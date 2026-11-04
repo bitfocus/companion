@@ -71,8 +71,10 @@ export class BackupController {
 		// Listen for config changes
 		this.#userConfig.on('keyChanged', (change) => {
 			if (change.key === 'backups') {
+				const scheduleChanged = scheduleOf(this.#backupRules) !== scheduleOf(change.value)
 				this.#backupRules = change.value
-				this.#scheduleBackups()
+				// Recording a backup changes the rules too, which must not restart the jobs
+				if (scheduleChanged) this.#scheduleBackups()
 			}
 		})
 	}
@@ -254,12 +256,16 @@ export class BackupController {
 			const job = nodeCron.schedule(
 				rule.cron,
 				async () => {
-					const logger = LogController.createLogger(`ImportExport/BackupController/${rule.name}`)
+					// The rule may have changed since it was scheduled, without changing its schedule
+					const currentRule = this.#backupRules.find((r) => r.id === rule.id)
+					if (!currentRule) return
+
+					const logger = LogController.createLogger(`ImportExport/BackupController/${currentRule.name}`)
 					try {
 						logger.info(`Running scheduled backup for rule`)
-						const backupInfo = await this.#createBackup(logger, rule)
+						const backupInfo = await this.#createBackup(logger, currentRule)
 						if (backupInfo) {
-							this.#updateLastRanTimestamp(rule.id, backupInfo)
+							this.#updateLastRanTimestamp(currentRule.id, backupInfo)
 							logger.info(
 								`Scheduled backup created successfully: ${backupInfo.filePath} (${backupInfo.fileSize} bytes)`
 							)
@@ -318,27 +324,19 @@ export class BackupController {
 
 			const deletionResults = await Promise.all(deletionPromises)
 
-			// Update the rule's previousBackups list to remove successfully deleted backups
-			// Note: this needs to lookup the list again, as the original array may have been modified during the delete
-			const updatedPreviousBackups = rule.previousBackups.filter(
-				(backup) => !deletionResults.some((deleted) => deleted && deleted.filePath === backup.filePath)
-			)
+			// Remove the deleted backups from the rule as it is now, as it may have changed during the delete
+			const deletedPaths = new Set(deletionResults.flatMap((deleted) => (deleted ? [deleted.filePath] : [])))
+			const currentRule = this.#backupRules.find((r) => r.id === rule.id)
+			if (!currentRule) return
 
-			// Update the rule in the configuration if any backups were deleted
-			if (updatedPreviousBackups.length !== rule.previousBackups.length) {
-				const updatedBackupRules = [...this.#backupRules]
-				const ruleIndex = updatedBackupRules.findIndex((r) => r.id === rule.id)
+			const updatedPreviousBackups = currentRule.previousBackups.filter((backup) => !deletedPaths.has(backup.filePath))
+			if (updatedPreviousBackups.length !== currentRule.previousBackups.length) {
+				const updatedBackupRules = this.#backupRules.map((r) =>
+					r.id === rule.id ? { ...r, previousBackups: updatedPreviousBackups } : r
+				)
 
-				if (ruleIndex !== -1) {
-					updatedBackupRules[ruleIndex] = {
-						...updatedBackupRules[ruleIndex],
-						previousBackups: updatedPreviousBackups,
-					}
-
-					// Update the userConfig
-					this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
-					this.#backupRules = updatedBackupRules
-				}
+				this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
+				this.#backupRules = updatedBackupRules
 			}
 		} catch (err) {
 			this.#logger.error(`Failed to clean up old backups for rule ${rule.name}: ${stringifyError(err)}`)
@@ -487,16 +485,12 @@ export class BackupController {
 				this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${stringifyError(err)}`)
 			}
 
-			// Update backup rules to remove this backup from the specific rule
-			const updatedBackupRules = [...this.#backupRules]
-			const updatedRule = updatedBackupRules.find((r) => r.id === ruleId)
-			if (updatedRule) {
-				updatedRule.previousBackups.splice(backupIndex, 1)
-
-				// Update the userConfig through the database
-				this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
-				this.#backupRules = updatedBackupRules
-			}
+			// Remove this backup from the rule as it is now, without changing the rule
+			const updatedBackupRules = this.#backupRules.map((r) =>
+				r.id === ruleId ? { ...r, previousBackups: r.previousBackups.filter((b) => b.filePath !== filePath) } : r
+			)
+			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
+			this.#backupRules = updatedBackupRules
 
 			return true
 		} catch (e) {
@@ -566,9 +560,6 @@ export class BackupController {
 			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
 			this.#backupRules = updatedBackupRules
 
-			// Reschedule if the rule was updated
-			this.#scheduleBackups()
-
 			this.#logger.info(`Updated backup rule ${ruleId} field ${change.key}`)
 			return true
 		} catch (e) {
@@ -600,12 +591,9 @@ export class BackupController {
 
 			const updatedBackupRules = [...this.#backupRules, newRule]
 
-			// Update the userConfig through the UserConfig controller
+			// Saving it schedules it, through the change to the rules
 			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
 			this.#backupRules = updatedBackupRules
-
-			// Reschedule backups
-			this.#scheduleBackups()
 
 			this.#logger.info(`Created backup rule: ${newRule.name} (${newRuleId})`)
 			return newRuleId
@@ -686,4 +674,9 @@ export class BackupController {
 			return false
 		}
 	}
+}
+
+/** What decides the scheduled jobs: the enabled rules and their cron expressions */
+function scheduleOf(rules: BackupRulesConfig[]): string {
+	return JSON.stringify(rules.filter((rule) => rule.enabled).map((rule) => [rule.id, rule.cron]))
 }

@@ -44,8 +44,9 @@ class FakeUserConfig extends EventEmitter<DataUserConfigEvents> {
 	saved: BackupRulesConfig[] | undefined
 	setKeyUnchecked(key: string, value: BackupRulesConfig[]): void {
 		if (key !== 'backups') throw new Error(`Unexpected key ${key}`)
-		this.saved = value
-		this.emit('keyChanged', { key: 'backups', value }, false)
+		// The real user config parses what it is given, so hands back a copy
+		this.saved = structuredClone(value)
+		this.emit('keyChanged', { key: 'backups', value: structuredClone(value) }, false)
 	}
 }
 
@@ -119,6 +120,27 @@ describe('BackupController', () => {
 			expect(cronMock.schedule).toHaveBeenLastCalledWith('0 4 * * *', expect.any(Function), { noOverlap: true })
 		})
 
+		test('a finished backup leaves the scheduled jobs running', async () => {
+			const { caller } = createController([makeRule({ id: 'on', enabled: true })])
+			const job = cronMock.schedule.mock.results[0].value
+
+			await caller.runBackupNow({ ruleId: 'on' })
+
+			expect(job.stop).not.toHaveBeenCalled()
+			expect(cronMock.schedule).toHaveBeenCalledTimes(1)
+		})
+
+		test('a scheduled run uses the rule as it is when it runs', async () => {
+			const { controller, db } = createController([makeRule({ id: 'on', enabled: true, backupType: 'db' })])
+			await controller.updateRuleField('on', { key: 'backupType', value: 'export-json' })
+			const run = cronMock.schedule.mock.calls[cronMock.schedule.mock.calls.length - 1][1] as () => Promise<void>
+
+			await run()
+
+			expect(writeExportToFile).toHaveBeenCalled()
+			expect(db.createBackup).not.toHaveBeenCalled()
+		})
+
 		test('a scheduled run makes a backup', async () => {
 			const { db, userConfig } = createController([makeRule({ id: 'on', enabled: true })])
 			const run = cronMock.schedule.mock.calls[0][1] as () => Promise<void>
@@ -139,6 +161,7 @@ describe('BackupController', () => {
 			expect(userConfig.saved).toEqual([
 				expect.objectContaining({ id, name: 'Nightly', enabled: true, keep: 5, backupType: 'db', previousBackups: [] }),
 			])
+			expect(cronMock.schedule).toHaveBeenCalledTimes(1)
 			expect(cronMock.schedule).toHaveBeenCalledWith('0 0 * * *', expect.any(Function), { noOverlap: true })
 		})
 
@@ -257,6 +280,30 @@ describe('BackupController', () => {
 			)
 		})
 
+		test('pruning does not bring back a backup deleted while it ran', async () => {
+			const oldFile = path.join(DEFAULT_DIR, 'old.companiondb')
+			const mid = backup('mid.companiondb', 2)
+			let finishDeletingOld!: () => void
+			fsMock.unlink.mockImplementation(async (file: string) => {
+				if (file === oldFile) await new Promise<void>((resolve) => (finishDeletingOld = resolve))
+			})
+			const { caller, controller, userConfig } = createController([
+				makeRule({ id: 'a', keep: 2, previousBackups: [backup('old.companiondb', 1), mid] }),
+			])
+
+			// The backup starts pruning the oldest, and the user deletes another while that is still going
+			await caller.runBackupNow({ ruleId: 'a' })
+			await vi.waitFor(() => expect(fsMock.unlink).toHaveBeenCalledWith(oldFile))
+			expect(await controller.deleteBackup('a', mid.filePath)).toBe(true)
+			finishDeletingOld()
+
+			await vi.waitFor(() =>
+				expect(userConfig.saved?.[0].previousBackups.map((b) => path.basename(b.filePath))).toEqual([
+					'backup-1.companiondb',
+				])
+			)
+		})
+
 		test('keeps every backup when keep is 0', async () => {
 			const { caller, userConfig } = createController([
 				makeRule({ id: 'a', keep: 0, previousBackups: [backup('old.companiondb', 1)] }),
@@ -292,6 +339,16 @@ describe('BackupController', () => {
 
 			expect(fsMock.unlink).not.toHaveBeenCalled()
 			expect(userConfig.saved).toBeUndefined()
+		})
+
+		test('does not change the rule it was given', async () => {
+			const old = backup('old.companiondb', 1)
+			const rule = makeRule({ id: 'a', previousBackups: [old] })
+			const { controller } = createController([rule])
+
+			await controller.deleteBackup('a', old.filePath)
+
+			expect(rule.previousBackups).toEqual([old])
 		})
 
 		test('forgets a backup whose file is already gone', async () => {
