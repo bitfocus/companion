@@ -22,6 +22,8 @@ const loc = (pageNumber: number, row: number, column: number): ControlLocation =
 interface Cell {
 	location: ControlLocation
 	controlId: string
+	/** Defaults to 'button-layered' */
+	type?: string
 }
 
 function setup(options: { cells?: Cell[]; validPages?: number[]; gridSize?: UserConfigGridSize } = {}) {
@@ -46,14 +48,14 @@ function setup(options: { cells?: Cell[]; validPages?: number[]; gridSize?: User
 
 	// A mock control per occupied cell, tracking the calls the router makes on it
 	const controlsMap = new Map<string, any>()
-	for (const { controlId } of cells) {
+	for (const { controlId, type } of cells) {
 		controlsMap.set(controlId, {
-			type: 'button-layered',
+			type: type ?? 'button-layered',
 			toJSON: vi.fn((_clone: boolean) => ({ type: 'button', __sourceId: controlId })),
 			triggerLocationHasChanged: vi.fn(),
+			abortDelayedActions: vi.fn(),
 			supportsOptions: true,
 			optionsSetField: vi.fn(() => true),
-			abortDelayedActions: vi.fn(),
 		})
 	}
 
@@ -178,6 +180,22 @@ describe('createControlsTrpcRouter', () => {
 			// The existing control is placed at the destination
 			expect(emitsOf('controlPlacedAt')).toEqual([[loc(1, 0, 1), CreateBankControlId('ctrlA')]])
 			expect(controlsMap.get(CreateBankControlId('ctrlA')).triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			// Its running actions are stopped, rather than carrying on in the new place
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).abortDelayedActions).toHaveBeenCalledWith(false, null, 0)
+		})
+
+		it('leaves the actions of a moved link button running on its remote installation', async () => {
+			const { caller, controlsMap } = setup({
+				cells: [{ location: loc(1, 0, 0), controlId: CreateBankControlId('ctrlA'), type: 'link-button' }],
+			})
+
+			await caller.gridBatchTransfer({
+				operation: 'move',
+				pairs: [{ fromLocation: loc(1, 0, 0), toLocation: loc(1, 0, 1) }],
+			})
+
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).abortDelayedActions).not.toHaveBeenCalled()
 		})
 
 		it('deletes the control that a move overwrites', async () => {
@@ -215,8 +233,9 @@ describe('createControlsTrpcRouter', () => {
 				type: 'button',
 				__sourceId: CreateBankControlId('ctrlA'),
 			})
-			// The source keeps its place - a copy never deletes it
+			// The source keeps its place - a copy never deletes it, or stops its actions
 			expect(controlsController.deleteControl).not.toHaveBeenCalled()
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).abortDelayedActions).not.toHaveBeenCalled()
 		})
 
 		it('copies onto an occupied cell by discarding the occupant', async () => {
@@ -261,6 +280,8 @@ describe('createControlsTrpcRouter', () => {
 			expect(placed).toContainEqual(['1/0/0', CreateBankControlId('ctrlB')])
 			expect(controlsMap.get(CreateBankControlId('ctrlA')).triggerLocationHasChanged).toHaveBeenCalledTimes(1)
 			expect(controlsMap.get(CreateBankControlId('ctrlB')).triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).abortDelayedActions).toHaveBeenCalledTimes(1)
+			expect(controlsMap.get(CreateBankControlId('ctrlB')).abortDelayedActions).toHaveBeenCalledTimes(1)
 		})
 
 		it('notifies of a page change when a control moves across pages', async () => {

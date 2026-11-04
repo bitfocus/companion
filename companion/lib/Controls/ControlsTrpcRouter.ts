@@ -225,6 +225,18 @@ export function createControlsTrpcRouter(
 					if (previous) previousLocations.set(placement.controlId, previous)
 				}
 
+				// Stop the actions of any control which is moving, so a run isn't left part in the old place and part in the new.
+				// A link button's actions run on the remote installation, where nothing has moved
+				for (const placement of plan.placements) {
+					if (placement.kind !== 'existing') continue
+
+					const previous = previousLocations.get(placement.controlId)
+					if (previous && formatLocation(previous) === formatLocation(placement.location)) continue
+
+					const control = controlsMap.get(placement.controlId)
+					if (control && control.type !== 'link-button') control.abortDelayedActions(false, null, 0)
+				}
+
 				// Delete any controls, letting pageStore respond to the `controlRemovedFrom` events this emits.
 				for (const controlId of plan.discardedControlIds) {
 					controlsController.deleteControl(controlId)
