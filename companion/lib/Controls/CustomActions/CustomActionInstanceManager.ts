@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
@@ -8,6 +9,7 @@ import {
 	type CustomActionControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
+import type { CustomActionRunInfo } from '@companion-app/shared/Model/CustomActionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -55,6 +57,29 @@ interface PlacedCopy {
 }
 
 /**
+ * A run of a custom action which is in progress
+ */
+interface ActiveRun extends CustomActionRunInfo {
+	readonly customActionControlId: CustomActionControlId
+	/** The id of the action which called it, as it is stored */
+	readonly useEntityId: string
+	readonly abortController: AbortController
+}
+
+export interface CustomActionInstanceEvents {
+	/** An action which calls a custom action has been added, changed or removed, or a run has started or finished */
+	usageChanged: []
+}
+
+/**
+ * The id of an action calling a custom action, as it is stored. The copies of a custom action, and of those it calls,
+ * prefix the ids of the entities they copy, so a copy of a stored action ends with its id
+ */
+function getUseEntityId(callerId: string): string {
+	return callerId.slice(callerId.lastIndexOf('/') + 1)
+}
+
+/**
  * The lists of entities of a copy of a custom action
  */
 interface CopyLists {
@@ -83,6 +108,11 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	/** The copies, by the action which calls the custom action */
 	readonly #copies = new Map<ControlEntityInstance, PlacedCopy>()
 
+	/** The runs in progress, by their id */
+	readonly #runs = new Map<string, ActiveRun>()
+
+	readonly events = new EventEmitter<CustomActionInstanceEvents>()
+
 	/** The custom actions which have changed, so their copies need rebuilding */
 	#changedCustomActionIds = new Set<CustomActionControlId>()
 
@@ -103,6 +133,8 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 * @param callerScope The scope the action parses its options in
 	 */
 	entityUpdate(caller: ControlEntityInstance, controlId: SomeControlId, callerScope: EntityScope): void {
+		this.events.emit('usageChanged')
+
 		if (caller.disabled) {
 			// A disabled action has nothing subscribed
 			this.#removeCopy(caller)
@@ -133,6 +165,42 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 */
 	entityDelete(caller: ControlEntityInstance): void {
 		this.#removeCopy(caller)
+		this.events.emit('usageChanged')
+	}
+
+	/**
+	 * The runs of a custom action which are in progress
+	 * @param customActionControlId The custom action
+	 * @returns Each run, with the id of the action which called it as it is stored
+	 */
+	getRuns(customActionControlId: CustomActionControlId): Array<{ run: CustomActionRunInfo; useEntityId: string }> {
+		const runs: Array<{ run: CustomActionRunInfo; useEntityId: string }> = []
+		for (const run of this.#runs.values()) {
+			if (run.customActionControlId !== customActionControlId) continue
+			runs.push({
+				run: { runId: run.runId, controlId: run.controlId, startedAt: run.startedAt },
+				useEntityId: run.useEntityId,
+			})
+		}
+		return runs
+	}
+
+	/**
+	 * Abort the runs of a custom action which are in progress
+	 * @param customActionControlId The custom action
+	 * @param useEntityId Only the runs called by this action, as it is stored, or null for every run
+	 * @returns How many runs were aborted
+	 */
+	abortRuns(customActionControlId: CustomActionControlId, useEntityId: string | null): number {
+		let count = 0
+		for (const run of this.#runs.values()) {
+			if (run.customActionControlId !== customActionControlId) continue
+			if (useEntityId !== null && run.useEntityId !== useEntityId) continue
+
+			run.abortController.abort()
+			count++
+		}
+		return count
 	}
 
 	/**
@@ -182,6 +250,14 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		)
 
 		const runId = nanoid()
+
+		// A run can be aborted on its own, as well as with its caller
+		const abortController = new AbortController()
+		const runExtras: RunActionExtras = {
+			...extras,
+			abortDelayed: AbortSignal.any([extras.abortDelayed, abortController.signal]),
+		}
+
 		const groupIds = {
 			actions: `custom-action-run:${runId}:actions`,
 			localVariables: `custom-action-run:${runId}:local-variables`,
@@ -210,7 +286,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			const targets = outputTargets.get(variableName)
 			if (!targets) return
 
-			const value = customAction.readRunLocalVariable(frame, extras, variableName)
+			const value = customAction.readRunLocalVariable(frame, runExtras, variableName)
 			for (const target of targets) storeOutput(target, value)
 		}
 
@@ -224,16 +300,29 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			},
 		}
 
+		this.#runs.set(runId, {
+			runId,
+			controlId: copy.controlId,
+			startedAt: Date.now(),
+			customActionControlId: customAction.controlId,
+			useEntityId: getUseEntityId(caller.id),
+			abortController,
+		})
+		this.events.emit('usageChanged')
+
 		try {
-			await customAction.runActions(lists.actions.getDirectEntities(), frame, extras)
+			await customAction.runActions(lists.actions.getDirectEntities(), frame, runExtras)
 
 			// Write the final value of each output, which covers those computed from other variables
-			if (!extras.abortDelayed.aborted) {
+			if (!runExtras.abortDelayed.aborted) {
 				for (const variableName of outputTargets.keys()) writeOutput(variableName)
 			}
 
 			return undefined
 		} finally {
+			this.#runs.delete(runId)
+			this.events.emit('usageChanged')
+
 			caller.removeTransientChildGroup(groupIds.actions)
 			caller.removeTransientChildGroup(groupIds.localVariables)
 			scope.destroy()

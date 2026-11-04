@@ -610,6 +610,65 @@ describe('ControlCustomAction', () => {
 			expect(ran).toEqual(['first'])
 		})
 
+		test('a run in progress is listed, by the action which called it, until it finishes', async () => {
+			const { executeAction, runAsButton, customActionInstances } = createHarness({ actions: [action('first')] })
+			const call = callAction()
+			let seenDuringRun: unknown = null
+			executeAction.mockImplementation(async () => {
+				seenDuringRun = customActionInstances.getRuns(CUSTOM_ACTION_CONTROL_ID)
+			})
+			const changed = vi.fn()
+			customActionInstances.events.on('usageChanged', changed)
+
+			await runAsButton([call])
+
+			expect(seenDuringRun).toEqual([
+				{
+					run: { runId: expect.any(String), controlId: CALLER_CONTROL_ID, startedAt: expect.any(Number) },
+					useEntityId: call.id,
+				},
+			])
+			expect(customActionInstances.getRuns(CUSTOM_ACTION_CONTROL_ID)).toEqual([])
+			expect(changed).toHaveBeenCalled()
+		})
+
+		test('aborting the runs of a custom action stops them, but not the rest of what the caller is doing', async () => {
+			const { executeAction, runAsButton, customActionInstances } = createHarness({
+				actions: [action('first'), action('second')],
+			})
+			const ran: string[] = []
+			executeAction.mockImplementation(async (action) => {
+				ran.push(action.definitionId)
+				if (action.definitionId === 'first') {
+					expect(customActionInstances.abortRuns(CUSTOM_ACTION_CONTROL_ID, null)).toBe(1)
+				}
+			})
+
+			await runAsButton([callAction(), action('after')], { executionMode: 'sequential' })
+
+			expect(ran).toEqual(['first', 'after'])
+		})
+
+		test('aborting the runs called by one action leaves the others', async () => {
+			const { executeAction, runAsButton, customActionInstances } = createHarness({ actions: [action('slow')] })
+			const stopped = callAction({ n: exprVal(1) })
+			const kept = callAction({ n: exprVal(2) })
+			const finished: unknown[] = []
+			executeAction.mockImplementation(async (_action, extras) => {
+				await new Promise((resolve) => setTimeout(resolve, 300))
+				if (!extras.abortDelayed.aborted) finished.push(extras.frame?.options.n)
+			})
+
+			const run = runAsButton([stopped, kept])
+			await vi.waitFor(() => expect(customActionInstances.getRuns(CUSTOM_ACTION_CONTROL_ID)).toHaveLength(2), {
+				interval: 5,
+			})
+			expect(customActionInstances.abortRuns(CUSTOM_ACTION_CONTROL_ID, stopped.id)).toBe(1)
+			await run
+
+			expect(finished).toEqual([2])
+		})
+
 		test('a custom action which calls itself does not run itself', async () => {
 			// Saved before calling itself was prevented
 			const { executeAction, runAsButton } = createHarness({ actions: [action('count'), callAction()] })

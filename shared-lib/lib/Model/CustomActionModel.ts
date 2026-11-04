@@ -103,6 +103,31 @@ export interface ClientCustomActionData extends CustomActionOptions {
 	nestedTooDeep: boolean
 }
 
+/** A run of a custom action which is in progress */
+export interface CustomActionRunInfo {
+	readonly runId: string
+	/** The control running it. For a run inside another custom action, the control which started the outer run */
+	readonly controlId: SomeControlId
+	/** When it started, as a unix timestamp in ms */
+	readonly startedAt: number
+}
+
+/** An action which calls a custom action, and its runs in progress */
+export interface CustomActionUse {
+	/** The control holding the action, which may be another custom action */
+	readonly controlId: SomeControlId
+	readonly entityId: string
+	readonly disabled: boolean
+	readonly runs: CustomActionRunInfo[]
+}
+
+/** What calls a custom action, and what is running it */
+export interface CustomActionUsage {
+	readonly uses: CustomActionUse[]
+	/** Runs whose calling action no longer exists, such as one removed part way through a run */
+	readonly otherRuns: CustomActionRunInfo[]
+}
+
 /** The properties of a custom action sent to the ui which are not persisted */
 export interface CustomActionRuntimeProps {
 	/** Whether a test run, started from the editor, is running */
