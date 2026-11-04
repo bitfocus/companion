@@ -358,7 +358,7 @@ export function createControlsTrpcRouter(
 				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
-				controlsController.abortAllDelayedActions(null)
+				controlsMap.get(controlId)?.abortDelayedActions(false, null, 0)
 			}),
 
 		setOptionsField: publicProcedure

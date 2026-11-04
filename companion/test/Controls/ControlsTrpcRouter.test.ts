@@ -53,6 +53,7 @@ function setup(options: { cells?: Cell[]; validPages?: number[]; gridSize?: User
 			triggerLocationHasChanged: vi.fn(),
 			supportsOptions: true,
 			optionsSetField: vi.fn(() => true),
+			abortDelayedActions: vi.fn(),
 		})
 	}
 
@@ -331,6 +332,31 @@ describe('createControlsTrpcRouter', () => {
 			await caller.hotPressControl({ location: loc(1, 0, 0), direction: true, surfaceId: 'surface1' })
 
 			expect(controlsController.pressControl).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('hotAbortControl', () => {
+		it('aborts only the control at the location', async () => {
+			const { caller, controlsController, controlsMap } = setup({
+				cells: [
+					{ location: loc(1, 0, 0), controlId: CreateBankControlId('ctrlA') },
+					{ location: loc(1, 0, 1), controlId: CreateBankControlId('ctrlB') },
+				],
+			})
+
+			await caller.hotAbortControl({ location: loc(1, 0, 0) })
+
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).abortDelayedActions).toHaveBeenCalledWith(false, null, 0)
+			expect(controlsMap.get(CreateBankControlId('ctrlB')).abortDelayedActions).not.toHaveBeenCalled()
+			expect(controlsController.abortAllDelayedActions).not.toHaveBeenCalled()
+		})
+
+		it('does nothing when there is no control at the location', async () => {
+			const { caller, controlsController } = setup()
+
+			await caller.hotAbortControl({ location: loc(1, 0, 0) })
+
+			expect(controlsController.abortAllDelayedActions).not.toHaveBeenCalled()
 		})
 	})
 
