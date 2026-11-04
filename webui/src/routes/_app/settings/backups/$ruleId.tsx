@@ -34,7 +34,7 @@ const RouteComponent = observer(function RouteComponent() {
 
 			<div className="secondary-panel-simple-body">
 				<MyErrorBoundary>
-					<BackupRuleEditor ruleId={ruleId} />
+					<BackupRuleEditor key={ruleId} ruleId={ruleId} />
 				</MyErrorBoundary>
 			</div>
 		</>

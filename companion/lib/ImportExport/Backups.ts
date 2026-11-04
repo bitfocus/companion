@@ -109,8 +109,13 @@ export class BackupController {
 						change: BackupRuleChangeSchema,
 					})
 				)
-				.mutation(async ({ input }) => {
-					return this.updateRuleField(input.ruleId, input.change)
+				.mutation(async ({ input }): Promise<string | null> => {
+					// The reason for a refusal is returned for the ui to show, not thrown, as a thrown error is reported to sentry
+					const refusal = this.#validateRuleChange(input.change)
+					if (refusal) return refusal
+
+					if (!(await this.updateRuleField(input.ruleId, input.change))) return 'Failed to update the backup rule'
+					return null
 				}),
 
 			createRule: publicProcedure

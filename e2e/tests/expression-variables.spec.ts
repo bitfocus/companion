@@ -38,7 +38,13 @@ test('an invalid name is refused', async ({ page }) => {
 	const name = editor.getByRole('textbox', { name: 'Name' })
 	await name.fill('not valid!')
 	await expect(name).toHaveAttribute('aria-invalid', 'true')
+	await expect(editor.getByText('Name must be alphanumeric and can contain underscores and dashes')).toBeVisible()
 	await expect(listRow(page, 'e2e_valid')).toBeVisible()
+
+	// Leaving the field shows the saved name again
+	await name.blur()
+	await expect(name).toHaveValue('e2e_valid')
+	await expect(editor.getByText('Name must be alphanumeric and can contain underscores and dashes')).toHaveCount(0)
 
 	await reloadApp(page)
 	await expect(listRow(page, 'e2e_valid')).toBeVisible()

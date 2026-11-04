@@ -7,10 +7,10 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { FormLabel } from '~/Components/Form.js'
 import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import './EditPanel.css'
-import { useCallback, useContext, useId, useMemo, useRef } from 'react'
+import { useCallback, useContext, useId, useMemo, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
-import { isLabelValid } from '@companion-app/shared/Label.js'
+import { INVALID_LABEL_MESSAGE, isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -18,6 +18,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { StaticAlert } from '~/Components/Alert.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
@@ -126,7 +127,17 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 		[setOption]
 	)
 
-	const setName = useCallback((val: string) => setValueInner('variableName', val), [setValueInner])
+	// An invalid name would be refused, so it is only shown, until the field is left and shows the saved name again
+	const [nameInvalid, setNameInvalid] = useState(false)
+	const setName = useCallback(
+		(val: string) => {
+			const valid = val === '' || isLabelValid(val)
+			setNameInvalid(!valid)
+			if (valid) setValueInner('variableName', val)
+		},
+		[setValueInner]
+	)
+	const clearNameInvalid = useCallback(() => setNameInvalid(false), [])
 	const setDescription = useCallback((val: string) => setValueInner('description', val), [setValueInner])
 
 	const nameFieldId = useId()
@@ -153,7 +164,13 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 						setValue={setName}
 						value={options.variableName}
 						checkValid={isLabelValid}
+						onBlur={clearNameInvalid}
 					/>
+					{nameInvalid && (
+						<StaticAlert color="warning" className="edit-field-help text-xs">
+							{INVALID_LABEL_MESSAGE}
+						</StaticAlert>
+					)}
 				</div>
 				<div className="edit-field-row">
 					<FormLabel htmlFor={descriptionFieldId}>Description</FormLabel>

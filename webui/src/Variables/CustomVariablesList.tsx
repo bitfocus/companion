@@ -4,6 +4,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
+import { INVALID_LABEL_MESSAGE } from '@companion-app/shared/Label.js'
 import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
@@ -101,7 +102,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const createMutation = useMutationExt(trpc.customVariables.create.mutationOptions())
 	const validateNewName = useCallback(
 		(name: string) => {
-			if (!isCustomVariableValid(name)) return 'Name must be alphanumeric and can contain underscores and dashes'
+			if (!isCustomVariableValid(name)) return INVALID_LABEL_MESSAGE
 			if (customVariables.customVariables.has(name)) return 'A variable with this name already exists'
 			return undefined
 		},

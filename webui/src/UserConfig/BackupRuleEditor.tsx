@@ -1,8 +1,9 @@
 import { faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useId, useRef } from 'react'
+import { useCallback, useContext, useId, useRef, useState } from 'react'
 import type { BackupRuleSettings, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
@@ -68,6 +69,15 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 	)
 })
 
+function FieldError({ message }: { message: string | undefined }): React.JSX.Element | null {
+	if (message === undefined) return null
+	return (
+		<StaticAlert color="warning" className="edit-field-help text-xs">
+			{message}
+		</StaticAlert>
+	)
+}
+
 interface BackupRuleEditorProps {
 	ruleId: string
 }
@@ -81,12 +91,20 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	// Find the rule in the config
 	const rule = userConfig.properties?.backups?.find((r) => r.id === ruleId)
 
+	// Why the last change to each field was refused, until a change to it is accepted
+	const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof BackupRuleSettings, string>>>({})
+
 	// Function to update a specific field in the rule
 	const updateField = useCallback(
 		<K extends keyof BackupRuleSettings>(field: K, value: BackupRuleSettings[K]) => {
-			updateRuleFieldMutation.mutateAsync({ ruleId, change: keyValueChange(field, value) }).catch((err) => {
-				console.error('Error updating backup rule field:', err)
-			})
+			updateRuleFieldMutation
+				.mutateAsync({ ruleId, change: keyValueChange(field, value) })
+				.then((refusal) =>
+					setFieldErrors(({ [field]: _, ...others }) => (refusal === null ? others : { ...others, [field]: refusal }))
+				)
+				.catch((err) => {
+					console.error(`Error updating backup rule field: ${stringifyError(err)}`)
+				})
 		},
 		[updateRuleFieldMutation, ruleId]
 	)
@@ -132,15 +150,27 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				<div className="edit-field-row">
 					<FormLabel htmlFor={nameFieldId}>Rule Name</FormLabel>
 					<div className="min-w-0">
-						<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
+						<TextInputFieldSimple
+							id={nameFieldId}
+							value={rule.name}
+							setValue={(value) => updateField('name', value)}
+							checkValid={fieldErrors.name === undefined ? undefined : false}
+						/>
 					</div>
+					<FieldError message={fieldErrors.name} />
 				</div>
 
 				<div className="edit-field-row">
 					<FormLabel htmlFor={cronFieldId}>Cron Schedule</FormLabel>
 					<div className="min-w-0">
-						<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
+						<TextInputFieldSimple
+							id={cronFieldId}
+							value={rule.cron}
+							setValue={(value) => updateField('cron', value)}
+							checkValid={fieldErrors.cron === undefined ? undefined : false}
+						/>
 					</div>
+					<FieldError message={fieldErrors.cron} />
 					<small className="edit-field-help form-text text-muted block">
 						Use cron syntax (e.g., <code className="text-2xs bg-surface-muted px-1 py-0.5 rounded">0 0 * * *</code> for
 						daily at midnight). Use{' '}
@@ -210,6 +240,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 							setValue={(value) => updateField('keep', value)}
 						/>
 					</div>
+					<FieldError message={fieldErrors.keep} />
 					<small className="edit-field-help form-text text-muted block">
 						Number of backup files to retain before automatically purging older backups.
 					</small>

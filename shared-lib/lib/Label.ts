@@ -7,6 +7,9 @@ export function makeLabelSafe(label: string): string {
 	return label.trim().replace(/[^\w-]/gi, '_')
 }
 
+/** Why a name is refused, for one failing isLabelValid or isCustomVariableValid */
+export const INVALID_LABEL_MESSAGE = 'Name must be alphanumeric and can contain underscores and dashes'
+
 /** Reserved words, which can't be used as a label */
 const RESERVED_LABELS: ReadonlySet<string> = new Set([
 	'internal',

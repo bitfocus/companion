@@ -389,6 +389,20 @@ describe('BackupController', () => {
 			expect(userConfig.saved).toBeUndefined()
 		})
 
+		test('the procedure returns why it refused an invalid value, without throwing', async () => {
+			const { caller, userConfig } = createController([makeRule({ id: 'rule1' })])
+
+			expect(await caller.updateRuleField({ ruleId: 'rule1', change: { key: 'cron', value: 'every tuesday' } })).toBe(
+				"'every tuesday' is not a valid cron expression"
+			)
+			expect(await caller.updateRuleField({ ruleId: 'rule1', change: { key: 'name', value: ' ' } })).toBe(
+				'Name cannot be empty'
+			)
+			expect(userConfig.saved).toBeUndefined()
+
+			expect(await caller.updateRuleField({ ruleId: 'rule1', change: { key: 'cron', value: '0 1 * * *' } })).toBeNull()
+		})
+
 		test('refuses a rule that does not exist', async () => {
 			const { controller, userConfig } = createController([makeRule({ id: 'rule1' })])
 

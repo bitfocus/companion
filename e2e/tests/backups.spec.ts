@@ -29,10 +29,16 @@ test('a backup rule can be configured, run and its backup deleted', async ({ pag
 	await expect(editor.getByRole('textbox', { name: 'Retention Count' })).toHaveValue('3')
 	await expect(editor.getByRole('combobox', { name: 'Backup Type' })).toHaveText('YAML (More human readable)')
 
-	// An invalid schedule is refused, leaving the one before
+	// An invalid schedule is refused with the reason, leaving the one before
 	await editor.getByRole('textbox', { name: 'Cron Schedule' }).fill('not a schedule')
 	await editor.getByRole('textbox', { name: 'Cron Schedule' }).blur()
 	await expect(editor.getByRole('textbox', { name: 'Cron Schedule' })).toHaveValue('30 2 * * 1')
+	await expect(editor.getByText("'not a schedule' is not a valid cron expression")).toBeVisible()
+	await expect(editor.getByRole('textbox', { name: 'Cron Schedule' })).toHaveAttribute('aria-invalid', 'true')
+
+	// Until a change to it is accepted
+	await editor.getByRole('textbox', { name: 'Cron Schedule' }).fill('30 3 * * 1')
+	await expect(editor.getByText(/is not a valid cron expression/)).toHaveCount(0)
 
 	await editor.getByRole('button', { name: 'Run Now' }).click()
 	const backups = editor.getByRole('row').filter({ has: page.getByRole('button', { name: 'Delete backup' }) })
