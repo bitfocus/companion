@@ -16,6 +16,15 @@ export interface VariableDependencyListener<T> {
 	onVariableDependenciesChanged(hits: ReadonlyArray<VariableDependency<T>>, changed: ReadonlySet<string>): void
 }
 
+/** Whether two sets hold the same ids. A plain loop, as `isSubsetOf` is several times slower on small sets */
+function haveSameIds(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+	if (a.size !== b.size) return false
+	for (const id of b) {
+		if (!a.has(id)) return false
+	}
+	return true
+}
+
 /** Variables whose names are relative to the control they are evaluated for */
 function isControlRelative(variableId: string): boolean {
 	return variableId.startsWith('local:') || variableId.startsWith('this:') || variableId.startsWith('page:')
@@ -75,25 +84,18 @@ export class VariableDependency<T> {
 		if (oldIds === newIds) return
 
 		// Re-evaluating rarely changes what was read, so check for that before touching the index
-		if (oldIds && newIds && oldIds.size === newIds.size) {
-			let same = true
-			for (const id of newIds) {
-				if (!oldIds.has(id)) {
-					same = false
-					break
-				}
-			}
-			if (same) return
-		}
+		if (oldIds && newIds && haveSameIds(oldIds, newIds)) return
 
 		if (oldIds) {
 			for (const id of oldIds) {
-				if (!newIds || !newIds.has(id)) this.#index.remove(this, id)
+				if (newIds?.has(id)) continue
+				this.#index.remove(this, id)
 			}
 		}
 		if (newIds) {
 			for (const id of newIds) {
-				if (!oldIds || !oldIds.has(id)) this.#index.add(this, id)
+				if (oldIds?.has(id)) continue
+				this.#index.add(this, id)
 			}
 		}
 	}
@@ -271,11 +273,19 @@ export class VariableDependencyRegistry {
 
 				for (const controlId of controlIdFilter) {
 					const deps = this.#index.byKey.get(`${controlId}\n${variableId}`)
-					if (deps) for (const dependency of deps) collect(dependency, false)
+					if (!deps) continue
+
+					for (const dependency of deps) {
+						collect(dependency, false)
+					}
 				}
 			} else {
 				const deps = this.#index.byKey.get(variableId)
-				if (deps) for (const dependency of deps) collect(dependency, true)
+				if (!deps) continue
+
+				for (const dependency of deps) {
+					collect(dependency, true)
+				}
 			}
 		}
 		for (const dependency of this.#index.armed) {
