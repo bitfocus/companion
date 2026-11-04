@@ -31,8 +31,7 @@ test('a surface group holds an emulator, with its own startup and allowed pages'
 	await expect(page.getByRole('combobox', { name: 'Surface Group' })).toHaveText(/E2E Group/)
 
 	const panel = page.locator('.secondary-panel')
-	// The allowed pages field has no label of its own
-	const allowedPages = panel.getByRole('group').last()
+	const allowedPages = panel.getByRole('combobox', { name: 'Allowed pages' })
 
 	await list.getByText(/group:/).click()
 	await expect(page.getByRole('heading', { name: 'Settings for E2E Group' })).toBeVisible()
@@ -40,11 +39,10 @@ test('a surface group holds an emulator, with its own startup and allowed pages'
 	await panel.getByRole('combobox', { name: 'Startup Page' }).click()
 	await page.getByRole('option', { name: /^2/ }).click()
 	await panel.getByRole('switch', { name: 'Restrict pages accessible to this group' }).click()
-	await expect(panel.getByText('Allowed pages:')).toBeVisible()
-	await allowedPages.getByRole('combobox').click()
+	await allowedPages.click()
 	await page.getByRole('option', { name: /^2/ }).click()
 	await page.keyboard.press('Escape')
-	await expect(allowedPages.getByRole('button', { name: /^Remove 2/ })).toBeVisible()
+	await expect(panel.getByRole('button', { name: /^Remove 2/ })).toBeVisible()
 
 	// The selected group is kept in the url, so its panel is still open after the reload
 	await reloadApp(page)
@@ -52,7 +50,7 @@ test('a surface group holds an emulator, with its own startup and allowed pages'
 	await expect(panel.getByRole('switch', { name: 'Use Last Page At Startup' })).not.toBeChecked()
 	await expect(panel.getByRole('combobox', { name: 'Startup Page' })).toHaveValue(/^2/)
 	await expect(panel.getByRole('switch', { name: 'Restrict pages accessible to this group' })).toBeChecked()
-	await expect(allowedPages.getByRole('button', { name: /^Remove 2/ })).toBeVisible()
+	await expect(panel.getByRole('button', { name: /^Remove 2/ })).toBeVisible()
 
 	await list.getByText(/emulator:grouped/).click()
 	await expect(page.getByRole('combobox', { name: 'Surface Group' })).toHaveText(/E2E Group/)

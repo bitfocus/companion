@@ -85,8 +85,8 @@ describe('TableInputField', () => {
 
 		it('renders column headers when rows are present', () => {
 			render(<Controlled definition={definition} initialValue={[{ value: 50, color: 0x00ff00 }]} />)
-			expect(screen.getByText('Value')).toBeInTheDocument()
-			expect(screen.getByText('Color')).toBeInTheDocument()
+			expect(screen.getByRole('columnheader', { name: 'Value' })).toBeInTheDocument()
+			expect(screen.getByRole('columnheader', { name: 'Color' })).toBeInTheDocument()
 		})
 
 		it('renders the add button', () => {

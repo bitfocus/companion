@@ -39,12 +39,13 @@ async function editFields(page: Page, row: Locator): Promise<void> {
 	await row.getByRole('button', { name: 'Bottom', exact: true }).click()
 	await row.getByRole('button', { name: 'Italic', exact: true }).click()
 
-	const multi = row.getByRole('group').filter({ has: page.getByRole('button', { name: 'Remove One' }) })
-	await multi.getByRole('combobox').click()
+	await row.getByRole('combobox', { name: 'Multi dropdown', exact: true }).click()
 	await page.getByRole('option', { name: 'Two', exact: true }).click()
 	await page.keyboard.press('Escape')
 
 	await row.getByRole('button', { name: 'Add row' }).click()
+	await row.getByRole('textbox', { name: 'Count', exact: true }).fill('3')
+	await row.getByRole('textbox', { name: 'Count', exact: true }).blur()
 	await row.getByRole('button', { name: 'Add item' }).click()
 }
 
@@ -63,8 +64,13 @@ async function checkFields(row: Locator): Promise<void> {
 	await expect(row.getByRole('button', { name: 'Italic', exact: true })).toHaveAttribute('aria-pressed', 'true')
 	await expect(row.getByRole('button', { name: 'Remove Two' })).toBeVisible()
 	await expect(row.getByRole('button', { name: 'Remove One' })).toBeVisible()
+	// The pickers are named by their label, though their input sits under the picked value's display
+	await expect(row.getByRole('combobox', { name: 'Variable', exact: true })).toBeAttached()
+	await expect(row.getByRole('combobox', { name: 'Custom variable', exact: true })).toBeAttached()
 	await expect(row.getByRole('button', { name: 'Remove row' })).toHaveCount(1)
-	await expect(row.getByRole('textbox', { name: 'Name', exact: true })).toHaveCount(1)
+	await expect(row.getByRole('textbox', { name: 'Count', exact: true })).toHaveValue('3')
+	// One in the table's row, and one in the list's item
+	await expect(row.getByRole('textbox', { name: 'Name', exact: true })).toHaveCount(2)
 }
 
 test('action option fields persist', async ({ page }) => {

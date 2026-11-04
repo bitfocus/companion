@@ -468,7 +468,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						{!!groupConfig.config.restrict_pages && (
 							<>
 								<FormLabel htmlFor={allowedPagesFieldId} sm={4} column="sm">
-									Allowed pages:
+									Allowed pages
 								</FormLabel>
 								<Grid.Col sm={8}>
 									<InternalPageIdDropdown
