@@ -1950,6 +1950,19 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('Invalid STYLE')
 		})
 
+		test('error for a STYLE that is JSON but not a style', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const badStyle = Buffer.from(JSON.stringify({ bitmap: 'big', colors: 'cmyk' })).toString('base64')
+
+			processMessage(`ADD-SUB SUBID="sub1" LOCATION="1/2/3" STYLE="${badStyle}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid STYLE')
+			expect(serviceApi.acquireDisplayedLocation).not.toHaveBeenCalled()
+		})
+
 		test('successfully adds subscription', () => {
 			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)

@@ -15,6 +15,7 @@ import {
 	parseStringParamWithBooleanFallback,
 	SATELLITE_BITMAP_FORMATS,
 	SatelliteConfigFieldsSchema,
+	SatelliteControlStylePresetSchema,
 	SatelliteLineBuffer,
 	SatelliteSurfaceAppearanceSchema,
 	SatelliteSurfaceLayoutSchema,
@@ -760,11 +761,16 @@ export class ServiceSatelliteApi {
 		// Parse style
 		let style: SatelliteControlStylePreset
 		if (params.STYLE && params.STYLE !== true) {
+			let parsed
 			try {
-				style = JSON.parse(Buffer.from(String(params.STYLE), 'base64').toString())
+				parsed = SatelliteControlStylePresetSchema.safeParse(
+					JSON.parse(Buffer.from(String(params.STYLE), 'base64').toString())
+				)
 			} catch (_e) {
 				return this.#formatAndSendError(socket, messageName, undefined, 'Invalid STYLE')
 			}
+			if (!parsed.success) return this.#formatAndSendError(socket, messageName, undefined, 'Invalid STYLE')
+			style = parsed.data
 		} else {
 			style = {}
 
