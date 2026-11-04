@@ -56,6 +56,8 @@ interface EntityWrapper {
 	 * part of its key has changed (eg the image size of a feedback)
 	 */
 	resendRequested?: boolean
+	/** Whether this replaced another instance of the entity, so has none of the values that one was given */
+	isNewInstance?: boolean
 	/** The variables referenced by the last parse of the options, created when it first references any */
 	variables: VariableDependency<EntityWrapper> | null
 	/** Whether the last parsed options for this feedback entity depended on the render clock */
@@ -261,10 +263,23 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 			) => {
 				const key = getEntitySubscriptionKey(wrapper.controlId, payload.entity, payload.parsedOptions)
 
+				const isNewInstance = !!wrapper.isNewInstance
+				wrapper.isNewInstance = false
+
 				const subscriptionId = wrapper.subscriptionId
-				if (subscriptionId !== undefined && this.#subscriptions.get(subscriptionId)?.key === key) {
+				const subscription = subscriptionId !== undefined ? this.#subscriptions.get(subscriptionId) : undefined
+				if (subscriptionId !== undefined && subscription?.key === key) {
 					// Unchanged. The key covers everything the module is sent, so it only needs sending again if asked for
 					if (resendRequested) setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+
+					// The module won't report the value again until it changes, so a new instance needs the current one
+					if (isNewInstance && subscription.lastValue) {
+						joinedFeedbackValues.push({
+							entityId,
+							controlId: subscription.controlId,
+							value: subscription.lastValue.value,
+						})
+					}
 					return
 				}
 
@@ -730,15 +745,17 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 	trackEntity(entity: ControlEntityInstance, controlId: SomeControlId): void {
 		// This may replace an existing entity, if so it needs to restart the process.
 		// It stays in the subscription of what it replaced until it has been processed
-		this.#entities.get(entity.id)?.variables?.dispose()
+		const existing = this.#entities.get(entity.id)
+		existing?.variables?.dispose()
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
 			entity: new WeakRef(entity),
 			controlId: controlId,
 			state: EntityState.UNLOADED,
 			variables: null,
-			subscriptionId: this.#entities.get(entity.id)?.subscriptionId,
-			resendRequested: this.#entities.get(entity.id)?.resendRequested,
+			subscriptionId: existing?.subscriptionId,
+			resendRequested: existing?.resendRequested,
+			isNewInstance: !!existing && (existing.isNewInstance || existing.entity.deref() !== entity),
 		})
 
 		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
