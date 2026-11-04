@@ -398,9 +398,13 @@ export class EntityPoolSpecialExpressionManager implements VariableDependencyLis
 	 * processing of those special expressions to compute their new values.
 	 */
 	forgetEntity(entityId: string): void {
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			entities.delete(entityId)
 		}
+
+		// Processing ends by registering what the remaining entities read, so this stops tracking what the
+		// forgotten one did. Debounced, so a burst of removals rescans the entities once
+		this.#debounceProcessPending()
 	}
 
 	/**

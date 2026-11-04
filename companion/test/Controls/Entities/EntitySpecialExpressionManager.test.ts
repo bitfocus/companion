@@ -923,6 +923,31 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 	})
 
 	describe('forgetEntity', () => {
+		it('stops tracking the variables only the forgotten entity read', () => {
+			mockParseExpressionResult = { ok: true, value: false, variableIds: new Set(['var1']) }
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-1', { isExpression: true, value: '$(internal:var1)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+
+			mockParseExpressionResult = { ok: true, value: false, variableIds: new Set(['var2']) }
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-2', { isExpression: true, value: '$(internal:var2)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(2)
+
+			manager.forgetEntity('entity-1')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(1)
+
+			manager.forgetEntity('entity-2')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(0)
+		})
+
 		it('should remove potentially isInverted entity from tracking', () => {
 			const mockEntity = createMockFeedbackEntity('entity-1', { isExpression: false, value: true })
 
@@ -1479,7 +1504,9 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			mockUpdateIsInvertedFn.mockClear()
 			mockUpdateStoreResultFn.mockClear()
 
+			expect(variableDependencies.stats().keys).toBe(1)
 			manager.destroy()
+			expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 
 			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
