@@ -3,7 +3,11 @@ import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
-import { CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateCustomActionControlId,
+	type CustomActionControlId,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -11,6 +15,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
@@ -34,11 +39,11 @@ export type CustomActionInstancesForEntity = Pick<CustomActionInstanceManager, '
  */
 interface PlacedCopy {
 	/** The control holding the calling action */
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	/** The scope the calling action parses its options in */
 	callerScope: EntityScope
 	/** The control id of the custom action which was copied, if there is a copy */
-	customActionControlId: string | null
+	customActionControlId: CustomActionControlId | null
 	/** The scope of the copy, or null if there is no copy */
 	scope: CustomActionEntityScope | null
 	/** The variables the inputs of the copy referenced when they were parsed */
@@ -69,16 +74,22 @@ export class CustomActionInstanceManager {
 
 	readonly #controlStore: Pick<IControlStore, 'getControl'>
 	readonly #renderClock: RenderClock
+	readonly #variableDependencies: VariableDependencyRegistry
 
 	/** The copies, by the action which calls the custom action */
 	readonly #copies = new Map<ControlEntityInstance, PlacedCopy>()
 
 	/** The custom actions which have changed, so their copies need rebuilding */
-	#changedCustomActionIds = new Set<string>()
+	#changedCustomActionIds = new Set<CustomActionControlId>()
 
-	constructor(controlStore: Pick<IControlStore, 'getControl'>, renderClock: RenderClock) {
+	constructor(
+		controlStore: Pick<IControlStore, 'getControl'>,
+		renderClock: RenderClock,
+		variableDependencies: VariableDependencyRegistry
+	) {
 		this.#controlStore = controlStore
 		this.#renderClock = renderClock
+		this.#variableDependencies = variableDependencies
 	}
 
 	/**
@@ -87,7 +98,7 @@ export class CustomActionInstanceManager {
 	 * @param controlId The control holding the action
 	 * @param callerScope The scope the action parses its options in
 	 */
-	entityUpdate(caller: ControlEntityInstance, controlId: string, callerScope: EntityScope): void {
+	entityUpdate(caller: ControlEntityInstance, controlId: SomeControlId, callerScope: EntityScope): void {
 		if (caller.disabled) {
 			// A disabled action has nothing subscribed
 			this.#removeCopy(caller)
@@ -162,6 +173,7 @@ export class CustomActionInstanceManager {
 			copyScope.customActionChain,
 			this,
 			this.#renderClock,
+			this.#variableDependencies,
 			{ customActionControlId: customAction.controlId, options, localValues: new Map() }
 		)
 
@@ -228,7 +240,7 @@ export class CustomActionInstanceManager {
 	 * A custom action has been changed or deleted, so its copies need rebuilding
 	 * @param customActionControlId The control id of the custom action
 	 */
-	onCustomActionChanged(customActionControlId: string): void {
+	onCustomActionChanged(customActionControlId: CustomActionControlId): void {
 		this.#changedCustomActionIds.add(customActionControlId)
 		this.#debounceRebuildChanged()
 	}
@@ -251,17 +263,16 @@ export class CustomActionInstanceManager {
 	)
 
 	/**
-	 * Some variables have changed, so re-parse the inputs of any copies which used them
+	 * Some variables have changed, so re-parse the inputs of any copies which used them. The entities of the copies
+	 * are told of the changes by the variable dependency registry
 	 * @param changedVariables The ids of the variables which changed
 	 * @param controlIdFilter If set, only the controls the change applies to
 	 */
-	onVariablesChanged(changedVariables: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(changedVariables: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		// Re-parsing the inputs of a copy can replace the copies nested inside it, so work from a snapshot
 		for (const [caller, copy] of [...this.#copies]) {
 			if (this.#copies.get(caller) !== copy) continue
 			if (controlIdFilter && !controlIdFilter.has(copy.controlId)) continue
-
-			copy.scope?.specialExpressionManager.onVariablesChanged(changedVariables)
 
 			if (!changedVariables.isDisjointFrom(copy.referencedVariableIds)) {
 				this.#refreshInputs(caller, copy)
@@ -304,6 +315,7 @@ export class CustomActionInstanceManager {
 			[...chain, customActionControlId],
 			this,
 			this.#renderClock,
+			this.#variableDependencies,
 			{ customActionControlId, options, localValues: new Map() }
 		)
 		copy.scope = scope

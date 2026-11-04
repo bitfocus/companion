@@ -2,7 +2,12 @@ import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
-import { CreateCustomActionControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateCustomActionControlId,
+	ParseControlId,
+	zodControlIds,
+	type CustomActionControlId,
+} from '@companion-app/shared/ControlId.js'
 import {
 	CustomActionOutputSchema,
 	type ClientCustomActionData,
@@ -16,7 +21,6 @@ import type { ControlStore } from './ControlStore.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionCollections } from './CustomActionCollections.js'
 import type { ControlsFactory } from './Factory.js'
-import { validateCustomActionControlId } from './Util.js'
 
 /**
  * Update the actions which run a custom action, after one of its inputs has been renamed
@@ -27,7 +31,7 @@ import { validateCustomActionControlId } from './Util.js'
  */
 export function renameCustomActionInputInCallers(
 	controlStore: ControlStore,
-	customActionControlId: string,
+	customActionControlId: CustomActionControlId,
 	fromId: string,
 	toId: string
 ): void {
@@ -64,7 +68,7 @@ export function renameCustomActionInputInCallers(
  */
 export function renameCustomActionOutputInCallers(
 	controlStore: ControlStore,
-	customActionControlId: string,
+	customActionControlId: CustomActionControlId,
 	fromId: string,
 	toId: string
 ): void {
@@ -97,9 +101,7 @@ export function createCustomActionTrpcRouter(
 	controlStore: ControlStore,
 	factory: ControlsFactory
 ) {
-	function getCustomAction(controlId: string): ControlCustomAction | undefined {
-		if (!validateCustomActionControlId(controlId)) return undefined
-
+	function getCustomAction(controlId: CustomActionControlId): ControlCustomAction | undefined {
 		const control = controlStore.controls.get(controlId)
 		return control instanceof ControlCustomAction ? control : undefined
 	}
@@ -110,11 +112,11 @@ export function createCustomActionTrpcRouter(
 		watch: publicProcedure.subscription<AsyncIterable<CustomActionsUpdate>>(async function* (opts) {
 			const changes = toIterable(changeEvents, 'customActionChange', opts.signal)
 
-			const customActions: Record<string, ClientCustomActionData> = {}
+			const customActions: Record<CustomActionControlId, ClientCustomActionData> = {}
 
-			for (const [controlId, control] of controlStore.controls.entries()) {
+			for (const control of controlStore.controls.values()) {
 				if (control instanceof ControlCustomAction) {
-					customActions[controlId] = control.toClientJSON()
+					customActions[control.controlId] = control.toClientJSON()
 				}
 			}
 
@@ -139,14 +141,14 @@ export function createCustomActionTrpcRouter(
 				}
 			}
 			const maxRank = Math.max(0, ...allCustomActions.map((control) => control.options.sortOrder))
-			newControl.optionsSetField('sortOrder', maxRank + 1, true)
+			newControl.optionsSetField({ key: 'sortOrder', value: maxRank + 1 }, true)
 
-			newControl.optionsSetField('name', input.name)
+			newControl.optionsSetField({ key: 'name', value: input.name })
 
 			return controlId
 		}),
 
-		delete: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
+		delete: publicProcedure.input(z.object({ controlId: zodControlIds['custom-action'] })).mutation(({ input }) => {
 			const control = getCustomAction(input.controlId)
 			if (!control) return false
 
@@ -156,7 +158,7 @@ export function createCustomActionTrpcRouter(
 			return true
 		}),
 
-		clone: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
+		clone: publicProcedure.input(z.object({ controlId: zodControlIds['custom-action'] })).mutation(({ input }) => {
 			const fromControl = getCustomAction(input.controlId)
 			if (!fromControl) return false
 
@@ -171,7 +173,7 @@ export function createCustomActionTrpcRouter(
 			return newControlId
 		}),
 
-		testRun: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
+		testRun: publicProcedure.input(z.object({ controlId: zodControlIds['custom-action'] })).mutation(({ input }) => {
 			const control = getCustomAction(input.controlId)
 			if (!control) return false
 
@@ -180,7 +182,7 @@ export function createCustomActionTrpcRouter(
 		}),
 
 		inputAdd: publicProcedure
-			.input(z.object({ controlId: z.string(), field: AuthorableInputFieldSchema }))
+			.input(z.object({ controlId: zodControlIds['custom-action'], field: AuthorableInputFieldSchema }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -189,7 +191,7 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		inputRemove: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string() }))
+			.input(z.object({ controlId: zodControlIds['custom-action'], inputId: z.string() }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -198,7 +200,9 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		inputMove: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string(), index: z.number().int().min(0) }))
+			.input(
+				z.object({ controlId: zodControlIds['custom-action'], inputId: z.string(), index: z.number().int().min(0) })
+			)
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -207,7 +211,9 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		inputUpdate: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string(), field: AuthorableInputFieldSchema }))
+			.input(
+				z.object({ controlId: zodControlIds['custom-action'], inputId: z.string(), field: AuthorableInputFieldSchema })
+			)
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -223,7 +229,7 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		outputAdd: publicProcedure
-			.input(z.object({ controlId: z.string(), output: CustomActionOutputSchema }))
+			.input(z.object({ controlId: zodControlIds['custom-action'], output: CustomActionOutputSchema }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -232,7 +238,7 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		outputRemove: publicProcedure
-			.input(z.object({ controlId: z.string(), outputId: z.string() }))
+			.input(z.object({ controlId: zodControlIds['custom-action'], outputId: z.string() }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -241,7 +247,9 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		outputMove: publicProcedure
-			.input(z.object({ controlId: z.string(), outputId: z.string(), index: z.number().int().min(0) }))
+			.input(
+				z.object({ controlId: zodControlIds['custom-action'], outputId: z.string(), index: z.number().int().min(0) })
+			)
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -250,7 +258,9 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		outputUpdate: publicProcedure
-			.input(z.object({ controlId: z.string(), outputId: z.string(), output: CustomActionOutputSchema }))
+			.input(
+				z.object({ controlId: zodControlIds['custom-action'], outputId: z.string(), output: CustomActionOutputSchema })
+			)
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -269,7 +279,7 @@ export function createCustomActionTrpcRouter(
 			.input(
 				z.object({
 					collectionId: z.string().nullable(),
-					controlId: z.string(),
+					controlId: zodControlIds['custom-action'],
 					dropIndex: z.number(),
 				})
 			)
@@ -283,7 +293,7 @@ export function createCustomActionTrpcRouter(
 
 				// update the collectionId of the custom action being moved if needed
 				if (thisCustomAction.options.collectionId !== (collectionId ?? undefined)) {
-					thisCustomAction.optionsSetField('collectionId', collectionId ?? undefined, true)
+					thisCustomAction.optionsSetField({ key: 'collectionId', value: collectionId ?? undefined }, true)
 				}
 
 				// find all the other custom actions with the matching collectionId
@@ -291,8 +301,8 @@ export function createCustomActionTrpcRouter(
 					.values()
 					.filter(
 						(control): control is ControlCustomAction =>
-							control.controlId !== controlId &&
 							control instanceof ControlCustomAction &&
+							control.controlId !== controlId &&
 							((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
 					)
 					.toArray()
@@ -310,7 +320,7 @@ export function createCustomActionTrpcRouter(
 				sortedCustomActions.forEach((customAction, index) => {
 					if (customAction.options.sortOrder === index) return // No change
 
-					customAction.optionsSetField('sortOrder', index, true)
+					customAction.optionsSetField({ key: 'sortOrder', value: index }, true)
 				})
 
 				return true

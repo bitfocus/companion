@@ -304,7 +304,11 @@ export class Registry {
 			LINK_BUILTIN_TRANSPORTS
 		)
 
-		const customActionInstances = new CustomActionInstanceManager(controlStore, this.#renderClock)
+		const customActionInstances = new CustomActionInstanceManager(
+			controlStore,
+			this.#renderClock,
+			this.variables.dependencies
+		)
 
 		const actionRunner = new ActionRunner(
 			this.instance,

@@ -207,6 +207,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 					{entity.type === EntityModelType.Action &&
 						!!service.setRawOutputTarget &&
+						!!controlId &&
 						entityDefinition?.actionOutputs?.map((output) => (
 							<StoreResultFields
 								key={output.id}

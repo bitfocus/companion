@@ -1,5 +1,9 @@
 import { describe, expect, test, vi } from 'vitest'
-import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateCustomActionControlId,
+	CreatePageControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { CustomActionRunFrame } from '../../lib/Controls/CustomActionRunFrame.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
@@ -69,7 +73,9 @@ describe('LocalVariablesController', () => {
 		test('the location "this" resolves to nothing when there is no calling control', () => {
 			const { controller } = createController()
 
-			expect(controller.localVariableFor('this', 'my_var', { controlId: null, location: undefined })).toBe(null)
+			expect(controller.localVariableFor('this', 'my_var', { controlId: null, location: undefined, frame: null })).toBe(
+				null
+			)
 		})
 
 		test('the location "this" resolves to the calling control', () => {
@@ -178,7 +184,10 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity])
 			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var', frame: null }, 'new value')
+			controller.setLocalVariable(
+				{ controlId: CreateBankControlId('control-a1'), name: 'my_var', frame: null },
+				'new value'
+			)
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
 		})
@@ -248,7 +257,11 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity])
 			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.writeLocalVariableStartupValue({ controlId: CreateBankControlId('control-a1'), name: 'my_var', frame: null })
+			controller.writeLocalVariableStartupValue({
+				controlId: CreateBankControlId('control-a1'),
+				name: 'my_var',
+				frame: null,
+			})
 
 			expect(control.entities.entitySetOption).toHaveBeenCalledWith('local-variables', entity.id, 'startup_value', {
 				isExpression: false,
@@ -263,7 +276,10 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity], false)
 			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var', frame: null }, 'new value')
+			controller.setLocalVariable(
+				{ controlId: CreateBankControlId('control-a1'), name: 'my_var', frame: null },
+				'new value'
+			)
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
 		})
@@ -283,7 +299,11 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity], false)
 			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.writeLocalVariableStartupValue({ controlId: CreateBankControlId('control-a1'), name: 'my_var', frame: null })
+			controller.writeLocalVariableStartupValue({
+				controlId: CreateBankControlId('control-a1'),
+				name: 'my_var',
+				frame: null,
+			})
 
 			expect(control.entities.entitySetOption).not.toHaveBeenCalled()
 		})
@@ -292,7 +312,7 @@ describe('LocalVariablesController', () => {
 	describe('inside a run of a custom action', () => {
 		function makeFrame(): CustomActionRunFrame {
 			return {
-				customActionControlId: 'custom-action:abc',
+				customActionControlId: CreateCustomActionControlId('abc'),
 				options: {},
 				localValues: new Map(),
 				getLocalVariableEntities: () => [],
@@ -305,7 +325,7 @@ describe('LocalVariablesController', () => {
 			const frame = makeFrame()
 
 			expect(controller.localVariableFor('this', 'my_var', { ...makeExtras(), frame })).toEqual({
-				controlId: 'custom-action:abc',
+				controlId: CreateCustomActionControlId('abc'),
 				name: 'my_var',
 				frame,
 			})
@@ -315,7 +335,7 @@ describe('LocalVariablesController', () => {
 			const { controller } = createController()
 
 			expect(controller.localVariableFor('2/1/2', 'my_var', { ...makeExtras(), frame: makeFrame() })).toEqual({
-				controlId: 'control-b1',
+				controlId: CreateBankControlId('control-b1'),
 				name: 'my_var',
 				frame: null,
 			})
@@ -324,10 +344,12 @@ describe('LocalVariablesController', () => {
 		test('setLocalVariable only sets the value for the run', () => {
 			const entity = makeVariableEntity('my_var')
 			const control = makeControl([entity])
-			const { controller } = createController({ 'custom-action:abc': control })
+			const { controller } = createController({ [CreateCustomActionControlId('abc')]: control })
 			const frame = makeFrame()
 
-			expect(controller.setLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame }, 'value')).toBe(true)
+			expect(
+				controller.setLocalVariable({ controlId: CreateCustomActionControlId('abc'), name: 'my_var', frame }, 'value')
+			).toBe(true)
 
 			expect(frame.localValues.get('my_var')).toBe('value')
 			expect(frame.localValueChanged).toHaveBeenCalledWith('my_var')
@@ -336,23 +358,25 @@ describe('LocalVariablesController', () => {
 
 		test('setLocalVariable rejects a variable which is not a user value', () => {
 			const control = makeControl([makeVariableEntity('my_var', { definitionId: 'something_else' })])
-			const { controller } = createController({ 'custom-action:abc': control })
+			const { controller } = createController({ [CreateCustomActionControlId('abc')]: control })
 			const frame = makeFrame()
 
-			expect(controller.setLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame }, 'value')).toBe(
-				false
-			)
+			expect(
+				controller.setLocalVariable({ controlId: CreateCustomActionControlId('abc'), name: 'my_var', frame }, 'value')
+			).toBe(false)
 			expect(frame.localValues.size).toBe(0)
 			expect(frame.localValueChanged).not.toHaveBeenCalled()
 		})
 
 		test('resetLocalVariable forgets the value of the run', () => {
 			const control = makeControl([makeVariableEntity('my_var', { startupValue: 'startup' })])
-			const { controller } = createController({ 'custom-action:abc': control })
+			const { controller } = createController({ [CreateCustomActionControlId('abc')]: control })
 			const frame = makeFrame()
 			frame.localValues.set('my_var', 'value')
 
-			expect(controller.resetLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame })).toBe(true)
+			expect(
+				controller.resetLocalVariable({ controlId: CreateCustomActionControlId('abc'), name: 'my_var', frame })
+			).toBe(true)
 
 			expect(frame.localValues.has('my_var')).toBe(false)
 			expect(frame.localValueChanged).toHaveBeenCalledWith('my_var')
@@ -361,11 +385,11 @@ describe('LocalVariablesController', () => {
 
 		test('writeLocalVariableStartupValue is rejected', () => {
 			const control = makeControl([makeVariableEntity('my_var', { feedbackValue: 'current' })])
-			const { controller } = createController({ 'custom-action:abc': control })
+			const { controller } = createController({ [CreateCustomActionControlId('abc')]: control })
 
 			expect(
 				controller.writeLocalVariableStartupValue({
-					controlId: 'custom-action:abc',
+					controlId: CreateCustomActionControlId('abc'),
 					name: 'my_var',
 					frame: makeFrame(),
 				})
@@ -378,11 +402,13 @@ describe('LocalVariablesController', () => {
 				makeVariableEntity('my_var', { feedbackValue: 'startup' }),
 				makeVariableEntity('other', { feedbackValue: 'other startup' }),
 			])
-			const { controller } = createController({ 'custom-action:abc': control })
+			const { controller } = createController({ [CreateCustomActionControlId('abc')]: control })
 			const frame = makeFrame()
 			frame.localValues.set('my_var', 'run value')
 
-			expect(controller.getLocalVariableContextFor({ controlId: 'custom-action:abc', name: 'my_var', frame })).toEqual({
+			expect(
+				controller.getLocalVariableContextFor({ controlId: CreateCustomActionControlId('abc'), name: 'my_var', frame })
+			).toEqual({
 				'this:current': 'run value',
 				'target:my_var': 'run value',
 				'target:other': 'other startup',

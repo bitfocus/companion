@@ -9,7 +9,11 @@ import {
 	SomeButtonModelSchema,
 	type NormalButtonRuntimeProps,
 } from './ButtonModel.js'
-import { CustomActionModelSchema, CustomActionOptionsSchema } from './CustomActionModel.js'
+import {
+	CustomActionModelSchema,
+	CustomActionOptionsSchema,
+	type CustomActionRuntimeProps,
+} from './CustomActionModel.js'
 import { ExpressionVariableModelSchema, ExpressionVariableOptionsSchema } from './ExpressionVariableModel.js'
 import type { LinkButtonRuntimeProps } from './Link.js'
 import { PageControlModelSchema } from './PageControlModel.js'
@@ -90,7 +94,7 @@ export type ControlRuntimePropsByType = AllControlTypes<{
 	'link-button': LinkButtonRuntimeProps
 	trigger: NoRuntimeProps
 	'expression-variable': NoRuntimeProps
-	'custom-action': NoRuntimeProps
+	'custom-action': CustomActionRuntimeProps
 	page: NoRuntimeProps
 }>
 

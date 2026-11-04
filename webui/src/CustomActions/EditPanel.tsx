@@ -1,11 +1,11 @@
 import { faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useId, useMemo } from 'react'
-import type { JsonValue } from 'type-fest'
-import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
+import type { CustomActionModel, CustomActionOptions } from '@companion-app/shared/Model/CustomActionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { toCompanionInputField, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
-import { StaticAlert } from '~/Components/Alert.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid.js'
@@ -19,6 +19,7 @@ import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
@@ -29,7 +30,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CustomActionOutputsEditor } from './OutputsEditor.js'
 
 interface EditCustomActionPanelProps {
-	controlId: string
+	controlId: CustomActionControlId
 }
 
 export function EditCustomActionPanel({ controlId }: EditCustomActionPanelProps): React.JSX.Element {
@@ -41,30 +42,25 @@ export function EditCustomActionPanel({ controlId }: EditCustomActionPanelProps)
 	return (
 		<div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
-			{controlConfig &&
-				(controlConfig.config.type === 'custom-action' ? (
-					<CustomActionPanelContent
-						config={controlConfig.config}
-						controlId={controlId}
-						testRunning={!!controlConfig.runtime.testRunning}
-					/>
-				) : (
-					<StaticAlert color="danger">
-						Invalid control type: {controlConfig.config.type}. Expected 'custom-action'.
-					</StaticAlert>
-				))}
+			{controlConfig && (
+				<CustomActionPanelContent
+					config={controlConfig.config}
+					controlId={controlId}
+					testRunning={controlConfig.runtime.testRunning}
+				/>
+			)}
 		</div>
 	)
 }
 
 interface CustomActionPanelContentProps {
 	config: CustomActionModel
-	controlId: string
+	controlId: CustomActionControlId
 	testRunning: boolean
 }
 
 function CustomActionPanelContent({ config, controlId, testRunning }: CustomActionPanelContentProps): React.ReactNode {
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'custom-action')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 	const [activeTab, setActiveTab] = useLocalStorage<'actions' | 'inputs' | 'outputs' | 'variables'>(
 		'customActionEditor.activeTab',
@@ -187,18 +183,18 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 	)
 }
 
-function CustomActionDetails({ config, controlId }: { config: CustomActionModel; controlId: string }) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+function CustomActionDetails({ config, controlId }: { config: CustomActionModel; controlId: CustomActionControlId }) {
+	const setOptionInner = useControlOptionsSetter(controlId, 'custom-action')
 	const nameId = useId()
 	const descriptionId = useId()
 
 	const setOption = useCallback(
-		(key: string, value: JsonValue | undefined) => {
-			setOptionsFieldMutation.mutateAsync({ controlId, key, value }).catch((e) => {
-				console.error(`Set ${key} failed: ${e}`)
+		<K extends keyof CustomActionOptions>(key: K, value: CustomActionOptions[K]) => {
+			setOptionInner(key, value).catch((e) => {
+				console.error(`Set ${key} failed: ${stringifyError(e)}`)
 			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOptionInner]
 	)
 
 	return (
@@ -230,7 +226,13 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 	)
 }
 
-function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; inputs: AuthorableInputField[] }) {
+function CustomActionInputsEditor({
+	controlId,
+	inputs,
+}: {
+	controlId: CustomActionControlId
+	inputs: AuthorableInputField[]
+}) {
 	const addMutation = useMutationExt(trpc.controls.customActions.inputAdd.mutationOptions())
 	const removeMutation = useMutationExt(trpc.controls.customActions.inputRemove.mutationOptions())
 	const moveMutation = useMutationExt(trpc.controls.customActions.inputMove.mutationOptions())
@@ -275,7 +277,15 @@ function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; in
 	)
 }
 
-function TestRunButton({ controlId, name, running }: { controlId: string; name: string; running: boolean }) {
+function TestRunButton({
+	controlId,
+	name,
+	running,
+}: {
+	controlId: CustomActionControlId
+	name: string
+	running: boolean
+}) {
 	const { notifier } = useContext(RootAppStoreContext)
 	const testRunMutation = useMutationExt(trpc.controls.customActions.testRun.mutationOptions())
 

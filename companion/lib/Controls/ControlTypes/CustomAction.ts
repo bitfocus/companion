@@ -1,13 +1,16 @@
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import {
+	CustomActionOptionsSchema,
 	CustomActionOutputSchema,
 	type ClientCustomActionData,
 	type CustomActionModel,
 	type CustomActionOptions,
 	type CustomActionOutput,
+	type CustomActionRuntimeProps,
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -19,6 +22,7 @@ import {
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
@@ -49,6 +53,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../IControlFragments.js'
+import { parseOptionsField } from '../OptionsField.js'
 
 /**
  * Run extras which are part of a run of a custom action
@@ -68,14 +73,14 @@ export type CustomActionRunExtras = RunActionExtras & { frame: CustomActionRunFr
  * this program.
  */
 export class ControlCustomAction
-	extends ControlBase<CustomActionModel>
+	extends ControlBase<CustomActionControlId, CustomActionModel, CustomActionRuntimeProps>
 	implements
 		ControlWithActions,
 		ControlWithoutEvents,
 		ControlWithEntities,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<CustomActionOptions>,
 		ControlWithoutPushed
 {
 	readonly type = 'custom-action'
@@ -88,6 +93,8 @@ export class ControlCustomAction
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+
+	readonly optionsSchema: z.ZodType<CustomActionOptions> = CustomActionOptionsSchema
 
 	/**
 	 * The defaults options for a custom action
@@ -145,7 +152,12 @@ export class ControlCustomAction
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a custom action, not creating at startup
 	 */
-	constructor(deps: ControlDependencies, controlId: string, storage: CustomActionModel | null, isImport: boolean) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: CustomActionControlId,
+		storage: CustomActionModel | null,
+		isImport: boolean
+	) {
 		super(deps, controlId, `Controls/ControlTypes/CustomAction/${controlId}`)
 
 		this.#testActionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, () =>
@@ -161,6 +173,7 @@ export class ControlCustomAction
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
+			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
 			getDefaultOptionsVariables: () => buildCustomActionOptionsVariables(this.#getDefaultOptions()),
@@ -246,6 +259,7 @@ export class ControlCustomAction
 			learnTimeout: undefined,
 			showInvert: false,
 			actionHasResult: false,
+			actionExecutionTimeout: undefined,
 			actionOutputs: this.#outputs.map((output) => ({ id: output.id, label: output.label })),
 			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
@@ -266,7 +280,7 @@ export class ControlCustomAction
 	parseCallInputs(
 		rawOptions: ExpressionableOptionsObject,
 		parser: VariablesAndExpressionParser,
-		callerControlId: string | null
+		callerControlId: SomeControlId | null
 	): { options: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> } {
 		const optionsWithDefaults: ExpressionableOptionsObject = { ...rawOptions }
 		for (const input of this.#inputs) {
@@ -372,7 +386,7 @@ export class ControlCustomAction
 	 */
 	createCopyParser(
 		values: CustomActionValues,
-		callerControlId: string,
+		callerControlId: SomeControlId,
 		localVariableEntities: ControlEntityInstance[],
 		overrideVariableValues: VariableValues | null,
 		options: ExpressionParserOptions
@@ -644,20 +658,21 @@ export class ControlCustomAction
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
-		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
+	optionsSetField(change: KeyValueChange<CustomActionOptions>, forceSet?: boolean): boolean {
+		if (!forceSet && (change.key === 'sortOrder' || change.key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
-		// @ts-expect-error mismatch in types
-		this.options[key] = value
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
+
+		this.options = options
 
 		this.commitChange()
 
 		return true
 	}
 
-	toRuntimeJSON(): Record<string, any> {
+	toRuntimeJSON(): CustomActionRuntimeProps {
 		return {
 			testRunning: this.#testActionRunner.hasRunningChains,
 		}

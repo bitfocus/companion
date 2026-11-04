@@ -1,3 +1,4 @@
+import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
@@ -11,7 +12,7 @@ export const MAX_CUSTOM_ACTION_DEPTH = 16
  */
 export interface CustomActionValues {
 	/** The control id of the custom action */
-	readonly customActionControlId: string
+	readonly customActionControlId: CustomActionControlId
 	/** The values of the inputs of the custom action, exposed to its entities as `$(options:<id>)` */
 	readonly options: VariableValues
 	/**

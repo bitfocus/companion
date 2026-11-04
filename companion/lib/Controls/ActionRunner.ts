@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
-import { CreateCustomActionControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type JsonValue } from '@companion-module/host'

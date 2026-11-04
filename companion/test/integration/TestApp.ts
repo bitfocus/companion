@@ -8,8 +8,13 @@ import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import type { BuildOptions } from 'esbuild'
 import { nanoid } from 'nanoid'
 import supertest from 'supertest'
-import { ParseControlId, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import {
+	ParseControlId,
+	type BankControlId,
+	type CustomActionControlId,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -105,14 +110,14 @@ export interface TestApp {
 	): string
 	/** Add an action from the internal connection to a custom action's action list */
 	addCustomActionAction(
-		controlId: string,
+		controlId: CustomActionControlId,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
 	/** Add an action which runs a custom action, to the first step's 'down' set of a button */
 	addCustomActionCall(
-		controlId: string,
-		customActionControlId: string,
+		controlId: SomeControlId,
+		customActionControlId: CustomActionControlId,
 		options: Record<string, ExpressionOrValue<any>>,
 		outputTargets: Record<string, RawStoreResult> | null
 	): string

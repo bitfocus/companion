@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
@@ -20,7 +21,7 @@ describe('custom actions', () => {
 	})
 
 	/** Create a custom action which writes its `text` input, with a suffix, to the custom variable `out` */
-	async function createWritingCustomAction(): Promise<string> {
+	async function createWritingCustomAction(): Promise<CustomActionControlId> {
 		const controlId = await app.trpc().controls.customActions.create({ name: 'Write' })
 		await app.trpc().controls.customActions.inputAdd({
 			controlId,

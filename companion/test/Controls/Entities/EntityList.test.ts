@@ -1187,7 +1187,11 @@ describe('duplicateEntity', () => {
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, CreateBankControlId('test01'))
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), CreateBankControlId('test01'), expect.any(Function))
+		expect(internalEntityUpdate).toHaveBeenCalledWith(
+			newEntity!.asEntityModel(),
+			CreateBankControlId('test01'),
+			expect.any(Function)
+		)
 	})
 
 	test('duplicate deep when root is full', () => {
@@ -2043,7 +2047,7 @@ function translateFeedbackValues(oldValues: Record<string, any>): Map<string, Ne
 
 describe('scope', () => {
 	test('an entity parses its options in the scope of its list', () => {
-		const { list, scope, internalEntityUpdate, newActionModel } = createList('test01')
+		const { list, scope, internalEntityUpdate, newActionModel } = createList(CreateBankControlId('test01'))
 		const parser = {} as any
 		vi.mocked(scope.createVariablesAndExpressionParser).mockReturnValue(parser)
 
@@ -2095,7 +2099,7 @@ describe('transient child groups', () => {
 	}
 
 	function setup(caller: ActionEntityModel = callerModel) {
-		const res = createList('test01')
+		const res = createList(CreateBankControlId('test01'))
 		res.list.loadStorage([caller], false, false)
 		const callerEntity = res.list.findById(caller.id)!
 		res.connectionEntityUpdate.mockClear()
@@ -2113,7 +2117,7 @@ describe('transient child groups', () => {
 		const { group, transientScope, connectionEntityUpdate, specialExpressionManager } = setup()
 
 		const action = group.findById(transientAction.id)!
-		expect(connectionEntityUpdate).toHaveBeenCalledWith(action, 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(action, CreateBankControlId('test01'))
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
 
 		const parser = {} as any
@@ -2153,7 +2157,10 @@ describe('transient child groups', () => {
 		const changed = list.updateFeedbackValues(
 			'conn01',
 			new Map<string, NewFeedbackValue>([
-				[transientFeedback.id, { entityId: transientFeedback.id, controlId: 'test01', value: 'abc' }],
+				[
+					transientFeedback.id,
+					{ entityId: transientFeedback.id, controlId: CreateBankControlId('test01'), value: 'abc' },
+				],
 			])
 		)
 
@@ -2176,7 +2183,10 @@ describe('transient child groups', () => {
 		)
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
-		expect(connectionEntityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: transientFeedback.id }), 'test01')
+		expect(connectionEntityDelete).toHaveBeenCalledWith(
+			expect.objectContaining({ id: transientFeedback.id }),
+			CreateBankControlId('test01')
+		)
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(callerEntity.getTransientChildGroup('instance')).toBe(newGroup)
 	})
