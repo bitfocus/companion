@@ -1,12 +1,18 @@
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
-import type { BankControlId, CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreatePageControlId,
+	type BankControlId,
+	type CustomActionControlId,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType, type EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
+import { MAX_CUSTOM_ACTION_DEPTH } from '../../lib/Controls/CustomActionRunFrame.js'
 import { CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import { createMockTrpcContext } from '../Util.js'
@@ -509,6 +515,206 @@ describe('long running custom actions', () => {
 		app.pressButton(location, true)
 		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(3))
 		expect(history).toEqual([1, 2, 3])
+	})
+
+	test('deleting a custom action stops the runs of it which are in progress', async () => {
+		app.createCustomVariable('progress', 0)
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Forever',
+			'true',
+			'$(local:count) + $(options:step)',
+			100
+		)
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = addCountingButton(location, customActionId, {}, 'progress')
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(2))
+
+		expect(await app.trpc().controls.customActions.delete({ controlId: customActionId })).toBe(true)
+		const stoppedAt = app.getCustomVariableValue('progress') as number
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		expect(app.getCustomVariableValue('progress')).toBeLessThanOrEqual(stoppedAt + 1)
+
+		// The call is left on the button, and does nothing
+		expect(findCallId(app, buttonId)).toBeTruthy()
+		app.registry.variables.custom.setValue('progress', 0)
+		app.pressButton(location, false)
+		app.pressButton(location, true)
+		await new Promise((resolve) => setTimeout(resolve, 300))
+		expect(app.getCustomVariableValue('progress')).toBe(0)
+	})
+
+	test('the value a caller gives for an input is dropped when the input is removed', async () => {
+		const { controlId: customActionId } = await createCountingCustomAction('Count', 'false', '0', 1)
+		const buttonId = addCountingButton({ pageNumber: 1, row: 1, column: 1 }, customActionId, { step: exprVal(7) }, 'x')
+		app.createCustomVariable('x', 0)
+		const callId = findCallId(app, buttonId)
+		expect(getEntity(app, buttonId, callId).rawOptions).toEqual({ step: exprVal(7) })
+
+		await app.trpc().controls.customActions.inputRemove({ controlId: customActionId, inputId: 'step' })
+
+		// Otherwise a new input of the same id would pick up a value given for the old one
+		expect(getEntity(app, buttonId, callId).rawOptions).toEqual({})
+	})
+
+	test('the local variable actions reset a variable of the run, but do not write the startup value of the custom action', async () => {
+		app.createCustomVariable('set', '')
+		app.createCustomVariable('reset', '')
+		app.createCustomVariable('synced', '')
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Reset' })
+		const storedId = app.addLocalVariable(customActionId, 'v', 'user_value', { startup_value: exprVal(5) })
+
+		const groupId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		const inOrder = { parentId: groupId, childGroup: 'default' }
+		const local = { location: exprVal('this'), name: exprVal('v') }
+		const record = (variable: string) =>
+			app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+				name: exprVal(variable),
+				create: exprVal(false),
+				value: exprExpr('$(local:v)'),
+			})
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', { ...local, value: exprExpr('10') })
+		record('set')
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_reset_to_default', local)
+		record('reset')
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', { ...local, value: exprExpr('20') })
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_sync_to_default', local)
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_reset_to_default', local)
+		record('synced')
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(location), customActionId, {}, null)
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('synced')).not.toBe(''))
+
+		expect(app.getCustomVariableValue('set')).toBe(10)
+		expect(app.getCustomVariableValue('reset')).toBe(5)
+		// Writing the startup value is refused within a run, so resetting again gives the original startup value
+		expect(app.getCustomVariableValue('synced')).toBe(5)
+
+		const stored = getEntity(app, customActionId, storedId)
+		expect(stored.rawOptions.startup_value).toEqual(exprVal(5))
+		expect(stored.feedbackValue).toBe(5)
+	})
+
+	test('an output target can be an expression, resolved in the context of the caller', async () => {
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Count',
+			'$(local:count) < 2',
+			'$(local:count) + $(options:step)',
+			10
+		)
+		app.createCustomVariable('out_3', 0)
+		app.createCustomVariable('out_4', 0)
+
+		for (const column of [3, 4]) {
+			const location = { pageNumber: 1, row: 1, column }
+			app.addCustomActionCall(
+				app.createButton(location),
+				customActionId,
+				{ step: exprVal(column) },
+				{
+					count: {
+						type: 'custom-variable',
+						variableName: exprExpr("concat('out_', $(this:column))"),
+						createIfNotExists: false,
+					},
+				}
+			)
+			app.pressButton(location, true)
+		}
+
+		await vi.waitFor(() => {
+			expect(app.getCustomVariableValue('out_3')).toBe(3)
+			expect(app.getCustomVariableValue('out_4')).toBe(4)
+		})
+	})
+
+	test('custom actions nested too deeply stop at the limit when run, and say so', async () => {
+		// A chain of custom actions each calling the next, one longer than the limit
+		const depth = MAX_CUSTOM_ACTION_DEPTH + 1
+		const ids: CustomActionControlId[] = []
+		for (let i = 0; i < depth; i++) {
+			app.createCustomVariable(`ran_${i}`, false)
+			ids.push(await app.trpc().controls.customActions.create({ name: `Level ${i}` }))
+		}
+		for (let i = depth - 1; i >= 0; i--) {
+			app.addCustomActionAction(ids[i], null, 'custom_variable_set_value', {
+				name: exprVal(`ran_${i}`),
+				create: exprVal(false),
+				value: exprExpr('true'),
+			})
+			if (i + 1 < depth) app.addCustomActionCall(ids[i], ids[i + 1], {}, null)
+		}
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(location), ids[0], {}, null)
+		app.pressButton(location, true)
+
+		await vi.waitFor(() => expect(app.getCustomVariableValue(`ran_${MAX_CUSTOM_ACTION_DEPTH - 1}`)).toBe(true))
+		await new Promise((resolve) => setTimeout(resolve, 200))
+		expect(app.getCustomVariableValue(`ran_${MAX_CUSTOM_ACTION_DEPTH}`)).toBe(false)
+
+		const first = app.registry.controls.getControl(ids[0])
+		if (!(first instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+		await vi.waitFor(() => expect(first.toClientJSON().nestedTooDeep).toBe(true))
+	})
+
+	test('moving the caller part way through a run is seen as it would be by the actions of a button', async () => {
+		await app.trpc().pages.insert({ asPageNumber: 2, pageNames: ['Second'] })
+		for (const pageNumber of [1, 2]) {
+			app.addLocalVariable(CreatePageControlId(app.registry.page.store.getPageId(pageNumber)!), 'name', 'user_value', {
+				startup_value: exprVal(`page ${pageNumber}`),
+			})
+		}
+		app.createCustomVariable('fromButton', '')
+		app.createCustomVariable('fromCustomAction', '')
+		const where = "concat($(this:page), '/', $(this:row), '/', $(this:column), ' ', $(page:name))"
+
+		// The custom action waits, then reports where it is
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Where' })
+		const groupId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		const inOrder = { parentId: groupId, childGroup: 'default' }
+		app.addCustomActionAction(customActionId, inOrder, 'wait', { time: exprExpr('300') })
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('fromCustomAction'),
+			create: exprVal(false),
+			value: exprExpr(where),
+		})
+
+		// The button does the same itself, and calls the custom action
+		const from = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(from)
+		const buttonGroupId = app.addInternalAction(buttonId, 'action_group', { execution_mode: exprVal('sequential') })
+		const buttonInOrder = { parentId: buttonGroupId, childGroup: 'default' }
+		app.addInternalChildAction(buttonId, buttonInOrder, 'wait', { time: exprExpr('300') })
+		app.addInternalChildAction(buttonId, buttonInOrder, 'custom_variable_set_value', {
+			name: exprVal('fromButton'),
+			create: exprVal(false),
+			value: exprExpr(where),
+		})
+		app.addCustomActionCall(buttonId, customActionId, {}, null)
+
+		app.pressButton(from, true)
+		await new Promise((resolve) => setTimeout(resolve, 50))
+		expect(
+			await app.trpc().controls.gridBatchTransfer({
+				operation: 'move',
+				pairs: [{ fromLocation: from, toLocation: { pageNumber: 2, row: 2, column: 2 } }],
+			})
+		).toBe(true)
+
+		await vi.waitFor(() => {
+			expect(app.getCustomVariableValue('fromButton')).not.toBe('')
+			expect(app.getCustomVariableValue('fromCustomAction')).not.toBe('')
+		})
+		expect(app.getCustomVariableValue('fromCustomAction')).toBe(app.getCustomVariableValue('fromButton'))
 	})
 })
 
