@@ -136,6 +136,11 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 
 	destroy(): void {
 		this.#unsubscribeRenderClock()
+
+		for (const feedback of this.#feedbacks.values()) {
+			feedback.variables?.dispose()
+		}
+		this.#feedbacks.clear()
 	}
 
 	init(

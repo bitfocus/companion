@@ -282,6 +282,16 @@ describe('onVariablesChanged', () => {
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
 	})
 
+	test('stops tracking the variables of every feedback when destroyed', () => {
+		const { controller, controlStore, variableDependencies } = setup()
+
+		controller.destroy()
+		expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
+
+		variableDependencies.dispatch(new Set(['custom:g']), null)
+		expect(controlStore.updateFeedbackValues).not.toHaveBeenCalled()
+	})
+
 	test('stops tracking the variables of deleted and replaced feedbacks', () => {
 		const { controller, variableDependencies } = setup()
 		expect(variableDependencies.stats().dependencies).toBe(2)
