@@ -15,6 +15,31 @@ import { createTestApp, type TestApp } from './TestApp.js'
 // Booting the application takes a few seconds, so the default timeouts are too tight
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
 
+/** Find an entity on a control */
+function getEntity(app: TestApp, controlId: SomeControlId, entityId: string): ControlEntityInstance {
+	const control = app.registry.controls.getControl(controlId)
+	const entity = control?.supportsEntities ? control.entities.findEntityById(entityId) : undefined
+	if (!entity) throw new Error(`Entity "${entityId}" does not exist on "${controlId}"`)
+	return entity
+}
+
+/** The id of the only action which calls a custom action on a control. Entity ids are not kept across a restart */
+function findCallId(app: TestApp, controlId: SomeControlId): string {
+	const control = app.registry.controls.getControl(controlId)
+	const calls = control?.supportsEntities
+		? control.entities.getAllEntities().filter((entity) => entity.connectionId === CUSTOM_ACTIONS_CONNECTION_ID)
+		: []
+	if (calls.length !== 1) throw new Error(`Expected one call on "${controlId}", found ${calls.length}`)
+	return calls[0].id
+}
+
+/** The value of a local variable in the copy of a custom action held by an action which calls it */
+function getCopyValue(app: TestApp, controlId: SomeControlId, callId: string, variableName: string): unknown {
+	const copyLocals = getEntity(app, controlId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+	const local = copyLocals?.getDirectEntities().find((entity) => entity.localVariableName === `local:${variableName}`)
+	return local ? local.feedbackValue : 'no copy'
+}
+
 describe('custom actions', () => {
 	let app: TestApp
 	beforeEach(async () => {
@@ -496,31 +521,6 @@ describe('custom action scope and copies', () => {
 		await app.close()
 	})
 
-	/** Find an entity on a control */
-	function getEntity(controlId: SomeControlId, entityId: string): ControlEntityInstance {
-		const control = app.registry.controls.getControl(controlId)
-		const entity = control?.supportsEntities ? control.entities.findEntityById(entityId) : undefined
-		if (!entity) throw new Error(`Entity "${entityId}" does not exist on "${controlId}"`)
-		return entity
-	}
-
-	/** The id of the only action which calls a custom action on a control. Entity ids are not kept across a restart */
-	function findCallId(controlId: SomeControlId): string {
-		const control = app.registry.controls.getControl(controlId)
-		const calls = control?.supportsEntities
-			? control.entities.getAllEntities().filter((entity) => entity.connectionId === CUSTOM_ACTIONS_CONNECTION_ID)
-			: []
-		if (calls.length !== 1) throw new Error(`Expected one call on "${controlId}", found ${calls.length}`)
-		return calls[0].id
-	}
-
-	/** The value of a local variable in the copy of a custom action held by an action which calls it */
-	function getCopyValue(controlId: SomeControlId, callId: string, variableName: string): unknown {
-		const copyLocals = getEntity(controlId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
-		const local = copyLocals?.getDirectEntities().find((entity) => entity.localVariableName === `local:${variableName}`)
-		return local ? local.feedbackValue : 'no copy'
-	}
-
 	/** The id of a local variable of a custom action itself */
 	function getStoredLocalVariableId(customActionId: CustomActionControlId, variableName: string): string {
 		const control = app.registry.controls.getControl(customActionId)
@@ -648,15 +648,15 @@ describe('custom action scope and copies', () => {
 		const betaCall = app.addCustomActionCall(betaId, customActionId, { n: exprVal(5) }, null)
 
 		await vi.waitFor(() => {
-			expect(getCopyValue(alphaId, alphaCall, 'double')).toBe(2)
-			expect(getCopyValue(betaId, betaCall, 'double')).toBe(10)
+			expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(2)
+			expect(getCopyValue(app, betaId, betaCall, 'double')).toBe(10)
 		})
-		const betaCopy = getEntity(betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+		const betaCopy = getEntity(app, betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
 
 		// A variable used by one caller's input only changes that caller's copy
 		app.registry.variables.custom.setValue('a', 3)
-		await vi.waitFor(() => expect(getCopyValue(alphaId, alphaCall, 'double')).toBe(6))
-		expect(getCopyValue(betaId, betaCall, 'double')).toBe(10)
+		await vi.waitFor(() => expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(6))
+		expect(getCopyValue(app, betaId, betaCall, 'double')).toBe(10)
 
 		// As does changing the options of one call
 		await app.trpc().controls.entities.setOption({
@@ -666,11 +666,13 @@ describe('custom action scope and copies', () => {
 			key: 'n',
 			value: exprVal(7),
 		})
-		await vi.waitFor(() => expect(getCopyValue(betaId, betaCall, 'double')).toBe(14))
-		expect(getCopyValue(alphaId, alphaCall, 'double')).toBe(6)
+		await vi.waitFor(() => expect(getCopyValue(app, betaId, betaCall, 'double')).toBe(14))
+		expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(6)
 
 		// The copy was updated in place, rather than rebuilt
-		expect(getEntity(betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)).toBe(betaCopy)
+		expect(getEntity(app, betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)).toBe(
+			betaCopy
+		)
 	})
 
 	test('editing a custom action updates the copies held by its callers, and their runs', async () => {
@@ -680,7 +682,7 @@ describe('custom action scope and copies', () => {
 		const location = { pageNumber: 1, row: 1, column: 1 }
 		const buttonId = app.createButton(location)
 		const callId = app.addCustomActionCall(buttonId, customActionId, { n: exprVal(4) }, null)
-		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(8))
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(8))
 
 		// Change what the local variable computes, and add an action
 		const localId = getStoredLocalVariableId(customActionId, 'double')
@@ -697,7 +699,7 @@ describe('custom action scope and copies', () => {
 			value: exprExpr('$(local:double)'),
 		})
 
-		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(12))
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(12))
 
 		app.pressButton(location, true)
 		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe(12))
@@ -722,15 +724,15 @@ describe('custom action scope and copies', () => {
 		await app.close()
 		app = await createTestApp({ configDir, extraModulePath: null })
 
-		const restoredCallId = findCallId(buttonId)
-		const call = getEntity(buttonId, restoredCallId)
+		const restoredCallId = findCallId(app, buttonId)
+		const call = getEntity(app, buttonId, restoredCallId)
 		expect(call.rawOptions).toEqual({ n: exprVal(21) })
 		expect(call.rawOutputTargets).toEqual({
 			double: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
 		})
 
 		// The copy is rebuilt from the restored custom action and inputs
-		await vi.waitFor(() => expect(getCopyValue(buttonId, restoredCallId, 'double')).toBe(42))
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, restoredCallId, 'double')).toBe(42))
 
 		app.pressButton(location, true)
 		await vi.waitFor(() => expect(app.getCustomVariableValue('res')).toBe(42))
@@ -741,7 +743,7 @@ describe('custom action scope and copies', () => {
 
 		const buttonId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
 		const callId = app.addCustomActionCall(buttonId, customActionId, { n: exprVal(6) }, null)
-		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(12))
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(12))
 
 		await app.trpc().controls.customActions.inputUpdate({
 			controlId: customActionId,
@@ -758,16 +760,16 @@ describe('custom action scope and copies', () => {
 			value: exprVal('$(options:count) * 2'),
 		})
 
-		expect(getEntity(buttonId, callId).rawOptions).toEqual({ count: exprVal(6) })
-		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(12))
+		expect(getEntity(app, buttonId, callId).rawOptions).toEqual({ count: exprVal(6) })
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(12))
 
 		const { configDir } = app
 		await app.close()
 		app = await createTestApp({ configDir, extraModulePath: null })
 
-		const restoredCallId = findCallId(buttonId)
-		expect(getEntity(buttonId, restoredCallId).rawOptions).toEqual({ count: exprVal(6) })
-		await vi.waitFor(() => expect(getCopyValue(buttonId, restoredCallId, 'double')).toBe(12))
+		const restoredCallId = findCallId(app, buttonId)
+		expect(getEntity(app, buttonId, restoredCallId).rawOptions).toEqual({ count: exprVal(6) })
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, restoredCallId, 'double')).toBe(12))
 	})
 
 	/** The id of the first step of a button */
@@ -790,8 +792,10 @@ describe('custom actions using a connection', () => {
 		await app.close()
 	})
 
-	test('a connection feedback in a custom action sees the inputs of each caller', async () => {
-		const label = 'tester'
+	const label = 'tester'
+
+	/** Add a connection of the test module, once its definitions are known */
+	async function addConnection(): Promise<string> {
 		const connectionId = await app
 			.trpc()
 			.instances.connections.add({ module: { type: 'test-module-2-1-3' }, label, versionId: 'dev' })
@@ -801,8 +805,14 @@ describe('custom actions using a connection', () => {
 				app.registry.instance.definitions.getEntityDefinition(EntityModelType.Feedback, connectionId, 'last_value_is')
 			).toBeTruthy()
 		}, 30_000)
+		return connectionId
+	}
 
-		// A custom action which reports whether the last value of the connection is its input
+	/**
+	 * Create a custom action whose local variable `matches` is whether the last value of the connection is its input
+	 * `want`, and which writes that to the custom variable `out`
+	 */
+	async function createCheckingCustomAction(connectionId: string): Promise<CustomActionControlId> {
 		app.createCustomVariable('out', '')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Check' })
 		await app.trpc().controls.customActions.inputAdd({
@@ -836,19 +846,21 @@ describe('custom actions using a connection', () => {
 			create: exprVal(false),
 			value: exprExpr('$(local:matches)'),
 		})
+		return customActionId
+	}
 
-		// Two buttons, which call it with different inputs
-		const alpha = { pageNumber: 1, row: 1, column: 1 }
-		app.addCustomActionCall(app.createButton(alpha), customActionId, { want: exprVal('alpha') }, null)
-		const beta = { pageNumber: 1, row: 1, column: 2 }
-		app.addCustomActionCall(app.createButton(beta), customActionId, { want: exprVal('beta') }, null)
+	/** The id of the first step of a button */
+	function getStepId(buttonId: SomeControlId): string {
+		const control = app.registry.controls.getControl(buttonId)
+		if (!control?.supportsEntities) throw new Error('Expected a button')
+		return (control.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+	}
 
-		// A button which sets the last value of the connection
+	/** Add a button which sets the last value of the connection, returning a function to set it with */
+	async function addSetter(connectionId: string): Promise<(value: string) => Promise<void>> {
 		const setter = { pageNumber: 1, row: 2, column: 1 }
 		const setterId = app.createButton(setter)
-		const setterControl = app.registry.controls.getControl(setterId)
-		if (!setterControl?.supportsEntities || !setterControl.entities.isEditable) throw new Error('Expected a button')
-		const stepId = (setterControl.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+		const stepId = getStepId(setterId)
 		const setVarId = await app.trpc().controls.entities.add({
 			controlId: setterId,
 			entityLocation: { stepId, setId: 'down' },
@@ -859,7 +871,7 @@ describe('custom actions using a connection', () => {
 		})
 		if (!setVarId) throw new Error('Failed to add the action')
 
-		const setLastValue = async (value: string) => {
+		return async (value: string) => {
 			await app.trpc().controls.entities.setOption({
 				controlId: setterId,
 				entityLocation: { stepId, setId: 'down' },
@@ -873,6 +885,19 @@ describe('custom actions using a connection', () => {
 				expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe(value)
 			}, 10_000)
 		}
+	}
+
+	test('a connection feedback in a custom action sees the inputs of each caller', async () => {
+		const connectionId = await addConnection()
+		const customActionId = await createCheckingCustomAction(connectionId)
+
+		// Two buttons, which call it with different inputs
+		const alpha = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(alpha), customActionId, { want: exprVal('alpha') }, null)
+		const beta = { pageNumber: 1, row: 1, column: 2 }
+		app.addCustomActionCall(app.createButton(beta), customActionId, { want: exprVal('beta') }, null)
+
+		const setLastValue = await addSetter(connectionId)
 
 		/** Press a button until the custom action reports the expected value, as the connection updates asynchronously */
 		const expectPressGives = async (location: typeof alpha, expected: boolean) => {
@@ -891,5 +916,129 @@ describe('custom actions using a connection', () => {
 		await setLastValue('beta')
 		await expectPressGives(alpha, false)
 		await expectPressGives(beta, true)
+	})
+
+	test('a copy sharing a subscription with another has its value, and one with other inputs has its own', async () => {
+		const connectionId = await addConnection()
+		const customActionId = await createCheckingCustomAction(connectionId)
+		const setLastValue = await addSetter(connectionId)
+
+		const buttonId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const firstCall = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('alpha') }, null)
+		await setLastValue('alpha')
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, firstCall, 'matches')).toBe(true), 10_000)
+
+		// Another call on the same button with the same input shares the subscription of the first, so has its value
+		// though the connection doesn't report it again
+		const secondCall = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('alpha') }, null)
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, secondCall, 'matches')).toBe(true))
+
+		// One with a different input has its own subscription, and value
+		const otherCall = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('beta') }, null)
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, otherCall, 'matches')).toBe(false), 10_000)
+		expect(getCopyValue(app, buttonId, firstCall, 'matches')).toBe(true)
+	})
+
+	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
+		const connectionId = await addConnection()
+		const customActionId = await createCheckingCustomAction(connectionId)
+		const setLastValue = await addSetter(connectionId)
+
+		const buttonId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const callId = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('alpha') }, null)
+		await setLastValue('alpha')
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
+		const copyBefore = getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+
+		// Editing the custom action rebuilds the copy, with the same subscription as before
+		app.addCustomActionAction(customActionId, null, 'wait', { time: exprExpr('1') })
+		await vi.waitFor(() =>
+			expect(
+				getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+			).not.toBe(copyBefore)
+		)
+
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true))
+	})
+
+	test('changing the input of one caller re-subscribes only its own copy', async () => {
+		const connectionId = await addConnection()
+		const customActionId = await createCheckingCustomAction(connectionId)
+		const setLastValue = await addSetter(connectionId)
+
+		const alphaId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const alphaCall = app.addCustomActionCall(alphaId, customActionId, { want: exprVal('alpha') }, null)
+		const betaId = app.createButton({ pageNumber: 1, row: 1, column: 2 })
+		const betaCall = app.addCustomActionCall(betaId, customActionId, { want: exprVal('beta') }, null)
+		await setLastValue('alpha')
+		await vi.waitFor(() => {
+			expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(true)
+			expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(false)
+		}, 10_000)
+
+		// Building the custom action queued a rebuild of its copies, which must be done before watching what is sent
+		await new Promise((resolve) => setTimeout(resolve, 200))
+		const alphaCopy = getEntity(app, alphaId, alphaCall).getTransientChildGroup(
+			CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
+		)
+
+		const updated = vi.spyOn(app.registry.instance.processManager, 'connectionEntityUpdate')
+		await app.trpc().controls.entities.setOption({
+			controlId: betaId,
+			entityLocation: { stepId: getStepId(betaId), setId: 'down' },
+			entityId: betaCall,
+			key: 'want',
+			value: exprVal('alpha'),
+		})
+
+		await vi.waitFor(() => expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(true), 10_000)
+		expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(true)
+		expect(getEntity(app, alphaId, alphaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)).toBe(
+			alphaCopy
+		)
+
+		// Only the entities of the copy whose inputs changed were sent to the connection
+		const updatedIds = updated.mock.calls.map(([entity]) => entity.id)
+		expect(updatedIds.length).toBeGreaterThan(0)
+		expect(updatedIds.every((id) => id.startsWith(`${betaCall}/`))).toBe(true)
+	})
+
+	test('a connection action in a custom action runs with the inputs of each caller', async () => {
+		const connectionId = await addConnection()
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Send' })
+		await app.trpc().controls.customActions.inputAdd({
+			controlId: customActionId,
+			field: { type: 'textinput', id: 'text', label: 'Text', default: '' },
+		})
+		const sendId = await app.trpc().controls.entities.add({
+			controlId: customActionId,
+			entityLocation: 'custom_action_actions',
+			ownerId: null,
+			connectionId,
+			entityType: EntityModelType.Action,
+			entityDefinition: 'set_var',
+		})
+		if (!sendId) throw new Error('Failed to add the action')
+		await app.trpc().controls.entities.setOption({
+			controlId: customActionId,
+			entityLocation: 'custom_action_actions',
+			entityId: sendId,
+			key: 'value',
+			value: exprExpr("concat('from ', $(options:text))"),
+		})
+
+		const first = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(first), customActionId, { text: exprVal('first') }, null)
+		const second = { pageNumber: 1, row: 1, column: 2 }
+		app.addCustomActionCall(app.createButton(second), customActionId, { text: exprVal('second') }, null)
+
+		const lastValue = () => app.registry.variables.values.getVariableValue(label, 'last_value')
+		app.pressButton(first, true)
+		await vi.waitFor(() => expect(lastValue()).toBe('from first'), 10_000)
+		app.pressButton(second, true)
+		await vi.waitFor(() => expect(lastValue()).toBe('from second'), 10_000)
+		app.pressButton(first, false)
+		app.pressButton(first, true)
+		await vi.waitFor(() => expect(lastValue()).toBe('from first'), 10_000)
 	})
 })
