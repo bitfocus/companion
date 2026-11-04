@@ -6,6 +6,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LayeredButtonDrawer } from '../../lib/Controls/ControlTypes/Button/LayeredButtonDrawer.js'
 import { ReferencedLocationsIndex } from '../../lib/Controls/ReferencedLocationsIndex.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 // Control the (heavy) element conversion so we can shape its result and open/close the async draw window.
 const convertMock = vi.hoisted(() => vi.fn())
@@ -77,6 +78,7 @@ describe('LayeredButtonDrawer', () => {
 		events = new EventEmitter()
 		deps = {
 			events,
+			variableDependencies: new VariableDependencyRegistry(),
 			pageStore: { getLocationOfControlId: vi.fn(() => currentLocation) },
 			variableValues: { createVariablesAndExpressionParser: vi.fn(() => ({ marker: 'parser' })) },
 			getPageVariableEntities: vi.fn(() => ({ marker: 'page-entities' })),
@@ -257,9 +259,9 @@ describe('LayeredButtonDrawer', () => {
 		})
 	})
 
-	describe('onVariablesChanged', () => {
+	describe('variable changes', () => {
 		it('does nothing before any draw has happened', async () => {
-			drawer.onVariablesChanged(new Set(['local:x']))
+			deps.variableDependencies.dispatch(new Set(['local:x']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
@@ -271,7 +273,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
 			const changed = new Set(['local:preset_name', 'internal:other'])
-			drawer.onVariablesChanged(changed)
+			deps.variableDependencies.dispatch(changed, new Set([CONTROL_ID]))
 
 			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
@@ -282,7 +284,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['internal:unrelated']))
+			deps.variableDependencies.dispatch(new Set(['internal:unrelated']), new Set([CONTROL_ID]))
 
 			expect(queueSpy).not.toHaveBeenCalled()
 			await sleep(30)
@@ -293,7 +295,7 @@ describe('LayeredButtonDrawer', () => {
 			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set() }))
 			await drawer.getDrawStyle()
 
-			drawer.onVariablesChanged(new Set(['local:anything']))
+			deps.variableDependencies.dispatch(new Set(['local:anything']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
@@ -308,7 +310,7 @@ describe('LayeredButtonDrawer', () => {
 
 			// The variable it depends on changes before #lastDrawVariables is committed. Previously this was
 			// tested against a null/stale #lastDrawVariables and silently dropped.
-			drawer.onVariablesChanged(new Set(['local:preset_name']))
+			deps.variableDependencies.dispatch(new Set(['local:preset_name']), new Set([CONTROL_ID]))
 
 			pending.resolve(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawPromise
@@ -321,7 +323,7 @@ describe('LayeredButtonDrawer', () => {
 			convertMock.mockReturnValueOnce(pending.promise)
 
 			const drawPromise = drawer.getDrawStyle()
-			drawer.onVariablesChanged(new Set(['internal:unrelated']))
+			deps.variableDependencies.dispatch(new Set(['internal:unrelated']), new Set([CONTROL_ID]))
 			pending.resolve(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawPromise
 
@@ -340,7 +342,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['connection:cam']))
+			deps.variableDependencies.dispatch(new Set(['connection:cam']), new Set([CONTROL_ID]))
 
 			// The stale cache entry must be evicted...
 			expect(queueSpy).toHaveBeenCalledWith(new Set(['connection:cam']))
@@ -360,7 +362,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
 			const changed = new Set(['local:this_step', 'connection:cam'])
-			drawer.onVariablesChanged(changed)
+			deps.variableDependencies.dispatch(changed, new Set([CONTROL_ID]))
 
 			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
@@ -372,7 +374,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const drawPromise = drawer.getDrawStyle()
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['connection:cam']))
+			deps.variableDependencies.dispatch(new Set(['connection:cam']), new Set([CONTROL_ID]))
 			pending.resolve(conversionResult({ hiddenVariables: new Set(['connection:cam']) }))
 			await drawPromise
 
@@ -392,10 +394,86 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			invalidateSpy.mockClear()
-			drawer.onVariablesChanged(new Set(['local:preset_name']))
+			deps.variableDependencies.dispatch(new Set(['local:preset_name']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('variable dependency registration', () => {
+		const registry = (): VariableDependencyRegistry => deps.variableDependencies
+
+		it('is told about a change to a drawn variable, and not about others', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['conn:a']) }))
+			await drawer.getDrawStyle()
+
+			registry().dispatch(new Set(['conn:b']), null)
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+
+			registry().dispatch(new Set(['conn:a']), null)
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+		})
+
+		it('only hears about its own local variables', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['local:x']) }))
+			await drawer.getDrawStyle()
+
+			registry().dispatch(new Set(['local:x']), new Set([CreateBankControlId('other')]))
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+
+			registry().dispatch(new Set(['local:x']), new Set([CONTROL_ID]))
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+		})
+
+		it('evicts a hidden variable change without redrawing', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ hiddenVariables: new Set(['conn:hidden']) }))
+			await drawer.getDrawStyle()
+
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
+			registry().dispatch(new Set(['conn:hidden']), null)
+
+			expect(queueSpy).toHaveBeenCalled()
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+
+		it('catches a change mid-draw to a variable the previous draw did not read', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['conn:old']) }))
+			await drawer.getDrawStyle()
+
+			const pending = deferred<ReturnType<typeof conversionResult>>()
+			convertMock.mockReturnValueOnce(pending.promise)
+			const drawPromise = drawer.getDrawStyle()
+
+			// Not registered yet, so only seen because the in-flight draw is armed
+			registry().dispatch(new Set(['conn:new']), null)
+
+			pending.resolve(conversionResult({ usedVariables: new Set(['conn:new']) }))
+			await drawPromise
+
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+			expect(registry().stats().armed).toBe(0)
+		})
+
+		it('stops hearing about every change once the draw completes, even if it failed', async () => {
+			convertMock.mockRejectedValueOnce(new Error('boom'))
+			await expect(drawer.getDrawStyle()).rejects.toThrow('boom')
+
+			expect(registry().stats().armed).toBe(0)
+		})
+
+		it('stops tracking when disposed', async () => {
+			convertMock.mockResolvedValueOnce(
+				conversionResult({ usedVariables: new Set(['conn:a']), hiddenVariables: new Set(['conn:b']) })
+			)
+			await drawer.getDrawStyle()
+			expect(registry().stats().keys).toBe(2)
+
+			drawer.dispose()
+			expect(registry().stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 		})
 	})
 

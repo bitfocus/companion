@@ -11,6 +11,7 @@ import {
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { RenderClock } from '../../lib/Controls/RenderClock.js'
 import { InternalController } from '../../lib/Internal/Controller.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
 
 /**
@@ -22,6 +23,8 @@ function createController() {
 	const pageStore = mockDeep<any>()
 	const instanceController = mockDeep<any>()
 	const variablesController = mockDeep<any>()
+	const variableDependencies = new VariableDependencyRegistry()
+	variablesController.dependencies = variableDependencies
 	const surfaceController = mockDeep<any>()
 	const renderClock = mock<RenderClock>({ subscribe: vi.fn(() => () => {}) })
 
@@ -52,7 +55,7 @@ function createController() {
 		vi.fn() // requestExit
 	)
 
-	return { controller, controlStore, pageStore, instanceController }
+	return { controller, controlStore, pageStore, instanceController, variableDependencies }
 }
 
 /** A deep mock returned as `any`, to keep the (irrelevant during these tests) init dependencies simple. */
@@ -193,7 +196,7 @@ describe('onVariablesChanged', () => {
 		}
 	}
 
-	/** Track a feedback on each of two controls, both referencing `local:x` */
+	/** Track a feedback on each of two controls, both referencing `local:x` and `custom:g` */
 	function setup() {
 		const ctx = createController()
 
@@ -206,7 +209,7 @@ describe('onVariablesChanged', () => {
 			parseEntityOptions: vi.fn(() => ({
 				ok: true,
 				parsedOptions: { expression: true },
-				referencedVariableIds: new Set(['local:x']),
+				referencedVariableIds: new Set(['local:x', 'custom:g']),
 				clockSensitive: false,
 			})),
 		} as any)
@@ -219,6 +222,7 @@ describe('onVariablesChanged', () => {
 	}
 
 	function updatedEntityIds(controlStore: ReturnType<typeof createController>['controlStore']): string[] {
+		if (controlStore.updateFeedbackValues.mock.calls.length === 0) return []
 		expect(controlStore.updateFeedbackValues).toHaveBeenCalledTimes(1)
 		return controlStore.updateFeedbackValues.mock.calls[0][1].map((v) => v.entityId)
 	}
@@ -226,9 +230,28 @@ describe('onVariablesChanged', () => {
 	test('a global change re-evaluates every feedback referencing the variable', () => {
 		const { controller, controlStore } = setup()
 
-		controller.onVariablesChanged(new Set(['local:x']), null)
+		controller.onVariablesChanged(new Set(['custom:g']), null)
 
 		expect(updatedEntityIds(controlStore)).toEqual(['fb1', 'fb2'])
+	})
+
+	test('the normal variable change dispatch reaches the feedbacks', () => {
+		const { controlStore, variableDependencies } = setup()
+
+		variableDependencies.dispatch(new Set(['local:x']), new Set([CreateBankControlId('control1')]))
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb1'])
+	})
+
+	test('only re-evaluates internal feedbacks, without notifying anything else', () => {
+		const { controller, controlStore, variableDependencies } = setup()
+		const otherListener = { onVariableDependenciesChanged: vi.fn() }
+		variableDependencies.create(otherListener, CreateBankControlId('control1'), null).set(new Set(['local:x']))
+
+		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control1')]))
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb1'])
+		expect(otherListener.onVariableDependenciesChanged).not.toHaveBeenCalled()
 	})
 
 	test('a scoped change only re-evaluates the feedbacks of the targeted controls', () => {
@@ -257,6 +280,29 @@ describe('onVariablesChanged', () => {
 		)
 
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+	})
+
+	test('stops tracking the variables of every feedback when destroyed', () => {
+		const { controller, controlStore, variableDependencies } = setup()
+
+		controller.destroy()
+		expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
+
+		variableDependencies.dispatch(new Set(['custom:g']), null)
+		expect(controlStore.updateFeedbackValues).not.toHaveBeenCalled()
+	})
+
+	test('stops tracking the variables of deleted and replaced feedbacks', () => {
+		const { controller, variableDependencies } = setup()
+		expect(variableDependencies.stats().dependencies).toBe(2)
+
+		// Replacing a feedback swaps its tracking rather than adding to it
+		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'))
+		expect(variableDependencies.stats().dependencies).toBe(2)
+
+		controller.entityDelete(makeFeedback('fb1'))
+		controller.entityDelete(makeFeedback('fb2'))
+		expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 	})
 
 	test('a feedback re-tracked on a different control follows it', () => {

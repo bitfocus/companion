@@ -113,6 +113,9 @@ export abstract class ControlBase<
 	 * Immediately after this is called, it will be removed from the store, and assumed to be fully deleted
 	 */
 	destroy(): void {
+		// Stop tracking anything that read variables for this control, in case an owner missed disposing it
+		this.deps.variableDependencies.disposeControl(this.controlId)
+
 		// Inform clients
 		this.updateEvents.emit('update', { type: 'destroy' })
 	}
@@ -200,15 +203,6 @@ export abstract class ControlBase<
 	 */
 	rotateControl(_delta: number, _surfaceId: string | undefined): boolean {
 		return false
-	}
-
-	/**
-	 * Some variables changed. Controls whose own fields reference variables override this; entities and drawing are
-	 * told separately
-	 * @param _allChangedVariables The ids of the changed variables
-	 */
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
-		// Nothing to do
 	}
 
 	/**

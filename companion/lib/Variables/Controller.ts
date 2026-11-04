@@ -10,9 +10,11 @@
  */
 
 import type { DataDatabase } from '../Data/Database.js'
+import type { MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import { router } from '../UI/TRPC.js'
 import { VariablesCustomVariable } from './CustomVariable.js'
+import { VariableDependencyRegistry } from './DependencyRegistry.js'
 import { VariablesInstanceDefinitions } from './InstanceDefinitions.js'
 import { VariablesValues } from './Values.js'
 
@@ -20,11 +22,16 @@ export class VariablesController {
 	readonly custom: VariablesCustomVariable
 	readonly values: VariablesValues
 	readonly definitions: VariablesInstanceDefinitions
+	/** What references which variables, so that a change only reaches what read a changed variable */
+	readonly dependencies = new VariableDependencyRegistry()
 
-	constructor(db: DataDatabase, userconfig: DataUserConfig) {
+	constructor(db: DataDatabase, userconfig: DataUserConfig, metrics: MetricsRegistry) {
 		this.values = new VariablesValues(userconfig)
 		this.custom = new VariablesCustomVariable(db, this.values)
 		this.definitions = new VariablesInstanceDefinitions()
+
+		this.values.registerMetrics(metrics)
+		this.dependencies.registerMetrics(metrics)
 	}
 
 	createTrpcRouter() {

@@ -112,6 +112,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 	readonly #entityManager: ConnectionEntityManager | null
 
+	readonly sendVariablesChanged: ((changedVariableIds: string[]) => void) | undefined
+
 	#currentUpgradeIndex: number | null = null
 
 	/**
@@ -186,9 +188,12 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 					this.#deps.controls,
 					this.connectionId,
-					this.#deps.renderClock
+					this.#deps.renderClock,
+					this.#deps.variables.dependencies
 				)
 			: null
+		// With an entity manager, the variable dependency registry tells it about the changes it reads
+		this.sendVariablesChanged = this.#entityManager ? undefined : this.#sendVariablesChanged.bind(this)
 
 		const messageHandler = (msg: any) => {
 			// payload is an EJSON string here (parsed inside receivedMessage); count it before that
@@ -346,23 +351,12 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 
 	/**
-	 * Send the list of changed variables to the child process
-	 * @access public - called whenever variables change
+	 * Send the list of changed variables to the child process, for the old flow (without an entity manager)
+	 * which checks them itself for anything to invalidate
 	 */
-	async sendVariablesChanged(
-		changedVariableIdSet: ReadonlySet<string>,
-		getChangedVariableIds: () => string[],
-		controlIdFilter: ReadonlySet<SomeControlId> | null
-	): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
-			return
-		}
-
-		// Old flow means informing the module about any variable changes so that it can check for anything to invalidate
-		if (controlIdFilter) return
+	#sendVariablesChanged(changedVariableIds: string[]): void {
 		this.#ipcWrapper.sendWithNoCb('variablesChanged', {
-			variablesIds: getChangedVariableIds(),
+			variablesIds: changedVariableIds,
 		})
 	}
 
@@ -652,7 +646,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Tell the child instance class to 'destroy' itself
 	 */
 	async destroy(): Promise<void> {
-		// Cleanup the system once the module is destroyed
+		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
+		this.#entityManager?.destroy()
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})

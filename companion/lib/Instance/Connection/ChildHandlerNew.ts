@@ -158,7 +158,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			new ConnectionNewEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 			this.#deps.controls,
 			this.connectionId,
-			this.#deps.renderClock
+			this.#deps.renderClock,
+			this.#deps.variables.dependencies
 		)
 
 		this.#unsubListeners = () => transport.destroy()
@@ -249,18 +250,6 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async sendAllFeedbackInstances(): Promise<void> {
 		this.#entityManager.resendFeedbacks()
-	}
-
-	/**
-	 * Send the list of changed variables to the child process
-	 * @access public - called whenever variables change
-	 */
-	async sendVariablesChanged(
-		changedVariableIdSet: ReadonlySet<string>,
-		_getChangedVariableIds: () => string[],
-		controlIdFilter: ReadonlySet<SomeControlId> | null
-	): Promise<void> {
-		this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
 	}
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
@@ -454,7 +443,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Tell the child instance class to 'destroy' itself
 	 */
 	async destroy(): Promise<void> {
-		// Cleanup the system once the module is destroyed
+		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
+		this.#entityManager.destroy()
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})

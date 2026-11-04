@@ -16,6 +16,7 @@ import type { InternalController } from '../Internal/Controller.js'
 import type { LinkButtonClient } from '../Link/ButtonClient.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
+import type { VariableDependencyRegistry } from '../Variables/DependencyRegistry.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
@@ -41,6 +42,8 @@ export interface ControlExternalDependencies {
 	readonly internalModule: InternalController
 	readonly instance: InstanceController
 	readonly variableValues: VariablesValues
+	/** Where entities and drawing register the variables they read, to be told when those change */
+	readonly variableDependencies: VariableDependencyRegistry
 	readonly userconfig: DataUserConfig
 	readonly graphics: GraphicsController
 

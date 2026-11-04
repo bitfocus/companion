@@ -5,6 +5,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonPreset } from '../../../../lib/Controls/ControlTypes/Button/Preset.js'
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
 function makeStorage(overrides: Partial<PresetButtonModel> = {}): PresetButtonModel {
 	return {
@@ -72,6 +73,7 @@ describe('ControlButtonPreset', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			variableDependencies: new VariableDependencyRegistry(),
 			linkButtons: null as any,
 			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: {

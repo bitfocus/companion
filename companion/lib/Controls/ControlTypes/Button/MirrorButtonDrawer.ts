@@ -6,6 +6,7 @@ import { makeReferencePlaceholder } from '../../../Graphics/ConvertGraphicsEleme
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import LogController, { type Logger } from '../../../Log/Controller.js'
+import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
 
@@ -21,7 +22,7 @@ const emptyStateProps = {
  * The `drawing` for a button-reference control: owns no elements, but mirrors the target button's whole draw
  * style and redraws when the target renders. Reference cycles resolve to a placeholder.
  */
-export class MirrorButtonDrawer implements IButtonDrawer {
+export class MirrorButtonDrawer implements IButtonDrawer, VariableDependencyListener<null> {
 	readonly #logger: Logger
 	readonly #deps: ControlDependencies
 	readonly #controlId: BankControlId
@@ -31,7 +32,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	#lastReferencedLocations: ReadonlySet<ControlLocationString> | null = null
 
 	/** Variables the last location-resolution depended on, so a change to any (e.g. `$(page:x)`) redraws us. */
-	#lastLocationVariables: ReadonlySet<string> | null = null
+	readonly #locationVariables: VariableDependency<null>
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
 
@@ -44,11 +45,13 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getTargetLocation = getTargetLocation
+		this.#locationVariables = deps.variableDependencies.create(this, controlId, null)
 	}
 
 	dispose(): void {
 		// Cancel any redraw still queued so it can't fire after the owning control is gone
 		this.invalidate.cancel()
+		this.#locationVariables.dispose()
 	}
 
 	#placeholder(text: string): DrawStyleLayeredButtonModel {
@@ -63,7 +66,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
 		const { location: targetLocation, referencedVariableIds } = this.#getTargetLocation()
-		this.#lastLocationVariables = referencedVariableIds.size > 0 ? referencedVariableIds : null
+		this.#locationVariables.set(referencedVariableIds)
 
 		if (!targetLocation) {
 			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'), null)
@@ -130,9 +133,13 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	// A mirror owns no elements, but its `location` field can reference variables (e.g. `$(page:x)`): when one
 	// of those changes the mirrored target may change, so redraw. The target's own variables are handled by
 	// redrawing off its render (see onButtonDrawn), not here.
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		if (!this.#lastLocationVariables) return
-		if (this.#lastLocationVariables.isDisjointFrom(allChangedVariables)) return
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
+		const locationVariables = this.#locationVariables.variableIds
+		if (!locationVariables) return
+		if (locationVariables.isDisjointFrom(allChangedVariables)) return
 
 		this.invalidate()
 	}

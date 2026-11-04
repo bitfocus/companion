@@ -509,34 +509,15 @@ export class ControlsController {
 	}
 
 	/**
-	 * Propagate variable changes to the controls and triggers. `controlIdFilter` is null for a global
-	 * change, or the set of controls the change is scoped to.
+	 * Propagate variable changes to the triggers. `controlIdFilter` is null for a global change, or the set of
+	 * controls the change is scoped to. The controls' entities and drawing are told about the changes they care
+	 * about by the variable dependency registry.
 	 */
 	onVariablesChanged(
 		allChangedVariablesSet: ReadonlySet<string>,
 		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
-
-		if (allChangedVariablesSet.size === 0) return
-
-		const notifyControl = (control: SomeControl) => {
-			if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
-			control.drawing?.onVariablesChanged(allChangedVariablesSet)
-			control.onVariablesChanged(allChangedVariablesSet)
-		}
-
-		if (controlIdFilter) {
-			// The change is scoped to specific control(s), so only look at those
-			for (const controlId of controlIdFilter) {
-				const control = this.#store.controls.get(controlId)
-				if (control) notifyControl(control)
-			}
-		} else {
-			for (const control of this.#store.controls.values()) {
-				notifyControl(control)
-			}
-		}
 	}
 
 	/**

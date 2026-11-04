@@ -7,6 +7,7 @@ import type { ControlDependencies } from '../../../../lib/Controls/ControlDepend
 import { ControlButtonReference } from '../../../../lib/Controls/ControlTypes/Button/Reference.js'
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 import { mangleReferenceSurfaceId, MAX_REFERENCE_DEPTH } from '../../../../lib/Surface/ReferenceSurfaceId.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
 const MY_CONTROL_ID = CreateBankControlId('test01')
 const MY_LOCATION: ControlLocation = { pageNumber: 1, row: 2, column: 3 }
@@ -64,6 +65,7 @@ describe('ControlButtonReference', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			variableDependencies: new VariableDependencyRegistry(),
 			linkButtons: null as any,
 			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: controlsAccessor as any,

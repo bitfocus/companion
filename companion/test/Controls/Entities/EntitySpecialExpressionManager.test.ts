@@ -11,6 +11,7 @@ import type {
 	NewSpecialExpressionValue,
 	UpdateSpecialExpressionValuesFn,
 } from '../../../lib/Controls/Entities/SpecialExpressions.js'
+import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
 
 describe('EntityPoolSpecialExpressionManager', () => {
@@ -47,6 +48,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		.mockReturnValue(mockVariablesParser as any)
 
 	let manager: EntityPoolSpecialExpressionManager
+	let variableDependencies: VariableDependencyRegistry
 
 	// Helper to create mock entities
 	function createMockFeedbackEntity(
@@ -99,6 +101,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		mockCreateVariablesAndExpressionParser.mockReturnValue(mockVariablesParser as any)
 
 		// Create a new instance for each test
+		variableDependencies = new VariableDependencyRegistry()
 		manager = new EntityPoolSpecialExpressionManager(
 			CreateBankControlId('control-1'),
 			mockCreateVariablesAndExpressionParser,
@@ -106,7 +109,8 @@ describe('EntityPoolSpecialExpressionManager', () => {
 				isInverted: mockUpdateIsInvertedFn,
 				storeResult: mockUpdateStoreResultFn,
 			},
-			renderClock as any
+			renderClock as any,
+			variableDependencies
 		)
 
 		vi.useFakeTimers()
@@ -919,6 +923,31 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 	})
 
 	describe('forgetEntity', () => {
+		it('stops tracking the variables only the forgotten entity read', () => {
+			mockParseExpressionResult = { ok: true, value: false, variableIds: new Set(['var1']) }
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-1', { isExpression: true, value: '$(internal:var1)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+
+			mockParseExpressionResult = { ok: true, value: false, variableIds: new Set(['var2']) }
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-2', { isExpression: true, value: '$(internal:var2)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(2)
+
+			manager.forgetEntity('entity-1')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(1)
+
+			manager.forgetEntity('entity-2')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(0)
+		})
+
 		it('should remove potentially isInverted entity from tracking', () => {
 			const mockEntity = createMockFeedbackEntity('entity-1', { isExpression: false, value: true })
 
@@ -930,7 +959,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.forgetEntity('entity-1')
 
 			// Trigger variable change to verify entity is not processed
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -979,7 +1008,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			const UsedVariables: ReadonlySet<string> = new Set<string>(['var42'])
 
 			// Trigger variable change to verify entity would be processed
-			manager.onVariablesChanged(UsedVariables)
+			variableDependencies.dispatch(UsedVariables, null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -991,7 +1020,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.forgetEntity('entity-314')
 
 			// Trigger variable change to verify entity is not processed
-			manager.onVariablesChanged(UsedVariables)
+			variableDependencies.dispatch(UsedVariables, null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1051,7 +1080,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				variableIds: new Set(['var1', 'var2']),
 			}
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
@@ -1122,7 +1151,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				// Change the parse results for re-processing
 				resetParseResults()
 
-				manager.onVariablesChanged(new Set([singleVar]))
+				variableDependencies.dispatch(new Set([singleVar]), null)
 				vi.runAllTimers()
 
 				expect(mockUpdateStoreResultFn).toHaveBeenCalledWith(
@@ -1190,7 +1219,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				// Change the parse results for re-processing
 				resetParseResult()
 
-				manager.onVariablesChanged(new Set([singleVar]))
+				variableDependencies.dispatch(new Set([singleVar]), null)
 				vi.runAllTimers()
 
 				expect(mockUpdateStoreResultFn).toHaveBeenCalledWith(
@@ -1225,7 +1254,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateIsInvertedFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['unrelated-var']))
+			variableDependencies.dispatch(new Set(['unrelated-var']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1258,7 +1287,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateStoreResultFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['unrelated-var']))
+			variableDependencies.dispatch(new Set(['unrelated-var']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
@@ -1271,7 +1300,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateIsInvertedFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1284,7 +1313,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateStoreResultFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
@@ -1333,7 +1362,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				variableIds: new Set(['shared-var']),
 			}
 
-			manager.onVariablesChanged(new Set(['shared-var']))
+			variableDependencies.dispatch(new Set(['shared-var']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateStoreResultFn).toHaveBeenCalledTimes(1)
@@ -1379,7 +1408,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.trackEntity(mockEntity, 'isInverted')
 			// Don't run timers yet - entity is still pending
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Should only be called once despite both trackEntity and onVariablesChanged
@@ -1412,7 +1441,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.trackEntity(mockEntity, 'storeResult')
 			// Don't run timers yet - entity is still pending
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Should only be called once despite both trackEntity and onVariablesChanged
@@ -1475,9 +1504,11 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			mockUpdateIsInvertedFn.mockClear()
 			mockUpdateStoreResultFn.mockClear()
 
+			expect(variableDependencies.stats().keys).toBe(1)
 			manager.destroy()
+			expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1883,7 +1914,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 
 		it('should not call updateFn if no entities need processing', () => {
 			// Trigger variable change without any tracked entities
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 
 			vi.runAllTimers()
 

@@ -15,6 +15,7 @@ import { ControlButtonLayered } from '../../../../lib/Controls/ControlTypes/Butt
 import type { NewSpecialExpressionValue } from '../../../../lib/Controls/Entities/SpecialExpressions.js'
 import type { NewFeedbackValue } from '../../../../lib/Controls/Entities/Types.js'
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
 const CONTROL_ID = CreateBankControlId('ctrl1')
 const CONNECTION_ID = 'conn01'
@@ -144,6 +145,7 @@ describe('ControlButtonLayered', () => {
 			events: events as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			variableDependencies: new VariableDependencyRegistry(),
 			linkButtons: null as any,
 			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: {
@@ -193,6 +195,14 @@ describe('ControlButtonLayered', () => {
 	})
 
 	describe('construction & metadata', () => {
+		it('stops tracking the variables it reads when destroyed', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+			expect(deps.variableDependencies.stats().dependencies).toBeGreaterThan(0)
+
+			control.destroy()
+			expect(deps.variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
+		})
+
 		it('reports its type and capability flags', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 

@@ -6,6 +6,11 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ExpressionOrValue, JsonValue } from '@companion-module/host'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import type {
+	VariableDependency,
+	VariableDependencyListener,
+	VariableDependencyRegistry,
+} from '../../Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { RenderClock } from '../RenderClock.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
@@ -214,7 +219,7 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
  * expressions, and invalidates the parsed results and reevaluates them when the
  * variables used within them change.
  */
-export class EntityPoolSpecialExpressionManager {
+export class EntityPoolSpecialExpressionManager implements VariableDependencyListener<null> {
 	readonly #controlId: SomeControlId
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
 	readonly #renderClock: RenderClock
@@ -235,6 +240,8 @@ export class EntityPoolSpecialExpressionManager {
 	}
 	/** The entity maps of every special expression, so hot paths can walk them without allocating */
 	readonly #allEntityMaps: ReadonlyArray<Map<string, EntityWrapper>>
+	/** Every variable referenced by the tracked entities, so we are told when one changes */
+	readonly #variables: VariableDependency<null>
 
 	constructor(
 		controlId: SomeControlId,
@@ -242,9 +249,11 @@ export class EntityPoolSpecialExpressionManager {
 		updateFns: {
 			[Expression in SpecialExpression]: UpdateSpecialExpressionValuesFn<Expression>
 		},
-		renderClock: RenderClock
+		renderClock: RenderClock,
+		variableDependencies: VariableDependencyRegistry
 	) {
 		this.#controlId = controlId
+		this.#variables = variableDependencies.create(this, controlId, null)
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
 		this.#renderClock = renderClock
 
@@ -322,6 +331,8 @@ export class EntityPoolSpecialExpressionManager {
 			if (!this.#unsubscribeRenderClock && this.#hasClockSensitiveEntity()) {
 				this.#unsubscribeRenderClock = this.#renderClock.subscribe(() => this.onRenderClockTick())
 			}
+
+			this.#updateVariables()
 		},
 		{
 			before: false,
@@ -340,9 +351,26 @@ export class EntityPoolSpecialExpressionManager {
 		this.#debounceProcessPending.cancel()
 		this.#unsubscribeRenderClock?.()
 		this.#unsubscribeRenderClock = null
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		this.#variables.dispose()
+		for (const entities of this.#allEntityMaps) {
 			entities.clear()
 		}
+	}
+
+	/**
+	 * Register the variables referenced by every tracked entity. An entity awaiting re-processing has none; it
+	 * reads the latest values when it is processed, so it doesn't need to hear about changes until then.
+	 */
+	#updateVariables(): void {
+		const allVariableIds = new Set<string>()
+		for (const entities of this.#allEntityMaps) {
+			for (const wrapper of entities.values()) {
+				if (!wrapper.referencedVariableIds) continue
+				for (const id of wrapper.referencedVariableIds) allVariableIds.add(id)
+			}
+		}
+
+		this.#variables.set(allVariableIds)
 	}
 
 	/**
@@ -370,9 +398,13 @@ export class EntityPoolSpecialExpressionManager {
 	 * processing of those special expressions to compute their new values.
 	 */
 	forgetEntity(entityId: string): void {
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			entities.delete(entityId)
 		}
+
+		// Processing ends by registering what the remaining entities read, so this stops tracking what the
+		// forgotten one did. Debounced, so a burst of removals rescans the entities once
+		this.#debounceProcessPending()
 	}
 
 	/**
@@ -416,7 +448,10 @@ export class EntityPoolSpecialExpressionManager {
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		variableIds: ReadonlySet<string>
+	): void {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false

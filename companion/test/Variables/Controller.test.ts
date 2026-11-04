@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { mock } from 'vitest-mock-extended'
+import type { MetricsRegistry } from '../../lib/Data/Metrics.js'
 import { VariablesController } from '../../lib/Variables/Controller.js'
 import { FakeDataDatabase } from '../utils/FakeTableView.js'
 import { mockUserConfig } from '../utils/MockUserConfig.js'
@@ -14,7 +16,11 @@ describe('VariablesController', () => {
 	})
 
 	test('wires the custom variables to the values store', () => {
-		const controller = new VariablesController(new FakeDataDatabase().asDataDatabase(), userconfig)
+		const controller = new VariablesController(
+			new FakeDataDatabase().asDataDatabase(),
+			userconfig,
+			mock<MetricsRegistry>()
+		)
 
 		expect(controller.values).toBeTruthy()
 		expect(controller.definitions).toBeTruthy()
@@ -24,7 +30,11 @@ describe('VariablesController', () => {
 	})
 
 	test('creates the trpc router', () => {
-		const controller = new VariablesController(new FakeDataDatabase().asDataDatabase(), userconfig)
+		const controller = new VariablesController(
+			new FakeDataDatabase().asDataDatabase(),
+			userconfig,
+			mock<MetricsRegistry>()
+		)
 
 		expect(controller.createTrpcRouter()).toBeTruthy()
 	})

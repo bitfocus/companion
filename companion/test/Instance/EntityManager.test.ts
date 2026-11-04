@@ -12,6 +12,7 @@ import {
 	type EntityManagerAdapter,
 	type EntityManagerFeedbackEntity,
 } from '../../lib/Instance/Connection/EntityManager.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 // Mock dependencies
 vi.mock('nanoid', () => ({
@@ -63,6 +64,7 @@ describe('InstanceEntityManager', () => {
 	}
 
 	let entityManager: ConnectionEntityManager
+	let variableDependencies: VariableDependencyRegistry
 
 	// Reset mocks before each test
 	beforeEach(() => {
@@ -91,11 +93,13 @@ describe('InstanceEntityManager', () => {
 		mockAdapter.upgradeFeedbacks.mockResolvedValue([])
 
 		// Create a new instance for each test
+		variableDependencies = new VariableDependencyRegistry()
 		entityManager = new ConnectionEntityManager(
 			mockAdapter,
 			mockControlsController as any,
 			'test-connection-id',
-			mockRenderClock as any
+			mockRenderClock as any,
+			variableDependencies
 		)
 
 		vi.useFakeTimers()
@@ -477,7 +481,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Simulate variables changing
-			entityManager.onVariablesChanged(new Set(['var1']), null)
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Verify it triggered a re-process
@@ -538,7 +542,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Simulate unrelated variables changing
-			entityManager.onVariablesChanged(new Set(['unrelated-var']), null)
+			variableDependencies.dispatch(new Set(['unrelated-var']), null)
 			vi.runAllTimers()
 
 			// Should not have triggered a re-process
@@ -603,7 +607,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Simulate variables changing for only control-1
-			entityManager.onVariablesChanged(new Set(['var1']), new Set([CreateBankControlId('control-1')]))
+			variableDependencies.dispatch(new Set(['var1']), new Set([CreateBankControlId('control-1')]))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-1
@@ -685,7 +689,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateFeedbacks.mockClear()
 
 			// Simulate variables changing for only control-2
-			entityManager.onVariablesChanged(new Set(['control-var']), new Set([CreateBankControlId('control-2')]))
+			variableDependencies.dispatch(new Set(['control-var']), new Set([CreateBankControlId('control-2')]))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-2, not entity-1
@@ -746,18 +750,132 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateFeedbacks.mockClear()
 
 			// A change scoped to the old control must not invalidate it
-			entityManager.onVariablesChanged(new Set(['control-var']), new Set([CreateBankControlId('control-1')]))
+			variableDependencies.dispatch(new Set(['control-var']), new Set([CreateBankControlId('control-1')]))
 			vi.runAllTimers()
 			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
 
 			// A change scoped to the new control must
-			entityManager.onVariablesChanged(new Set(['control-var']), new Set([CreateBankControlId('control-2')]))
+			variableDependencies.dispatch(new Set(['control-var']), new Set([CreateBankControlId('control-2')]))
 			vi.runAllTimers()
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
 			expect([...mockAdapter.updateFeedbacks.mock.calls[0][0].keys()]).toEqual(['entity-1'])
 			expect(mockAdapter.updateFeedbacks.mock.calls[0][0].get('entity-1')?.controlId).toBe(
 				CreateBankControlId('control-2')
 			)
+		})
+	})
+
+	describe('variable dependency tracking', () => {
+		const makeFeedback = (id: string) => ({
+			id,
+			type: EntityModelType.Feedback,
+			definitionId: 'feedback-1',
+			upgradeIndex: 5,
+			asEntityModel: vi.fn().mockReturnValue({
+				id,
+				type: EntityModelType.Feedback,
+				definitionId: 'feedback-1',
+				connectionId: 'connection-1',
+				options: {},
+			}),
+			getEntityDefinition: vi.fn().mockReturnValue({
+				hasLifecycleFunctions: true,
+				options: [],
+				optionsToIgnoreForSubscribe: [],
+			}),
+		})
+
+		it('only registers entities which reference variables', () => {
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
+				parsedOptions: options,
+				referencedVariableIds: new Set<string>(),
+			}))
+
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			expect(variableDependencies.stats().dependencies).toBe(0)
+		})
+
+		it('stops tracking a forgotten entity', () => {
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(makeFeedback('entity-2') as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+			expect(variableDependencies.stats().dependencies).toBe(2)
+
+			entityManager.forgetEntity('entity-1')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().dependencies).toBe(1)
+		})
+
+		it('replaces the tracking of a re-tracked entity', () => {
+			entityManager.start(5)
+			const entity = makeFeedback('entity-1')
+			entityManager.trackEntity(entity as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+			entityManager.trackEntity(entity as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			expect(variableDependencies.stats().dependencies).toBe(1)
+		})
+
+		it('stops tracking everything when destroyed', () => {
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(makeFeedback('entity-2') as any, CreateBankControlId('control-2'))
+			vi.runAllTimers()
+
+			mockAdapter.updateFeedbacks.mockClear()
+
+			entityManager.destroy()
+			expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
+
+			// Nothing is sent to a module being shut down
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+		})
+
+		it('follows a re-parse that reads different variables', () => {
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			// The next parse, prompted by a change to what it read, reads something else
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
+				parsedOptions: options,
+				referencedVariableIds: new Set(['other-var']),
+			}))
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+
+			variableDependencies.dispatch(new Set(['other-var']), null)
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
+		})
+
+		it('ignores changes while an entity is not ready', () => {
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			// Pending deletion, so the change must not resurrect it
+			entityManager.forgetEntity('entity-1')
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
+			expect(mockAdapter.updateFeedbacks.mock.calls[0][0].get('entity-1')).toBeNull()
 		})
 	})
 
@@ -1251,7 +1369,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Trigger variable change for the referenced variable
-			entityManager.onVariablesChanged(new Set(['test:expr_var']), null)
+			variableDependencies.dispatch(new Set(['test:expr_var']), null)
 			vi.runAllTimers()
 
 			// Should have triggered a re-process because the expression variable changed
@@ -1294,7 +1412,7 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateActions.mockClear()
 
 			// Trigger variable change for an unrelated variable
-			entityManager.onVariablesChanged(new Set(['other:unrelated_var']), null)
+			variableDependencies.dispatch(new Set(['other:unrelated_var']), null)
 			vi.runAllTimers()
 
 			// Should NOT have triggered a re-process
