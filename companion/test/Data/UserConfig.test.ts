@@ -295,7 +295,7 @@ describe('DataUserConfig', () => {
 		test('getConfig and setConfigKey round-trip', async () => {
 			const { userconfig, caller } = createUserConfig()
 
-			await caller.setConfigKey({ key: 'pin', value: '4321' })
+			await caller.setConfigKey({ change: { key: 'pin', value: '4321' } })
 			expect(userconfig.getKey('pin')).toBe('4321')
 
 			const config = await caller.getConfig()
@@ -308,10 +308,31 @@ describe('DataUserConfig', () => {
 		test('setConfigKeys sets multiple values', async () => {
 			const { userconfig, caller } = createUserConfig()
 
-			await caller.setConfigKeys({ values: { pin: '1111', pin_enable: true } })
+			await caller.setConfigKeys({
+				changes: [
+					{ key: 'pin', value: '1111' },
+					{ key: 'pin_enable', value: true },
+				],
+			})
 
 			expect(userconfig.getKey('pin')).toBe('1111')
 			expect(userconfig.getKey('pin_enable')).toBe(true)
+		})
+
+		test('setConfigKeys leaves the settings it is not given as they were', async () => {
+			const { userconfig, caller } = createUserConfig()
+			userconfig.setKey('artnet_channel', 3)
+
+			await caller.setConfigKeys({ changes: [{ key: 'pin', value: '1111' }] })
+
+			expect(userconfig.getKey('artnet_channel')).toBe(3)
+		})
+
+		test('setConfigKey refuses a value of the wrong type for the setting', async () => {
+			const { userconfig, caller } = createUserConfig()
+
+			await expect(caller.setConfigKey({ change: { key: 'pin_enable', value: 'yes' } as any })).rejects.toThrow()
+			expect(userconfig.getKey('pin_enable')).toBe(DataUserConfig.Defaults.pin_enable)
 		})
 
 		test('watchConfig yields init then key changes', async () => {

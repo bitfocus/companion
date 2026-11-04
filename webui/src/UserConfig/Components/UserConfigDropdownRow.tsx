@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
-import { ResetButton, type UserConfigProps } from './Common.js'
+import { parseUserConfigChange, ResetButton, type UserConfigProps } from './Common.js'
 
 interface UserConfigDropdownRowProps {
 	userConfig: UserConfigProps
@@ -26,7 +26,10 @@ export const UserConfigDropdownRow = observer(function UserConfigDropdownRow({
 					htmlName={undefined} // Future: set this for better accessibility
 					choices={choices}
 					value={String(userConfig.config[field] as any)}
-					setValue={(value) => userConfig.setValue(field, value)}
+					setValue={(value) => {
+						const change = parseUserConfigChange(field, value)
+						if (change) userConfig.setValue(change)
+					}}
 					searchLabelsOnly={searchLabelsOnly}
 				/>
 			</td>

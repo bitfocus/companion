@@ -1,9 +1,10 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 
 interface DataCollectionStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function DataCollectionStep({ config, setValue }: DataCollectionStepProps): React.JSX.Element {
@@ -22,7 +23,7 @@ export function DataCollectionStep({ config, setValue }: DataCollectionStepProps
 				<CheckboxInputFieldWithLabel
 					label="Send anonymous usage statistics"
 					value={!!config.detailed_data_collection}
-					setValue={(val) => setValue('detailed_data_collection', val)}
+					setValue={(value) => setValue({ key: 'detailed_data_collection', value })}
 				/>
 			</div>
 			<p className="text-muted mt-4 text-sm">

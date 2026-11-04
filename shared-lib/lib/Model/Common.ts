@@ -151,9 +151,9 @@ export type DropdownChoiceId = string | number
  *
  * Available for actions/feedbacks/config
  */
-export interface DropdownChoice {
+export interface DropdownChoice<TId extends DropdownChoiceId = DropdownChoiceId> {
 	/** Value of the option */
-	id: DropdownChoiceId
+	id: TId
 	/** Label to show to users */
 	label: string
 	/** Show the option but do not let it be picked */

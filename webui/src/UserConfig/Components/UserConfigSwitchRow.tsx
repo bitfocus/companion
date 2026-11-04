@@ -1,12 +1,13 @@
 import { observer } from 'mobx-react-lite'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigKeyOfType } from '@companion-app/shared/Model/UserConfigModel.js'
+import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ResetButton, type UserConfigProps } from './Common.js'
 
 interface UserConfigSwitchRowProps {
 	userConfig: UserConfigProps
 	label: string | React.ReactNode
-	field: keyof UserConfigModel
+	field: UserConfigKeyOfType<boolean>
 	requiresRestart?: boolean
 	inverted?: boolean
 	title?: string
@@ -39,7 +40,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 					<SwitchInputField
 						id={undefined}
 						value={!disabledReason && invertIfNeeded(!!userConfig.config[field])}
-						setValue={(val) => userConfig.setValue(field, invertIfNeeded(val))}
+						setValue={(val) => userConfig.setValue(keyValueChange(field, invertIfNeeded(val)))}
 						disabled={!!disabledReason}
 					/>
 				</div>

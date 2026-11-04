@@ -13,23 +13,25 @@ import { useDropdownComboboxItems } from './DropdownInputField/useDropdownCombob
 import { isGroupedFuzzyItems, useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
-interface DropdownInputFieldProps {
+interface DropdownInputFieldProps<TId extends DropdownChoiceId> {
 	htmlName: string | undefined
 	className?: string
-	choices: DropdownChoicesOrGroups
-	allowCustom?: boolean
+	/** The value is always one of these ids, unless custom values are allowed */
+	choices: DropdownChoicesOrGroups<TId>
+	/** A custom value is typed text, so it is only allowed when any string is a valid value */
+	allowCustom?: string extends TId ? boolean : false
 	disableEditingCustom?: boolean
 	tooltip?: string
 	regex?: string
-	value: DropdownChoiceId
-	setValue: (value: DropdownChoiceId) => void
+	value: TId
+	setValue: (value: TId) => void
 	disabled?: boolean
 	onBlur?: () => void
-	checkValid?: (value: DropdownChoiceId) => boolean | undefined
+	checkValid?: (value: TId) => boolean | undefined
 	searchLabelsOnly?: boolean
 }
 
-export const DropdownInputField = observer(function DropdownInputField({
+function DropdownInputFieldInner<TId extends DropdownChoiceId>({
 	htmlName,
 	className,
 	choices,
@@ -43,7 +45,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	onBlur,
 	checkValid,
 	searchLabelsOnly = true,
-}: DropdownInputFieldProps): React.JSX.Element {
+}: DropdownInputFieldProps<TId>): React.JSX.Element {
 	const { allItems, flatItems } = useFuzzyChoices(choices, searchLabelsOnly)
 
 	// The popup doesn't handle groups when virtualised, so detect if there are any groups
@@ -100,7 +102,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 					localDisplay.set(newId)
 					controlledInput.set(undefined)
 				})
-				setValue(newId)
+				// An id the combobox gives is from the choices, so is a TId
+				setValue(newId as TId)
 				setInputValue('')
 
 				// Shift focus to the trigger
@@ -151,7 +154,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 			// with no edits). Without this, a numeric DropdownChoiceId becomes a string silently.
 			const prefilled = currentLocal == null ? '' : String(currentLocal)
 			const next = currentControlled === prefilled ? currentLocal : currentControlled
-			setValue(next)
+			// Custom text is only allowed when any string is a TId
+			setValue(next as TId)
 			runInAction(() => controlledInput.set(undefined))
 			setInputValue('')
 		} else if (!isEditingMode && allowCustom) {
@@ -186,7 +190,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 		[disableEditingCustom, allowCustom, flatItems]
 	)
 
-	const isInvalid = !isKnownValue || checkValid?.(localDisplayValue) === false
+	const isInvalid = !isKnownValue || checkValid?.(localDisplayValue as TId) === false
 
 	return (
 		<div className={classNames('dropdown-field', { 'dropdown-field-invalid': isInvalid }, className)} title={tooltip}>
@@ -236,4 +240,9 @@ export const DropdownInputField = observer(function DropdownInputField({
 			</Combobox.Root>
 		</div>
 	)
-})
+}
+
+/** A dropdown of choices. Its value is typed by the ids of the choices, so it can be an enum */
+export const DropdownInputField = observer(DropdownInputFieldInner) as <TId extends DropdownChoiceId>(
+	props: DropdownInputFieldProps<TId>
+) => React.JSX.Element

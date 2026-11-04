@@ -1,5 +1,6 @@
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { DropdownInputField } from '~/Components/DropdownInputField'
 import { FormLabel } from '~/Components/Form'
@@ -8,7 +9,7 @@ import { GraphicsPreviewButton } from './GraphicsPreview.js'
 
 interface GraphicsStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX.Element {
@@ -32,14 +33,14 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 							htmlName="buttons_decoration"
 							choices={BUTTON_DECORATION_CHOICES}
 							value={decoration}
-							setValue={(value) => setValue('buttons_decoration', value)}
+							setValue={(value) => setValue({ key: 'buttons_decoration', value })}
 						/>
 					</div>
 
 					<CheckboxInputFieldWithLabel
 						label="Show status icons on each button"
 						value={statusIcons === 'show'}
-						setValue={(val) => setValue('buttons_status_icons', val ? 'show' : 'none')}
+						setValue={(val) => setValue({ key: 'buttons_status_icons', value: val ? 'show' : 'none' })}
 					/>
 				</div>
 

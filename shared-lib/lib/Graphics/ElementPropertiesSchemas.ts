@@ -443,7 +443,7 @@ export const circleElementSchema: ElementSchemaSection[] = [
 ]
 
 /** The choices of decoration for a button, for its canvas or for a remote button */
-export const BUTTON_DECORATION_CHOICES: DropdownChoice[] = [
+export const BUTTON_DECORATION_CHOICES: DropdownChoice<ButtonGraphicsDecorationType>[] = [
 	{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
 	{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
 	{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
@@ -451,7 +451,7 @@ export const BUTTON_DECORATION_CHOICES: DropdownChoice[] = [
 ]
 
 /** The choices of status icons for a button, for its canvas or for a remote button */
-export const BUTTON_STATUS_ICONS_CHOICES: DropdownChoice[] = [
+export const BUTTON_STATUS_ICONS_CHOICES: DropdownChoice<ButtonGraphicsShowStatusIcons>[] = [
 	{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
 	{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
 	{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },

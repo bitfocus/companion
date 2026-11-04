@@ -553,7 +553,7 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 		const user = userEvent.setup()
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<DropdownInputField
+				<DropdownInputField<DropdownChoiceId>
 					choices={NUMERIC_CHOICES}
 					allowCustom={true}
 					disableEditingCustom={false}
@@ -593,7 +593,7 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 		const user = userEvent.setup()
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<DropdownInputField
+				<DropdownInputField<DropdownChoiceId>
 					choices={NUMERIC_CHOICES}
 					allowCustom={true}
 					disableEditingCustom={false}

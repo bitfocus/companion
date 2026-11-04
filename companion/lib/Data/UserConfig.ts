@@ -9,6 +9,7 @@ import {
 	type UserConfigModel,
 	type UserConfigUpdate,
 } from '@companion-app/shared/Model/UserConfigModel.js'
+import { zodKeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -130,6 +131,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		const self = this
 		const selfEvents: EventEmitter<DataUserConfigEvents> = self
 		const zodUserConfigKey = UserConfigModelSchema.keyof()
+		const zodUserConfigKeyChange = zodKeyValueChange(UserConfigModelSchema)
 		return router({
 			sslCertificateCreate: publicProcedure.mutation(async () => {
 				return this.createSslCertificate()
@@ -166,24 +168,25 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			setConfigKey: publicProcedure
 				.input(
 					z.object({
-						key: zodUserConfigKey,
-						value: z.unknown(),
+						change: zodUserConfigKeyChange,
 					})
 				)
 				.mutation(({ input }) => {
-					// The value is checked against the setting's schema
-					return this.#setKey(input.key, input.value, true)
+					return this.#setKey(input.change.key, input.change.value, true)
 				}),
 
 			setConfigKeys: publicProcedure
 				.input(
 					z.object({
-						values: z.partialRecord(zodUserConfigKey, z.unknown()),
+						changes: z.array(zodUserConfigKeyChange),
 					})
 				)
 				.mutation(({ input }) => {
-					// The values are checked against the settings' schemas
-					return this.#setKeys(input.values)
+					for (const change of input.changes) {
+						this.#setKey(change.key, change.value, false)
+					}
+
+					this.#dbTable.set('userconfig', this.#data)
 				}),
 
 			resetConfigKey: publicProcedure
@@ -405,10 +408,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * @param objects - the key/value pairs
 	 */
 	setKeys(values: Partial<UserConfigModel>): void {
-		this.#setKeys(values)
-	}
-
-	#setKeys(values: Partial<Record<keyof UserConfigModel, unknown>>): void {
 		for (const key of Object.keys(values) as (keyof UserConfigModel)[]) {
 			this.#setKey(key, values[key], false)
 		}

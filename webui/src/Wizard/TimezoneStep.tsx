@@ -1,11 +1,12 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { DropdownInputField } from '~/Components/DropdownInputField'
 import { Grid } from '~/Components/Grid'
 import { TIMEZONE_CHOICES } from '~/Resources/timezones.js'
 
 interface TimezoneStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function TimezoneStep({ config, setValue }: TimezoneStepProps): React.JSX.Element {
@@ -26,7 +27,7 @@ export function TimezoneStep({ config, setValue }: TimezoneStepProps): React.JSX
 					htmlName="timezone"
 					choices={TIMEZONE_CHOICES}
 					value={String(config.timezone ?? '')}
-					setValue={(value) => setValue('timezone', value)}
+					setValue={(value) => setValue({ key: 'timezone', value })}
 					searchLabelsOnly
 				/>
 			</Grid.Col>

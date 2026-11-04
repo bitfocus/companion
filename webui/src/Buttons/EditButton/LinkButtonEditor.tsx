@@ -10,7 +10,6 @@ import {
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { LinkButtonModel, LinkButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
-import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
@@ -114,10 +113,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 						htmlName={decorationFieldId}
 						choices={BUTTON_DECORATION_CHOICES}
 						value={config.options.decoration}
-						setValue={(value) => {
-							const decoration = Object.values(ButtonGraphicsDecorationType).find((v) => v === value)
-							if (decoration) setOption('decoration', decoration)
-						}}
+						setValue={(value) => setOption('decoration', value)}
 					/>
 				</Grid.Col>
 
@@ -129,10 +125,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 						htmlName={statusIconsFieldId}
 						choices={BUTTON_STATUS_ICONS_CHOICES}
 						value={config.options.showStatusIcons}
-						setValue={(value) => {
-							const showStatusIcons = Object.values(ButtonGraphicsShowStatusIcons).find((v) => v === value)
-							if (showStatusIcons) setOption('showStatusIcons', showStatusIcons)
-						}}
+						setValue={(value) => setOption('showStatusIcons', value)}
 					/>
 					<div className="form-text">
 						The button is decorated here, as any button of this installation. With a top bar, a link among its status
