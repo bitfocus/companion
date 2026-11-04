@@ -15,7 +15,11 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
-import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
+import type {
+	VariableDependency,
+	VariableDependencyListener,
+	VariableDependencyRegistry,
+} from '../../Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
@@ -46,8 +50,8 @@ interface PlacedCopy {
 	customActionControlId: CustomActionControlId | null
 	/** The scope of the copy, or null if there is no copy */
 	scope: CustomActionEntityScope | null
-	/** The variables the inputs of the copy referenced when they were parsed */
-	referencedVariableIds: ReadonlySet<string>
+	/** The variables the inputs of the copy referenced when they were parsed, so that they are re-parsed when one changes */
+	readonly inputVariables: VariableDependency<ControlEntityInstance>
 }
 
 /**
@@ -69,7 +73,7 @@ interface CopyLists {
  *
  * The copies are never persisted, and are rebuilt whenever the custom action changes.
  */
-export class CustomActionInstanceManager {
+export class CustomActionInstanceManager implements VariableDependencyListener<ControlEntityInstance> {
 	readonly #logger: Logger = LogController.createLogger('Controls/CustomActions/InstanceManager')
 
 	readonly #controlStore: Pick<IControlStore, 'getControl'>
@@ -115,7 +119,7 @@ export class CustomActionInstanceManager {
 				callerScope,
 				customActionControlId: null,
 				scope: null,
-				referencedVariableIds: new Set(),
+				inputVariables: this.#variableDependencies.create(this, controlId, caller),
 			}
 			newCopy.callerScope = callerScope
 			this.#copies.set(caller, newCopy)
@@ -263,20 +267,16 @@ export class CustomActionInstanceManager {
 	)
 
 	/**
-	 * Some variables have changed, so re-parse the inputs of any copies which used them. The entities of the copies
-	 * are told of the changes by the variable dependency registry
-	 * @param changedVariables The ids of the variables which changed
-	 * @param controlIdFilter If set, only the controls the change applies to
+	 * Some variables read by the inputs of copies have changed, so re-parse those inputs. The entities of the copies
+	 * are told of the changes by the registry themselves
 	 */
-	onVariablesChanged(changedVariables: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
-		// Re-parsing the inputs of a copy can replace the copies nested inside it, so work from a snapshot
-		for (const [caller, copy] of [...this.#copies]) {
-			if (this.#copies.get(caller) !== copy) continue
-			if (controlIdFilter && !controlIdFilter.has(copy.controlId)) continue
+	onVariableDependenciesChanged(hits: ReadonlyArray<VariableDependency<ControlEntityInstance>>): void {
+		for (const hit of hits) {
+			// Re-parsing the inputs of a copy can remove the copies nested inside it
+			const copy = this.#copies.get(hit.data)
+			if (copy?.inputVariables !== hit) continue
 
-			if (!changedVariables.isDisjointFrom(copy.referencedVariableIds)) {
-				this.#refreshInputs(caller, copy)
-			}
+			this.#refreshInputs(hit.data, copy)
 		}
 	}
 
@@ -307,7 +307,7 @@ export class CustomActionInstanceManager {
 			copy.callerScope.createVariablesAndExpressionParser(null),
 			copy.controlId
 		)
-		copy.referencedVariableIds = referencedVariableIds
+		copy.inputVariables.set(referencedVariableIds)
 
 		const scope = new CustomActionEntityScope(
 			customAction,
@@ -428,7 +428,7 @@ export class CustomActionInstanceManager {
 			copy.callerScope.createVariablesAndExpressionParser(null),
 			copy.controlId
 		)
-		copy.referencedVariableIds = referencedVariableIds
+		copy.inputVariables.set(referencedVariableIds)
 
 		if (isEqual(options, scope.values.options)) return
 
@@ -445,7 +445,7 @@ export class CustomActionInstanceManager {
 		copy.scope?.destroy()
 		copy.scope = null
 		copy.customActionControlId = null
-		copy.referencedVariableIds = new Set()
+		copy.inputVariables.set(null)
 	}
 
 	#removeCopy(caller: ControlEntityInstance): void {
@@ -454,6 +454,7 @@ export class CustomActionInstanceManager {
 
 		this.#copies.delete(caller)
 		this.#clearCopy(caller, copy)
+		copy.inputVariables.dispose()
 	}
 }
 
