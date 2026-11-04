@@ -16,8 +16,14 @@ import { nanoid } from 'nanoid'
 import nodeCron, { type ScheduledTask } from 'node-cron'
 import z from 'zod'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import {
+	BackupRuleChangeSchema,
+	type BackupRuleChange,
+	type BackupRulesConfig,
+	type PreviousBackupInfo,
+} from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController, { type Logger } from '../Log/Controller.js'
@@ -98,12 +104,11 @@ export class BackupController {
 				.input(
 					z.object({
 						ruleId: z.string(),
-						field: z.string(),
-						value: z.unknown(),
+						change: BackupRuleChangeSchema,
 					})
 				)
 				.mutation(async ({ input }) => {
-					return this.updateRuleField(input.ruleId, input.field, input.value)
+					return this.updateRuleField(input.ruleId, input.change)
 				}),
 
 			createRule: publicProcedure
@@ -501,75 +506,41 @@ export class BackupController {
 	}
 
 	/**
-	 * Validate a field update for a backup rule
-	 * @param field The field name to update
-	 * @param value The value to set
-	 * @returns Validation result with success status and error message
+	 * Check a change to a backup rule for what its schema can't: the schema has already checked its type
+	 * @returns why the change is invalid, or undefined when it is valid
 	 */
-	#validateFieldUpdate(field: string, value: unknown): { valid: boolean; error?: string } {
-		// Type validation for each field
-		switch (field) {
+	#validateRuleChange(change: BackupRuleChange): string | undefined {
+		switch (change.key) {
 			case 'name':
+				if (change.value.trim().length === 0) return 'Name cannot be empty'
+				return undefined
+			case 'cron':
+				if (!nodeCron.validate(change.value)) return `'${change.value}' is not a valid cron expression`
+				return undefined
+			case 'keep':
+				if (!Number.isInteger(change.value) || change.value < 0) {
+					return `Keep must be a non-negative integer, got ${change.value}`
+				}
+				if (change.value > 1000) return `Keep cannot exceed 1000 backups, got ${change.value}`
+				return undefined
+			case 'enabled':
+			case 'backupType':
 			case 'backupPath':
 			case 'backupNamePattern':
-				if (typeof value !== 'string') {
-					return { valid: false, error: `Field '${field}' must be a string, got ${typeof value}` }
-				}
-				if (field === 'name' && value.trim().length === 0) {
-					return { valid: false, error: 'Name cannot be empty' }
-				}
-				break
-
-			case 'cron':
-				if (typeof value !== 'string') {
-					return { valid: false, error: `Field '${field}' must be a string, got ${typeof value}` }
-				}
-				if (!nodeCron.validate(value)) {
-					return { valid: false, error: `Field '${field}' must be a valid cron expression, got '${value}'` }
-				}
-				break
-
-			case 'enabled':
-				if (typeof value !== 'boolean') {
-					return { valid: false, error: `Field '${field}' must be a boolean, got ${typeof value}` }
-				}
-				break
-
-			case 'keep':
-				if (!Number.isInteger(value) || (value as number) < 0) {
-					return { valid: false, error: `Field '${field}' must be a non-negative integer, got ${value}` }
-				}
-				if ((value as number) > 1000) {
-					return { valid: false, error: `Field '${field}' cannot exceed 1000 backups, got ${value}` }
-				}
-				break
-
-			case 'backupType': {
-				const validBackupTypes = ['db', 'export-gz', 'export-json', 'export-yaml']
-				if (typeof value !== 'string' || !validBackupTypes.includes(value)) {
-					return {
-						valid: false,
-						error: `Field '${field}' must be one of: ${validBackupTypes.join(', ')}, got ${value}`,
-					}
-				}
-				break
-			}
-
+				return undefined
 			default:
-				return { valid: false, error: `Unknown field: ${field}` }
+				assertNever(change)
+				return undefined
 		}
-
-		return { valid: true }
 	}
 
 	/**
 	 * Update a specific field in a backup rule
 	 * @param ruleId ID of the rule to update
-	 * @param field Field name to update
-	 * @param value New value for the field
+	 * @param change The field to update, and its new value
 	 * @returns Promise resolving to true if update was successful
 	 */
-	async updateRuleField(ruleId: string, field: string, value: unknown): Promise<boolean> {
+	async updateRuleField(ruleId: string, change: BackupRuleChange): Promise<boolean> {
 		try {
 			const updatedBackupRules = [...this.#backupRules]
 			const ruleIndex = updatedBackupRules.findIndex((r) => r.id === ruleId)
@@ -579,18 +550,17 @@ export class BackupController {
 				return false
 			}
 
-			// Validate the field name and value type
-			const validationResult = this.#validateFieldUpdate(field, value)
-			if (!validationResult.valid) {
-				this.#logger.warn(`Invalid field update for backup rule: ${validationResult.error}`)
+			const error = this.#validateRuleChange(change)
+			if (error) {
+				this.#logger.warn(`Invalid field update for backup rule: ${error}`)
 				return false
 			}
 
 			// Update the field
-			updatedBackupRules[ruleIndex] = {
-				...updatedBackupRules[ruleIndex],
-				[field]: value,
-			}
+			updatedBackupRules[ruleIndex] = Object.assign(
+				{ ...updatedBackupRules[ruleIndex] },
+				{ [change.key]: change.value }
+			)
 
 			// Update the userConfig through the UserConfig controller
 			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
@@ -599,10 +569,10 @@ export class BackupController {
 			// Reschedule if the rule was updated
 			this.#scheduleBackups()
 
-			this.#logger.info(`Updated backup rule ${ruleId} field ${field}`)
+			this.#logger.info(`Updated backup rule ${ruleId} field ${change.key}`)
 			return true
 		} catch (e) {
-			this.#logger.error(`Failed to update backup rule ${ruleId} field ${field}:`, e)
+			this.#logger.error(`Failed to update backup rule ${ruleId} field ${change.key}:`, e)
 			return false
 		}
 	}

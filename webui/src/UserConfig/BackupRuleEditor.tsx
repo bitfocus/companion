@@ -2,7 +2,8 @@ import { faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef } from 'react'
-import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { BackupRuleSettings, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
@@ -82,8 +83,8 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 
 	// Function to update a specific field in the rule
 	const updateField = useCallback(
-		<K extends keyof BackupRulesConfig>(field: K, value: BackupRulesConfig[K]) => {
-			updateRuleFieldMutation.mutateAsync({ ruleId, field, value }).catch((err) => {
+		<K extends keyof BackupRuleSettings>(field: K, value: BackupRuleSettings[K]) => {
+			updateRuleFieldMutation.mutateAsync({ ruleId, change: keyValueChange(field, value) }).catch((err) => {
 				console.error('Error updating backup rule field:', err)
 			})
 		},
@@ -161,7 +162,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 						<SimpleDropdownInputField
 							id={backupTypeFieldId}
 							value={rule.backupType}
-							setValue={(value) => updateField('backupType', value as BackupRulesConfig['backupType'])}
+							setValue={(value) => updateField('backupType', value as BackupRuleSettings['backupType'])}
 							choices={backupTypes}
 						/>
 					</div>

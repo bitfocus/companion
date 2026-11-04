@@ -1,4 +1,5 @@
 import z from 'zod'
+import { zodKeyValueChange } from '../Util/KeyValue.js'
 import { ExportFormatDefault, zodExportFormat } from './ExportFormat.js'
 import { ButtonGraphicsDecorationType } from './StyleModel.js'
 
@@ -19,8 +20,8 @@ export type PreviousBackupInfo = z.output<typeof PreviousBackupInfoSchema>
 
 const DEFAULT_BACKUP_NAME_PATTERN = 'backup-$(internal:date_iso)-$(internal:time_h)$(internal:time_m)'
 
-export const BackupRulesConfigSchema = z.object({
-	id: z.string(),
+/** The settings of a backup rule, which can each be changed */
+export const BackupRuleSettingsSchema = z.object({
 	name: z.string().default('Backup'),
 	cron: z.string().default('0 0 * * *'),
 	enabled: z.boolean().default(false),
@@ -28,6 +29,16 @@ export const BackupRulesConfigSchema = z.object({
 	backupType: z.enum(['db', 'export-gz', 'export-json', 'export-yaml']).default('db'),
 	backupPath: z.string().default(''),
 	backupNamePattern: z.string().default(DEFAULT_BACKUP_NAME_PATTERN),
+})
+export type BackupRuleSettings = z.output<typeof BackupRuleSettingsSchema>
+
+/** A change to one of the settings of a backup rule */
+export const BackupRuleChangeSchema = zodKeyValueChange(BackupRuleSettingsSchema)
+export type BackupRuleChange = z.output<typeof BackupRuleChangeSchema>
+
+export const BackupRulesConfigSchema = z.object({
+	id: z.string(),
+	...BackupRuleSettingsSchema.shape,
 
 	lastRan: z.number().default(0),
 
