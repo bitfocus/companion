@@ -1,8 +1,8 @@
 @import '../breakpoints.css'; /* makes @custom-media (--bp-*) resolvable in this file (see Sidebar.css) */
 
-/* Styles for the SplitPanels component (Layout/SplitPanels.tsx). Only the split *container* and its
-   draggable divide live here; the panel content classes (`.primary-panel`, `.secondary-panel`,
-   `.secondary-panel-simple`, …) stay in layout.css as they are shared/reused outside a split.
+/* Styles for the SplitPanels component (Layout/SplitPanels.tsx). Only the split *container* lives here
+   (its draggable divide is Components/ResizeHandle.css); the panel content classes (`.primary-panel`,
+   `.secondary-panel`, `.secondary-panel-simple`, …) stay in layout.css as they are shared/reused outside a split.
 
    Registered in the `app-base` layer in postcss-wrap-layer.mjs (rather than defaulting to `features`
    like other Layout/*.css) so page/feature CSS can still override `.split-panels` in-context, as it
@@ -19,8 +19,9 @@
 	grid-template-columns: 1fr;
 	height: 100%;
 
-	/* The containing block for the absolutely-positioned resize handle, whose `left` is measured from
-	   this element. Needed here rather than on an ancestor, as a split can be nested in a page shell. */
+	/* The containing block for the absolutely-positioned resize handle (Components/ResizeHandle), whose
+	   `left` is measured from this element. Needed here rather than on an ancestor, as a split can be
+	   nested in a page shell. */
 	position: relative;
 
 	/* A single track the height of the split, rather than of its content, so that panels filling it
@@ -70,89 +71,5 @@
 @media only screen and (min-width: 2000px) {
 	.split-panels {
 		grid-template-columns: 2fr 3fr;
-	}
-}
-
-/* Draggable divide (opt-in via SplitPanels `resize`). Only rendered in the two-panel layout; the
-   column widths themselves are driven by an inline `grid-template-columns` from the stored percent. */
-.split-panels-resize-handle {
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	/* `left` is set imperatively to the panel boundary; centre the strip on it. */
-	transform: translateX(-50%);
-	width: 1.5rem; /* generous hit area spanning the column gap */
-	z-index: 2;
-	cursor: col-resize;
-	touch-action: none;
-	--divider-color: var(--color-action-border);
-	background-image: linear-gradient(var(--divider-color), var(--divider-color));
-	background-position: center;
-	background-size: 1px 100%;
-	background-repeat: no-repeat;
-
-	/* A full-height rule separates the panels; the opaque grip sits over its centre. */
-	&::before,
-	&::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		pointer-events: none;
-	}
-
-	&::before {
-		transform: translate(-50%, -50%);
-		width: 16px;
-		height: 36px;
-		border-radius: 6px;
-		background-color: var(--color-action-bg);
-		border: 1px solid var(--divider-color);
-		transition: background-color 0.15s ease;
-	}
-
-	&::after {
-		/* Two columns of three dots, centred inside the grip. */
-		transform: translate(-4.5px, -8.5px);
-		width: 3px;
-		height: 3px;
-		border-radius: 50%;
-		background-color: var(--color-action-text);
-		box-shadow:
-			6px 0 0 var(--color-action-text),
-			0 7px 0 var(--color-action-text),
-			6px 7px 0 var(--color-action-text),
-			0 14px 0 var(--color-action-text),
-			6px 14px 0 var(--color-action-text);
-	}
-
-	&:hover,
-	&:focus-visible,
-	&[data-dragging] {
-		--divider-color: var(--color-action-border-hover);
-	}
-
-	&:hover::before,
-	&:focus-visible::before {
-		background-color: var(--color-action-hover);
-	}
-
-	&[data-dragging]::before {
-		background-color: var(--color-action-pressed);
-	}
-
-	&:focus-visible {
-		outline: none;
-	}
-
-	&:focus-visible::before {
-		outline: 2px solid var(--color-action-focus);
-		outline-offset: 2px;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.split-panels-resize-handle::before {
-		transition: none;
 	}
 }
