@@ -29,6 +29,7 @@ export function LinkButtonPanel({
 			controlId={controlId}
 			location={location}
 			typeLabel="Remote button"
+			liveStep={null}
 			// The remote button may use rotary actions
 			testControls={<ControlHotPressButtons location={location} showRotaries />}
 			actions={null}

@@ -116,6 +116,18 @@
 		color: var(--color-muted);
 		font-size: 0.75rem;
 	}
+
+	/* Follows the type, so it reads as a detail of the button rather than another heading */
+	.edit-button-summary-step {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+
+		&::before {
+			content: '·';
+			margin-inline: 0.15rem;
+		}
+	}
 }
 
 .edit-button-summary-actions {

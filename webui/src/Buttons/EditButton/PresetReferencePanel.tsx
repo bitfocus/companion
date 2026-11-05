@@ -23,6 +23,7 @@ export function PresetReferencePanel({ controlId, location, config }: PresetRefe
 			controlId={controlId}
 			location={location}
 			typeLabel="Preset reference"
+			liveStep={null}
 			testControls={<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />}
 			actions={<ConvertToNormalButton location={location} />}
 			notesState={notesState}

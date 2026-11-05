@@ -13,6 +13,8 @@ interface EditButtonLayoutProps {
 	controlId: SomeControlId
 	location: ControlLocation
 	typeLabel: string
+	/** Which step the button is on, for types with steps */
+	liveStep: React.ReactNode
 	/** Controls to test the button with, for types that can be pressed */
 	testControls: React.ReactNode
 	/** Extra actions, shown before the clear button */
@@ -29,6 +31,7 @@ export function EditButtonLayout({
 	controlId,
 	location,
 	typeLabel,
+	liveStep,
 	testControls,
 	actions,
 	notesState,
@@ -46,7 +49,10 @@ export function EditButtonLayout({
 					</div>
 					<div className="edit-button-summary-identity">
 						<strong>Button {formatLocation(location)}</strong>
-						<span>{typeLabel}</span>
+						<span>
+							{typeLabel}
+							{liveStep}
+						</span>
 						{testControls && (
 							<div className="edit-button-summary-test">
 								<MyErrorBoundary>{testControls}</MyErrorBoundary>

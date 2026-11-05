@@ -29,6 +29,7 @@ export function ButtonReferencePanel({
 			controlId={controlId}
 			location={location}
 			typeLabel="Button reference"
+			liveStep={null}
 			// The referenced button may use rotary actions
 			testControls={<ControlHotPressButtons location={location} showRotaries />}
 			actions={<ConvertToNormalButton location={location} />}

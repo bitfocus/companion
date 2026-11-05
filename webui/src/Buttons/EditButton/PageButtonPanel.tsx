@@ -44,6 +44,7 @@ export function PageButtonPanel({ controlId, location, type }: PageButtonPanelPr
 			controlId={controlId}
 			location={location}
 			typeLabel={info.label}
+			liveStep={null}
 			testControls={null}
 			actions={<ConvertToNormalButton location={location} />}
 			notesState={null}

@@ -18,6 +18,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
+import { LiveStepDot } from './LiveStep.js'
 import type { ButtonEditorMainTabState } from './useButtonEditorMainTab.js'
 
 export function ButtonEditorTabBar({ tabs, activeTab, setActiveTab }: ButtonEditorMainTabState): React.JSX.Element {
@@ -232,12 +233,7 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 		[renameStepMutation, controlId, stepId]
 	)
 
-	const liveDot = isCurrent && (
-		<span
-			className={`w-1.5 h-1.5 rounded-full bg-tone-good-fill ${isSelected ? '' : 'animate-pulse'}`}
-			title="Active live step"
-		/>
-	)
+	const liveDot = isCurrent && <LiveStepDot pulse={!isSelected} />
 
 	if (editingSize) {
 		return (

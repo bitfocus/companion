@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
+import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import { ButtonEditorTabs } from '../ButtonEditorTabs.js'
+import { LiveStepLabel } from '../LiveStep.js'
 
 const { renameMutation } = vi.hoisted(() => ({
 	renameMutation: { mutateAsync: vi.fn().mockResolvedValue(true) },
@@ -91,5 +93,43 @@ describe('inline step renaming', () => {
 		expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
 		expect(screen.getByRole('button', { name: 'Opening (1)' })).toBeInTheDocument()
 		expect(renameMutation.mutateAsync).toHaveBeenCalledTimes(renameCount)
+	})
+})
+
+describe('the live step in the editor header', () => {
+	function makeSteps(...names: (string | undefined)[]): NormalButtonSteps {
+		return Object.fromEntries(
+			names.map((name, i) => [
+				String(i),
+				{
+					options: { name, runWhileHeld: [] },
+					action_sets: { down: [], up: [], rotate_left: [], rotate_right: [] },
+				},
+			])
+		)
+	}
+
+	it('says nothing for a button with one step, which has no other step to be on', () => {
+		const { container } = render(<LiveStepLabel steps={makeSteps(undefined)} currentStepId="0" />)
+
+		expect(container).toBeEmptyDOMElement()
+	})
+
+	it('says which step of how many the button is on', () => {
+		render(<LiveStepLabel steps={makeSteps(undefined, undefined, undefined)} currentStepId="1" />)
+
+		expect(screen.getByText('Step 2 of 3')).toBeInTheDocument()
+	})
+
+	it('uses the name of a named step', () => {
+		render(<LiveStepLabel steps={makeSteps('Off', 'On')} currentStepId="1" />)
+
+		expect(screen.getByText('On · step 2 of 2')).toBeInTheDocument()
+	})
+
+	it('says nothing when the live step is not one it knows of yet', () => {
+		const { container } = render(<LiveStepLabel steps={makeSteps(undefined, undefined)} currentStepId="9" />)
+
+		expect(container).toBeEmptyDOMElement()
 	})
 })
