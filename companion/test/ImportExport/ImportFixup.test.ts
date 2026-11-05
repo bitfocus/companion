@@ -629,6 +629,28 @@ describe('fixupLayeredButtonControl', () => {
 
 		expect((result.style.layers[0] as any).children[0].text.value).toBe('$(NewLabel:x)')
 	})
+
+	test('remaps connectionId on composite draw elements, including nested in groups', () => {
+		const control = makeButton({
+			style: {
+				layers: [
+					{ id: 'c1', type: 'composite', name: 'comp', connectionId: 'conn-old', elementId: 'meter' },
+					{
+						id: 'g1',
+						type: 'group',
+						name: 'grp',
+						children: [{ id: 'c2', type: 'composite', name: 'comp', connectionId: 'conn-old', elementId: 'meter' }],
+					},
+				],
+			},
+		})
+
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+
+		expect((result.style.layers[0] as any).connectionId).toBe('conn-new')
+		expect((result.style.layers[0] as any).elementId).toBe('meter')
+		expect((result.style.layers[1] as any).children[0].connectionId).toBe('conn-new')
+	})
 })
 
 describe('fixupPresetReferenceControl', () => {
