@@ -65,7 +65,7 @@ describe('ServiceMdnsAdvertise', () => {
 		expect(ctx.published()).toContainEqual(
 			expect.objectContaining({
 				name: 'Studio',
-				type: 'companion-link-ws',
+				type: 'comp-link-ws',
 				protocol: 'tcp',
 				port: 1234,
 				txt: expect.objectContaining({
@@ -77,10 +77,26 @@ describe('ServiceMdnsAdvertise', () => {
 		)
 	})
 
+	it('keeps service types within the 15 characters RFC 6763 allows, except the legacy ones', () => {
+		const ctx = createService({ link_direct_enabled: true, link_direct_port: 1234 })
+
+		const types = ctx
+			.published()
+			.filter((svc: any) => !svc.allowInvalidType)
+			.map((svc: any) => svc.type as string)
+		expect(types).toHaveLength(3)
+		for (const type of types) expect(type.length).toBeLessThanOrEqual(15)
+	})
+
 	it('does not announce direct Link connections while they are switched off', () => {
 		const ctx = createService({ link_direct_enabled: false, link_direct_port: 1234 })
 
-		expect(ctx.published().map((svc: any) => svc.type)).toEqual(['companion-satellite-tcp', 'companion-satellite-ws'])
+		expect(ctx.published().map((svc: any) => [svc.type, svc.port, svc.allowInvalidType])).toEqual([
+			['comp-sat-tcp', 16622, false],
+			['companion-satellite-tcp', 16622, true],
+			['comp-sat-ws', 16623, false],
+			['companion-satellite-ws', 16623, true],
+		])
 	})
 
 	it('announces again when direct Link connections are switched on, or their port changes', async () => {
@@ -89,11 +105,11 @@ describe('ServiceMdnsAdvertise', () => {
 
 		ctx.set({ key: 'link_direct_enabled', value: true })
 		await vi.advanceTimersByTimeAsync(100)
-		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'companion-link-ws', port: 1234 }))
+		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'comp-link-ws', port: 1234 }))
 
 		ctx.set({ key: 'link_direct_port', value: 4321 })
 		await vi.advanceTimersByTimeAsync(100)
-		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'companion-link-ws', port: 4321 }))
+		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'comp-link-ws', port: 4321 }))
 		expect(hoisted.instances.at(-2).unpublishAll).toHaveBeenCalled()
 	})
 
@@ -105,7 +121,7 @@ describe('ServiceMdnsAdvertise', () => {
 		ctx.link.emit('self')
 		await vi.advanceTimersByTimeAsync(100)
 		expect(ctx.published()).toContainEqual(
-			expect.objectContaining({ type: 'companion-link-ws', txt: expect.objectContaining({ linkId: 'new-link-id' }) })
+			expect.objectContaining({ type: 'comp-link-ws', txt: expect.objectContaining({ linkId: 'new-link-id' }) })
 		)
 	})
 
@@ -122,10 +138,10 @@ describe('ServiceMdnsAdvertise', () => {
 
 		ctx.setListening(false)
 		await vi.advanceTimersByTimeAsync(100)
-		expect(ctx.published().map((svc: any) => svc.type)).not.toContain('companion-link-ws')
+		expect(ctx.published().map((svc: any) => svc.type)).not.toContain('comp-link-ws')
 
 		ctx.setListening(true)
 		await vi.advanceTimersByTimeAsync(100)
-		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'companion-link-ws' }))
+		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'comp-link-ws' }))
 	})
 })

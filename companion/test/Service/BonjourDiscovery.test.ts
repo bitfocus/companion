@@ -295,7 +295,7 @@ describe('ServiceBonjourDiscovery', () => {
 		it('takes the query of a Link transport field from Link, not a module manifest', async () => {
 			const { service, server, instanceController, getLinkBonjourQueries } = createService(
 				{},
-				{ 'direct-client/bonjourHost': [{ type: 'companion-link-ws', protocol: 'tcp', addressFamily: 'ipv4' }] }
+				{ 'direct-client/bonjourHost': [{ type: 'comp-link-ws', protocol: 'tcp', addressFamily: 'ipv4' }] }
 			)
 			const sub = await subscribe(service, {
 				type: 'link-transport',
@@ -307,7 +307,7 @@ describe('ServiceBonjourDiscovery', () => {
 			const browser = await getBrowser(server!)
 			expect(getLinkBonjourQueries).toHaveBeenCalledWith('direct-client', 'bonjourHost')
 			expect(instanceController.getManifestForConnection).not.toHaveBeenCalled()
-			expect(browser.filter).toMatchObject({ type: 'companion-link-ws', protocol: 'tcp', addressFamily: 'ipv4' })
+			expect(browser.filter).toMatchObject({ type: 'comp-link-ws', protocol: 'tcp', addressFamily: 'ipv4' })
 
 			browser.emit('up', makeSvc())
 			expect(await p).toEqual({ type: 'up', service: expectedSvc({ subId: 'link:direct-client::bonjourHost' }) })
@@ -316,7 +316,7 @@ describe('ServiceBonjourDiscovery', () => {
 
 		it("leaves out this installation's new Link id once it is regenerated", async () => {
 			const linkQueries = {
-				'direct-client/bonjourHost': [{ type: 'companion-link-ws', protocol: 'tcp', excludeTxt: { linkId: 'old' } }],
+				'direct-client/bonjourHost': [{ type: 'comp-link-ws', protocol: 'tcp', excludeTxt: { linkId: 'old' } }],
 			} satisfies Record<string, BonjourQuery[]>
 			const { service, server, linkSelfListeners } = createService({}, linkQueries)
 			const sub = await subscribe(service, {
@@ -328,7 +328,7 @@ describe('ServiceBonjourDiscovery', () => {
 			const browser = await getBrowser(server!)
 
 			linkQueries['direct-client/bonjourHost'] = [
-				{ type: 'companion-link-ws', protocol: 'tcp', excludeTxt: { linkId: 'new' } },
+				{ type: 'comp-link-ws', protocol: 'tcp', excludeTxt: { linkId: 'new' } },
 			]
 			for (const listener of linkSelfListeners) listener()
 
