@@ -72,6 +72,7 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 				}
 			}
 
+			if (element.type === 'composite') this.visitor.visitConnectionId(element, 'connectionId')
 			if (element.type === 'group') this.visitDrawElements(element.children)
 		}
 
