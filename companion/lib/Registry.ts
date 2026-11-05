@@ -547,41 +547,12 @@ export class Registry {
 			this.controls.triggerEvents.emit('startup')
 
 			if (process.env.COMPANION_IPC_PARENT) {
-				process.on('disconnect', () => process.exit())
-
-				process.on('message', (msg: any): void => {
-					try {
-						if (msg.messageType === 'http-rebind') {
-							this.rebindHttp(msg.ip, Number(msg.port))
-						} else if (msg.messageType === 'exit') {
-							this.exit(false, false)
-						} else if (msg.messageType === 'scan-usb') {
-							this.surfaces.triggerRefreshDevices().catch(() => {
-								showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
-							})
-						} else if (msg.messageType === 'power-status') {
-							this.instance.powerStatusChange(msg.status)
-						} else if (msg.messageType === 'lock-screen') {
-							this.controls.triggerEvents.emit('locked', !!msg.status)
-						}
-					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
-					}
-				})
+				process.on('disconnect', this.#onIpcDisconnect)
+				process.on('message', this.#onIpcMessage)
 			}
 
 			if (process.env.COMPANION_IPC_PARENT || process.env.COMPANION_DEV_MODULES) {
-				process.on('message', (msg: any): void => {
-					try {
-						if (msg.messageType === 'reload-extra-module') {
-							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e: unknown) => {
-								this.#logger.warn(`Failed to reload module: ${stringifyError(e)}`)
-							})
-						}
-					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
-					}
-				})
+				process.on('message', this.#onDevModuleMessage)
 			}
 		} catch (e) {
 			// We aren't ready, but we need exit to work
@@ -595,11 +566,49 @@ export class Registry {
 		}
 	}
 
+	#onIpcDisconnect = (): void => process.exit()
+
+	#onIpcMessage = (msg: any): void => {
+		try {
+			if (msg.messageType === 'http-rebind') {
+				this.rebindHttp(msg.ip, Number(msg.port))
+			} else if (msg.messageType === 'exit') {
+				this.exit(false, false)
+			} else if (msg.messageType === 'scan-usb') {
+				this.surfaces.triggerRefreshDevices().catch(() => {
+					showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
+				})
+			} else if (msg.messageType === 'power-status') {
+				this.instance.powerStatusChange(msg.status)
+			} else if (msg.messageType === 'lock-screen') {
+				this.controls.triggerEvents.emit('locked', !!msg.status)
+			}
+		} catch (e) {
+			this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
+		}
+	}
+
+	#onDevModuleMessage = (msg: any): void => {
+		try {
+			if (msg.messageType === 'reload-extra-module') {
+				this.instance.modules.reloadExtraModule(msg.fullpath).catch((e: unknown) => {
+					this.#logger.warn(`Failed to reload module: ${stringifyError(e)}`)
+				})
+			}
+		} catch (e) {
+			this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
+		}
+	}
+
 	/**
 	 * Shutdown the application gracefully: stop the timers and services, close the sockets and
 	 * databases. This does not terminate the process; `exit` wraps this for the running app
 	 */
 	async close(): Promise<void> {
+		process.off('disconnect', this.#onIpcDisconnect)
+		process.off('message', this.#onIpcMessage)
+		process.off('message', this.#onDevModuleMessage)
+
 		this.internalModule.destroy()
 		this.#renderClock.destroy()
 		this.controls.triggerEvents.destroy()

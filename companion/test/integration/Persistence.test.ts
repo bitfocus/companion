@@ -6,9 +6,10 @@ import { createTestApp, type TestApp } from './TestApp.js'
 vi.setConfig({ testTimeout: 60_000, hookTimeout: 30_000 })
 
 describe('config persistence across restarts', () => {
-	let app: TestApp
+	let app: TestApp | undefined
 	afterEach(async () => {
-		await app.close()
+		await app?.close()
+		app = undefined
 	})
 
 	test('controls and custom variables survive a restart', async () => {
@@ -29,20 +30,38 @@ describe('config persistence across restarts', () => {
 		await app.close()
 
 		// Boot a second app from the same config directory
-		app = await createTestApp({ configDir, extraModulePath: null })
+		const restarted = await createTestApp({ configDir, extraModulePath: null })
+		app = restarted
 
 		// The control rehydrated at its location with its entities
-		const rehydratedControlId = app.registry.page.store.getControlIdAt(location)
+		const rehydratedControlId = restarted.registry.page.store.getControlIdAt(location)
 		expect(rehydratedControlId).toBe(controlId)
 
 		// The custom variable definition persisted, and its value reset to the startup value
 		// (persistCurrentValue defaults to false)
-		expect(app.getCustomVariableValue('persisted')).toBe('startup-value')
+		expect(restarted.getCustomVariableValue('persisted')).toBe('startup-value')
 
 		// Pressing the restored button still runs its restored action
-		app.pressButton(location, true)
+		restarted.pressButton(location, true)
 		await vi.waitFor(() => {
-			expect(app.getCustomVariableValue('persisted')).toBe('pressed after restart')
+			expect(restarted.getCustomVariableValue('persisted')).toBe('pressed after restart')
 		})
+	})
+
+	test('closing the app removes the process listeners it added', async () => {
+		// As when developing modules, which adds a listener for module reloads
+		vi.stubEnv('COMPANION_DEV_MODULES', '/nonexistent')
+		try {
+			const before = process.listenerCount('message')
+
+			app = await createTestApp({ configDir: null, extraModulePath: null })
+			expect(process.listenerCount('message')).toBe(before + 1)
+
+			await app.close()
+			app = undefined
+			expect(process.listenerCount('message')).toBe(before)
+		} finally {
+			vi.unstubAllEnvs()
+		}
 	})
 })
