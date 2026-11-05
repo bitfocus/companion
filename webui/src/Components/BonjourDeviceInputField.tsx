@@ -69,10 +69,16 @@ export function BonjourDeviceInputField({
 
 		choices.push({ id: MANUAL_SENTINEL, label: 'Manual' })
 
+		// A device announcing several service types shows up once per type, at the same host:port
+		const seenAddresses = new Set<string>()
+
 		for (const svc of Object.values(services)) {
 			if (!svc) continue
 			for (const rawAddress of svc.addresses || []) {
 				const address = `${rawAddress}:${svc.port}`
+				if (seenAddresses.has(address)) continue
+				seenAddresses.add(address)
+
 				choices.push({
 					id: address,
 					label: `${svc.name} (${address})`,
