@@ -57,8 +57,8 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 
 			// Advertise a separate service per satellite port, so each SRV record points
 			// straight at the port the satellite app should connect to.
-			this.#publish(name, txt, 'companion-satellite-tcp', 16622)
-			this.#publish(name, txt, 'companion-satellite-ws', 16623)
+			this.#publish(name, txt, 'comp-sat-tcp', 16622, 'companion-satellite-tcp')
+			this.#publish(name, txt, 'comp-sat-ws', 16623, 'companion-satellite-ws')
 
 			this.currentState = true
 
@@ -72,19 +72,28 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		}
 	}
 
-	#publish(name: string, txt: Record<string, string>, type: string, port: number): void {
-		this.#bonjour?.publish(
-			{
-				name,
-				type,
-				protocol: 'tcp',
-				port,
-				txt,
-				ttl: 150,
-				disableIPv6: DISABLE_IPv6,
-			},
-			{ announceOnInterval: 60 * 1000 }
-		)
+	/**
+	 * @param legacyType Also announced under this pre-5.2 type, which is longer than RFC 6763 allows, so that older
+	 * satellite apps still find this. TODO: remove after 5.2
+	 */
+	#publish(name: string, txt: Record<string, string>, type: string, port: number, legacyType: string | null): void {
+		const publish = (serviceType: string, allowInvalidType: boolean) =>
+			this.#bonjour?.publish(
+				{
+					name,
+					type: serviceType,
+					protocol: 'tcp',
+					port,
+					txt,
+					ttl: 150,
+					disableIPv6: DISABLE_IPv6,
+					allowInvalidType,
+				},
+				{ announceOnInterval: 60 * 1000 }
+			)
+
+		publish(type, false)
+		if (legacyType !== null) publish(legacyType, true)
 	}
 
 	close(): void {

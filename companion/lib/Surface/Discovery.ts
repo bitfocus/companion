@@ -14,6 +14,21 @@ import type { DiscoveredRemoteSurfaceInfo } from '@companion-surface/host'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
+const SATELLITE_MDNS_SERVICE_TYPE = 'comp-sat-app'
+const LEGACY_SATELLITE_MDNS_SERVICE_TYPE = 'companion-satellite'
+
+/**
+ * The satellite services to show, leaving out those announced under the legacy type when they are also announced
+ * under the current one
+ */
+export function getSatelliteServices(
+	services: DiscoveredService[],
+	legacyServices: DiscoveredService[]
+): DiscoveredService[] {
+	const names = new Set(services.map((service) => service.name))
+	return [...services, ...legacyServices.filter((service) => !names.has(service.name))]
+}
+
 /**
  * Class providing the discovery of Satellite Surface.
  *
@@ -34,6 +49,10 @@ export class ServiceSurfaceDiscovery {
 	readonly #bonjour = new Bonjour()
 
 	#satelliteBrowser: Browser | undefined
+	/** Browses the pre-5.2 type, which is longer than RFC 6763 allows. TODO: remove in 6.0 */
+	#legacySatelliteBrowser: Browser | undefined
+	/** The satellite services last sent to the ui, by id */
+	#satelliteServices = new Map<string, ClientDiscoveredSurfaceInfo>()
 
 	#satelliteExpireInterval: NodeJS.Timeout | undefined
 
@@ -43,24 +62,13 @@ export class ServiceSurfaceDiscovery {
 
 	constructor() {
 		try {
-			this.#satelliteBrowser = this.#bonjour.find({ type: 'companion-satellite', protocol: 'tcp' })
+			this.#satelliteBrowser = this.#watchSatelliteType(SATELLITE_MDNS_SERVICE_TYPE)
+			this.#legacySatelliteBrowser = this.#watchSatelliteType(LEGACY_SATELLITE_MDNS_SERVICE_TYPE)
 
 			this.#satelliteExpireInterval = setInterval(() => {
 				this.#satelliteBrowser?.expire()
+				this.#legacySatelliteBrowser?.expire()
 			}, 30000)
-
-			this.#satelliteBrowser.on('up', (service) => {
-				this.#updateSatelliteService(undefined, service)
-			})
-			this.#satelliteBrowser.on('down', (service) => {
-				this.#forgetSatelliteService(service)
-			})
-			this.#satelliteBrowser.on('txt-update', (newService, oldService) => {
-				this.#updateSatelliteService(oldService, newService)
-			})
-			this.#satelliteBrowser.on('srv-update', (newService, oldService) => {
-				this.#updateSatelliteService(oldService, newService)
-			})
 		} catch (_e) {
 			this.#logger.debug(`ERROR failed to start searching for companion satellite devices`)
 		}
@@ -119,30 +127,41 @@ export class ServiceSurfaceDiscovery {
 		}
 	}
 
-	#updateSatelliteService(oldService: DiscoveredService | undefined, service: DiscoveredService) {
-		this.#logger.debug(`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`)
-
-		if (oldService) {
-			const oldServiceInfo = this.#convertSatelliteServiceForUi(oldService)
-			const newServiceInfo = this.#convertSatelliteServiceForUi(service)
-
-			if (isEqual(oldServiceInfo, newServiceInfo)) {
-				// Nothing to do
-				return
-			}
-		}
-
-		this.#surfaceEvents.emit('event', {
-			type: 'update',
-			info: this.#convertSatelliteServiceForUi(service),
+	#watchSatelliteType(type: string): Browser {
+		const browser = this.#bonjour.find({ type, protocol: 'tcp' })
+		browser.on('up', (service) => {
+			this.#logger.debug(
+				`Found companion satellite device ${service.name} at ${service.addresses?.[0]}:${service.port}`
+			)
+			this.#updateSatelliteServices()
 		})
+		browser.on('down', () => this.#updateSatelliteServices())
+		browser.on('txt-update', () => this.#updateSatelliteServices())
+		browser.on('srv-update', () => this.#updateSatelliteServices())
+		return browser
 	}
 
-	#forgetSatelliteService(service: DiscoveredService) {
-		this.#surfaceEvents.emit('event', {
-			type: 'remove',
-			itemId: this.#convertSatelliteServiceForUi(service).id,
-		})
+	/** Send the ui what changed in the satellite services, after any of them changes */
+	#updateSatelliteServices() {
+		const services = getSatelliteServices(
+			this.#satelliteBrowser?.services ?? [],
+			this.#legacySatelliteBrowser?.services ?? []
+		)
+
+		const newServices = new Map<string, ClientDiscoveredSurfaceInfo>()
+		for (const service of services) {
+			const info = this.#convertSatelliteServiceForUi(service)
+			newServices.set(info.id, info)
+
+			if (!isEqual(this.#satelliteServices.get(info.id), info)) {
+				this.#surfaceEvents.emit('event', { type: 'update', info })
+			}
+		}
+		for (const id of this.#satelliteServices.keys()) {
+			if (!newServices.has(id)) this.#surfaceEvents.emit('event', { type: 'remove', itemId: id })
+		}
+
+		this.#satelliteServices = newServices
 	}
 
 	#convertSatelliteServiceForUi(service: DiscoveredService): ClientDiscoveredSurfaceInfo {
@@ -236,12 +255,7 @@ export class ServiceSurfaceDiscovery {
 				// Send the initial data
 				const initialServices: ClientDiscoveredSurfaceInfo[] = []
 
-				if (self.#satelliteBrowser) {
-					for (const service of self.#satelliteBrowser.services) {
-						const uiService = self.#convertSatelliteServiceForUi(service)
-						initialServices.push(uiService)
-					}
-				}
+				initialServices.push(...self.#satelliteServices.values())
 
 				for (const [instanceId, knownSurfaces] of self.#knownSurfaces) {
 					for (const surface of knownSurfaces.values()) {
