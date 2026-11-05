@@ -30,7 +30,7 @@ function getEntity(app: TestApp, controlId: SomeControlId, entityId: string): Co
 	return entity
 }
 
-/** The id of the only action which calls a custom action on a control. Entity ids are not kept across a restart */
+/** The id of the only action which calls a custom action on a control */
 function findCallId(app: TestApp, controlId: SomeControlId): string {
 	const control = app.registry.controls.getControl(controlId)
 	const calls = control?.supportsEntities
@@ -1084,7 +1084,7 @@ describe('custom action scope and copies', () => {
 
 		const location = { pageNumber: 1, row: 1, column: 1 }
 		const buttonId = app.createButton(location)
-		app.addCustomActionCall(
+		const callId = app.addCustomActionCall(
 			buttonId,
 			customActionId,
 			{ n: exprVal(21) },
@@ -1097,15 +1097,14 @@ describe('custom action scope and copies', () => {
 		await app.close()
 		app = await createTestApp({ configDir, extraModulePath: null })
 
-		const restoredCallId = findCallId(app, buttonId)
-		const call = getEntity(app, buttonId, restoredCallId)
+		const call = getEntity(app, buttonId, callId)
 		expect(call.rawOptions).toEqual({ n: exprVal(21) })
 		expect(call.rawOutputTargets).toEqual({
 			double: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
 		})
 
 		// The copy is rebuilt from the restored custom action and inputs
-		await vi.waitFor(() => expect(getCopyValue(app, buttonId, restoredCallId, 'double')).toBe(42))
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(42))
 
 		app.pressButton(location, true)
 		await vi.waitFor(() => expect(app.getCustomVariableValue('res')).toBe(42))
@@ -1140,9 +1139,8 @@ describe('custom action scope and copies', () => {
 		await app.close()
 		app = await createTestApp({ configDir, extraModulePath: null })
 
-		const restoredCallId = findCallId(app, buttonId)
-		expect(getEntity(app, buttonId, restoredCallId).rawOptions).toEqual({ count: exprVal(6) })
-		await vi.waitFor(() => expect(getCopyValue(app, buttonId, restoredCallId, 'double')).toBe(12))
+		expect(getEntity(app, buttonId, callId).rawOptions).toEqual({ count: exprVal(6) })
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(12))
 	})
 
 	/** The id of the first step of a button */
