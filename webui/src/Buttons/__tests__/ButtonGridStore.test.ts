@@ -176,6 +176,82 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('drawing the keyboard focus', () => {
+		const key = (location: ControlLocation) => formatLocationKey(location)
+
+		it('draws nothing while the focus is just the selection', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			expect(store.isCursor(key(at(1, 1)))).toBe(false)
+
+			store.moveFocus(0, 1, GRID_SIZE)
+			expect(store.isCursor(key(at(1, 2)))).toBe(false)
+		})
+
+		it('draws the focus once ctrl walks it off the selection', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+
+			expect(store.isCursor(key(at(1, 3)))).toBe(true)
+			expect(store.isCursor(key(at(1, 1)))).toBe(false)
+		})
+
+		it('keeps drawing it on a cell space has just added', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+			store.toggleFocused()
+
+			expect(store.selectionCount).toBe(2)
+			expect(store.isCursor(key(at(1, 3)))).toBe(true)
+		})
+
+		it('draws the end of a range extended with shift', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.extendFocus(0, 1, GRID_SIZE)
+
+			expect(store.isCursor(key(at(1, 2)))).toBe(true)
+		})
+
+		it('stops drawing it as soon as the pointer is used', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+
+			store.handleTap(at(2, 2), TOGGLE, actions)
+
+			// The ctrl-click moved the focus to a cell it took out of nothing, but a mouse user never asked for a cursor
+			expect(store.selectionCount).toBe(2)
+			expect(store.isCursor(key(at(2, 2)))).toBe(false)
+		})
+
+		it('does not point at wherever select-all left the focus', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+
+			store.selectAllOnPage(1, GRID_SIZE)
+
+			expect(store.isCursor(key(at(3, 7)))).toBe(false)
+		})
+	})
+
+	describe('arrowing onto a button', () => {
+		it('opens it in the editor under select, as clicking it would', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			vi.mocked(actions.openEditor).mockClear()
+
+			store.handleFocusMoved(at(1, 2), actions)
+
+			expect(actions.openEditor).toHaveBeenCalledWith(at(1, 2))
+		})
+
+		it('leaves the editor alone under arrange, where a tap does not open it either', () => {
+			store.setTool('arrange', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleFocusMoved(at(1, 2), actions)
+
+			expect(actions.openEditor).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('a view which is not the whole grid', () => {
 		/**
 		 * Viewing as a surface: it shows the buttons its controls drive, and answers for itself which one is

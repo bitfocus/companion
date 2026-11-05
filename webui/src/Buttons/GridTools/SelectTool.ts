@@ -38,6 +38,11 @@ export class SelectTool extends GridToolBase {
 		this.onHover(ctx, location, modifiers)
 	}
 
+	override onFocusMoved(ctx: GridToolContext, location: ControlLocation): void {
+		// Walking the grid with the arrows is choosing a button as surely as clicking it, so the editor follows
+		if (this.opensEditor && ctx.store.selectionCount === 1) ctx.actions.openEditor(location)
+	}
+
 	/**
 	 * What a tap on this tool means in terms of the selection.
 	 *

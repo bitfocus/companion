@@ -91,6 +91,27 @@ describe('walking around the grid', () => {
 		expect(store.selectedLocations).toEqual([expected])
 	})
 
+	it('opens the button a plain arrow lands on, so the editor never shows one the outline has left', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('ArrowRight')
+
+		expect(actions.openEditor).toHaveBeenCalledWith(at(1, 2))
+	})
+
+	it.each([
+		['shift', { shiftKey: true }],
+		['ctrl', { ctrlKey: true }],
+	])('leaves the editor where it is when %s is held', (_name, modifiers) => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('ArrowRight', modifiers)
+
+		expect(actions.openEditor).not.toHaveBeenCalled()
+	})
+
 	it('extends the selection when shift is held', () => {
 		const { store, press } = setup()
 		act(() => store.setSelection([at(1, 1)]))

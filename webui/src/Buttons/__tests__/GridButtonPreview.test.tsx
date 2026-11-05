@@ -29,6 +29,7 @@ function setup(props: Partial<Props> = {}) {
 		onTap,
 		onContextMenu,
 		selected: false,
+		cursor: false,
 		copySource: false,
 		pendingChange: null,
 		contextMenuOpen: false,

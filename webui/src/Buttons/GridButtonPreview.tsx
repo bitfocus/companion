@@ -56,6 +56,8 @@ export interface GridButtonPreviewProps {
 	onContextMenu: (location: ControlLocation, x: number, y: number) => void
 
 	selected: boolean
+	/** Where the keyboard focus is, when it has moved away from simply being the selection */
+	cursor: boolean
 	copySource: boolean
 	/** What a modifier-click here would do to this button, while the modifier is held */
 	pendingChange: GridPendingChange | null
@@ -101,6 +103,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	onTap,
 	onContextMenu,
 	selected,
+	cursor,
 	copySource,
 	pendingChange,
 	contextMenuOpen,
@@ -289,12 +292,16 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	return (
 		<div
 			ref={setRefs}
+			// The grid panel takes the keys, so a cell is not a tab stop. Set here, dnd-kit leaves it alone
+			// rather than making a draggable cell one.
+			tabIndex={-1}
 			// `grid-button` marks this as the grid's own cell rather than any other ButtonPreview, so a
 			// rule can apply to it and not to the preset pool or the emulator
 			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', `control-kind-${kind}`, {
 				// Let the browser scroll the grid, except in press mode where a scroll must not steal the press
 				'grid-pannable': !pressMode,
 				selected,
+				'grid-cursor': cursor,
 				'copy-source': copySource,
 				'pending-add': pendingChange === 'add',
 				'pending-remove': pendingChange === 'remove',

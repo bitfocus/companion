@@ -1,3 +1,4 @@
+import { PointerSensor } from '@dnd-kit/dom'
 import { useDraggable, useDragOperation, useDroppable } from '@dnd-kit/react'
 import { memo, useCallback, useMemo, useState } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
@@ -15,6 +16,7 @@ import {
 	useGridDragAnyButton,
 	useGridDragPreviewValid,
 	useGridDropGhostSource,
+	useGridIsCursor,
 	useGridIsSelected,
 	useGridIsTransferSource,
 	useGridPendingChange,
@@ -80,6 +82,7 @@ export const GridButtonCell = memo(function GridButtonCell({
 	// Read straight from the store rather than taking these as props, so a selection change re-renders
 	// only the cells whose own answer changed
 	const selected = useGridIsSelected(locationKey)
+	const cursor = useGridIsCursor(locationKey)
 	const isTransferSource = useGridIsTransferSource(locationKey)
 	const pressMode = useGridPressMode()
 	const dragAnyButton = useGridDragAnyButton()
@@ -107,6 +110,8 @@ export const GridButtonCell = memo(function GridButtonCell({
 		type: GRID_BUTTON_DRAG_TYPE,
 		data: dragData,
 		disabled: dragDisabled,
+		// The grid's own keys move the selection, so a focused cell must not also start a keyboard drag on space
+		sensors: [PointerSensor],
 	})
 
 	const onTap = useCallback(
@@ -149,6 +154,7 @@ export const GridButtonCell = memo(function GridButtonCell({
 			onTap={onTap}
 			onContextMenu={onContextMenu}
 			selected={selected}
+			cursor={cursor}
 			copySource={isTransferSource}
 			pendingChange={pendingChange}
 			contextMenuOpen={contextMenuOpen}

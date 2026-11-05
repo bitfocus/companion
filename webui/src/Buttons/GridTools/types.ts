@@ -116,6 +116,8 @@ export interface GridTool {
 	onExit(ctx: GridToolContext): void
 
 	onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void
+	/** A plain arrow moved the selection onto this cell */
+	onFocusMoved(ctx: GridToolContext, location: ControlLocation): void
 	onPress(ctx: GridToolContext, location: ControlLocation, isDown: boolean): void
 	onRotate(ctx: GridToolContext, location: ControlLocation, delta: number): void
 
@@ -172,6 +174,10 @@ export abstract class GridToolBase implements GridTool {
 	}
 
 	onTap(_ctx: GridToolContext, _location: ControlLocation, _modifiers: GridButtonModifiers): void {
+		// nothing by default
+	}
+
+	onFocusMoved(_ctx: GridToolContext, _location: ControlLocation): void {
 		// nothing by default
 	}
 

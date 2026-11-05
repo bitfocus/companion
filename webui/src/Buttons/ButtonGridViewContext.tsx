@@ -54,6 +54,15 @@ export function useGridIsSelected(locationKey: string): boolean {
 	)
 }
 
+/** Whether the keyboard focus is drawn on this one cell */
+export function useGridIsCursor(locationKey: string): boolean {
+	const store = useButtonGridStore()
+	return useSyncExternalStore(
+		store.subscribe,
+		useCallback(() => store.isCursor(locationKey), [store, locationKey])
+	)
+}
+
 /**
  * The button that would end up on this cell if the drag in flight were released, or null.
  *

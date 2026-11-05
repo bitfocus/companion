@@ -77,13 +77,18 @@ export function useGridKeyboard({
 			if (!gridSize) return
 
 			// Shift extends the selection as the focus moves, ctrl walks the focus without disturbing it,
-			// and a plain arrow selects wherever it lands - the same three behaviours as any file list
+			// and a plain arrow selects wherever it lands and opens it - the same three behaviours as any file list
 			const navigate = (rowDelta: number, columnDelta: number) => {
 				e.preventDefault()
 
-				if (e.shiftKey) store.extendFocus(rowDelta, columnDelta, gridSize)
-				else if (isControlOrCommandCombo) store.moveFocusOnly(rowDelta, columnDelta, gridSize)
-				else store.moveFocus(rowDelta, columnDelta, gridSize)
+				if (e.shiftKey) {
+					store.extendFocus(rowDelta, columnDelta, gridSize)
+				} else if (isControlOrCommandCombo) {
+					store.moveFocusOnly(rowDelta, columnDelta, gridSize)
+				} else {
+					const next = store.moveFocus(rowDelta, columnDelta, gridSize)
+					if (next) store.handleFocusMoved(next, actions)
+				}
 			}
 
 			switch (e.key) {
