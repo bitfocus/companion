@@ -435,6 +435,18 @@ describe('ButtonGridStore', () => {
 			expect(store.selectionCount).toBe(0)
 		})
 
+		it('keeps a selection that was already moved to the new page', () => {
+			store.setViewPage(1, actions)
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			// Page up/down moves the selection before the page around the grid catches up
+			store.moveFocusToPage(2)
+			store.setViewPage(2, actions)
+
+			expect(store.selectedLocations).toEqual([at(1, 1, 2)])
+			expect(store.focus).toEqual(at(1, 1, 2))
+		})
+
 		it('keeps it when told again about the page it is already showing', () => {
 			store.setViewPage(1, actions)
 			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
