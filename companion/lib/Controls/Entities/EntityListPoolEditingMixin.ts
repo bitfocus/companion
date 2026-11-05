@@ -621,7 +621,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const stepId = existingKeys.length === 0 ? '0' : `${Math.max(...existingKeys) + 1}`
 
-			this.steps.set(stepId, this.getNewStepValue(null, null))
+			this.steps.set(stepId, this.getNewStepValue(null, null, false))
 
 			// Ensure current step is valid
 			this.stepCheckExpression(true)
@@ -645,7 +645,8 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const newStep = this.getNewStepValue(
 				structuredClone(this.stepAsActionSetsModel(stepToCopy)),
-				structuredClone(stepToCopy.options)
+				structuredClone(stepToCopy.options),
+				true
 			)
 
 			// add one after the last

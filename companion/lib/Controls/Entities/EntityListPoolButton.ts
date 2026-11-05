@@ -116,7 +116,7 @@ export abstract class ButtonEntityListPoolBase
 
 		this.currentStep = { type: 'id', id: '0' }
 
-		this.steps.set('0', this.getNewStepValue(null, null))
+		this.steps.set('0', this.getNewStepValue(null, null, false))
 	}
 
 	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean): void {
@@ -127,7 +127,7 @@ export abstract class ButtonEntityListPoolBase
 		this.steps.clear()
 
 		for (const [id, stepObj] of Object.entries(storage.steps ?? {})) {
-			this.steps.set(id, this.getNewStepValue(stepObj.action_sets, stepObj.options))
+			this.steps.set(id, this.getNewStepValue(stepObj.action_sets, stepObj.options, isImport))
 		}
 
 		this.currentStep = { type: 'id', id: this.getStepIds()[0] } // TODO - other modes?
@@ -390,34 +390,32 @@ export abstract class ButtonEntityListPoolBase
 		return list
 	}
 
+	/**
+	 * @param isCloned - give the actions fresh ids, as for an import or a duplicated step
+	 */
 	protected getNewStepValue(
 		existingActions: ActionSetsModel | null,
-		existingOptions: ActionStepOptions | null
+		existingOptions: ActionStepOptions | null,
+		isCloned: boolean
 	): ControlEntityListActionStep {
 		const options = existingOptions || structuredClone(ButtonEntityListPoolBase.DefaultStepOptions)
 
-		const downList = this.createActionEntityList(existingActions?.down || [], false, !!existingActions)
-		const upList = this.createActionEntityList(existingActions?.up || [], false, !!existingActions)
+		const downList = this.createActionEntityList(existingActions?.down || [], false, isCloned)
+		const upList = this.createActionEntityList(existingActions?.up || [], false, isCloned)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], false, !!existingActions))
-			sets.set(
-				'rotate_right',
-				this.createActionEntityList(existingActions?.rotate_right || [], false, !!existingActions)
-			)
+			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], false, isCloned))
+			sets.set('rotate_right', this.createActionEntityList(existingActions?.rotate_right || [], false, isCloned))
 		}
 
 		for (const setId in existingActions || {}) {
 			const setIdNumber = validateActionSetId(setId as ActionSetId)
 			if (typeof setIdNumber === 'number') {
-				sets.set(
-					setIdNumber,
-					this.createActionEntityList(existingActions?.[setIdNumber] || [], false, !!existingActions)
-				)
+				sets.set(setIdNumber, this.createActionEntityList(existingActions?.[setIdNumber] || [], false, isCloned))
 			}
 		}
 

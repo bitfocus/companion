@@ -69,6 +69,8 @@ describe('EntityListPool - stepDuplicate', () => {
 		expect(ok).toBe(true)
 		expect(pool.getStepIds()).toEqual(['0', '1'])
 		expect(pool.getAllEntitiesInList(downSet('1'))).toHaveLength(1)
+		// The copy is a separate action, not the same one twice
+		expect(pool.getAllEntitiesInList(downSet('1'))[0].id).not.toBe(pool.getAllEntitiesInList(downSet('0'))[0].id)
 	})
 
 	test('returns false for an unknown step', () => {

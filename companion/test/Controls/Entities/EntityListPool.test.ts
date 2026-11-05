@@ -629,8 +629,40 @@ describe('EntityListPool - storage round-trip (button)', () => {
 
 		const steps = pool.asNormalButtonSteps()
 		expect(Object.keys(steps)).toEqual(['0'])
-		// loadStorage clones the entities (assigning fresh ids), so assert on the preserved content
 		expect(steps['0'].action_sets.down).toHaveLength(1)
 		expect(steps['0'].action_sets.down?.[0].definitionId).toBe('round-trip-action')
+	})
+
+	test.each([
+		['loading keeps', false],
+		['importing replaces', true],
+	] as const)('%s the stored entity ids', (_name, isImport) => {
+		const { pool } = createPool()
+		const feedback = feedbackModel()
+		const action = actionModel()
+
+		pool.loadStorage(
+			buttonStorage({
+				feedbacks: [feedback],
+				steps: {
+					'0': {
+						action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
+						options: { runWhileHeld: [] },
+					},
+				},
+			}),
+			true,
+			isImport
+		)
+
+		const loadedFeedbackId = pool.getFeedbackEntities()[0].id
+		const loadedActionId = pool.getAllEntitiesInList(downSet('0'))[0].id
+		if (isImport) {
+			expect(loadedFeedbackId).not.toBe(feedback.id)
+			expect(loadedActionId).not.toBe(action.id)
+		} else {
+			expect(loadedFeedbackId).toBe(feedback.id)
+			expect(loadedActionId).toBe(action.id)
+		}
 	})
 })
