@@ -232,6 +232,19 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('test pressing', () => {
+		it('runs the button whatever the tool, leaving the selection alone', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTestPress(at(2, 2), true, actions)
+			store.handleTestPress(at(2, 2), false, actions)
+
+			expect(actions.press).toHaveBeenNthCalledWith(1, at(2, 2), true)
+			expect(actions.press).toHaveBeenNthCalledWith(2, at(2, 2), false)
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+	})
+
 	describe('arrowing onto a button', () => {
 		it('opens it in the editor under select, as clicking it would', () => {
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)

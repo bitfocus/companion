@@ -15,6 +15,7 @@ import {
 	MARQUEE_START_THRESHOLD,
 	revealScrollOffset,
 } from './GridCanvasGeometry.js'
+import { hoverModifiers } from './gridModifiers.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
@@ -423,10 +424,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				const point = canvasPoint(e.clientX, e.clientY)
 				const inside = !!point && point.x >= 0 && point.y >= 0 && point.x < canvasWidth && point.y < canvasHeight
 
-				onHoverLocation(inside ? locationAtCanvasPoint(point.x, point.y) : null, {
-					range: e.shiftKey,
-					toggle: e.ctrlKey || e.metaKey,
-				})
+				onHoverLocation(inside ? locationAtCanvasPoint(point.x, point.y) : null, hoverModifiers(e))
 			},
 			[onHoverLocation, canvasPoint, canvasWidth, canvasHeight, locationAtCanvasPoint, dragSource]
 		)

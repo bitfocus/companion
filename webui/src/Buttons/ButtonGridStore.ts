@@ -345,6 +345,14 @@ export class ButtonGridStore {
 		this.#activeTool.onFocusMoved(this.#context(actions), location)
 	}
 
+	/**
+	 * Run a button for real whatever the tool, for testing it in between edits without switching to the press
+	 * tool. Leaves the selection and the editor alone, as it is a quick try rather than a choice of button.
+	 */
+	handleTestPress(location: ControlLocation, isDown: boolean, actions: GridToolActions): void {
+		actions.press(location, isDown)
+	}
+
 	handlePress(location: ControlLocation, isDown: boolean, actions: GridToolActions): void {
 		this.#activeTool.onPress(this.#context(actions), location, isDown)
 	}

@@ -44,6 +44,12 @@
 		filter: brightness(0.5);
 	}
 
+	/* The keys for a test press are held over the button: drawn pushed in, as it would be */
+	&.pending-press .button-border {
+		transform: scale(0.94);
+		filter: brightness(0.85);
+	}
+
 	/* Where the keyboard is, once it has moved off the selection. Drawn in the cell's own padding, clear of
 	   its neighbours, and as an outline so a selected cell keeps its solid border inside it. */
 	&.grid-cursor .button-border {

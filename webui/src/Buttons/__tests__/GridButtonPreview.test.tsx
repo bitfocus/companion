@@ -10,6 +10,7 @@ type Props = Parameters<typeof GridButtonPreview>[0]
 
 function setup(props: Partial<Props> = {}) {
 	const onPress = vi.fn()
+	const onTestPress = vi.fn()
 	const onRotate = vi.fn()
 	const onTap = vi.fn()
 	const onContextMenu = vi.fn()
@@ -25,6 +26,7 @@ function setup(props: Partial<Props> = {}) {
 		placeholder: '2/3',
 		pressMode: false,
 		onPress,
+		onTestPress,
 		onRotate: null,
 		onTap,
 		onContextMenu,
@@ -47,7 +49,7 @@ function setup(props: Partial<Props> = {}) {
 	const utils = render(<GridButtonPreview {...baseProps} />)
 	const root = utils.container.firstElementChild as HTMLElement
 	const rerender = (next: Partial<Props>) => utils.rerender(<GridButtonPreview {...baseProps} {...next} />)
-	return { ...utils, onPress, onRotate, onTap, onContextMenu, root, rerender }
+	return { ...utils, onPress, onTestPress, onRotate, onTap, onContextMenu, root, rerender }
 }
 
 describe('GridButtonPreview', () => {
@@ -139,6 +141,89 @@ describe('GridButtonPreview', () => {
 		it('lets the browser pan, so a touch drag scrolls the grid', () => {
 			const { root } = setup()
 			expect(root).toHaveClass('grid-pannable')
+		})
+	})
+
+	describe('test pressing with ctrl+shift', () => {
+		const TEST_PRESS_KEYS = { ctrlKey: true, shiftKey: true }
+
+		it('presses on the way down and releases on the way up, so a held button is held', () => {
+			const { root, onTestPress, onPress, onTap } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			expect(onTestPress).toHaveBeenCalledExactlyOnceWith(location, true)
+
+			fireEvent.pointerUp(root, { pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			expect(onTestPress).toHaveBeenLastCalledWith(location, false)
+			expect(onTestPress).toHaveBeenCalledTimes(2)
+
+			// A press is not a choice of button, so nothing is selected by it
+			expect(onTap).not.toHaveBeenCalled()
+			expect(onPress).not.toHaveBeenCalled()
+		})
+
+		it('still releases when the keys are let go before the button', () => {
+			const { root, onTestPress, onTap } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			fireEvent.pointerUp(root, { pointerId: 1, clientX: 50, clientY: 50 })
+
+			expect(onTestPress).toHaveBeenLastCalledWith(location, false)
+			expect(onTap).not.toHaveBeenCalled()
+		})
+
+		it('releases when the browser takes the gesture over', () => {
+			const { root, onTestPress } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			fireEvent.pointerCancel(root, { pointerId: 1 })
+
+			expect(onTestPress).toHaveBeenLastCalledWith(location, false)
+		})
+
+		it('releases when the cell goes away mid-press', () => {
+			const { root, onTestPress, unmount } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			unmount()
+
+			expect(onTestPress).toHaveBeenLastCalledWith(location, false)
+		})
+
+		it.each([
+			['shift alone', { shiftKey: true }],
+			['ctrl alone', { ctrlKey: true }],
+		])('leaves %s to selecting', (_name, keys) => {
+			const { root, onTestPress, onTap } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50, ...keys })
+			fireEvent.pointerUp(root, { pointerId: 1, clientX: 50, clientY: 50, ...keys })
+
+			expect(onTestPress).not.toHaveBeenCalled()
+			expect(onTap).toHaveBeenCalled()
+		})
+
+		it('is an ordinary press in press mode, where every click already is one', () => {
+			const { root, onTestPress, onPress } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+
+			expect(onPress).toHaveBeenCalledWith(location, true)
+			expect(onTestPress).not.toHaveBeenCalled()
+		})
+
+		it('shows the button pushed in while the keys are held over it', () => {
+			const { root } = setup()
+
+			fireEvent.pointerMove(root, { pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			expect(root.classList.contains('pending-press')).toBe(true)
+
+			fireEvent.pointerMove(root, { pointerId: 1, clientX: 51, clientY: 50, shiftKey: true })
+			expect(root.classList.contains('pending-press')).toBe(false)
+
+			fireEvent.pointerMove(root, { pointerId: 1, clientX: 50, clientY: 50, ...TEST_PRESS_KEYS })
+			fireEvent.pointerLeave(root, { pointerId: 1 })
+			expect(root.classList.contains('pending-press')).toBe(false)
 		})
 	})
 

@@ -13,6 +13,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { memo, useCallback } from 'react'
 import { Toolbar } from '~/Components/Toolbar.js'
+import { PRIMARY_MODIFIER_LABEL } from '~/util/platform.js'
 import type { GridClipboard } from './ButtonGridStore.js'
 import {
 	useButtonGridView,
@@ -39,14 +40,19 @@ interface ToolDefinition {
  * live in a bar underneath the grid.
  */
 const NAVIGATION_TOOLS: ToolDefinition[] = [
-	{ id: 'select', label: 'Select', icon: faArrowPointer, title: 'Select buttons' },
+	{
+		id: 'select',
+		label: 'Select',
+		icon: faArrowPointer,
+		title: `Select buttons. Shift-click selects a range, ${PRIMARY_MODIFIER_LABEL}-click adds or removes one, and ${PRIMARY_MODIFIER_LABEL}+Shift-click (or Enter) presses one for real.`,
+	},
 	{ id: 'multi-select', label: 'Multi', icon: faSquareCheck, title: 'Tap buttons to add or remove them' },
 	{ id: 'arrange', label: 'Arrange', icon: faUpDownLeftRight, title: 'Drag any button to move it' },
 	{
 		id: 'press',
 		label: 'Press',
 		icon: faHandPointer,
-		title: 'Press buttons for real, running their actions',
+		title: `Press buttons for real, running their actions. To press one without leaving another tool, ${PRIMARY_MODIFIER_LABEL}+Shift-click it or press Enter.`,
 		dangerous: true,
 	},
 ]

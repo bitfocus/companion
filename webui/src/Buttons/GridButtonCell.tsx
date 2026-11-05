@@ -25,6 +25,7 @@ import {
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
+import { isTestPressGesture } from './gridModifiers.js'
 import { ROTARY_STEP_DEGREES } from './SurfaceView/rotaryDrag.js'
 import { SurfaceControlDetail } from './SurfaceView/SurfaceControlDetail.js'
 import { SurfaceLeds } from './SurfaceView/SurfaceLeds.js'
@@ -54,6 +55,17 @@ export interface GridButtonCellProps {
  * it a style which places and sizes it. That is what lets the same cell be one square of the infinite grid and one
  * control of a surface drawn at its own size and shape.
  */
+/**
+ * Pointer only: the grid's own keys move the selection, so a focused cell must not also start a keyboard drag on
+ * space. And a click that is pressing the button for real must not start dragging it as well.
+ */
+const GRID_DRAG_SENSORS = [
+	PointerSensor.configure({
+		preventActivation: (event, source) =>
+			isTestPressGesture(event) || !!PointerSensor.defaults.preventActivation?.(event, source),
+	}),
+]
+
 export const GridButtonCell = memo(function GridButtonCell({
 	location,
 	renderSize,
@@ -110,8 +122,7 @@ export const GridButtonCell = memo(function GridButtonCell({
 		type: GRID_BUTTON_DRAG_TYPE,
 		data: dragData,
 		disabled: dragDisabled,
-		// The grid's own keys move the selection, so a focused cell must not also start a keyboard drag on space
-		sensors: [PointerSensor],
+		sensors: GRID_DRAG_SENSORS,
 	})
 
 	const onTap = useCallback(
@@ -120,6 +131,10 @@ export const GridButtonCell = memo(function GridButtonCell({
 	)
 	const onPress = useCallback(
 		(pressLocation: ControlLocation, isDown: boolean) => store.handlePress(pressLocation, isDown, actions),
+		[store, actions]
+	)
+	const onTestPress = useCallback(
+		(pressLocation: ControlLocation, isDown: boolean) => store.handleTestPress(pressLocation, isDown, actions),
 		[store, actions]
 	)
 	// How far this control has been turned from here, so each step sent turns what is drawn with it. A knob has no
@@ -150,6 +165,7 @@ export const GridButtonCell = memo(function GridButtonCell({
 			placeholder={`${row}/${column}`}
 			pressMode={pressMode}
 			onPress={onPress}
+			onTestPress={onTestPress}
 			onRotate={isRotaryKind(kind) ? onRotate : null}
 			onTap={onTap}
 			onContextMenu={onContextMenu}

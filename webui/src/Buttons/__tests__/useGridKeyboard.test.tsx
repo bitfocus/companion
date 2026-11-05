@@ -14,7 +14,7 @@ function setup(options: { gridSize?: UserConfigGridSize | undefined } = {}) {
 	const setPageNumber = vi.fn()
 	const zoom: GridZoomController = { zoomIn: vi.fn(), zoomOut: vi.fn(), zoomReset: vi.fn(), setZoom: vi.fn() }
 
-	const { result } = renderHook(() =>
+	const { result, unmount } = renderHook(() =>
 		useGridKeyboard({
 			store,
 			actions,
@@ -33,7 +33,7 @@ function setup(options: { gridSize?: UserConfigGridSize | undefined } = {}) {
 		return event
 	}
 
-	return { store, actions, setPageNumber, zoom, press }
+	return { store, actions, setPageNumber, zoom, press, unmount }
 }
 
 describe('zooming', () => {
@@ -155,6 +155,68 @@ describe('walking around the grid', () => {
 		press('a', { ctrlKey: true })
 
 		expect(store.selectionCount).toBe(32)
+	})
+})
+
+describe('pressing the focused button with Enter', () => {
+	const releaseEnter = () => act(() => void document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' })))
+
+	it('holds it down until Enter is let go', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keydown' })
+		expect(actions.press).toHaveBeenCalledExactlyOnceWith(at(1, 1), true)
+
+		releaseEnter()
+		expect(actions.press).toHaveBeenLastCalledWith(at(1, 1), false)
+	})
+
+	it('does not press again while the key repeats', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keydown' })
+		press('Enter', { type: 'keydown', repeat: true })
+
+		expect(actions.press).toHaveBeenCalledTimes(1)
+	})
+
+	it('leaves the selection and the editor alone', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keydown' })
+
+		expect(store.selectedLocations).toEqual([at(1, 1)])
+		expect(actions.openEditor).not.toHaveBeenCalled()
+	})
+
+	it('ignores the key-up the editor hands in, which was for whatever the editor was on', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keyup' })
+
+		expect(actions.press).not.toHaveBeenCalled()
+	})
+
+	it('does nothing with nothing focused', () => {
+		const { actions, press } = setup()
+
+		press('Enter', { type: 'keydown' })
+
+		expect(actions.press).not.toHaveBeenCalled()
+	})
+
+	it('lets go when the grid goes away mid-press', () => {
+		const { store, actions, press, unmount } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+		press('Enter', { type: 'keydown' })
+
+		unmount()
+
+		expect(actions.press).toHaveBeenLastCalledWith(at(1, 1), false)
 	})
 })
 

@@ -1,4 +1,5 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { isTypingTarget } from '~/util/isTypingTarget.js'
 import type { ButtonGridStore } from './ButtonGridStore.js'
@@ -49,6 +50,30 @@ export function useGridKeyboard({
 
 		document.addEventListener('keydown', handleEscape)
 		return () => document.removeEventListener('keydown', handleEscape)
+	}, [store, actions])
+
+	// The button Enter is holding down. Let go of wherever the focus has gone by then, or when the window loses
+	// it, so a button is never left stuck down.
+	const enterPressRef = useRef<ControlLocation | null>(null)
+	useEffect(() => {
+		const release = () => {
+			const location = enterPressRef.current
+			if (!location) return
+
+			enterPressRef.current = null
+			store.handleTestPress(location, false, actions)
+		}
+		const handleKeyUp = (e: KeyboardEvent) => {
+			if (e.key === 'Enter') release()
+		}
+
+		document.addEventListener('keyup', handleKeyUp)
+		window.addEventListener('blur', release)
+		return () => {
+			document.removeEventListener('keyup', handleKeyUp)
+			window.removeEventListener('blur', release)
+			release()
+		}
 	}, [store, actions])
 
 	return useCallback(
@@ -111,6 +136,18 @@ export function useGridKeyboard({
 					e.preventDefault()
 					store.toggleFocused()
 					return
+				case 'Enter': {
+					// Press the focused button for real, as ctrl+shift+click does. Only on the way down: the editor
+					// hands its key-ups in here too, and an Enter there is for whatever it is on.
+					if (e.type !== 'keydown' || e.repeat || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
+					const focus = store.focus
+					if (!focus || enterPressRef.current) return
+
+					e.preventDefault()
+					enterPressRef.current = focus
+					store.handleTestPress(focus, true, actions)
+					return
+				}
 				case 'PageUp': {
 					const focus = store.focus
 					if (!focus) return
