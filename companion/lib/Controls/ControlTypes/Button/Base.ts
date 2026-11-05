@@ -203,6 +203,7 @@ export abstract class ButtonControlRuntimeBase<
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.actionRunner.abortAll(null)
 		this.abortRunningHoldTimers(undefined)
 
 		// Buttons always host a drawer, so the base owns tearing it down

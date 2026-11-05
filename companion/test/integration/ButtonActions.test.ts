@@ -129,6 +129,27 @@ describe('button action execution', () => {
 		expect(app.getCustomVariableValue('after')).toBe(stops ? 'initial' : 'yes')
 	})
 
+	test('deleting a button part way through its actions stops them', async () => {
+		app = await createTestApp({ configDir: null, extraModulePath: null })
+
+		app.createCustomVariable('after', 'initial')
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const controlId = app.createButton(location)
+		app.addInternalAction(controlId, 'wait', { time: exprVal('100') })
+		app.addInternalAction(controlId, 'custom_variable_set_value', {
+			name: exprVal('after'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+
+		app.pressButton(location, true)
+		await app.trpc().controls.resetControls({ locations: [location], newType: null })
+
+		await new Promise((resolve) => setTimeout(resolve, 250))
+		expect(app.getCustomVariableValue('after')).toBe('initial')
+	})
+
 	test('logic_if only runs its children when the condition is true', async () => {
 		app = await createTestApp({ configDir: null, extraModulePath: null })
 

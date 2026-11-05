@@ -48,6 +48,37 @@ describe('trigger controls', () => {
 		})
 	})
 
+	test('deleting a trigger part way through its actions stops them', async () => {
+		app.createCustomVariable('watch', 'initial')
+		app.createCustomVariable('started', 'no')
+		app.createCustomVariable('after', 'initial')
+
+		const { triggerId, trigger } = await createTrigger()
+		app.addTriggerAction(triggerId, 'custom_variable_set_value', {
+			name: exprVal('started'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+		app.addTriggerAction(triggerId, 'wait', { time: exprVal('100') })
+		app.addTriggerAction(triggerId, 'custom_variable_set_value', {
+			name: exprVal('after'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+		trigger.eventAdd({ id: nanoid(), type: 'variable_changed', enabled: true, options: { variableId: 'custom:watch' } })
+		trigger.optionsSetField('enabled', true)
+		await settle()
+
+		app.registry.variables.custom.setValue('watch', 'go')
+		await vi.waitFor(() => {
+			expect(app.getCustomVariableValue('started')).toBe('yes')
+		})
+		await app.trpc().controls.triggers.delete({ controlId: triggerId })
+
+		await new Promise((resolve) => setTimeout(resolve, 250))
+		expect(app.getCustomVariableValue('after')).toBe('initial')
+	})
+
 	test('a disabled trigger does not run', async () => {
 		app.createCustomVariable('watch', 'initial')
 		app.createCustomVariable('result', 'initial')

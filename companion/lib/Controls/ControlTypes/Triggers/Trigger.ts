@@ -630,6 +630,8 @@ export class ControlTrigger
 	}
 
 	destroy(): void {
+		this.#actionRunner.abortAll(null)
+
 		this.#timerEvents.destroy()
 		this.#miscEvents.destroy()
 		this.#variablesEvents.destroy()
