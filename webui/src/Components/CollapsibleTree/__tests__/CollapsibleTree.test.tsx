@@ -8,6 +8,7 @@ import {
 	type CollapsibleTreeLeafProps,
 	type CollapsibleTreeNode,
 } from '../CollapsibleTree.js'
+import { countTreeLeaves } from '../countTreeLeaves.js'
 
 // ---------------------------------------------------------------------------
 // Fixtures & helpers
@@ -463,5 +464,20 @@ describe('CollapsibleTree', () => {
 		expect(screen.getByRole('button', { name: 'Leaf A' })).not.toHaveAttribute('aria-current')
 		expect(screen.getByRole('button', { name: 'Leaf B' })).toHaveAttribute('aria-current', 'true')
 		expect(screen.getByRole('button', { name: 'Leaf B' })).toHaveClass('selected')
+	})
+})
+
+describe('countTreeLeaves', () => {
+	it('counts the leaves of a node and of the nodes inside it', () => {
+		const node = (leaves: number, children: CollapsibleTreeNode[]): CollapsibleTreeNode => ({
+			id: `${leaves}`,
+			children,
+			leaves: Array.from({ length: leaves }, (_, i) => i),
+			metadata: null,
+		})
+
+		expect(countTreeLeaves(node(0, []))).toBe(0)
+		// A group holding only other groups still has what they hold
+		expect(countTreeLeaves(node(0, [node(2, []), node(1, [node(3, [])])]))).toBe(6)
 	})
 })

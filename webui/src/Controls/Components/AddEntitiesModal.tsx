@@ -11,6 +11,7 @@ import {
 	type CollapsibleTreeHeaderProps,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { countTreeLeaves } from '~/Components/CollapsibleTree/countTreeLeaves.js'
 import { Modal } from '~/Components/Modal'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
@@ -30,7 +31,8 @@ const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 
 	const meta = node.metadata
 	if (meta.type === 'connection') {
-		const itemCount = node.leaves.length
+		// Custom actions can be in collections, so count those inside them too
+		const itemCount = countTreeLeaves(node)
 		const itemLabel = itemCount === 1 ? entityTypeLabelContext : `${entityTypeLabelContext}s`
 		return (
 			<span className="collapsible-tree-connection-header">
