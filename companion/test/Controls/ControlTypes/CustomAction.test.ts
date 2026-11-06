@@ -420,6 +420,24 @@ describe('ControlCustomAction', () => {
 			expect(untouched.rawOptions).toEqual({ n: exprVal(6) })
 		})
 
+		test('an output follows its local variable being renamed', () => {
+			const local = userValue('v', 0)
+			const { control } = createHarness({
+				localVariables: [local, userValue('other', 0)],
+				outputs: [
+					{ id: 'out', label: 'Out', variableName: 'v' },
+					{ id: 'unrelated', label: 'Unrelated', variableName: 'other' },
+				],
+			})
+
+			expect(control.entities.entitySetVariableName('local-variables', local.id, 'renamed')).toBe(true)
+
+			expect(control.outputs).toEqual([
+				{ id: 'out', label: 'Out', variableName: 'renamed' },
+				{ id: 'unrelated', label: 'Unrelated', variableName: 'other' },
+			])
+		})
+
 		test('removing an output removes where the actions which call the custom action write it', () => {
 			const { deps, controlStore } = createHarness({})
 			const target = { type: 'custom-variable' as const, variableName: exprVal('x'), createIfNotExists: false }

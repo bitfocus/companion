@@ -177,6 +177,7 @@ export class ControlCustomAction
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
 			getDefaultOptionsVariables: () => buildCustomActionOptionsVariables(this.#getDefaultOptions()),
+			localVariableRenamed: (fromName, toName) => this.#localVariableRenamed(fromName, toName),
 		})
 
 		this.options = structuredClone(ControlCustomAction.DefaultOptions)
@@ -534,6 +535,20 @@ export class ControlCustomAction
 
 		this.commitChange()
 		return true
+	}
+
+	/**
+	 * An output comes from a local variable by its name, so it follows the variable being renamed
+	 */
+	#localVariableRenamed(fromName: string, toName: string): void {
+		let changed = false
+		this.#outputs = this.#outputs.map((output) => {
+			if (output.variableName !== fromName) return output
+			changed = true
+			return { ...output, variableName: toName }
+		})
+
+		if (changed) this.commitChange(false)
 	}
 
 	/**

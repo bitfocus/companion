@@ -25,6 +25,8 @@ import type { NewFeedbackValue } from './Types.js'
 export interface ControlEntityListPoolCustomActionProps extends ControlEntityListPoolProps {
 	/** Get the `$(options:*)` variables for when the custom action is not being run, from the defaults of its inputs */
 	getDefaultOptionsVariables: () => VariableValues
+	/** A local variable has been renamed, so that whatever refers to it by name can follow */
+	localVariableRenamed: (fromName: string, toName: string) => void
 }
 
 /**
@@ -33,6 +35,7 @@ export interface ControlEntityListPoolCustomActionProps extends ControlEntityLis
  */
 export class ControlEntityListPoolCustomAction extends WithEntityEditing(ControlEntityListPoolBase) {
 	readonly #getDefaultOptionsVariables: () => VariableValues
+	readonly #localVariableRenamed: (fromName: string, toName: string) => void
 
 	#actions: ControlEntityList
 
@@ -43,12 +46,22 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		super(props, false, [props.controlId])
 
 		this.#getDefaultOptionsVariables = props.getDefaultOptionsVariables
+		this.#localVariableRenamed = props.localVariableRenamed
 
 		this.#actions = this.createEntityList({ type: EntityModelType.Action })
 		this.#localVariables = this.createEntityList({
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Value,
 		})
+	}
+
+	entitySetVariableName(listId: SomeSocketEntityLocation, id: string, name: string): boolean {
+		const fromName = this.#localVariables.findById(id)?.rawLocalVariableName ?? null
+
+		if (!super.entitySetVariableName(listId, id, name)) return false
+
+		if (listId === 'local-variables' && fromName && fromName !== name) this.#localVariableRenamed(fromName, name)
+		return true
 	}
 
 	loadStorage(storage: CustomActionModel, skipSubscribe: boolean, isImport: boolean): void {
