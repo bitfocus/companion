@@ -26,6 +26,8 @@ import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
 import { rememberViewedPage, resolveViewedPage } from './GridPageNavigation.js'
+import type { GridTransferPair } from './GridTools/index.js'
+import { locationAfterTransfer } from './GridTransferRequest.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
@@ -98,7 +100,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		[pages]
 	)
 
-	const onGridChanged = useCallback(() => setTabResetToken(nanoid()), [])
+	const onGridChanged = useCallback((pairs: GridTransferPair[]) => {
+		// The editor follows the button it was showing, like the selection does, rather than staying on the cell
+		setSelectedButton((location) => location && locationAfterTransfer(location, pairs))
+		setTabResetToken(nanoid())
+	}, [])
 
 	const actions = useGridToolActions({
 		store: gridStore,

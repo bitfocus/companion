@@ -17,8 +17,8 @@ export interface UseGridToolActionsOptions {
 	openEditor: (location: ControlLocation) => void
 	/** Asks before anything that cannot be undone, and explains a paste that would go nowhere */
 	confirmRef: React.RefObject<GenericConfirmModalRef | null>
-	/** Something on the grid has changed, so anything showing a button needs rebuilding */
-	onGridChanged: () => void
+	/** Buttons have been carried to new places, so anything showing one needs to follow it and rebuild */
+	onGridChanged: (pairs: GridTransferPair[]) => void
 }
 
 /**
@@ -70,7 +70,7 @@ export function useGridToolActions({
 				// Follow the buttons to where they landed. Leaving the old positions selected points at
 				// where they used to be, which is no use for whatever you want to do next.
 				store.setSelection(carrying.map((pair) => pair.toLocation))
-				onGridChanged()
+				onGridChanged(carrying)
 				onApplied()
 			}
 

@@ -292,6 +292,30 @@ describe('what the tools are told about the grid', () => {
 		// Editing a button that has just been moved away would be editing nothing
 		expect(editButtonMounts).toBe(2)
 	})
+
+	it('moves the editor along with the button it was showing', () => {
+		setup()
+		act(() => view.actions.openEditor(at(1, 1, 2)))
+
+		act(() => {
+			view.actions.transfer('move', [{ fromLocation: at(1, 1, 2), toLocation: at(2, 2, 2) }], () => undefined)
+		})
+
+		// Left behind, it would show the empty cell while the selection sits on the button
+		expect(editButtonProps.location).toEqual(at(2, 2, 2))
+		expect(tab(/Edit Button 2\/2\/2/)).toBeInTheDocument()
+	})
+
+	it('leaves the editor where it is when the button it shows was not carried', () => {
+		setup()
+		act(() => view.actions.openEditor(at(1, 3, 2)))
+
+		act(() => {
+			view.actions.transfer('move', [{ fromLocation: at(1, 1, 2), toLocation: at(2, 2, 2) }], () => undefined)
+		})
+
+		expect(editButtonProps.location).toEqual(at(1, 3, 2))
+	})
 })
 
 describe('the grid panel', () => {

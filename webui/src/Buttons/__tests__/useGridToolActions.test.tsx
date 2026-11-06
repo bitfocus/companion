@@ -141,6 +141,15 @@ describe('transferring buttons', () => {
 		expect(onGridChanged).toHaveBeenCalled()
 	})
 
+	it('tells the page where each button went, so whatever shows one can follow it', () => {
+		const { actions, onGridChanged } = setup({ occupied: (l) => l.row === 1 })
+		const pairs = [pair(at(1, 1), at(2, 1)), pair(at(1, 2), at(2, 2))]
+
+		act(() => actions().transfer('move', pairs, () => undefined))
+
+		expect(onGridChanged).toHaveBeenCalledWith(pairs)
+	})
+
 	it('asks before replacing anything, naming how much would go', () => {
 		const { actions, asked } = setup()
 		const onApplied = vi.fn()
