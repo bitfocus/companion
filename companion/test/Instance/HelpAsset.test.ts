@@ -10,9 +10,9 @@ describe('resolveHelpAssetPath', () => {
 	let outsideDir: string
 
 	beforeEach(() => {
-		// realpathSync so the base tmp dir (which is itself a symlink on some platforms, e.g. macOS) doesn't
-		// leak into the comparison
-		tempDir = realpathSync(mkdtempSync(path.join(os.tmpdir(), 'companion-help-')))
+		// native realpath so the base tmp dir (a symlink on macOS, an 8.3 short name on Windows) matches what
+		// fs.promises.realpath returns
+		tempDir = realpathSync.native(mkdtempSync(path.join(os.tmpdir(), 'companion-help-')))
 		helpDir = path.join(tempDir, 'module', 'companion')
 		outsideDir = path.join(tempDir, 'outside')
 		mkdirSync(path.join(helpDir, 'images'), { recursive: true })
