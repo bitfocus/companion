@@ -555,9 +555,12 @@ export class ControlEntityInstance {
 	 * Set the target into which an output of this action is written
 	 * @param outputId The id of the output
 	 * @param target The target, or undefined to discard the output
+	 * @returns Whether it was set, as only an action has outputs
 	 */
-	setRawOutputTarget(outputId: string, target: RawStoreResult | undefined): void {
-		if (this.type !== EntityModelType.Action) return
+	setRawOutputTarget(outputId: string, target: RawStoreResult | undefined): boolean {
+		if (this.type !== EntityModelType.Action) return false
+		// The id is used as a key, so it can't be one which every object has
+		if (BANNED_PROPS.has(outputId)) return false
 
 		const data = this.#data as ActionEntityModel
 		const targets = { ...data.outputTargets }
@@ -567,6 +570,7 @@ export class ControlEntityInstance {
 			delete targets[outputId]
 		}
 		data.outputTargets = Object.keys(targets).length > 0 ? targets : undefined
+		return true
 	}
 
 	/**
@@ -797,6 +801,27 @@ export class ControlEntityInstance {
 			entities.push(...childGroup.getAllEntitiesWithTransient())
 		}
 
+		return entities
+	}
+
+	/**
+	 * This entity and those inside it which are enabled. A disabled entity, and everything inside it, is left out
+	 * @param includeTransient Whether to include the entities of transient child groups
+	 */
+	getAllEnabledEntities(includeTransient: boolean): ControlEntityInstance[] {
+		if (this.disabled) return []
+
+		const entities: ControlEntityInstance[] = [this]
+		if (isInternalConnectionId(this.connectionId)) {
+			for (const childGroup of this.#children.values()) {
+				entities.push(...childGroup.getAllEnabledEntities(includeTransient))
+			}
+		}
+		if (includeTransient) {
+			for (const childGroup of this.#transientChildren.values()) {
+				entities.push(...childGroup.getAllEnabledEntities(includeTransient))
+			}
+		}
 		return entities
 	}
 
@@ -1155,15 +1180,6 @@ export class ControlEntityInstance {
 	/**
 	 * Get all the connection ids that are enabled
 	 */
-	getAllEnabledConnectionIds(connectionIds: Set<string>): void {
-		if (this.disabled) return
-
-		connectionIds.add(this.connectionId)
-
-		for (const childGroup of this.#children.values()) {
-			childGroup.getAllEnabledConnectionIds(connectionIds)
-		}
-	}
 }
 
 export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean {

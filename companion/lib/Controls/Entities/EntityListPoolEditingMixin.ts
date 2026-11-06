@@ -434,7 +434,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entity = this.getEntityList(listId)?.findById(id)
 			if (!entity) return false
 
-			entity.setRawOutputTarget(outputId, target)
+			if (!entity.setRawOutputTarget(outputId, target)) return false
 
 			this.reportChange({ redraw: false })
 

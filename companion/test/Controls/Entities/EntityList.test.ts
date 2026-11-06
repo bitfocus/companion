@@ -1724,7 +1724,7 @@ describe('updateFeedbackValues', () => {
 	})
 })
 
-describe('getAllEnabledConnectionIds', () => {
+describe('getAllEnabledEntities', () => {
 	test('default', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
@@ -1735,11 +1735,8 @@ describe('getAllEnabledConnectionIds', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
-
-		const connectionIds = new Set<string>()
-		list.getAllEnabledConnectionIds(connectionIds)
-		expect(connectionIds).toHaveLength(allConnectionIds.size)
+		// Every entity is enabled
+		expect(list.getAllEnabledEntities(false)).toEqual(list.getAllEntities())
 	})
 
 	test('all disabled', () => {
@@ -1757,10 +1754,21 @@ describe('getAllEnabledConnectionIds', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		// const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
-		const connectionIds = new Set<string>()
-		list.getAllEnabledConnectionIds(connectionIds)
-		expect(connectionIds).toHaveLength(0)
+		expect(list.getAllEnabledEntities(false)).toEqual([])
+	})
+
+	test('a disabled entity leaves out everything inside it', () => {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		const actions = structuredClone(ActionTree)
+		const group = actions.find((entity) => entity.id === 'int0')!
+		group.disabled = true
+
+		list.loadStorage(actions, true, false)
+
+		expect(list.getAllEnabledEntities(false).map((entity) => entity.id)).toEqual(['01', '02'])
 	})
 })
 
@@ -2112,6 +2120,17 @@ describe('transient child groups', () => {
 
 		return { ...res, callerEntity, transientScope, group }
 	}
+
+	test('the enabled entities include those of a transient group only when asked', () => {
+		const { list } = setup()
+
+		expect(list.getAllEnabledEntities(false).map((entity) => entity.id)).toEqual(['caller'])
+		expect(list.getAllEnabledEntities(true).map((entity) => entity.id)).toEqual([
+			'caller',
+			transientAction.id,
+			transientFeedback.id,
+		])
+	})
 
 	test('entities are subscribed, parsing their options in the scope of the group', () => {
 		const { group, transientScope, connectionEntityUpdate, specialExpressionManager } = setup()

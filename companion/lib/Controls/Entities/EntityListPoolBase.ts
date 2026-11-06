@@ -499,15 +499,19 @@ export abstract class ControlEntityListPoolBase {
 	): void
 
 	/**
-	 * Get all the connectionIds for entities which are active
+	 * The entities which are enabled, and those inside them which are. A disabled entity, and everything inside it, is
+	 * left out
+	 * @param includeTransient Whether to include the entities of transient child groups, such as the copy of a custom
+	 * action held by an action which calls it
+	 */
+	getAllEnabledEntities(includeTransient: boolean): ControlEntityInstance[] {
+		return this.getAllEntityLists().flatMap((list) => list.getAllEnabledEntities(includeTransient))
+	}
+
+	/**
+	 * Get all the connectionIds for entities which are active, including those used by the custom actions they call
 	 */
 	getAllEnabledConnectionIds(): Set<string> {
-		const connectionIds = new Set<string>()
-
-		for (const list of this.getAllEntityLists()) {
-			list.getAllEnabledConnectionIds(connectionIds)
-		}
-
-		return connectionIds
+		return new Set(this.getAllEnabledEntities(true).map((entity) => entity.connectionId))
 	}
 }

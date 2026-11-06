@@ -458,11 +458,11 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Get all the connection ids that are enabled
+	 * The entities which are enabled, and those inside them which are. A disabled entity, and everything inside it, is
+	 * left out
+	 * @param includeTransient Whether to include the entities of transient child groups
 	 */
-	getAllEnabledConnectionIds(connectionIds: Set<string>): void {
-		for (const entity of this.#entities) {
-			entity.getAllEnabledConnectionIds(connectionIds)
-		}
+	getAllEnabledEntities(includeTransient: boolean): ControlEntityInstance[] {
+		return this.#entities.flatMap((entity) => entity.getAllEnabledEntities(includeTransient))
 	}
 }
