@@ -22,19 +22,25 @@ import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
 import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
-import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import type { CustomActionEditTab } from './customActionEditTabs.js'
 import { CustomActionOutputsEditor } from './OutputsEditor.js'
 import { CustomActionUsesEditor } from './UsesEditor.js'
 
 interface EditCustomActionPanelProps {
 	controlId: CustomActionControlId
+	activeTab: CustomActionEditTab
+	setActiveTab: (tab: CustomActionEditTab) => void
 }
 
-export function EditCustomActionPanel({ controlId }: EditCustomActionPanelProps): React.JSX.Element {
+export function EditCustomActionPanel({
+	controlId,
+	activeTab,
+	setActiveTab,
+}: EditCustomActionPanelProps): React.JSX.Element {
 	const { controlConfig, error: configError, reloadConfig } = useControlConfig(controlId)
 
 	const loadError = configError ?? null
@@ -48,6 +54,8 @@ export function EditCustomActionPanel({ controlId }: EditCustomActionPanelProps)
 					config={controlConfig.config}
 					controlId={controlId}
 					testRunning={controlConfig.runtime.testRunning}
+					activeTab={activeTab}
+					setActiveTab={setActiveTab}
 				/>
 			)}
 		</div>
@@ -58,15 +66,19 @@ interface CustomActionPanelContentProps {
 	config: CustomActionModel
 	controlId: CustomActionControlId
 	testRunning: boolean
+	activeTab: CustomActionEditTab
+	setActiveTab: (tab: CustomActionEditTab) => void
 }
 
-function CustomActionPanelContent({ config, controlId, testRunning }: CustomActionPanelContentProps): React.ReactNode {
+function CustomActionPanelContent({
+	config,
+	controlId,
+	testRunning,
+	activeTab,
+	setActiveTab,
+}: CustomActionPanelContentProps): React.ReactNode {
 	const setControlNotes = useControlNotesSetter(controlId, 'custom-action')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
-	const [activeTab, setActiveTab] = useLocalStorage<'actions' | 'inputs' | 'outputs' | 'variables' | 'uses'>(
-		'customActionEditor.activeTab',
-		'actions'
-	)
 
 	const inputFields = useMemo(() => config.inputs.map(toCompanionInputField), [config.inputs])
 	const localVariableNames = useMemo(

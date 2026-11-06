@@ -79,7 +79,8 @@ export const CustomActionsPage = observer(function CustomActionsPage() {
 	}
 
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/custom-actions/$controlId' })
+	// The editor has a child route for each tab
+	const routeMatch = matchRoute({ to: '/custom-actions/$controlId', fuzzy: true })
 	const selectedCustomActionId = routeMatch ? routeMatch.controlId : null
 
 	const selectCustomAction = useCallback(
