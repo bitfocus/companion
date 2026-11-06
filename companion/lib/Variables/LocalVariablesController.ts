@@ -146,21 +146,35 @@ export class LocalVariablesController {
 	 * on the same control, suitable for passing to `VariablesAndExpressionParser.createChildParser`.
 	 */
 	getLocalVariableContextFor(localVariable: LocalVariable): VariableValues | null {
-		const controlAndVariable = this.#getControlAndVariable(localVariable)
-		if (!controlAndVariable) return null
+		const localVariableEntities = this.#getLocalVariableEntitiesFor(localVariable)
+		if (!localVariableEntities) return null
 
-		const { entities, variableEntity } = controlAndVariable
+		const variableEntity = localVariableEntities.find((entity) => entity.rawLocalVariableName === localVariable.name)
+		if (!variableEntity) return null
+
 		const result: VariableValues = {
 			'this:current': this.#getValue(variableEntity, localVariable.frame),
 		}
 
-		for (const entity of entities.getAllEntitiesInList('local-variables')) {
+		for (const entity of localVariableEntities) {
 			const rawName = entity.rawLocalVariableName
 			if (!rawName) continue
 			result[`target:${rawName}`] = this.#getValue(entity, localVariable.frame)
 		}
 
 		return result
+	}
+
+	/**
+	 * The local variables a local variable is among. In a run of a custom action, these are the copies held by the run,
+	 * whose values come from its inputs, rather than those of the custom action itself
+	 */
+	#getLocalVariableEntitiesFor(localVariable: LocalVariable): ControlEntityInstance[] | null {
+		if (localVariable.frame) return localVariable.frame.getLocalVariableEntities()
+
+		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		if (!controlAndVariable) return null
+		return controlAndVariable.entities.getAllEntitiesInList('local-variables')
 	}
 
 	/**

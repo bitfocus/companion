@@ -403,7 +403,15 @@ describe('LocalVariablesController', () => {
 				makeVariableEntity('other', { feedbackValue: 'other startup' }),
 			])
 			const { controller } = createController({ [CreateCustomActionControlId('abc')]: control })
-			const frame = makeFrame()
+			// The copies held by the run, whose values come from its inputs rather than those of the custom action
+			const frame: CustomActionRunFrame = {
+				...makeFrame(),
+				getLocalVariableEntities: () =>
+					[
+						makeVariableEntity('my_var', { feedbackValue: 'run startup' }),
+						makeVariableEntity('other', { feedbackValue: 'other run startup' }),
+					] as any,
+			}
 			frame.localValues.set('my_var', 'run value')
 
 			expect(
@@ -411,7 +419,7 @@ describe('LocalVariablesController', () => {
 			).toEqual({
 				'this:current': 'run value',
 				'target:my_var': 'run value',
-				'target:other': 'other startup',
+				'target:other': 'other run startup',
 			})
 		})
 	})

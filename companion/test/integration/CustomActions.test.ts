@@ -971,6 +971,34 @@ describe('custom action scope and copies', () => {
 		expect(app.getFeedbackValue(buttonId, buttonLocalId)).toBe(99)
 	})
 
+	test('setting a local variable in a run sees the other local variables as the run has them', async () => {
+		app.createCustomVariable('out', 0)
+		const customActionId = await createDoublingCustomAction()
+		app.addLocalVariable(customActionId, 'copied', 'user_value', { startup_value: exprVal(0) })
+
+		const groupId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		const inOrder = { parentId: groupId, childGroup: 'default' }
+		// $(target:double) is computed from the input of the caller, rather than its default
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', {
+			location: exprVal('this'),
+			name: exprVal('copied'),
+			value: exprExpr('$(target:double)'),
+		})
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('out'),
+			create: exprVal(false),
+			value: exprExpr('$(local:copied)'),
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(location), customActionId, { n: exprVal(5) }, null)
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe(10))
+	})
+
 	test('a custom action writing to a local variable of its caller does so through an output only', async () => {
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Writer' })
 		app.addLocalVariable(customActionId, 'result', 'user_value', { startup_value: exprVal(0) })
