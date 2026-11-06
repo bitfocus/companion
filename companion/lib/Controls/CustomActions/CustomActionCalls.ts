@@ -22,12 +22,14 @@ export function analyseCustomActionCalls(
 	directCalls: ReadonlyMap<string, ReadonlySet<string>>
 ): Map<string, CustomActionCallAnalysis> {
 	const result = new Map<string, CustomActionCallAnalysis>()
+	// Shared by every custom action, as calls which branch and join again lead to the same ones many times
+	const knownChains = new Map<string, number>()
 
 	for (const id of directCalls.keys()) {
 		result.set(id, {
 			calledIds: findCalledIds(directCalls, id),
 			loop: findLoop(directCalls, id),
-			tooDeep: longestChain(directCalls, id, new Set()) > MAX_CUSTOM_ACTION_DEPTH,
+			tooDeep: longestChain(directCalls, id, new Set(), knownChains).length > MAX_CUSTOM_ACTION_DEPTH,
 		})
 	}
 
@@ -69,18 +71,42 @@ function findLoop(directCalls: ReadonlyMap<string, ReadonlySet<string>>, id: str
 	return null
 }
 
-/** The number of custom actions in the longest chain of calls from one, not following a loop */
-function longestChain(directCalls: ReadonlyMap<string, ReadonlySet<string>>, id: string, inChain: Set<string>): number {
-	if (inChain.has(id)) return 0
+/**
+ * The number of custom actions in the longest chain of calls from one, not following a loop
+ * @param inChain The custom actions already in the chain leading to this one
+ * @param knownChains The longest chain from those custom actions where it doesn't depend on the chain leading to them
+ * @returns The length, and whether it depends on the chain leading to it, as it met a custom action already in it
+ */
+function longestChain(
+	directCalls: ReadonlyMap<string, ReadonlySet<string>>,
+	id: string,
+	inChain: Set<string>,
+	knownChains: Map<string, number>
+): { length: number; dependsOnChain: boolean } {
+	if (inChain.has(id)) return { length: 0, dependsOnChain: true }
+
+	const known = knownChains.get(id)
+	if (known !== undefined) return { length: known, dependsOnChain: false }
 
 	inChain.add(id)
 	let longest = 0
+	let dependsOnChain = false
+	let stoppedEarly = false
 	for (const next of directCalls.get(id) ?? []) {
-		// Stop once it is clear the chain is too deep, as the number of chains can grow quickly
-		longest = Math.max(longest, longestChain(directCalls, next, inChain))
-		if (longest > MAX_CUSTOM_ACTION_DEPTH) break
+		const chain = longestChain(directCalls, next, inChain, knownChains)
+		longest = Math.max(longest, chain.length)
+		dependsOnChain ||= chain.dependsOnChain
+		// Stop once it is clear the chain is too deep, as the number of chains through loops can grow quickly
+		if (longest > MAX_CUSTOM_ACTION_DEPTH) {
+			stoppedEarly = true
+			break
+		}
 	}
 	inChain.delete(id)
 
-	return longest + 1
+	// Without meeting the chain leading to it, it isn't part of a loop, so its longest chain is the same however it is
+	// reached. One cut short has only been partly searched, so isn't known in full
+	if (!dependsOnChain && !stoppedEarly) knownChains.set(id, longest + 1)
+
+	return { length: longest + 1, dependsOnChain: dependsOnChain || stoppedEarly }
 }

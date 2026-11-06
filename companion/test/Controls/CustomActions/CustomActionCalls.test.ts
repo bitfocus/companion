@@ -55,4 +55,30 @@ describe('analyseCustomActionCalls', () => {
 		expect(result.get('l1')!.tooDeep).toBe(true)
 		expect(result.get('l2')!.tooDeep).toBe(false)
 	})
+
+	test.each([
+		['within the limit', MAX_CUSTOM_ACTION_DEPTH, false],
+		['beyond the limit', MAX_CUSTOM_ACTION_DEPTH + 1, true],
+	])(
+		'measures the depth of calls which branch and join again, %s, without trying every path',
+		(_name, layers, tooDeep) => {
+			// Each custom action calls all of the next layer, so there are 4^layers chains of calls through them
+			const width = 4
+			const graph: Record<string, string[]> = {}
+			for (let layer = 0; layer < layers; layer++) {
+				for (let i = 0; i < width; i++) {
+					graph[`${layer}-${i}`] =
+						layer + 1 < layers ? Array.from({ length: width }, (_, j) => `${layer + 1}-${j}`) : []
+				}
+			}
+
+			const start = performance.now()
+			const result = analyseCustomActionCalls(calls(graph))
+
+			expect(result.get('0-0')!.tooDeep).toBe(tooDeep)
+			expect(result.get(`${layers - 1}-0`)!.tooDeep).toBe(false)
+			expect(performance.now() - start).toBeLessThan(1000)
+		},
+		30_000
+	)
 })
