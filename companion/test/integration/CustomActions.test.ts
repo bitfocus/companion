@@ -1193,11 +1193,11 @@ describe('custom actions using a connection', () => {
 
 	const label = 'tester'
 
-	/** Add a connection of the test module, once its definitions are known */
-	async function addConnection(): Promise<string> {
+	/** Add a connection of a test module, once it can run actions */
+	async function addConnection(moduleType: string): Promise<string> {
 		const connectionId = await app
 			.trpc()
-			.instances.connections.add({ module: { type: 'test-module-2-1-3' }, label, versionId: 'dev' })
+			.instances.connections.add({ module: { type: moduleType }, label, versionId: 'dev' })
 		if (!connectionId) throw new Error('Failed to add the connection')
 		// The definitions are set part way through starting, while the actions of a button would still be dropped
 		await vi.waitFor(() => {
@@ -1289,7 +1289,7 @@ describe('custom actions using a connection', () => {
 	}
 
 	test('a connection feedback in a custom action sees the inputs of each caller', async () => {
-		const connectionId = await addConnection()
+		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
 
 		// Two buttons, which call it with different inputs
@@ -1320,7 +1320,7 @@ describe('custom actions using a connection', () => {
 	})
 
 	test('a copy sharing a subscription with another has its value, and one with other inputs has its own', async () => {
-		const connectionId = await addConnection()
+		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
 		const setLastValue = await addSetter(connectionId)
 
@@ -1340,8 +1340,43 @@ describe('custom actions using a connection', () => {
 		expect(getCopyValue(app, buttonId, firstCall, 'matches')).toBe(true)
 	})
 
+	test('the copy held by a call is subscribed to a connection of an older module when the app starts', async () => {
+		// Modules older than 1.13 are sent everything to subscribe when they start, rather than as each is added
+		const connectionId = await addConnection('test-module-1-12-1')
+		const customActionId = await createCheckingCustomAction(connectionId)
+		const setLastValue = await addSetter(connectionId)
+
+		// These modules can't be given expressions, so it checks for a fixed value rather than its input
+		const customAction = app.registry.controls.getControl(customActionId)
+		if (!(customAction instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+		await app.trpc().controls.entities.setOption({
+			controlId: customActionId,
+			entityLocation: 'local-variables',
+			entityId: customAction.entities.getLocalVariableEntities()[0].id,
+			key: 'value',
+			value: exprVal('alpha'),
+		})
+
+		const buttonId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const callId = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('alpha') }, null)
+		await setLastValue('alpha')
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
+
+		const { configDir } = app
+		await app.close()
+		app = await createTestApp({ configDir, extraModulePath: path.join(import.meta.dirname, 'modules/fixtures') })
+		await vi.waitFor(
+			() => expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeDefined(),
+			30_000
+		)
+
+		// The module starts afresh, so only reports the value to what it was told about when it started
+		await setLastValue('alpha')
+		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
+	})
+
 	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
-		const connectionId = await addConnection()
+		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
 		const setLastValue = await addSetter(connectionId)
 
@@ -1363,7 +1398,7 @@ describe('custom actions using a connection', () => {
 	})
 
 	test('changing the input of one caller re-subscribes only its own copy', async () => {
-		const connectionId = await addConnection()
+		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
 		const setLastValue = await addSetter(connectionId)
 
@@ -1425,7 +1460,7 @@ describe('custom actions using a connection', () => {
 	})
 
 	test('a connection action in a custom action runs with the inputs of each caller', async () => {
-		const connectionId = await addConnection()
+		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Send' })
 		await app.trpc().controls.customActions.inputAdd({
 			controlId: customActionId,
