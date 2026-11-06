@@ -1171,10 +1171,12 @@ describe('custom actions using a connection', () => {
 			.trpc()
 			.instances.connections.add({ module: { type: 'test-module-2-1-3' }, label, versionId: 'dev' })
 		if (!connectionId) throw new Error('Failed to add the connection')
+		// The definitions are set part way through starting, while the actions of a button would still be dropped
 		await vi.waitFor(() => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(EntityModelType.Feedback, connectionId, 'last_value_is')
 			).toBeTruthy()
+			expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeDefined()
 		}, 30_000)
 		return connectionId
 	}
@@ -1347,11 +1349,31 @@ describe('custom actions using a connection', () => {
 			expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(false)
 		}, 10_000)
 
-		// Building the custom action queued a rebuild of its copies, which must be done before watching what is sent
-		await new Promise((resolve) => setTimeout(resolve, 200))
-		const alphaCopy = getEntity(app, alphaId, alphaCall).getTransientChildGroup(
-			CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
+		// Building the custom action queued a rebuild of its copies, which must be done before watching what is sent.
+		// It is debounced, so wait for the copies to stay the same for a while, which allows for a slow machine
+		const copiesOf = () =>
+			[
+				[alphaId, alphaCall],
+				[betaId, betaCall],
+			].map(([controlId, callId]) =>
+				getEntity(app, controlId as SomeControlId, callId).getTransientChildGroup(
+					CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
+				)
+			)
+		let lastCopies = copiesOf()
+		let stableSince = Date.now()
+		await vi.waitFor(
+			() => {
+				const copies = copiesOf()
+				if (copies.some((copy, i) => copy !== lastCopies[i])) {
+					lastCopies = copies
+					stableSince = Date.now()
+				}
+				expect(Date.now() - stableSince).toBeGreaterThanOrEqual(300)
+			},
+			{ timeout: 10_000, interval: 20 }
 		)
+		const alphaCopy = lastCopies[0]
 
 		const updated = vi.spyOn(app.registry.instance.processManager, 'connectionEntityUpdate')
 		await app.trpc().controls.entities.setOption({
@@ -1371,7 +1393,7 @@ describe('custom actions using a connection', () => {
 		// Only the entities of the copy whose inputs changed were sent to the connection
 		const updatedIds = updated.mock.calls.map(([entity]) => entity.id)
 		expect(updatedIds.length).toBeGreaterThan(0)
-		expect(updatedIds.every((id) => id.startsWith(`${betaCall}/`))).toBe(true)
+		expect(updatedIds.filter((id) => !id.startsWith(`${betaCall}/`))).toEqual([])
 	})
 
 	test('a connection action in a custom action runs with the inputs of each caller', async () => {
