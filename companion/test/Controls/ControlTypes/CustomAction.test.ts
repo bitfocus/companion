@@ -28,6 +28,7 @@ import {
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import {
 	removeCustomActionInputInCallers,
+	removeCustomActionOutputInCallers,
 	renameCustomActionInputInCallers,
 } from '../../../lib/Controls/CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
@@ -306,6 +307,14 @@ describe('ControlCustomAction', () => {
 	})
 
 	describe('actions', () => {
+		test('the custom actions it calls leave out disabled calls, which can not make a loop', () => {
+			const { control } = createHarness({
+				actions: [callAction({}, 'enabled'), { ...callAction({}, 'disabled'), disabled: true }],
+			})
+
+			expect([...control.getCalledCustomActionIds()]).toEqual(['enabled'])
+		})
+
 		test('an action which calls the custom action itself can not be added', () => {
 			const { control } = createHarness({})
 
@@ -369,6 +378,33 @@ describe('ControlCustomAction', () => {
 			})
 		})
 
+		test('renaming an input updates the references to it in where results and outputs are written', () => {
+			const resultTarget = {
+				type: 'custom-variable' as const,
+				variableName: exprExpr("concat('result_', $(options:n))"),
+				createIfNotExists: false,
+			}
+			const call: ActionEntityModel = {
+				...callAction({}, 'other'),
+				storeResult: resultTarget,
+				outputTargets: {
+					value: { type: 'local-variable', location: exprVal('this'), variableName: exprExpr('$(options:n)') },
+				},
+			}
+			const { control } = createHarness({ actions: [call] })
+
+			expect(control.inputUpdate('n', { ...numberInput, id: 'count' })).toBe(true)
+
+			const entity = control.entities.getActionEntities()[0]
+			expect(entity.rawStoreResult).toEqual({
+				...resultTarget,
+				variableName: exprExpr("concat('result_', $(options:count))"),
+			})
+			expect(entity.rawOutputTargets).toEqual({
+				value: { type: 'local-variable', location: exprVal('this'), variableName: exprExpr('$(options:count)') },
+			})
+		})
+
 		test('renaming an input updates the actions which call the custom action', () => {
 			const { deps, controlStore } = createHarness({})
 
@@ -382,6 +418,28 @@ describe('ControlCustomAction', () => {
 			const [renamed, untouched] = caller.entities.getActionEntities()
 			expect(renamed.rawOptions).toEqual({ count: exprVal(5) })
 			expect(untouched.rawOptions).toEqual({ n: exprVal(6) })
+		})
+
+		test('removing an output removes where the actions which call the custom action write it', () => {
+			const { deps, controlStore } = createHarness({})
+			const target = { type: 'custom-variable' as const, variableName: exprVal('x'), createIfNotExists: false }
+
+			const caller = new ControlCustomAction(deps, CALLER_CONTROL_ID, null, false)
+			caller.entities.entityAdd('custom_action_actions', null, {
+				...callAction(),
+				outputTargets: { removed: target, kept: target },
+			})
+			caller.entities.entityAdd('custom_action_actions', null, {
+				...callAction({}, 'other'),
+				outputTargets: { removed: target },
+			})
+			controlStore.controls.set(CALLER_CONTROL_ID, caller)
+
+			removeCustomActionOutputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'removed')
+
+			const [changed, untouched] = caller.entities.getActionEntities()
+			expect(changed.rawOutputTargets).toEqual({ kept: target })
+			expect(untouched.rawOutputTargets).toEqual({ removed: target })
 		})
 
 		test('removing an input removes the value given for it by the actions which call the custom action', () => {
@@ -531,6 +589,37 @@ describe('ControlCustomAction', () => {
 				['out', 3],
 				['out', 3],
 			])
+		})
+
+		test('an output is not written once the run is aborted', async () => {
+			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
+				actions: [action('count')],
+				localVariables: [userValue('v', 0)],
+				outputs: [{ id: 'count', label: 'Count', variableName: 'v' }],
+			})
+			const abort = new AbortController()
+			executeAction.mockImplementation(async (_action, extras) => {
+				const variable = localVariables.localVariableFor('this', 'v', extras)!
+				localVariables.setLocalVariable(variable, 1)
+				abort.abort()
+				// Such as an action which carries on after it is aborted
+				localVariables.setLocalVariable(variable, 2)
+			})
+			variablesController.custom.hasCustomVariable.mockReturnValue(true)
+
+			await runAsButton(
+				[
+					{
+						...callAction(),
+						outputTargets: {
+							count: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+						},
+					},
+				],
+				{ abortDelayed: abort.signal }
+			)
+
+			expect(variablesController.custom.setValue.mock.calls).toEqual([['out', 1]])
 		})
 
 		test('the final value of an output is written, which may be computed', async () => {

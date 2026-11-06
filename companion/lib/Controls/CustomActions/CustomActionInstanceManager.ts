@@ -262,43 +262,6 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			actions: `custom-action-run:${runId}:actions`,
 			localVariables: `custom-action-run:${runId}:local-variables`,
 		}
-		const lists = this.#buildCopyLists(caller, scope, customAction, groupIds, `${caller.id}@${runId}/`)
-
-		// When the run sees what the copy held by the caller sees, it can start with its values
-		if (isEqual(options, copyScope.values.options)) {
-			const copyLists = getCopyLists(caller, CUSTOM_ACTION_COPY_ACTIONS_GROUP, CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
-			if (copyLists) this.#copyRuntimeValues(lists, `${caller.id}@${runId}/`, copyLists, `${caller.id}/`)
-		}
-
-		// Where each local variable of the run is written as an output, resolved in the context of the caller
-		const outputTargets = new Map<string, StoreResult[]>()
-		for (const output of customAction.outputs) {
-			if (!output.variableName) continue
-			const target = resolveStoreResult(caller.rawOutputTargets[output.id], parser, this.#logger)
-			if (!target) continue
-
-			const targets = outputTargets.get(output.variableName) ?? []
-			targets.push(target)
-			outputTargets.set(output.variableName, targets)
-		}
-
-		const writeOutput = (variableName: string) => {
-			const targets = outputTargets.get(variableName)
-			if (!targets) return
-
-			const value = customAction.readRunLocalVariable(frame, runExtras, variableName)
-			for (const target of targets) storeOutput(target, value)
-		}
-
-		const frame: CustomActionRunFrame = {
-			...scope.values,
-			getLocalVariableEntities: () => lists.localVariables.getDirectEntities(),
-			localValueChanged: (name) => {
-				scope.localValueChanged(name)
-				// Outputs are written as they change, so that the caller can see the progress of a run
-				writeOutput(name)
-			},
-		}
 
 		this.#runs.set(runId, {
 			runId,
@@ -311,12 +274,57 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		this.events.emit('usageChanged')
 
 		try {
+			// Built inside the try, so that the groups are removed again if building them fails
+			const lists = this.#buildCopyLists(caller, scope, customAction, groupIds, `${caller.id}@${runId}/`)
+
+			// When the run sees what the copy held by the caller sees, it can start with its values
+			if (isEqual(options, copyScope.values.options)) {
+				const copyLists = getCopyLists(
+					caller,
+					CUSTOM_ACTION_COPY_ACTIONS_GROUP,
+					CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
+				)
+				if (copyLists) this.#copyRuntimeValues(lists, `${caller.id}@${runId}/`, copyLists, `${caller.id}/`)
+			}
+
+			// Where each local variable of the run is written as an output, resolved in the context of the caller
+			const outputTargets = new Map<string, StoreResult[]>()
+			for (const output of customAction.outputs) {
+				if (!output.variableName) continue
+				const rawTarget = Object.hasOwn(caller.rawOutputTargets, output.id)
+					? caller.rawOutputTargets[output.id]
+					: undefined
+				const target = resolveStoreResult(rawTarget, parser, this.#logger)
+				if (!target) continue
+
+				const targets = outputTargets.get(output.variableName) ?? []
+				targets.push(target)
+				outputTargets.set(output.variableName, targets)
+			}
+
+			const writeOutput = (variableName: string) => {
+				const targets = outputTargets.get(variableName)
+				// Once aborted the caller has moved on, so must not see anything the run does after
+				if (!targets || runExtras.abortDelayed.aborted) return
+
+				const value = customAction.readRunLocalVariable(frame, runExtras, variableName)
+				for (const target of targets) storeOutput(target, value)
+			}
+
+			const frame: CustomActionRunFrame = {
+				...scope.values,
+				getLocalVariableEntities: () => lists.localVariables.getDirectEntities(),
+				localValueChanged: (name) => {
+					scope.localValueChanged(name)
+					// Outputs are written as they change, so that the caller can see the progress of a run
+					writeOutput(name)
+				},
+			}
+
 			await customAction.runActions(lists.actions.getDirectEntities(), frame, runExtras)
 
 			// Write the final value of each output, which covers those computed from other variables
-			if (!runExtras.abortDelayed.aborted) {
-				for (const variableName of outputTargets.keys()) writeOutput(variableName)
-			}
+			for (const variableName of outputTargets.keys()) writeOutput(variableName)
 
 			return undefined
 		} finally {

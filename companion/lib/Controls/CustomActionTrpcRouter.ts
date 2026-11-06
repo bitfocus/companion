@@ -95,6 +95,37 @@ export function removeCustomActionInputInCallers(
 }
 
 /**
+ * Remove where the actions which run a custom action write one of its outputs, after it has been removed, so that a
+ * new output with the same id doesn't write there
+ * @param controlStore The store of all the controls
+ * @param customActionControlId The control id of the custom action
+ * @param outputId The id of the removed output
+ */
+export function removeCustomActionOutputInCallers(
+	controlStore: ControlStore,
+	customActionControlId: CustomActionControlId,
+	outputId: string
+): void {
+	const parsedId = ParseControlId(customActionControlId)
+	if (parsedId?.type !== 'custom-action') return
+
+	for (const control of controlStore.controls.values()) {
+		if (!control.supportsEntities) continue
+
+		let changed = false
+		for (const entity of control.entities.getAllEntities()) {
+			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
+			if (!Object.hasOwn(entity.rawOutputTargets, outputId)) continue
+
+			entity.setRawOutputTarget(outputId, undefined)
+			changed = true
+		}
+
+		if (changed) control.commitChange(false)
+	}
+}
+
+/**
  * Update the actions which run a custom action, after one of its outputs has been renamed, so that they keep where
  * the output is written
  * @param controlStore The store of all the controls
@@ -373,7 +404,11 @@ export function createCustomActionTrpcRouter(
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
 
-				return control.outputRemove(input.outputId)
+				if (!control.outputRemove(input.outputId)) return false
+
+				removeCustomActionOutputInCallers(controlStore, input.controlId, input.outputId)
+
+				return true
 			}),
 
 		outputMove: publicProcedure

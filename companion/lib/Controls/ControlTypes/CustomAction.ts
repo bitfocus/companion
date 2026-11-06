@@ -543,20 +543,38 @@ export class ControlCustomAction
 		const fromVariable = `$(options:${fromId})`
 		const toVariable = `$(options:${toId})`
 
-		for (const entity of this.entities.getAllEntities()) {
+		/** The fields of an object with the reference renamed, or null if none had it */
+		const renameFields = <T extends object>(fields: T): T | null => {
 			let changed = false
-			const newOptions: ExpressionableOptionsObject = {}
-
-			for (const [key, value] of Object.entries(entity.rawOptions)) {
+			const renamed: Record<string, unknown> = {}
+			for (const [key, value] of Object.entries(fields)) {
 				if (isExpressionOrValue(value) && typeof value.value === 'string' && value.value.includes(fromVariable)) {
-					newOptions[key] = { ...value, value: value.value.replaceAll(fromVariable, toVariable) }
+					renamed[key] = { ...value, value: value.value.replaceAll(fromVariable, toVariable) }
 					changed = true
 				} else {
-					newOptions[key] = value
+					renamed[key] = value
 				}
 			}
+			return changed ? (renamed as T) : null
+		}
 
-			if (changed) entity.setOptions(newOptions)
+		for (const entity of this.entities.getAllEntities()) {
+			const newOptions = renameFields(entity.rawOptions)
+			if (newOptions) entity.setOptions(newOptions)
+
+			// Where its result and outputs are written can refer to the inputs too
+			const storeResult = entity.rawStoreResult
+			const newStoreResult = storeResult && renameFields(storeResult)
+			if (newStoreResult) entity.setRawStoreResult(newStoreResult)
+
+			for (const [outputId, target] of Object.entries(entity.rawOutputTargets)) {
+				const newTarget = renameFields(target)
+				if (newTarget) entity.setRawOutputTarget(outputId, newTarget)
+			}
+
+			const isInverted = entity.rawIsInverted
+			const renamedInverted = isInverted ? renameFields({ isInverted }) : null
+			if (renamedInverted) entity.setInverted(renamedInverted.isInverted)
 		}
 	}
 
@@ -619,8 +637,9 @@ export class ControlCustomAction
 	 * Get the ids of the custom actions this calls directly, including from within other actions
 	 */
 	getCalledCustomActionIds(): Set<string> {
+		// A disabled call, or one inside a disabled group, doesn't run, so can't make a loop
 		const ids = new Set<string>()
-		for (const entity of this.entities.getAllEntities()) {
+		for (const entity of this.entities.getAllEnabledEntities(false)) {
 			if (isCustomActionsConnectionId(entity.connectionId)) ids.add(entity.definitionId)
 		}
 		return ids
