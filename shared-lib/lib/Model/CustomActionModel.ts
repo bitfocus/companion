@@ -4,7 +4,7 @@ import { ParseControlId, type CustomActionControlId, type SomeControlId } from '
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
-import { AuthorableInputFieldSchema, INPUT_FIELD_ID_PATTERN } from './Options.js'
+import { AuthorableInputFieldSchema, INPUT_FIELD_ID_PATTERN, isAuthorableFieldId } from './Options.js'
 
 export type CustomActionCollection = CollectionBase<null>
 
@@ -64,7 +64,7 @@ export function getCustomActionCallsExcludedFrom(
  */
 export const CustomActionOutputSchema = z.object({
 	/** Used by the actions which call the custom action to say where the output goes */
-	id: z.string().regex(INPUT_FIELD_ID_PATTERN),
+	id: z.string().regex(INPUT_FIELD_ID_PATTERN).refine(isAuthorableFieldId, "Id can't be used in a variable"),
 	label: z.string(),
 	/** The name of the local variable of the custom action whose value is the output, or '' for none */
 	variableName: z.string().default(''),

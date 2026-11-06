@@ -303,6 +303,13 @@ describe('CustomActionModelSchema', () => {
 	])('an input can not have %s', (_name, input) => {
 		expect(CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [input] }).success).toBe(false)
 	})
+
+	test.each(['a b', '__proto__'])('an output can not have the id %s', (id) => {
+		expect(
+			CustomActionModelSchema.safeParse({ type: 'custom-action', outputs: [{ id, label: 'Out', variableName: 'v' }] })
+				.success
+		).toBe(false)
+	})
 })
 
 describe('getCustomActionCallsExcludedFrom', () => {
