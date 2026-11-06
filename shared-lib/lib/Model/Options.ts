@@ -1,5 +1,6 @@
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
+import { BANNED_PROPS } from '@companion-app/expressions'
 import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
 import { ALL_CONTROL_ID_KINDS, type ControlIdKind } from '../ControlId.js'
 import { assertNever } from '../Util.js'
@@ -533,6 +534,14 @@ const NOT_AUTHORABLE_FIELD_PROPERTIES = {
 export const INPUT_FIELD_ID_PATTERN = /^[\w-]+$/
 
 /**
+ * Whether an id can be used for an input field authored by a user. It is used in a variable, and as the key of the
+ * value given for it, so can't be a property which every object has, such as `__proto__`
+ */
+export function isAuthorableFieldId(id: string): boolean {
+	return INPUT_FIELD_ID_PATTERN.test(id) && !BANNED_PROPS.has(id)
+}
+
+/**
  * Schema of an input field which a user can author, such as an input of a custom action. It is one of the types of
  * field which the input field editor offers, without the properties a user can't author, which are dropped when
  * parsed
@@ -555,7 +564,7 @@ export const AuthorableInputFieldSchema = z
 		CompanionInputFieldExpressionExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
 		CompanionInputFieldStaticTextExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
 	])
-	.refine((field) => INPUT_FIELD_ID_PATTERN.test(field.id), {
+	.refine((field) => isAuthorableFieldId(field.id), {
 		message: "Id can't be used in a variable",
 		path: ['id'],
 	})

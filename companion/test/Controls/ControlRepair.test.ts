@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import z from 'zod'
 import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import { INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
-import { AuthorableInputFieldSchema, INPUT_FIELD_ID_PATTERN } from '@companion-app/shared/Model/Options.js'
+import { AuthorableInputFieldSchema, isAuthorableFieldId } from '@companion-app/shared/Model/Options.js'
 import { repairControl } from '../../lib/Controls/ControlRepair.js'
 
 const action = { type: 'action', id: 'a1', definitionId: 'send', connectionId: 'conn1', options: {} }
@@ -254,7 +254,7 @@ describe('repairControl', () => {
 			const placeholder = result!.control.inputs[0]
 			expect(placeholder.type).toBe('static-text')
 			expect(placeholder.id).not.toBe('not valid')
-			expect(placeholder.id).toMatch(INPUT_FIELD_ID_PATTERN)
+			expect(isAuthorableFieldId(placeholder.id)).toBe(true)
 		})
 
 		test('replaces something which is not an input at all', () => {

@@ -131,6 +131,7 @@ describe('ids', () => {
 		expect(isInputFieldIdValid('', new Set())).toBe(false)
 		expect(isInputFieldIdValid('a b', new Set())).toBe(false)
 		expect(isInputFieldIdValid('abc', new Set(['abc']))).toBe(false)
+		expect(isInputFieldIdValid('__proto__', new Set())).toBe(false)
 	})
 
 	it('updates the id with the label while it has not been edited', () => {
