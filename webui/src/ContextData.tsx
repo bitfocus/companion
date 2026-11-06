@@ -19,6 +19,7 @@ import { useActiveLearnRequests } from './Hooks/useActiveLearnRequests.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCompositeElementDefinitionsSubscription } from './Hooks/useCompositeElementDefinitionsSubscription.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
+import { useCustomActionsListSubscription } from './Hooks/useCustomActionsListSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
 import { useEntityDefinitionsSubscription } from './Hooks/useEntityDefinitionsSubscription.js'
@@ -40,6 +41,7 @@ import { useUserConfigSubscription } from './Hooks/useUserConfigSubscription.js'
 import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { HelpModal, type HelpModalRef } from './Instances/HelpModal.js'
 import { trpc } from './Resources/TRPC.js'
+import { CustomActionsListStore } from './Stores/CustomActionsListStore.js'
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
 import { InstanceStatusesStore } from './Stores/InstanceStatusesStore.js'
 import { SurfaceInstancesStore } from './Stores/SurfaceInstancesStore.js'
@@ -95,6 +97,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			triggersList: new TriggersListStore(),
 
+			customActionsList: new CustomActionsListStore(),
+
 			userConfig: new UserConfigStore(),
 
 			imageLibrary: new ImageLibraryStore(),
@@ -142,6 +146,12 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const triggerGroupsReady = useGenericCollectionsSubscription(
 		rootStore.triggersList,
 		trpc.controls.triggers.collections.watchQuery,
+		undefined
+	)
+	const customActionsListReady = useCustomActionsListSubscription(rootStore.customActionsList)
+	const customActionCollectionsReady = useGenericCollectionsSubscription(
+		rootStore.customActionsList,
+		trpc.controls.customActions.collections.watchQuery,
 		undefined
 	)
 	const { ready: pagesReady } = usePagesInfoSubscription(rootStore.pages)
@@ -198,6 +208,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		pagesReady,
 		triggersListReady,
 		triggerGroupsReady,
+		customActionsListReady,
+		customActionCollectionsReady,
 		entityDefinitionsReady,
 		compositeElementDefinitionsReady,
 		activeLearnRequestsReady,

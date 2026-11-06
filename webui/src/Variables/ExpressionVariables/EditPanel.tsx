@@ -62,7 +62,12 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const dataReady = !loadError && !!controlConfig
 
-	const localVariablesStore = useLocalVariablesStore(controlId, controlConfig?.config.localVariables ?? null)
+	const localVariablesStore = useLocalVariablesStore(
+		controlId,
+		controlConfig?.config.localVariables ?? null,
+		null,
+		null
+	)
 
 	return (
 		<div className="edit-panel">

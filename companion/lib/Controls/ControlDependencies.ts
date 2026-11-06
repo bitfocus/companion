@@ -1,7 +1,13 @@
 import type { EventEmitter } from 'node:events'
-import type { BankControlId, PresetControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
+import type {
+	BankControlId,
+	CustomActionControlId,
+	PresetControlId,
+	SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -19,6 +25,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariableDependencyRegistry } from '../Variables/DependencyRegistry.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -53,6 +60,9 @@ export interface ControlExternalDependencies {
 
 	/** Subscribes link buttons to the remote buttons they show */
 	readonly linkButtons: LinkButtonClient
+
+	/** Builds and runs the copies of custom actions held by the actions which call them */
+	readonly customActionInstances: CustomActionInstanceManager
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
@@ -83,6 +93,8 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: SomeControlId]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
+	/** Emitted when a custom action is changed or deleted, so that its action definition can be updated */
+	customActionDefinitionChanged: [controlId: CustomActionControlId]
 	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
 	presetDrawn: [controlId: PresetControlId, render: ImageResult]
@@ -106,4 +118,5 @@ export interface ControlCommonEvents {
 export type ControlChangeEvents = {
 	triggerChange: [controlId: SomeControlId, diff: TriggersUpdate]
 	expressionVariableChange: [controlId: SomeControlId, diff: ExpressionVariableUpdate]
+	customActionChange: [controlId: CustomActionControlId, diff: CustomActionsUpdate]
 }

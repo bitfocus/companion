@@ -1,8 +1,12 @@
 import classNames from 'classnames'
-import { useCallback } from 'react'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext } from 'react'
+import { getCustomActionCallsExcludedFrom } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { AddEntitiesModal } from './AddEntitiesModal.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
@@ -15,14 +19,21 @@ interface AddEntityPanelProps {
 	anyEntities: boolean
 }
 
-export function AddEntityPanel({
+export const AddEntityPanel = observer(function AddEntityPanel({
 	ownerId,
 	entityType,
 	feedbackListType,
 	entityTypeLabel,
 	anyEntities,
 }: AddEntityPanelProps): React.JSX.Element {
-	const { serviceFactory, readonly } = useEntityEditorContext()
+	const { serviceFactory, readonly, controlId } = useEntityEditorContext()
+
+	// A custom action can't contain an action which would run itself, directly or through another custom action
+	const { customActionsList } = useContext(RootAppStoreContext)
+	const excludedIds = useComputed(
+		() => getCustomActionCallsExcludedFrom(controlId, customActionsList.customActions.entries()),
+		[controlId, customActionsList]
+	)
 
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
@@ -54,6 +65,7 @@ export function AddEntityPanel({
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
 				feedbackListType={feedbackListType}
+				excludedIds={excludedIds}
 				disabled={readonly}
 			/>
 
@@ -63,9 +75,10 @@ export function AddEntityPanel({
 					entityType={entityType}
 					feedbackListType={feedbackListType}
 					entityTypeLabel={entityTypeLabel}
+					excludedIds={excludedIds}
 					disabled={readonly}
 				/>
 			</MyErrorBoundary>
 		</div>
 	)
-}
+})

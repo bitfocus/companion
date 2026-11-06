@@ -84,6 +84,7 @@ export class ControlPage
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		if (!storage) {

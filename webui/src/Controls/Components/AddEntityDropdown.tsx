@@ -20,6 +20,8 @@ interface AddEntityDropdownProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
+	/** The ids (`<connectionId>:<definitionId>`) of what can't be added here, such as a custom action running itself */
+	excludedIds: ReadonlySet<string>
 	disabled: boolean
 }
 export const AddEntityDropdown = observer(function AddEntityDropdown({
@@ -27,6 +29,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	entityType,
 	entityTypeLabel,
 	feedbackListType,
+	excludedIds,
 	disabled,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
@@ -65,8 +68,14 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				showWhenUnfiltered: true,
 				items: recents,
 			},
-		].map(scopeGroupItemIds)
-	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
+		]
+			.map((group) =>
+				excludedIds.size > 0
+					? { ...group, items: group.items.filter((item) => !excludedIds.has(String(item.id))) }
+					: group
+			)
+			.map(scopeGroupItemIds)
+	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType, excludedIds])
 	const collection = useComboboxCollection(options, getComboboxItemLabel)
 
 	const onChange = useCallback(

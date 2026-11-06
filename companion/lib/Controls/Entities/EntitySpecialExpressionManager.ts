@@ -1,6 +1,7 @@
 import debounceFn from 'debounce-fn'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResultError } from '@companion-app/shared/ExpressionResult.js'
+import type { RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -20,6 +21,7 @@ import type {
 	SpecialExpressions,
 	UpdateSpecialExpressionValuesFn,
 } from './SpecialExpressions.js'
+import type { StoreResult } from './Types.js'
 
 export type CreateVariablesAndExpressionParser = (
 	overrideVariableValues: VariableValues | null
@@ -138,8 +140,27 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 	entity: ControlEntityInstance,
 	parser: VariablesAndExpressionParser,
 	logger: Logger
-): SpecialExpressionComputation<'storeResult'> => {
-	const rawStoreResult = entity.rawStoreResult
+): SpecialExpressionComputation<'storeResult'> => computeStoreResult(entity.rawStoreResult, parser, logger)
+
+/**
+ * Resolve the expressions of where a value is stored, such as an output of an action
+ * @param rawStoreResult The target, or undefined for none
+ * @param parser A parser in the context of the action
+ * @param logger For any expressions which fail
+ */
+export function resolveStoreResult(
+	rawStoreResult: RawStoreResult | undefined,
+	parser: VariablesAndExpressionParser,
+	logger: Logger
+): StoreResult | undefined {
+	return computeStoreResult(rawStoreResult, parser, logger).computedValue
+}
+
+function computeStoreResult(
+	rawStoreResult: RawStoreResult | undefined,
+	parser: VariablesAndExpressionParser,
+	logger: Logger
+): SpecialExpressionComputation<'storeResult'> {
 	if (rawStoreResult === undefined) {
 		return { referencedVariableIds: null, computedValue: undefined, clockSensitive: false }
 	}

@@ -174,6 +174,7 @@ export class ControlTrigger
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		this.#eventBus = eventBus
@@ -277,6 +278,7 @@ export class ControlTrigger
 				surfaceId: this.controlId,
 				location: undefined,
 				rotationDelta: null,
+				frame: null,
 			})
 			.catch((e: unknown) => {
 				this.logger.error(`Failed to run actions: ${stringifyError(e)}`)

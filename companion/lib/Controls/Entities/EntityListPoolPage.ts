@@ -28,7 +28,7 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 	readonly #pageStore: IPageStore
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props, false)
+		super(props, false, [])
 
 		this.#pageStore = props.pageStore
 
