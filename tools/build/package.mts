@@ -165,6 +165,8 @@ if (process.env.ELECTRON !== '0') {
 					LSUIElement: 1,
 					NSAppleEventsUsageDescription: 'Companion uses AppleEvents to control local applications.',
 					NSLocalNetworkUsageDescription: 'Companion uses local network to communicate with devices.',
+					NSMicrophoneUsageDescription:
+						'Companion modules use audio inputs for level metering and audio-triggered actions.',
 				},
 				hardenedRuntime: true,
 				gatekeeperAssess: false,
