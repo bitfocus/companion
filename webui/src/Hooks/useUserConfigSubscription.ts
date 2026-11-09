@@ -1,6 +1,5 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useState } from 'react'
-import type { UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import { trpc } from '~/Resources/TRPC'
 import type { UserConfigStore } from '~/Stores/UserConfigStore.js'
 
@@ -22,7 +21,7 @@ export function useUserConfigSubscription(
 			},
 			onData: (data) => {
 				setLoadError?.(null)
-				store.updateStore(data as UserConfigUpdate) // TODO - avoid this cast
+				store.updateStore(data)
 				setReady(true)
 			},
 			onError: (error) => {

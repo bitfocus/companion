@@ -56,7 +56,11 @@ describe('DataChannelServer', () => {
 		const server = await createServer()
 
 		const hostReceived: unknown[] = []
-		const transport = new HostFramedTransport(server, (msg) => hostReceived.push(msg))
+		const transport = new HostFramedTransport(
+			server,
+			(msg) => hostReceived.push(msg),
+			() => undefined
+		)
 
 		// No child yet, so there is nothing to send to
 		expect(transport.send({ hello: 'nobody' })).toBe(0)
@@ -85,7 +89,11 @@ describe('DataChannelServer', () => {
 		const server = await createServer()
 
 		const received: [unknown, number][] = []
-		const transport = new HostFramedTransport(server, (msg, bytes) => received.push([msg, bytes]))
+		const transport = new HostFramedTransport(
+			server,
+			(msg, bytes) => received.push([msg, bytes]),
+			() => undefined
+		)
 
 		server.expectConnection()
 		const childSocket = await connectDataChannel(server.socketPath)
@@ -108,7 +116,11 @@ describe('DataChannelServer', () => {
 		const server = await createServer()
 
 		const hostReceived: unknown[] = []
-		const transport = new HostFramedTransport(server, (msg) => hostReceived.push(msg))
+		const transport = new HostFramedTransport(
+			server,
+			(msg) => hostReceived.push(msg),
+			() => undefined
+		)
 
 		server.expectConnection()
 		const childSocket = await connectDataChannel(server.socketPath)
@@ -137,7 +149,11 @@ describe('DataChannelServer', () => {
 		const server = await createServer()
 
 		const hostReceived: unknown[] = []
-		const transport = new HostFramedTransport(server, (msg) => hostReceived.push(msg))
+		const transport = new HostFramedTransport(
+			server,
+			(msg) => hostReceived.push(msg),
+			() => undefined
+		)
 
 		server.expectConnection()
 		const firstSocket = await connectDataChannel(server.socketPath)
@@ -167,7 +183,11 @@ describe('DataChannelServer', () => {
 		const server = await createServer()
 
 		const hostReceived: unknown[] = []
-		const transport = new HostFramedTransport(server, (msg) => hostReceived.push(msg))
+		const transport = new HostFramedTransport(
+			server,
+			(msg) => hostReceived.push(msg),
+			() => undefined
+		)
 
 		server.expectConnection()
 		const childSocket = await connectDataChannel(server.socketPath)
@@ -197,7 +217,11 @@ describe('DataChannelServer', () => {
 
 	test('drops the live socket and stops listening on close', async () => {
 		const server = await createServer()
-		const transport = new HostFramedTransport(server, () => undefined)
+		const transport = new HostFramedTransport(
+			server,
+			() => undefined,
+			() => undefined
+		)
 
 		server.expectConnection()
 		const childSocket = await connectDataChannel(server.socketPath)
@@ -265,7 +289,11 @@ describe('a real child process', () => {
 		const server = await createServer()
 
 		const received: unknown[] = []
-		const transport = new HostFramedTransport(server, (msg) => received.push(msg))
+		const transport = new HostFramedTransport(
+			server,
+			(msg) => received.push(msg),
+			() => undefined
+		)
 
 		server.expectConnection()
 
@@ -288,15 +316,22 @@ describe('a real child process', () => {
 
 	test('is treated as gone once the child dies', async () => {
 		const server = await createServer()
-		const transport = new HostFramedTransport(server, () => undefined)
+		let disconnects = 0
+		const transport = new HostFramedTransport(
+			server,
+			() => undefined,
+			() => disconnects++
+		)
 
 		server.expectConnection()
 		const child = spawnChild(server.socketPath)
 
 		await waitFor(() => transport.send({ direction: 'call' }) > 0)
+		expect(disconnects).toBe(0)
 
 		child.kill()
 		await waitFor(() => transport.send({ direction: 'call' }) === 0)
+		await waitFor(() => disconnects === 1)
 	}, 20_000)
 })
 

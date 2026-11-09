@@ -15,7 +15,10 @@ contextBridge.exposeInMainWorld('api', {
 		const validChannels = ['info', 'config-error']
 		if (validChannels.includes(channel)) {
 			// Deliberately strip event as it includes `sender`
-			ipcRenderer.on(channel, (event, ...args) => func(...args))
+			const listener = (event, ...args) => func(...args)
+			ipcRenderer.on(channel, listener)
+			return () => ipcRenderer.removeListener(channel, listener)
 		}
+		return () => {}
 	},
 })

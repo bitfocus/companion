@@ -21,9 +21,9 @@
     "@companion-surface/base": "1.4.1",
     "colord": "^2.10.0",
     "quick-lru": "^7.3.0",
-    "semver": "^7.8.5",
+    "semver": "^7.8.6",
     "type-fest": "^5.10.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/semver": "^7.8.0",

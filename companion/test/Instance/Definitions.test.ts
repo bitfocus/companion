@@ -40,7 +40,7 @@ function makeConnectionConfig(overrides: Partial<InstanceConfig> = {}): Instance
 		moduleVersionId: '1.0.0',
 		label: 'Test Connection',
 		config: {},
-		secrets: undefined,
+		secrets: {},
 		isFirstInit: false,
 		lastUpgradeIndex: 5,
 		enabled: true,
@@ -65,6 +65,7 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 		learnTimeout: undefined,
 		showInvert: false,
 		actionHasResult: false,
+		actionExecutionTimeout: undefined,
 		optionsSupportExpressions: false,
 		supportsChildGroups: [],
 		showButtonPreview: false,
@@ -84,7 +85,13 @@ function makeFeedbackDefinition(overrides: Partial<ClientEntityDefinition> = {})
 function makeButtonPresetModel(overrides: Partial<LayeredButtonModel> = {}): LayeredButtonModel {
 	return {
 		type: 'button-layered',
-		options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+		options: {
+			rotaryActions: false,
+			stepProgression: 'auto',
+			stepExpression: '',
+			canModifyStyleInApis: false,
+			notes: '',
+		},
 		style: { layers: [] },
 		feedbacks: [],
 		steps: {

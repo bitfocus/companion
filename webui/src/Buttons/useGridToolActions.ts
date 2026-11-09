@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { ButtonGridStore } from './ButtonGridStore.js'
@@ -17,8 +18,8 @@ export interface UseGridToolActionsOptions {
 	openEditor: (location: ControlLocation) => void
 	/** Asks before anything that cannot be undone, and explains a paste that would go nowhere */
 	confirmRef: React.RefObject<GenericConfirmModalRef | null>
-	/** Something on the grid has changed, so anything showing a button needs rebuilding */
-	onGridChanged: () => void
+	/** Buttons have been carried to new places, so anything showing one needs to follow it and rebuild */
+	onGridChanged: (pairs: GridTransferPair[]) => void
 }
 
 /**
@@ -66,12 +67,12 @@ export function useGridToolActions({
 				// as it was before anything moved, and a rejection leaves nothing half-applied
 				gridBatchTransferMutation
 					.mutateAsync({ operation, pairs: carrying })
-					.catch((e) => console.error(`${operation} failed: ${e}`))
+					.catch((e) => console.error(`${operation} failed: ${stringifyError(e)}`))
 
 				// Follow the buttons to where they landed. Leaving the old positions selected points at
 				// where they used to be, which is no use for whatever you want to do next.
 				store.setSelection(carrying.map((pair) => pair.toLocation))
-				onGridChanged()
+				onGridChanged(carrying)
 				onApplied()
 			}
 
@@ -137,12 +138,12 @@ export function useGridToolActions({
 			press: (location, isDown) => {
 				hotPressMutation
 					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
-					.catch((e) => console.error(`Hot press failed: ${e}`))
+					.catch((e) => console.error(`Hot press failed: ${stringifyError(e)}`))
 			},
 			rotate: (location, delta) => {
 				hotRotateMutation
 					.mutateAsync({ location, delta, surfaceId: 'grid' })
-					.catch((e) => console.error(`Hot rotate failed: ${e}`))
+					.catch((e) => console.error(`Hot rotate failed: ${stringifyError(e)}`))
 			},
 			clearButtons: (locations) => {
 				if (locations.length === 0) return
@@ -152,7 +153,7 @@ export function useGridToolActions({
 
 				confirmRef.current?.show(description, `This will clear the style, feedbacks and all actions`, 'Clear', () => {
 					resetControlsMutation.mutateAsync({ locations: [...locations], newType: null }).catch((e) => {
-						console.error(`Reset failed: ${e}`)
+						console.error(`Reset failed: ${stringifyError(e)}`)
 					})
 				})
 			},

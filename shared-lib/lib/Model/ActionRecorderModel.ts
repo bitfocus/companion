@@ -1,4 +1,4 @@
-import type jsonPatch from 'fast-json-patch'
+import type { ObjectPatch } from '../Diff.js'
 import type { ActionEntityModel } from './EntityModel.js'
 
 export interface RecordSessionInfo {
@@ -23,9 +23,9 @@ export type RecordSessionUpdate =
 	  }
 	| {
 			type: 'patch'
-			patch: jsonPatch.Operation<RecordSessionInfo>[]
+			patch: ObjectPatch<RecordSessionInfo>
 	  }
 	| {
 			type: 'remove'
-			// patch: jsonPatch.Operation<RecordSessionInfo>[]
+			// patch: ObjectPatch<RecordSessionInfo>
 	  }

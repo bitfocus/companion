@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef } from 'react'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { LocalVariableLocationOption } from '@companion-app/shared/ControlLocation.js'
 import {
 	CustomVariableCreateIfNotExistsOption,
@@ -30,8 +30,8 @@ type StoreType = NonNullable<RawStoreResult>['type'] | 'discard'
 
 interface LocalVariableControlsProps {
 	isLocatedInGrid: boolean
-	controlId: string
-	tmpValue: React.MutableRefObject<RawStoreResultLocalVariable>
+	controlId: SomeControlId
+	tmpValue: React.RefObject<RawStoreResultLocalVariable>
 	value: RawStoreResultLocalVariable
 	setValue: (val: RawStoreResultLocalVariable) => void
 	readonly: boolean
@@ -116,8 +116,8 @@ const StoreResultPageOption = {
 
 interface PageVariableControlsProps {
 	isLocatedInGrid: boolean
-	controlId: string
-	tmpValue: React.MutableRefObject<RawStoreResultPageVariable>
+	controlId: SomeControlId
+	tmpValue: React.RefObject<RawStoreResultPageVariable>
 	value: RawStoreResultPageVariable
 	setValue: (val: RawStoreResultPageVariable) => void
 	readonly: boolean
@@ -193,8 +193,8 @@ const PageVariableControls = observer(function PageVariableControls({
 
 interface CustomVariableControlsProps {
 	isLocatedInGrid: boolean
-	controlId: string
-	tmpValue: React.MutableRefObject<RawStoreResultCustomVariable>
+	controlId: SomeControlId
+	tmpValue: React.RefObject<RawStoreResultCustomVariable>
 	value: RawStoreResultCustomVariable
 	setValue: (val: RawStoreResultCustomVariable) => void
 	readonly: boolean // XXX necessary?
@@ -283,7 +283,7 @@ const StoreResultTargetOption = {
 
 interface StoreResultProps {
 	isLocatedInGrid: boolean
-	controlId: string
+	controlId: SomeControlId
 	storeResult: RawStoreResult | undefined
 	setStoreResult: (val: RawStoreResult | undefined) => void
 	readonly: boolean

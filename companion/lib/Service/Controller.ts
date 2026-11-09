@@ -1,4 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -81,8 +82,8 @@ export class ServiceController {
 		this.satelliteApi = new ServiceSatelliteApi(serviceApi, surfaceController, userconfig)
 		this.satelliteTcp = new ServiceSatelliteTcp(this.satelliteApi, userconfig)
 		this.satelliteWebsocket = new ServiceSatelliteWebsocket(this.satelliteApi, userconfig)
-		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
-		this.mdnsAdvertise = new ServiceMdnsAdvertise(userconfig, appInfo)
+		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController, registry.link)
+		this.mdnsAdvertise = new ServiceMdnsAdvertise(userconfig, appInfo, registry.link)
 	}
 
 	/**
@@ -114,19 +115,19 @@ export class ServiceController {
 	 * @param key - the key that changed
 	 * @param value - the new value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
-		this.artnet.updateUserConfig(key, value)
-		this.bonjourDiscovery.updateUserConfig(key, value)
-		this.emberplus.updateUserConfig(key, value)
-		this.https.updateUserConfig(key, value)
-		this.mdnsAdvertise.updateUserConfig(key, value)
-		this.oscListener.updateUserConfig(key, value)
-		this.oscSender.updateUserConfig(key, value)
-		this.rosstalk.updateUserConfig(key, value)
-		this.satelliteApi.updateUserConfig(key, value)
-		this.satelliteTcp.updateUserConfig(key, value)
-		this.satelliteWebsocket.updateUserConfig(key, value)
-		this.tcp.updateUserConfig(key, value)
-		this.udp.updateUserConfig(key, value)
+	updateUserConfig(change: UserConfigKeyChange): void {
+		this.artnet.updateUserConfig(change)
+		this.bonjourDiscovery.updateUserConfig(change)
+		this.emberplus.updateUserConfig(change)
+		this.https.updateUserConfig(change)
+		this.mdnsAdvertise.updateUserConfig(change)
+		this.oscListener.updateUserConfig(change)
+		this.oscSender.updateUserConfig(change)
+		this.rosstalk.updateUserConfig(change)
+		this.satelliteApi.updateUserConfig(change)
+		this.satelliteTcp.updateUserConfig(change)
+		this.satelliteWebsocket.updateUserConfig(change)
+		this.tcp.updateUserConfig(change)
+		this.udp.updateUserConfig(change)
 	}
 }

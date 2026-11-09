@@ -148,7 +148,7 @@ export function ModuleDeprecationBadge({
 
 	return (
 		<InlineHelpCustom help={<ModuleDeprecationNotices notices={notices} />} className={className}>
-			<Badge color="warning" aria-label={label}>
+			<Badge color="warning" variant="tonal" aria-label={label}>
 				{label}
 			</Badge>
 		</InlineHelpCustom>

@@ -5,6 +5,7 @@ import path from 'node:path'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
 import PQueue from 'p-queue'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
@@ -13,6 +14,7 @@ import {
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
@@ -26,7 +28,13 @@ import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
 import { PreserveEnvVars } from './Environment.js'
 import type { InstanceModules } from './Modules.js'
-import { getNodeJsPath, getNodeJsPermissionArguments, realPathOrSelf } from './NodePath.js'
+import {
+	getNodeJsPath,
+	getNodeJsPermissionArguments,
+	isNodeJsRuntimeOverridden,
+	realPathOrSelf,
+	resolveNodeJsRuntime,
+} from './NodePath.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
@@ -255,30 +263,30 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
-				child.handler.sendAllFeedbackInstances().catch((e) => {
-					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${e}`)
+				child.handler.sendAllFeedbackInstances().catch((e: unknown) => {
+					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${stringifyError(e)}`)
 				})
 			}
 		}
 	}
 
 	/**
-	 * Send a list of changed variables to all active instances.
-	 * This will trigger feedbacks using variables to be rechecked
+	 * Send a list of changed global variables to the active instances which check them themselves (the old
+	 * flow). The others are told about the changes they read by the variable dependency registry
 	 */
-	onVariablesChanged(
-		all_changed_variables_set: ReadonlySet<string>,
-		controlIdFilter: ReadonlySet<string> | null
-	): void {
-		const changedVariableIds = Array.from(all_changed_variables_set)
+	onVariablesChanged(changedVariableIds: ReadonlySet<string>): void {
+		// Only built when a connection needs it, and shared between them
+		let changedVariableIdsArray: string[] | undefined
 
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
-				child.handler
-					.sendVariablesChanged(all_changed_variables_set, changedVariableIds, controlIdFilter)
-					.catch((e) => {
-						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
-					})
+			if (!child.handler || !child.isReady || !isConnectionChild(child.handler)) continue
+			if (!child.handler.sendVariablesChanged) continue
+
+			changedVariableIdsArray ??= Array.from(changedVariableIds)
+			try {
+				child.handler.sendVariablesChanged(changedVariableIdsArray)
+			} catch (e) {
+				this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${stringifyError(e)}`)
 			}
 		}
 	}
@@ -330,7 +338,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				try {
 					await child.handler.destroy()
 				} catch (e) {
-					console.error(`Destroy failed: ${e}`)
+					console.error(`Destroy failed: ${stringifyError(e)}`)
 				}
 				delete child.handler
 			}
@@ -432,11 +440,11 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		// Queue the work
 		baseChild.lifeCycleQueue
 			.add(async () => {
-				await this.#queueRestartInstanceInner(instanceId, baseChild).catch((e) => {
-					this.#logger.error(`Unhandled error restarting instance: ${e}`)
+				await this.#queueRestartInstanceInner(instanceId, baseChild).catch((e: unknown) => {
+					this.#logger.error(`Unhandled error restarting instance: ${stringifyError(e)}`)
 				})
 			})
-			.catch((e) => {
+			.catch((e: unknown) => {
 				this.#logger.error(`Configured instance "${instanceId}" failed to start: `, e)
 			})
 	}
@@ -565,6 +573,15 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				'system',
 				`** API version: ${runtimeInfo.apiVersion} **`
 			)
+			if (isNodeJsRuntimeOverridden(moduleInfo.manifest.runtime.type)) {
+				this.#connectionDeps.debugLogLine(
+					instanceId,
+					Date.now(),
+					'System',
+					'warn',
+					`** Module requested the unsupported "${moduleInfo.manifest.runtime.type}" runtime, running it on "${resolveNodeJsRuntime(moduleInfo.manifest.runtime.type)}" instead. It may not work correctly **`
+				)
+			}
 
 			// New connections + surfaces carry their messages over a data channel socket (see DataChannelServer);
 			// legacy children only have the 'ipc' channel. The socket must be listening before the child is
@@ -574,7 +591,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				try {
 					dataChannel = await DataChannelServer.create(instanceId)
 				} catch (e) {
-					this.#logger.error(`Failed to open data channel for instance "${baseChild.lastLabel}": ${e}`)
+					this.#logger.error(`Failed to open data channel for instance "${baseChild.lastLabel}": ${stringifyError(e)}`)
 					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Failed to start')
 					this.emit('childStateChange', instanceId)
 					return
@@ -651,7 +668,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 			try {
 				await this.#createHandlerAndWaitForInit(child, monitor, dataChannel, runtimeInfo, moduleInfo)
 			} catch (error) {
-				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${error}`)
+				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${stringifyError(error)}`)
 				throw error
 			}
 
@@ -775,14 +792,14 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 						resolveInit()
 					})
-					.catch((e) => {
-						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
+					.catch((e: unknown) => {
+						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${stringifyError(e)}`)
 						this.#connectionDeps.debugLogLine(
 							child.instanceId,
 							Date.now(),
 							'System',
 							'error',
-							`Failed to init: ${e} ${e?.stack}`
+							`Failed to init: ${stringifyError(e)}`
 						)
 
 						forceRestart()
@@ -890,7 +907,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
-						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${stringifyError(e)}`)
 						return { error: 'Invalid module' }
 					}
 				}
@@ -939,7 +956,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
-						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${stringifyError(e)}`)
 						return { error: 'Invalid module' }
 					}
 				}
@@ -967,7 +984,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		}
 	}
 
-	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: string): Promise<boolean> {
+	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<boolean> {
 		const connection = this.getConnectionChild(entity.connectionId, true)
 		if (!connection) return false
 
@@ -975,7 +992,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 		return true
 	}
-	async connectionEntityDelete(entityModel: SomeEntityModel, _controlId: string): Promise<boolean> {
+	async connectionEntityDelete(entityModel: SomeEntityModel, _controlId: SomeControlId): Promise<boolean> {
 		const connection = this.getConnectionChild(entityModel.connectionId, true)
 		if (!connection) return false
 
@@ -985,12 +1002,13 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	}
 	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
-		controlId: string
+		controlId: SomeControlId,
+		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		const connection = this.getConnectionChild(entityModel.connectionId)
 		if (!connection) return undefined
 
-		return connection.entityLearnValues(entityModel, controlId)
+		return connection.entityLearnValues(entityModel, controlId, signal)
 	}
 }
 

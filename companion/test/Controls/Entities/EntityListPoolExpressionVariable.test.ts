@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { createExpressionVariablePool, feedbackModel, feedbackValues } from './EntityListPoolTestHelpers.js'
 
@@ -89,7 +90,9 @@ describe('EntityListPoolExpressionVariable', () => {
 			pool.loadStorage(expressionVariableStorage({ entity }), true, false)
 			reportChange.mockClear()
 
-			pool.updateIsInvertedValues(new Map([[entity.id, { entityId: entity.id, controlId: '', value: true }]]))
+			pool.updateIsInvertedValues(
+				new Map([[entity.id, { entityId: entity.id, controlId: CreateBankControlId('test'), value: true }]])
+			)
 
 			expect(reportChange).toHaveBeenCalledWith({ redraw: true, noSave: true })
 		})
@@ -99,7 +102,9 @@ describe('EntityListPoolExpressionVariable', () => {
 			pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), true, false)
 			reportChange.mockClear()
 
-			pool.updateIsInvertedValues(new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: '', value: true }]]))
+			pool.updateIsInvertedValues(
+				new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: CreateBankControlId('test'), value: true }]])
+			)
 
 			expect(reportChange).not.toHaveBeenCalled()
 		})

@@ -46,7 +46,7 @@ export interface DismissableAlertProps extends StaticAlertProps {
 }
 
 // Static map so Tailwind's content scanner sees each literal `bg-*` class (a dynamic `bg-${color}`
-// would not be generated). Values mirror the themed colours in tailwind.css.
+// would not be generated). Values mirror the themed colours in theme-tokens.css.
 const SOLID_ALERT_BG: Record<string, string> = {
 	primary: 'bg-primary',
 	secondary: 'bg-secondary',

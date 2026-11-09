@@ -4,24 +4,26 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ButtonReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InputValidityIcon, type InputValidity } from '~/Components/InputValidity.js'
 import { Note } from '~/Components/Note.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
+import { trpc } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { ButtonLocationInput } from './ButtonLocationInput.js'
 
 interface ButtonReferenceEditorProps {
 	config: ButtonReferenceButtonModel
-	controlId: string
+	controlId: SomeControlId
 	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 
@@ -34,15 +36,13 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 	controlId,
 	navigateToControl,
 }: ButtonReferenceEditorProps) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'button-reference')
 
 	const setLocation = useCallback(
 		(value: ExpressionOrValue<string>) => {
-			setOptionsFieldMutation
-				.mutateAsync({ controlId, key: 'location', value })
-				.catch((e) => console.error(`Failed to set reference location: ${e}`))
+			setOption('location', value).catch((e) => console.error(`Failed to set reference location: ${stringifyError(e)}`))
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 
 	const location = config.options.location
@@ -71,7 +71,7 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 })
 
 interface ResolvedLocationRowProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ExpressionOrValue<string>
 	navigateToControl: ((location: ControlLocation) => void) | undefined
 }

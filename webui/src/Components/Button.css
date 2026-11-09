@@ -78,6 +78,14 @@
 		box-shadow: none;
 		opacity: 1;
 
+		/* A disabled selection still shows which option is in effect */
+		&.active,
+		&[aria-pressed='true'] {
+			background-color: var(--color-selection-bg);
+			border-color: var(--color-selection-border);
+			box-shadow: inset 0 0 0 1px var(--color-selection-border);
+		}
+
 		/* Busy is unavailable for another invocation, but its progress must stay readable. */
 		&[aria-busy='true'] {
 			color: var(--color-action-text);

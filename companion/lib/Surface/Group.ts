@@ -10,11 +10,17 @@
  */
 
 import type EventEmitter from 'node:events'
-import type { JsonValue } from 'type-fest'
-import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import z from 'zod'
+import {
+	SurfaceGroupConfigSchema,
+	SurfaceGroupConfigStoredSchema,
+	type SurfaceGroupConfig,
+	type SurfaceGroupConfigChange,
+	type SurfaceGroupConfigStored,
+} from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -26,15 +32,7 @@ export class SurfaceGroup {
 	/**
 	 * The defaults config for a group
 	 */
-	static readonly DefaultOptions: SurfaceGroupConfig = {
-		name: 'Unnamed group',
-		last_page_id: '',
-		startup_page_id: '',
-		use_last_page: true,
-		never_lock: false,
-		restrict_pages: false,
-		allowed_page_ids: [],
-	}
+	static readonly DefaultOptions: SurfaceGroupConfig = SurfaceGroupConfigSchema.parse({})
 
 	/**
 	 * Id of this group
@@ -82,7 +80,7 @@ export class SurfaceGroup {
 	/**
 	 * The surface group config database
 	 */
-	#dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>
+	#dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigStoredSchema, string>
 	/**
 	 * The core page store
 	 */
@@ -96,7 +94,7 @@ export class SurfaceGroup {
 
 	constructor(
 		surfaceController: SurfaceController,
-		dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>,
+		dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigStoredSchema, string>,
 		pageStore: IPageStore,
 		userconfig: DataUserConfig,
 		updateEvents: EventEmitter<UpdateEvents>,
@@ -116,32 +114,25 @@ export class SurfaceGroup {
 		this.#isLocked = isLocked
 
 		// Load the appropriate config
+		let storedConfig: SurfaceGroupConfigStored
 		if (soleHandler) {
-			this.groupConfig = soleHandler.getGroupConfig() ?? {}
-			if (!this.groupConfig.name) this.groupConfig.name = 'Auto group'
+			storedConfig = this.#parseAutoGroupConfig(soleHandler.getGroupConfig())
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.#dbTable.getOrDefault(this.groupId, SurfaceGroup.DefaultOptions)
-		}
-		// Apply missing defaults
-		this.groupConfig = {
-			...structuredClone(SurfaceGroup.DefaultOptions),
-			...this.groupConfig,
+			storedConfig =
+				this.#dbTable.get(this.groupId) ?? this.#dbTable.set(this.groupId, structuredClone(SurfaceGroup.DefaultOptions))
 		}
 
-		// Live fixup the last_page config
-		if (this.groupConfig.last_page) {
-			this.groupConfig.last_page_id =
-				this.#pageStore.getPageInfo(this.groupConfig.last_page)?.id ?? this.groupConfig.last_page_id
-			delete this.groupConfig.last_page
+		// Live fixup the page numbers older versions stored
+		const { last_page, startup_page, allowed_pages: _allowedPages, ...groupConfig } = storedConfig
+		if (last_page) {
+			groupConfig.last_page_id = this.#pageStore.getPageInfo(last_page)?.id ?? groupConfig.last_page_id
 		}
-		// Live fixup the startup_page config
-		if (this.groupConfig.startup_page) {
-			this.groupConfig.startup_page_id =
-				this.#pageStore.getPageInfo(this.groupConfig.startup_page)?.id ?? this.groupConfig.startup_page_id
-			delete this.groupConfig.startup_page
+		if (startup_page) {
+			groupConfig.startup_page_id = this.#pageStore.getPageInfo(startup_page)?.id ?? groupConfig.startup_page_id
 		}
+		this.groupConfig = groupConfig
 
 		// Determine the correct page to use
 		if (this.groupConfig.use_last_page) {
@@ -407,30 +398,28 @@ export class SurfaceGroup {
 
 	/**
 	 * Update the config for this SurfaceGroup
-	 * @param key Config field to change
-	 * @param value New value for the field
+	 * @param change The config field to change, and its new value
 	 */
-	setGroupConfigValue(key: string, value: JsonValue | undefined): string | undefined {
-		this.#logger.debug(`Set config "${key}" to "${stringifyVariableValue(value)}"`)
+	setGroupConfigValue(change: SurfaceGroupConfigChange): string | undefined {
+		this.#logger.debug(`Set config "${change.key}" to "${JSON.stringify(change.value)}"`)
 
-		let newValue: JsonValue | null = null
 		try {
-			newValue = validateGroupConfigValue(this.#pageStore, key, value)
+			validateGroupConfigChange(this.#pageStore, change)
 		} catch (e) {
 			this.#logger.warn(`Set config failed: ${stringifyError(e)}`)
 			return 'invalid value'
 		}
 
-		if (key === 'last_page_id' && typeof newValue === 'string') {
-			this.#storeNewPage(newValue)
+		if (change.key === 'last_page_id') {
+			this.#storeNewPage(change.value)
 
 			return
 		} else {
-			;(this.groupConfig as any)[key] = newValue
+			Object.assign(this.groupConfig, { [change.key]: change.value })
 			this.#saveConfig()
 
 			// Changing never_lock changes whether the lock is suppressed for the member surfaces
-			if (key === 'never_lock') {
+			if (change.key === 'never_lock') {
 				this.#applyLockedToSurfaces()
 			}
 
@@ -479,6 +468,21 @@ export class SurfaceGroup {
 	}
 
 	/**
+	 * An auto group's config is stored with its surface, so needs parsing here
+	 */
+	#parseAutoGroupConfig(rawConfig: unknown): SurfaceGroupConfigStored {
+		const config = rawConfig && typeof rawConfig === 'object' ? rawConfig : {}
+		const result = SurfaceGroupConfigStoredSchema.safeParse({ name: 'Auto group', ...config })
+		if (result.success) {
+			if (!result.data.name) result.data.name = 'Auto group'
+			return result.data
+		}
+
+		this.#logger.warn(`Invalid group config, using the defaults: ${z.prettifyError(result.error)}`)
+		return { ...structuredClone(SurfaceGroup.DefaultOptions), name: 'Auto group' }
+	}
+
+	/**
 	 * Save the configuration of this surface group
 	 */
 	#saveConfig() {
@@ -493,43 +497,27 @@ export class SurfaceGroup {
 	}
 }
 
-export function validateGroupConfigValue(pageStore: IPageStore, key: string, value: JsonValue | undefined): JsonValue {
-	switch (key) {
-		case 'use_last_page': {
-			return Boolean(value)
-		}
-		case 'startup_page_id': {
-			value = stringifyVariableValue(value) ?? ''
-			if (!pageStore.isPageIdValid(value)) {
-				throw new Error(`Invalid startup_page "${value}"`)
-			}
-
-			return value
-		}
-		case 'last_page_id': {
-			value = stringifyVariableValue(value) ?? ''
-			if (!pageStore.isPageIdValid(value)) {
-				throw new Error(`Invalid current_page "${value}"`)
-			}
-
-			return value
-		}
+/**
+ * Check a change to a group's config refers to pages that exist. The schema has already checked its type
+ */
+export function validateGroupConfigChange(pageStore: IPageStore, change: SurfaceGroupConfigChange): void {
+	switch (change.key) {
+		case 'use_last_page':
 		case 'never_lock':
-			return Boolean(value)
-
 		case 'restrict_pages':
-			return Boolean(value)
-
+			return
+		case 'startup_page_id':
+			if (!pageStore.isPageIdValid(change.value)) throw new Error(`Invalid startup_page "${change.value}"`)
+			return
+		case 'last_page_id':
+			if (!pageStore.isPageIdValid(change.value)) throw new Error(`Invalid current_page "${change.value}"`)
+			return
 		case 'allowed_page_ids': {
-			const values = value as string[]
-			const errors = values.filter((page) => !pageStore.isPageIdValid(page))
-			if (errors.length > 0) {
-				throw new Error(`Invalid allowed_page_ids values: [${errors.join(',')}]`)
-			}
-
-			return values
+			const errors = change.value.filter((page) => !pageStore.isPageIdValid(page))
+			if (errors.length > 0) throw new Error(`Invalid allowed_page_ids values: [${errors.join(',')}]`)
+			return
 		}
 		default:
-			throw new Error(`Invalid SurfaceGroup config key: "${key}"`)
+			assertNever(change)
 	}
 }

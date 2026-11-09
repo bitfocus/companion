@@ -1,8 +1,8 @@
 import os from 'node:os'
-import type { operations as CompanionUpdatesApiOperations } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import type { UpdatesPostData } from '@companion-app/shared/OpenApi/CompanionUpdates/index.js'
 import type { AppInfo } from '../Registry.js'
 
-export type UpdateApiBody = CompanionUpdatesApiOperations['updates_post']['requestBody']['content']['application/json']
+export type UpdateApiBody = UpdatesPostData['body']
 
 export function compileUpdatePayload(appInfo: AppInfo): UpdateApiBody {
 	return {

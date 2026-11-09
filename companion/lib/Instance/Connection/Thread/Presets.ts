@@ -354,8 +354,9 @@ function ConvertPresetDefinition(
 						options: {
 							rotaryActions: hasRotaryActions,
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							stepExpression: '',
 							canModifyStyleInApis: false,
-							notes: rawPreset.notes,
+							notes: rawPreset.notes || '',
 						},
 
 						feedbacks: parsedStyle.feedbacks,
@@ -391,8 +392,9 @@ function ConvertPresetDefinition(
 						options: {
 							rotaryActions: hasRotaryActions,
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							stepExpression: '',
 							canModifyStyleInApis: false,
-							notes: rawPreset.notes,
+							notes: rawPreset.notes || '',
 						},
 
 						style: {
@@ -428,7 +430,7 @@ function ConvertPresetDefinition(
 				return null
 		}
 	} catch (e) {
-		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${e}`)
+		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${stringifyError(e)}`)
 		return null
 	}
 }

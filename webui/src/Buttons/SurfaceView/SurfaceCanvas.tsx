@@ -8,8 +8,8 @@ import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigM
 import type { ResolvedSurfaceView } from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonGridView } from '../ButtonGridViewContext.js'
 import { GridButtonCell } from '../GridButtonCell.js'
-import type { GridButtonModifiers } from '../GridButtonPreview.js'
 import { MARQUEE_START_THRESHOLD } from '../GridCanvasGeometry.js'
+import { hoverModifiers } from '../gridModifiers.js'
 import {
 	controlAtPoint,
 	controlBorderRadius,
@@ -140,8 +140,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			if (e.pointerType !== 'touch') {
 				const point = canvasPoint(e.clientX, e.clientY)
 				const control = point ? controlAtPoint(placed, point.x, point.y) : null
-				const modifiers: GridButtonModifiers = { range: e.shiftKey, toggle: e.ctrlKey || e.metaKey }
-				store.handleHover(control ? controlLocation(control, pageNumber) : null, modifiers, actions)
+				store.handleHover(control ? controlLocation(control, pageNumber) : null, hoverModifiers(e), actions)
 			}
 
 			if (!marquee || marquee.pointerId !== e.pointerId) return

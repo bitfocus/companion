@@ -1,4 +1,4 @@
-import type jsonPatch from 'fast-json-patch'
+import type { ObjectPatch } from '../Diff.js'
 import type { LayeredButtonModel } from './ButtonModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { VariableValue, VariableValues } from './Variables.js'
@@ -97,5 +97,5 @@ export interface UIPresetDefinitionUpdateRemove {
 export interface UIPresetDefinitionUpdatePatch {
 	type: 'patch'
 	connectionId: string
-	patch: jsonPatch.Operation<UIPresetSections>[]
+	patch: ObjectPatch<UIPresetSections>
 }

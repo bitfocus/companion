@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { API_VERSION, MAX_KEYS_TOTAL, MAX_LINE_LENGTH, parseLineParameters } from '@companion-app/satellite-protocol'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
@@ -45,6 +46,7 @@ function createService({ subscriptionsEnabled = false }: { subscriptionsEnabled?
 	const userconfig = mockDeep<DataUserConfig>(mockOptions)
 
 	serviceApi.appInfo.appBuild = 'test-build-123'
+	serviceApi.acquireDisplayedLocation.mockReturnValue(() => undefined)
 	userconfig.getKey.mockReturnValue(subscriptionsEnabled)
 
 	const api = new ServiceSatelliteApi(serviceApi, surfaceController, userconfig)
@@ -128,6 +130,15 @@ describe('ServiceSatelliteApi', () => {
 			api.initSocket(logger, socket)
 
 			expect(socket.writtenData[1]).toContain('BITMAP_FORMATS="rgb,png,webp"')
+		})
+
+		test('CAPS advertises BITMAP_CACHE', () => {
+			const { api, logger } = createService()
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('BITMAP_CACHE=1')
 		})
 
 		test('CAPS advertises control events', () => {
@@ -360,10 +371,28 @@ describe('ServiceSatelliteApi', () => {
 			expect(callArgs.gridSize).toEqual({ columns: 8, rows: 4 }) // LEGACY_MAX_BUTTONS=32 / LEGACY_BUTTONS_PER_ROW=8
 			expect(callArgs.surfaceManifestFromClient).toBe(false)
 			expect(callArgs.bitmapFormat).toBe('rgb') // default when BITMAP_FORMAT not specified
+			expect(callArgs.variableEncoding).toBe('string') // default when VARIABLE_ENCODING not specified
 
 			expect(socket.lastMessage).toContain('ADD-DEVICE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+		})
+
+		test.each([
+			['json', 'json'],
+			['string', 'string'],
+			['xml', 'string'],
+		])('negotiates VARIABLE_ENCODING=%s', (encoding, expected) => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" VARIABLE_ENCODING=${encoding}\n`)
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.variableEncoding).toBe(expected)
 		})
 
 		test.each(['png', 'webp'])('negotiates BITMAP_FORMAT=%s', (format) => {
@@ -1391,6 +1420,62 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('VARIABLE="myvar"')
 		})
+
+		test('a json value without ENCODING=json is taken as a string', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.setVariableValue.mockReturnValue(undefined)
+
+			const encoded = Buffer.from('123').toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=string\n`)
+
+			expect(mockDevice.setVariableValue).toHaveBeenCalledWith('myvar', '123')
+			expect(socket.lastMessage).toContain('OK')
+		})
+
+		test.each([123, 1.5, true, null, 'text', [1, 'two'], { a: { b: 1 } }])('decodes %j with ENCODING=json', (value) => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.setVariableValue.mockReturnValue(undefined)
+
+			const encoded = Buffer.from(JSON.stringify(value)).toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=json\n`)
+
+			expect(mockDevice.setVariableValue).toHaveBeenCalledWith('myvar', value)
+			expect(socket.lastMessage).toContain('OK')
+		})
+
+		test('error when ENCODING=json and VALUE is not json', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+
+			const encoded = Buffer.from('not json').toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=json\n`)
+
+			expect(mockDevice.setVariableValue).not.toHaveBeenCalled()
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid VALUE')
+		})
+
+		test('error when ENCODING is unknown', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+
+			const encoded = Buffer.from('1').toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=xml\n`)
+
+			expect(mockDevice.setVariableValue).not.toHaveBeenCalled()
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid ENCODING')
+		})
 	})
 
 	describe('FIRMWARE-UPDATE-INFO', () => {
@@ -1650,6 +1735,158 @@ describe('ServiceSatelliteApi', () => {
 		})
 	})
 
+	describe('BITMAP-CACHE', () => {
+		test('opts in to caching with the given budget', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=100000\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-CACHE OK BYTES=100000 \n'])
+			expect(socket.bitmapCache?.budgetBytes).toBe(100000)
+		})
+
+		test('shrinking evicts the least recently used bitmaps before the OK', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=300\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.bitmapCache!.store('b', 5, 5)
+			socket.bitmapCache!.store('c', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT BITMAP_IDS="a" \n', 'BITMAP-CACHE OK BYTES=200 \n'])
+			expect(socket.bitmapCache?.entryCount).toBe(2)
+		})
+
+		test('growing keeps every bitmap', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=100\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=1000\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-CACHE OK BYTES=1000 \n'])
+			expect(socket.bitmapCache?.has('a')).toBe(true)
+		})
+
+		test('shrinking past every bitmap evicts them all at once', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.bitmapCache!.store('b', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=50\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT ALL=1 \n', 'BITMAP-CACHE OK BYTES=50 \n'])
+			expect(socket.bitmapCache?.entryCount).toBe(0)
+		})
+
+		test('a budget of 0 evicts everything, then turns caching off', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=0\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT ALL=1 \n', 'BITMAP-CACHE OK BYTES=0 \n'])
+			expect(socket.bitmapCache).toBeNull()
+		})
+
+		test('a budget of 0 when not caching just replies OK', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=0\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-CACHE OK BYTES=0 \n'])
+			expect(socket.bitmapCache).toBeNull()
+		})
+
+		test.each(['', 'BYTES=abc', 'BYTES=-1', 'BYTES=1.5', 'BYTES', 'BYTES=', 'BYTES=0x10', 'BYTES=1e3'])(
+			'rejects an invalid budget: %s',
+			(args) => {
+				const { api, logger } = createService()
+				const { socket, processMessage } = createSocketAndInit(api, logger)
+
+				processMessage(`BITMAP-CACHE ${args}\n`)
+
+				expect(socket.lastMessage).toContain('BITMAP-CACHE ERROR')
+				expect(socket.lastMessage).toContain('Invalid BYTES')
+				expect(socket.bitmapCache).toBeNull()
+			}
+		)
+	})
+
+	describe('BITMAP-COST', () => {
+		test('a lower cost changes nothing the client can see', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-COST BITMAP_ID=a BYTES=10\n')
+
+			expect(socket.writtenData).toEqual([])
+			expect(socket.bitmapCache?.usedBytes).toBe(10)
+		})
+
+		test('a higher cost evicts bitmaps to get back within budget', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.bitmapCache!.store('b', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-COST BITMAP_ID=b BYTES=150\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT BITMAP_IDS="a" \n'])
+		})
+
+		test('is ignored for a bitmap which has been evicted, or when not caching', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-COST BITMAP_ID=a BYTES=10\n')
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.clearMessages()
+			processMessage('BITMAP-COST BITMAP_ID=a BYTES=10\n')
+
+			expect(socket.writtenData).toEqual([])
+		})
+
+		test.each([
+			['BYTES=10', 'Missing BITMAP_ID'],
+			['BITMAP_ID=a', 'Invalid BYTES'],
+			['BITMAP_ID=a BYTES=-5', 'Invalid BYTES'],
+			['BITMAP_ID=a BYTES=', 'Invalid BYTES'],
+		])('rejects invalid params: %s', (args, error) => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage(`BITMAP-COST ${args}\n`)
+
+			expect(socket.lastMessage).toContain('BITMAP-COST ERROR')
+			expect(socket.lastMessage).toContain(error)
+		})
+	})
+
 	describe('ADD-SUB', () => {
 		test('error when subscriptions not enabled', () => {
 			const { api, logger } = createService({ subscriptionsEnabled: false })
@@ -1739,6 +1976,19 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('Invalid STYLE')
 		})
 
+		test('error for a STYLE that is JSON but not a style', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const badStyle = Buffer.from(JSON.stringify({ bitmap: 'big', colors: 'cmyk' })).toString('base64')
+
+			processMessage(`ADD-SUB SUBID="sub1" LOCATION="1/2/3" STYLE="${badStyle}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid STYLE')
+			expect(serviceApi.acquireDisplayedLocation).not.toHaveBeenCalled()
+		})
+
 		test('successfully adds subscription', () => {
 			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
@@ -1773,6 +2023,26 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
 		})
 
+		test('counts a STYLE bitmap as shown at its own size, keeping its shape however large, but not a size of nothing', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { processMessage } = createSocketAndInit(api, logger)
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mock<ImageResult>())
+			const addSub = (subId: string, bitmap: { w: number; h: number }) => {
+				const style = Buffer.from(JSON.stringify({ bitmap })).toString('base64')
+				processMessage(`ADD-SUB SUBID="${subId}" LOCATION="1/2/3" STYLE="${style}"\n`)
+			}
+
+			addSub('sub1', { w: 4096, h: 1024 })
+			expect(serviceApi.acquireDisplayedLocation).toHaveBeenCalledWith(
+				{ pageNumber: 1, row: 2, column: 3 },
+				{ width: 4096, height: 1024 }
+			)
+
+			serviceApi.acquireDisplayedLocation.mockClear()
+			addSub('sub2', { w: 0, h: 100000 })
+			expect(serviceApi.acquireDisplayedLocation).not.toHaveBeenCalled()
+		})
+
 		test('negotiates BITMAP_FORMAT and sends the encoded data url in SUB-STATE', async () => {
 			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)
@@ -1788,6 +2058,37 @@ describe('ServiceSatelliteApi', () => {
 			expect(mockRender.drawNativeEncoded).toHaveBeenCalledWith(72, 72, null, 'webp')
 			const subState = socket.writtenData.find((m) => m.includes('SUB-STATE'))
 			expect(subState).toContain('BITMAP="data:image/webp;base64,AQIDBA=="')
+		})
+
+		test('counts the location as shown at the bitmap size while subscribed', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { processMessage, cleanupDevices } = createSocketAndInit(api, logger)
+
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mock<ImageResult>())
+			const releases = [vi.fn(), vi.fn()]
+			serviceApi.acquireDisplayedLocation.mockReturnValueOnce(releases[0]).mockReturnValueOnce(releases[1])
+
+			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3" BITMAP=128\n')
+			processMessage('ADD-SUB SUBID="sub2" LOCATION="1/2/4" BITMAP=72\n')
+			// Without a bitmap, nothing is drawn for it
+			processMessage('ADD-SUB SUBID="sub3" LOCATION="1/2/5"\n')
+			expect(serviceApi.acquireDisplayedLocation.mock.calls).toEqual([
+				[
+					{ pageNumber: 1, row: 2, column: 3 },
+					{ width: 128, height: 128 },
+				],
+				[
+					{ pageNumber: 1, row: 2, column: 4 },
+					{ width: 72, height: 72 },
+				],
+			])
+
+			processMessage('REMOVE-SUB SUBID="sub1"\n')
+			expect(releases[0]).toHaveBeenCalled()
+			expect(releases[1]).not.toHaveBeenCalled()
+
+			cleanupDevices()
+			expect(releases[1]).toHaveBeenCalled()
 		})
 
 		test('successfully adds subscription with base64 STYLE', () => {
@@ -1927,7 +2228,7 @@ describe('ServiceSatelliteApi', () => {
 
 			const mockRender = mock<ImageResult>()
 			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
-			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('ctrl-abc'))
 			serviceApi.pressControl.mockReturnValue(true)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
@@ -1940,7 +2241,11 @@ describe('ServiceSatelliteApi', () => {
 				row: 2,
 				column: 3,
 			})
-			expect(serviceApi.pressControl).toHaveBeenCalledWith('ctrl-abc', true, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.pressControl).toHaveBeenCalledWith(
+				CreateBankControlId('ctrl-abc'),
+				true,
+				expect.stringContaining('satellite-sub:')
+			)
 			expect(socket.lastMessage).toContain('SUB-PRESS')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
@@ -2017,7 +2322,7 @@ describe('ServiceSatelliteApi', () => {
 
 			const mockRender = mock<ImageResult>()
 			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
-			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('ctrl-abc'))
 			serviceApi.rotateControl.mockReturnValue(true)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
@@ -2025,7 +2330,11 @@ describe('ServiceSatelliteApi', () => {
 
 			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=1\n')
 
-			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', 1, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.rotateControl).toHaveBeenCalledWith(
+				CreateBankControlId('ctrl-abc'),
+				1,
+				expect.stringContaining('satellite-sub:')
+			)
 			expect(socket.lastMessage).toContain('SUB-ROTATE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
@@ -2037,7 +2346,7 @@ describe('ServiceSatelliteApi', () => {
 
 			const mockRender = mock<ImageResult>()
 			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
-			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('ctrl-abc'))
 			serviceApi.rotateControl.mockReturnValue(true)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
@@ -2045,7 +2354,11 @@ describe('ServiceSatelliteApi', () => {
 
 			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=-4\n')
 
-			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', -4, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.rotateControl).toHaveBeenCalledWith(
+				CreateBankControlId('ctrl-abc'),
+				-4,
+				expect.stringContaining('satellite-sub:')
+			)
 			expect(socket.lastMessage).toContain('OK')
 		})
 
@@ -2075,7 +2388,7 @@ describe('ServiceSatelliteApi', () => {
 			api.initSocket(logger, socket1)
 			api.initSocket(logger, socket2)
 
-			api.updateUserConfig('satellite_subscriptions_enabled', true)
+			api.updateUserConfig({ key: 'satellite_subscriptions_enabled', value: true })
 
 			expect(socket1.destroyed).toBe(true)
 			expect(socket2.destroyed).toBe(true)
@@ -2086,7 +2399,7 @@ describe('ServiceSatelliteApi', () => {
 			const socket = new TestSocketWrapper()
 			api.initSocket(logger, socket)
 
-			api.updateUserConfig('some_other_key', true)
+			api.updateUserConfig({ key: 'tcp_enabled', value: true })
 
 			expect(socket.destroyed).toBe(false)
 		})

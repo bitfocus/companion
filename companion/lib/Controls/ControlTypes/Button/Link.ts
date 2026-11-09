@@ -1,0 +1,324 @@
+import type z from 'zod'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
+import {
+	LinkButtonOptionsSchema,
+	parseLinkButtonOptions,
+	type LinkButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
+import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
+import { ParseLocationString } from '../../../Internal/Util.js'
+import type { LinkButtonState, LinkButtonTarget } from '../../../Link/ButtonClient.js'
+import { LinkButtonLocationRefSchema } from '../../../Link/Protocol/v1/Schemas.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import { mangleReferenceSurfaceId } from '../../../Surface/ReferenceSurfaceId.js'
+import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
+import { ControlBase } from '../../ControlBase.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
+import type {
+	ControlWithOptions,
+	ControlWithoutActions,
+	ControlWithoutActionSets,
+	ControlWithoutConvert,
+	ControlWithoutEntities,
+	ControlWithoutEvents,
+	ControlWithoutLayeredStyle,
+	ControlWithPushed,
+} from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
+import { LinkButtonDrawer } from './LinkButtonDrawer.js'
+
+const UNCONFIGURED_STATE: LinkButtonState = {
+	status: 'unconfigured',
+	peerName: null,
+	remoteKey: null,
+	images: [],
+	unreachable: false,
+	pressed: false,
+	stepCurrent: 1,
+	stepCount: 1,
+	buttonStatus: undefined,
+	actionRunning: false,
+	sourceChain: [],
+}
+
+/**
+ * A button that mirrors a button on another Companion installation, over Companion Link: it shows the remote
+ * button's image and forwards presses and rotation to it. The subscription to the remote button is managed by the
+ * {@link LinkButtonClient}; this control only says what it wants to show.
+ *
+ * @author Julian Waller <me@julusian.co.uk>
+ * @since 5.2.0
+ * @copyright 2026 Bitfocus AS
+ * @license
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for Companion along with
+ * this program.
+ */
+export class ControlButtonLink
+	extends ControlBase<BankControlId, LinkButtonModel, LinkButtonRuntimeProps>
+	implements
+		ControlWithoutLayeredStyle,
+		ControlWithoutEntities,
+		ControlWithoutActions,
+		ControlWithoutEvents,
+		ControlWithoutActionSets,
+		ControlWithOptions<LinkButtonModel['options']>,
+		ControlWithPushed,
+		ControlWithoutConvert,
+		VariableDependencyListener<null>
+{
+	readonly type = 'link-button'
+
+	readonly supportsActions = false
+	readonly supportsActionSets = false
+	readonly supportsConvert = false
+	readonly supportsEntities = false
+	readonly supportsEvents = false
+	readonly supportsLayeredStyle = false
+	readonly supportsOptions = true
+	readonly supportsPushed = true
+
+	readonly optionsSchema: z.ZodType<LinkButtonModel['options']> = LinkButtonOptionsSchema
+
+	options: LinkButtonModel['options']
+
+	readonly #drawing: LinkButtonDrawer
+	override get drawing(): LinkButtonDrawer {
+		return this.#drawing
+	}
+
+	/** Variables the location depends on, so that it is resolved again when any of them change */
+	readonly #locationVariables: VariableDependency<null>
+
+	/** Whether a location has been given that can't be resolved, which the link client isn't told about */
+	#locationInvalid = false
+
+	/** The pushed state last reported to `updateButtonState` */
+	#reportedPushed = false
+
+	/** Whether the remote button is pushed, from any surface on either installation */
+	get pushed(): boolean {
+		return this.#getState().pressed
+	}
+
+	protected triggerInvalidation = (): void => {
+		this.#drawing.invalidate()
+	}
+
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null, isImport: boolean) {
+		super(deps, controlId, 'Controls/Button/Link')
+
+		this.#locationVariables = deps.variableDependencies.create(this, controlId, null)
+		this.options = parseLinkButtonOptions({}).options
+
+		this.#drawing = new LinkButtonDrawer(
+			deps,
+			controlId,
+			() => this.#getState(),
+			() => this.options
+		)
+
+		if (!storage) {
+			// New control
+			this.commitChange()
+		} else {
+			if (storage.type !== 'link-button') throw new Error(`Invalid type given to ControlButtonLink: "${storage.type}"`)
+
+			const { options, invalidKeys } = parseLinkButtonOptions(storage.options)
+			this.options = options
+			if (invalidKeys.length > 0) {
+				this.logger.warn(`Replaced invalid options with their defaults: ${invalidKeys.join(', ')}`)
+			}
+
+			// Saved again when anything had to be replaced, so that it is valid from now on
+			if (isImport || invalidKeys.length > 0) this.commitChange()
+		}
+
+		this.#updateTarget()
+	}
+
+	destroy(): void {
+		this.deps.linkButtons.removeTarget(this.controlId)
+		this.#reportPushed(false)
+		this.#drawing.dispose()
+		this.#locationVariables.dispose()
+		super.destroy()
+	}
+
+	#getState(): LinkButtonState {
+		const state = this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+		return state.status === 'unconfigured' && this.#locationInvalid ? { ...state, status: 'bad_location' } : state
+	}
+
+	/** Resolve the location, and tell the link client what this button should show, and at what sizes */
+	#updateTarget(): void {
+		const wasInvalid = this.#locationInvalid
+		const target = this.#resolveTarget()
+		const onChange = () => {
+			this.sendRuntimePropsChange()
+			this.#reportPushed(this.pushed)
+			this.#drawing.invalidate()
+		}
+		this.deps.linkButtons.setTarget(this.controlId, target, onChange)
+		if (this.#locationInvalid !== wasInvalid) onChange()
+
+		this.deps.linkButtons.setDecoration(this.controlId, this.options.decoration)
+
+		// This button may have moved
+		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		this.deps.linkButtons.setDisplayedSizes(
+			this.controlId,
+			myLocation ? this.deps.graphics.displayedLocations.getSizes(myLocation) : []
+		)
+	}
+
+	#resolveTarget(): LinkButtonTarget | null {
+		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
+			myLocation,
+			null,
+			null,
+			myLocation ? this.deps.getPageVariableEntities(myLocation.pageNumber) : null
+		)
+
+		const location = this.options.location
+		let raw: string
+		if (location.isExpression) {
+			const res = parser.executeExpression(location.value, 'string')
+			raw = res.ok ? (stringifyVariableValue(res.value) ?? '') : ''
+			this.#locationVariables.set(res.variableIds)
+		} else {
+			const res = parser.parseVariables(location.value)
+			raw = res.text
+			this.#locationVariables.set(res.variableIds)
+		}
+
+		// `this` (and page 0) means the same location as this button, but on the remote installation
+		let resolved = ParseLocationString(raw, myLocation ?? undefined)
+		if (
+			resolved &&
+			!LinkButtonLocationRefSchema.safeParse({ type: 'location', page: resolved.pageNumber, ...resolved }).success
+		)
+			resolved = null
+		this.#locationInvalid = !resolved && raw.trim() !== ''
+		if (!this.options.peerId || !resolved) return null
+
+		return { peerId: this.options.peerId, location: resolved }
+	}
+
+	#reportPushed(pushed: boolean): void {
+		if (pushed === this.#reportedPushed) return
+		this.#reportedPushed = pushed
+
+		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		if (location) this.deps.events.emit('updateButtonState', location, pushed, undefined)
+	}
+
+	/** The pushed state is that of the remote button, so this can't change it */
+	setPushed(_direction: boolean, _surfaceId: string | undefined): boolean {
+		return false
+	}
+
+	pressControl(pressed: boolean, surfaceId: string | undefined): void {
+		this.deps.linkButtons.press(this.controlId, pressed, mangleReferenceSurfaceId(surfaceId, this.controlId))
+	}
+
+	override rotateControl(delta: number, surfaceId: string | undefined): boolean {
+		return this.deps.linkButtons.rotate(this.controlId, delta, mangleReferenceSurfaceId(surfaceId, this.controlId))
+	}
+
+	/** The actions run on the remote installation, so abort them there */
+	override abortDelayedActions(skip_up: boolean, _exceptSignal: AbortSignal | null, linkHops: number): void {
+		this.deps.linkButtons.abort(this.controlId, skip_up, linkHops)
+	}
+
+	/**
+	 * Update an option field: `peerId`, `location`, `notes`, `decoration` or `showStatusIcons`
+	 */
+	optionsSetField(change: KeyValueChange<LinkButtonModel['options']>): boolean {
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
+
+		this.options = options
+		this.commitChange(false)
+
+		switch (change.key) {
+			case 'notes':
+				break
+			case 'showStatusIcons':
+				this.#drawing.invalidate()
+				break
+			case 'peerId':
+			case 'location':
+			case 'decoration':
+				this.#updateTarget()
+				this.#drawing.invalidate()
+				break
+			default:
+				assertNever(change)
+		}
+		return true
+	}
+
+	collectReferencedConnectionsAndVariables(
+		foundConnectionIds: Set<string>,
+		foundConnectionLabels: Set<string>,
+		foundVariables: Set<string>
+	): void {
+		const collector = new VisitorReferencesCollector(
+			this.deps.internalModule,
+			foundConnectionIds,
+			foundConnectionLabels,
+			foundVariables,
+			undefined
+		)
+		collector.visitExpressionOrValue(this.options.location, true)
+	}
+
+	renameVariables(labelFrom: string, labelTo: string): void {
+		const updater = new VisitorReferencesUpdater(
+			this.deps.internalModule,
+			{ [labelFrom]: labelTo },
+			undefined,
+			undefined
+		)
+		updater.visitExpressionOrValue(this.options.location, true)
+
+		if (updater.hasChanges()) {
+			this.commitChange(false)
+			this.#updateTarget()
+		}
+	}
+
+	/** The location can reference variables, so resolve it again when any of them change */
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
+		const locationVariables = this.#locationVariables.variableIds
+		if (locationVariables && !locationVariables.isDisjointFrom(allChangedVariables)) this.#updateTarget()
+	}
+
+	/** The location can be relative to this button, so resolve it again */
+	triggerLocationHasChanged(): void {
+		this.#updateTarget()
+	}
+
+	toRuntimeJSON(): LinkButtonRuntimeProps {
+		const state = this.#getState()
+		return { status: state.status, peerName: state.peerName }
+	}
+
+	toJSON(clone = true): LinkButtonModel {
+		const obj: LinkButtonModel = {
+			type: this.type,
+			options: this.options,
+		}
+		return clone ? structuredClone(obj) : obj
+	}
+}

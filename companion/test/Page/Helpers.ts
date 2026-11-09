@@ -1,33 +1,25 @@
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreTableView } from '../../lib/Data/StoreBase.js'
+import { CreateBankControlId, type BankControlId } from '@companion-app/shared/ControlId.js'
+import { PageModelSchema, type PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { DataStoreSchemaTableView } from '../../lib/Data/Tables/SchemaTableView.js'
 import { PageStore } from '../../lib/Page/Store.js'
+import { FakeSchemaTableView, FakeTableView } from '../utils/FakeTableView.js'
 
 /**
- * A Map-backed stand-in for DataStoreTableView.
- * Values are cloned on read and write, mirroring the JSON round-trip of the real SQLite table,
- * so `data` can be used to assert exactly what would have been persisted.
+ * A Map-backed stand-in for the pages table.
+ * Rows are parsed with the page schema like the real table, and `data` holds exactly what would have been persisted.
  */
-export class FakePageTableView {
-	data: Record<string, PageModel> = {}
-
-	all(): Record<string, PageModel> {
-		return structuredClone(this.data)
-	}
-
-	set(key: string, value: PageModel): void {
-		this.data[key] = structuredClone(value)
-	}
-
-	delete(key: string): void {
-		delete this.data[key]
-	}
-
-	asTableView(): DataStoreTableView<Record<string, PageModel>> {
-		return this as unknown as DataStoreTableView<Record<string, PageModel>>
+export class FakePageTableView extends FakeTableView<PageModel> {
+	asSchemaTableView(): DataStoreSchemaTableView<typeof PageModelSchema, string> {
+		const view = new FakeSchemaTableView(this, PageModelSchema)
+		return view as unknown as DataStoreSchemaTableView<typeof PageModelSchema, string>
 	}
 }
 
-export function makePage(id: string, name: string, controls: Record<number, Record<number, string>> = {}): PageModel {
+export function makePage(
+	id: string,
+	name: string,
+	controls: Record<number, Record<number, BankControlId>> = {}
+): PageModel {
 	return { id, name, controls }
 }
 
@@ -39,15 +31,15 @@ export function createStore(initialPages?: PageModel[]): { db: FakePageTableView
 		})
 	}
 
-	const store = new PageStore(db.asTableView())
+	const store = new PageStore(db.asSchemaTableView())
 	return { db, store }
 }
 
 /** Three pages with a few controls, for tests that need an interesting layout */
 export function threePages(): PageModel[] {
 	return [
-		makePage('page-a', 'First', { 0: { 0: 'control-a1' } }),
-		makePage('page-b', 'Second', { 1: { 2: 'control-b1', 3: 'control-b2' } }),
-		makePage('page-c', 'Third', { 0: { 0: 'control-c1' } }),
+		makePage('page-a', 'First', { 0: { 0: CreateBankControlId('control-a1') } }),
+		makePage('page-b', 'Second', { 1: { 2: CreateBankControlId('control-b1'), 3: CreateBankControlId('control-b2') } }),
+		makePage('page-c', 'Third', { 0: { 0: CreateBankControlId('control-c1') } }),
 	]
 }

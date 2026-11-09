@@ -1,13 +1,17 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type {
-	SurfaceAppearanceDefinition,
-	SurfaceSchemaBitmapConfig,
-	SurfaceSchemaControlDefinition,
-	SurfaceSchemaControlStylePreset,
-	SurfaceSchemaLayoutDefinition,
-	SurfaceSchemaLedsConfig,
+import z from 'zod'
+import {
+	surfaceAppearanceSchema,
+	surfaceLayoutSchema,
+	type SurfaceAppearanceDefinition,
+	type SurfaceSchemaBitmapConfig,
+	type SurfaceSchemaControlDefinition,
+	type SurfaceSchemaControlStylePreset,
+	type SurfaceSchemaLayoutDefinition,
+	type SurfaceSchemaLedsConfig,
 } from '@companion-surface/base'
-import type { CollectionBase } from './Collections.js'
+import type { ObjectPatch } from '../Diff.js'
+import { zodKeyValueChange } from '../Util/KeyValue.js'
+import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
 	CompanionInputFieldCheckboxExtended,
@@ -34,7 +38,9 @@ export type {
 }
 
 export type GridSize = { columns: number; rows: number }
-export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
+export const SurfaceRotationSchema = z.literal(['surface90', 'surface-90', 'surface180', 'surface0', 0, -90, 90, 180])
+
+export type SurfaceRotation = z.output<typeof SurfaceRotationSchema>
 
 export interface RowsAndColumns {
 	rows: number
@@ -149,70 +155,121 @@ export interface ClientDevicesListItem {
 	surfaces: ClientSurfaceItem[]
 }
 
-export interface SurfaceConfig {
-	config: SurfacePanelConfig
-	groupConfig: SurfaceGroupConfig
+/** The settings of a surface group, which can each be changed */
+export const SurfaceGroupSettingsSchema = z.object({
+	last_page_id: z.string().default(''),
+	startup_page_id: z.string().default(''),
+	use_last_page: z.boolean().default(true),
+	never_lock: z.boolean().default(false),
+	restrict_pages: z.boolean().default(false),
+	allowed_page_ids: z.array(z.string()).default(() => []),
+})
 
-	groupId: string | null
+/** A change to one of the settings of a surface group */
+export const SurfaceGroupConfigChangeSchema = zodKeyValueChange(SurfaceGroupSettingsSchema)
+export type SurfaceGroupConfigChange = z.output<typeof SurfaceGroupConfigChangeSchema>
 
-	name?: string
+/** A surface group's config: its name and its settings */
+export const SurfaceGroupConfigSchema = z.object({
+	name: z.string().default('Unnamed group'),
+	...SurfaceGroupSettingsSchema.shape,
+})
 
-	/**
-	 * Whether this surface is enabled and should be opened when discovered.
-	 * Defaults to true when not specified.
-	 * Note: This setting does not apply to satellite, emulator, or elgato-plugin surfaces.
-	 */
-	enabled?: boolean
+export type SurfaceGroupConfig = z.output<typeof SurfaceGroupConfigSchema>
 
-	// Properties defined by the panel/integration, that may not be defined for old configs
-	type: string | undefined
-	integrationType: string | undefined
-	gridSize: GridSize | undefined
-	layout: SurfaceSchemaLayoutDefinition | undefined
-	/** null when the surface supplied none; undefined for configs saved before this was persisted */
-	appearance: SurfaceAppearanceDefinition | null | undefined
-	/**
-	 * Which of its module's declared models the surface is, by the id the module declared it with. null when it
-	 * named none; undefined for configs saved before this was persisted
-	 */
-	modelId: string | null | undefined
-	/**
-	 * When the surface was last connected, as a unix timestamp in ms. Stamped on connect and disconnect, so a
-	 * surface connected when Companion stopped uncleanly shows when it connected. undefined if never recorded
-	 */
-	lastSeen: number | undefined
-}
-
-export interface SurfaceGroupConfig {
-	name: string
-	last_page_id: string
-	startup_page_id: string
-	use_last_page: boolean
-	never_lock: boolean
-	restrict_pages?: boolean
-	allowed_page_ids?: string[]
-
+/** A surface group's config as it is stored and exported, which can have the page numbers older versions used */
+export const SurfaceGroupConfigStoredSchema = SurfaceGroupConfigSchema.extend({
 	/** @deprecated. replaced by last_page_id but still used for export */
-	last_page?: number
+	last_page: z.number().optional(),
 	/** @deprecated. replaced by startup_page_id but still used for export */
-	startup_page?: number
+	startup_page: z.number().optional(),
 	/** @deprecated.  used for export */
-	allowed_pages?: number[]
+	allowed_pages: z.array(z.number()).optional(),
+})
+
+export type SurfaceGroupConfigStored = z.output<typeof SurfaceGroupConfigStoredSchema>
+
+function isObject(value: unknown): value is Record<string, unknown> {
+	return !!value && typeof value === 'object' && !Array.isArray(value)
 }
 
-export interface SurfacePanelConfig {
-	// defaults from the panel - TODO properly
-	brightness: number
-	rotation: SurfaceRotation
+/**
+ * Surfaces saved before groupConfig existed kept their page in their panel config, and at the top level.
+ * Build their groupConfig from it, and drop the old fields.
+ */
+function migrateLegacySurfaceConfig(row: unknown): unknown {
+	if (!isObject(row)) return row
 
-	// companion owned defaults
-	xOffset: number
-	yOffset: number
-	groupId: string | null
+	const { page: _legacyPage, ...surface } = row
+	const { page, use_last_page, ...panelConfig } = isObject(surface.config) ? surface.config : {}
 
-	// panel custom properties
-	[key: string]: any
+	return {
+		...surface,
+		config: panelConfig,
+		groupConfig: surface.groupConfig ?? {
+			startup_page: page ?? 1,
+			use_last_page: use_last_page ?? page === undefined,
+		},
+	}
 }
+
+/**
+ * The panel's own properties, and their defaults, are added when it connects; they are kept as they are here
+ */
+export const SurfacePanelConfigSchema = z
+	.object({
+		brightness: z.number().default(100),
+		rotation: SurfaceRotationSchema.default(0),
+		xOffset: z.number().default(0),
+		yOffset: z.number().default(0),
+		groupId: z.string().nullable().default(null),
+	})
+	.catchall(z.any())
+
+export type SurfacePanelConfig = z.output<typeof SurfacePanelConfigSchema>
+
+export const SurfaceConfigSchema = z.preprocess(
+	migrateLegacySurfaceConfig,
+	z.object({
+		config: SurfacePanelConfigSchema,
+		/** Only used when the surface is in its own automatic group */
+		groupConfig: SurfaceGroupConfigStoredSchema.extend({ name: z.string().default('Auto group') }),
+
+		groupId: z.string().nullable().default(null),
+
+		name: z.string().optional(),
+
+		/**
+		 * Whether this surface is enabled and should be opened when discovered.
+		 * Note: This setting does not apply to satellite, emulator, or elgato-plugin surfaces.
+		 */
+		enabled: z.boolean().default(true),
+
+		// Properties defined by the panel/integration, that may not be defined for old configs
+		type: z.string().optional(),
+		integrationType: z.string().optional(),
+		gridSize: z.object({ columns: z.number(), rows: z.number() }).optional(),
+		/** An invalid layout is dropped, as the surface supplies it again when it connects */
+		layout: surfaceLayoutSchema.optional().catch(undefined),
+		/**
+		 * null when the surface supplied none; undefined for configs saved before this was persisted.
+		 * An invalid appearance is dropped, as the surface supplies it again when it connects
+		 */
+		appearance: surfaceAppearanceSchema.nullable().optional().catch(undefined),
+		/**
+		 * Which of its module's declared models the surface is, by the id the module declared it with. null when it
+		 * named none; undefined for configs saved before this was persisted
+		 */
+		modelId: z.string().nullable().optional(),
+		/**
+		 * When the surface was last connected, as a unix timestamp in ms. Stamped on connect and disconnect, so a
+		 * surface connected when Companion stopped uncleanly shows when it connected. undefined if never recorded
+		 */
+		lastSeen: z.number().optional(),
+	})
+)
+
+export type SurfaceConfig = z.output<typeof SurfaceConfigSchema>
 
 export type SurfacesUpdate =
 	SurfacesUpdateInitOp | SurfacesUpdateRemoveOp | SurfacesUpdateAddOp | SurfacesUpdateUpdateOp
@@ -235,7 +292,7 @@ export interface SurfacesUpdateUpdateOp {
 	type: 'update'
 	itemId: string
 
-	patch: JsonPatchOperation<ClientDevicesListItem>[]
+	patch: ObjectPatch<ClientDevicesListItem>
 }
 
 /**
@@ -258,23 +315,23 @@ export interface SurfaceModelsUpdateReplaceOp {
 	info: ClientSurfaceModelItem
 }
 
-export interface OutboundSurfaceInfo {
-	id: string
-	enabled: boolean
+export const OutboundSurfaceInfoSchema = z.object({
+	id: z.string(),
+	enabled: z.boolean().default(true),
 
-	displayName: string
-	type: 'plugin'
-	moduleId: string
-	instanceId: string
-	config: Record<string, any>
+	displayName: z.string().default(''),
+	type: z.literal('plugin'),
+	moduleId: z.string(),
+	instanceId: z.string(),
+	config: z.record(z.string(), z.any()).default(() => ({})),
 
-	collectionId: string | null
-	sortOrder: number
-}
+	collectionId: z.string().nullable().default(null),
+	sortOrder: z.number().default(0),
+})
 
-export interface OutboundSurfaceCollectionData {
-	enabled: boolean
-}
+export type OutboundSurfaceInfo = z.output<typeof OutboundSurfaceInfoSchema>
+
+export type OutboundSurfaceCollectionData = EnabledCollectionData
 
 export type OutboundSurfaceCollection = CollectionBase<OutboundSurfaceCollectionData>
 

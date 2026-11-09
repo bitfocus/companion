@@ -20,6 +20,8 @@ export interface ClientEntityDefinition {
 	 * Special case for 'conditionalise existing feedbacks' to avoid the root getting style overrides, as we defer that to the children feedbacks
 	 */
 	feedbackDisableStyleOverrides?: boolean
+	/** When true, this entity is never offered for adding, as it only stands in for one that couldn't be loaded. Defaults to false */
+	hiddenFromPicker?: boolean
 	/** When true, this feedback cannot be used as a style override: it is hidden from the add menu and rejected by validation. */
 	feedbackStyleOverridesUnsupported?: boolean
 	hasLifecycleFunctions: boolean
@@ -32,6 +34,12 @@ export interface ClientEntityDefinition {
 	 * `JsonValue` result.
 	 */
 	actionHasResult: boolean | undefined
+
+	/**
+	 * When an action, how long (in ms) its callback may run before it is cancelled. The host clamps this to a
+	 * maximum. Defaults to 5000ms when not set.
+	 */
+	actionExecutionTimeout: number | undefined
 
 	/**
 	 * When an advanced feedback, the properties that should have overrides assigned

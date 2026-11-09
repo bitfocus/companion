@@ -191,9 +191,10 @@
 			align-self: stretch;
 			border-radius: 3px;
 
-			background-color: var(--color-danger);
-			color: var(--color-on-dark);
-			font-weight: bold;
+			/* Tonal rather than solid: the active danger button beside it already carries the solid red */
+			background-color: var(--color-danger-bg-subtle);
+			color: var(--color-danger-text-emphasis);
+			box-shadow: inset 0 0 0 1px var(--color-danger-border-subtle);
 
 			/* Laying it out as a flex row would otherwise stop it shrinking, and the toolbar would grow a
 			   second row the moment press mode was entered - the exact jump this status exists to avoid */

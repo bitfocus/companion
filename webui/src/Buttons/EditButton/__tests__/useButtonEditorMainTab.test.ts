@@ -48,12 +48,4 @@ describe('useButtonEditorMainTab', () => {
 
 		expect(result.current.activeTab).toBe('actions')
 	})
-
-	it('has no tabs, and leaves the remembered tab alone, for a button without editor tabs', () => {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify('style'))
-		const { result } = renderHook(() => useButtonEditorMainTab(null, LayeredButtonExtraTabs))
-
-		expect(result.current.tabs).toEqual([])
-		expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')).toBe('style')
-	})
 })

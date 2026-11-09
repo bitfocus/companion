@@ -20,6 +20,7 @@ import { Popover } from '~/Components/Popover.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
+import { IS_APPLE_PLATFORM } from '~/util/platform.js'
 import { useAdminLock } from './AdminLockContext.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { navLocationForPath } from './navRegistry.js'
@@ -28,9 +29,6 @@ import { useSidebarState } from './Sidebar.js'
 import type { TopBarPage } from './TopBarContext.js'
 import { useHelpMenuItems } from './useHelpMenuItems.js'
 import { useUpdateInfo } from './useUpdateInfo.js'
-
-/** Apple keyboards use ⌘ for the command palette shortcut; everything else uses Ctrl. */
-const IS_APPLE_PLATFORM = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent)
 
 interface TopBarProps {
 	/** What the open page has said about itself, or `null` for a page without a header */

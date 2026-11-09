@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { initTRPC } from '@trpc/server'
 import { describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { ControlCommonEvents } from '../../lib/Controls/ControlDependencies.js'
 import { PageController } from '../../lib/Page/Controller.js'
@@ -96,17 +97,21 @@ describe('PageController', () => {
 			store.on('pageindexchange', pageindexchange)
 
 			const removed = controller.deletePage(2)
-			expect(removed.sort()).toEqual(['control-b1', 'control-b2'])
+			expect(removed.sort()).toEqual([CreateBankControlId('control-b1'), CreateBankControlId('control-b2')])
 
 			// Deleting the grid controls is the caller's responsibility; only the page's own
 			// variables control (page:<pageId>) is removed here, as it is intrinsic to the page.
 			expect(controls.deleteControl).toHaveBeenCalledTimes(1)
-			expect(controls.deleteControl).toHaveBeenCalledWith('page:page-b')
+			expect(controls.deleteControl).toHaveBeenCalledWith(CreatePageControlId('page-b'))
 
 			expect(store.getPageIds()).toEqual(['page-a', 'page-c'])
 			// The location cache was rebuilt for the renumbered pages
-			expect(store.getLocationOfControlId('control-c1')).toEqual({ pageNumber: 2, row: 0, column: 0 })
-			expect(store.getLocationOfControlId('control-b1')).toBe(undefined)
+			expect(store.getLocationOfControlId(CreateBankControlId('control-c1'))).toEqual({
+				pageNumber: 2,
+				row: 0,
+				column: 0,
+			})
+			expect(store.getLocationOfControlId(CreateBankControlId('control-b1'))).toBe(undefined)
 
 			// The renumbered page was redrawn, and the now-missing last page cleared
 			expect(graphics.clearAllForPage).toHaveBeenCalledWith(2)
@@ -114,7 +119,9 @@ describe('PageController', () => {
 			expect(graphics.invalidateButton).toHaveBeenCalledWith({ pageNumber: 2, row: 0, column: 0 })
 
 			// The renumbered control must recompute its location-dependent state (e.g. this:page)
-			expect(controlInstances.get('control-c1')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			expect(controlInstances.get(CreateBankControlId('control-c1'))?.triggerLocationHasChanged).toHaveBeenCalledTimes(
+				1
+			)
 
 			expect(clientUpdate).toHaveBeenCalledWith({
 				type: 'update',
@@ -166,12 +173,22 @@ describe('PageController', () => {
 			expect(store.getPageName(3)).toBe('Y')
 
 			// Controls on later pages moved
-			expect(store.getLocationOfControlId('control-b1')).toEqual({ pageNumber: 4, row: 1, column: 2 })
+			expect(store.getLocationOfControlId(CreateBankControlId('control-b1'))).toEqual({
+				pageNumber: 4,
+				row: 1,
+				column: 2,
+			})
 
 			// Controls on the renumbered pages were told their location changed
-			expect(controlInstances.get('control-b1')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
-			expect(controlInstances.get('control-b2')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
-			expect(controlInstances.get('control-c1')?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
+			expect(controlInstances.get(CreateBankControlId('control-b1'))?.triggerLocationHasChanged).toHaveBeenCalledTimes(
+				1
+			)
+			expect(controlInstances.get(CreateBankControlId('control-b2'))?.triggerLocationHasChanged).toHaveBeenCalledTimes(
+				1
+			)
+			expect(controlInstances.get(CreateBankControlId('control-c1'))?.triggerLocationHasChanged).toHaveBeenCalledTimes(
+				1
+			)
 
 			expect(pagecount).toHaveBeenCalledWith(5)
 			expect(clientUpdate).toHaveBeenCalledWith(
@@ -194,9 +211,9 @@ describe('PageController', () => {
 			controller.on('controlIdsMoved', controlIdsMoved)
 
 			const location = { pageNumber: 1, row: 2, column: 4 }
-			expect(controller.setControlIdAt(location, 'control-new')).toBe(true)
+			expect(controller.setControlIdAt(location, CreateBankControlId('control-new'))).toBe(true)
 
-			expect(store.getControlIdAt(location)).toBe('control-new')
+			expect(store.getControlIdAt(location)).toBe(CreateBankControlId('control-new'))
 			expect(clientUpdate).toHaveBeenCalledWith({
 				type: 'update',
 				updatedOrder: null,
@@ -205,11 +222,11 @@ describe('PageController', () => {
 					{
 						id: 'page-a',
 						name: null,
-						controls: [{ row: 2, column: 4, controlId: 'control-new' }],
+						controls: [{ row: 2, column: 4, controlId: CreateBankControlId('control-new') }],
 					},
 				],
 			})
-			expect(controlIdsMoved).toHaveBeenCalledWith(['control-new'])
+			expect(controlIdsMoved).toHaveBeenCalledWith([CreateBankControlId('control-new')])
 		})
 
 		test('replacing a control reports both old and new ids as moved', () => {
@@ -218,9 +235,12 @@ describe('PageController', () => {
 			const controlIdsMoved = vi.fn()
 			controller.on('controlIdsMoved', controlIdsMoved)
 
-			controller.setControlIdAt({ pageNumber: 1, row: 0, column: 0 }, 'control-new')
+			controller.setControlIdAt({ pageNumber: 1, row: 0, column: 0 }, CreateBankControlId('control-new'))
 
-			expect(controlIdsMoved).toHaveBeenCalledWith(['control-a1', 'control-new'])
+			expect(controlIdsMoved).toHaveBeenCalledWith([
+				CreateBankControlId('control-a1'),
+				CreateBankControlId('control-new'),
+			])
 		})
 
 		test('an invalid page is rejected without events', () => {
@@ -229,7 +249,9 @@ describe('PageController', () => {
 			const clientUpdate = vi.fn()
 			controller.on('clientUpdate', clientUpdate)
 
-			expect(controller.setControlIdAt({ pageNumber: 9, row: 0, column: 0 }, 'control-new')).toBe(false)
+			expect(controller.setControlIdAt({ pageNumber: 9, row: 0, column: 0 }, CreateBankControlId('control-new'))).toBe(
+				false
+			)
 			expect(clientUpdate).not.toHaveBeenCalled()
 		})
 
@@ -237,8 +259,8 @@ describe('PageController', () => {
 			const { controlEvents, store } = createFixture()
 
 			const location = { pageNumber: 1, row: 3, column: 3 }
-			controlEvents.emit('controlPlacedAt', location, 'control-new')
-			expect(store.getControlIdAt(location)).toBe('control-new')
+			controlEvents.emit('controlPlacedAt', location, CreateBankControlId('control-new'))
+			expect(store.getControlIdAt(location)).toBe(CreateBankControlId('control-new'))
 
 			controlEvents.emit('controlRemovedFrom', location)
 			expect(store.getControlIdAt(location)).toBe(undefined)
@@ -255,7 +277,7 @@ describe('PageController', () => {
 			controller.on('controlIdsMoved', controlIdsMoved)
 
 			const removed = controller.resetPage(2)
-			expect(removed.sort()).toEqual(['control-b1', 'control-b2'])
+			expect(removed.sort()).toEqual([CreateBankControlId('control-b1'), CreateBankControlId('control-b2')])
 
 			expect(store.getPageName(2)).toBe('PAGE')
 			expect(store.getAllControlIdsOnPage(2)).toEqual([])
@@ -322,7 +344,7 @@ describe('PageController', () => {
 			controller.createPageDefaultNavButtons(1)
 
 			expect(controls.deleteControl).toHaveBeenCalledTimes(1)
-			expect(controls.deleteControl).toHaveBeenCalledWith('control-a1')
+			expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('control-a1'))
 			expect(controls.createButtonControl.mock.calls).toEqual([
 				[{ pageNumber: 1, column: 0, row: 0 }, 'pageup'],
 				[{ pageNumber: 1, column: 0, row: 1 }, 'pagenum'],
@@ -338,14 +360,18 @@ describe('PageController', () => {
 					id: 'page-a',
 					name: 'First',
 					controls: {
-						0: { 0: 'control-in-bounds', 9: 'control-col-out' },
-						5: { 0: 'control-row-out-1', 1: 'control-row-out-2' },
+						0: { 0: CreateBankControlId('control-in-bounds'), 9: CreateBankControlId('control-col-out') },
+						5: { 0: CreateBankControlId('control-row-out-1'), 1: CreateBankControlId('control-row-out-2') },
 					},
 				},
 			])
 
 			const found = controller.findAllOutOfBoundsControls()
-			expect(found.sort()).toEqual(['control-col-out', 'control-row-out-1', 'control-row-out-2'])
+			expect(found.sort()).toEqual([
+				CreateBankControlId('control-col-out'),
+				CreateBankControlId('control-row-out-1'),
+				CreateBankControlId('control-row-out-2'),
+			])
 			expect(userconfig.getKey).toHaveBeenCalledWith('gridSize')
 		})
 	})
@@ -369,8 +395,8 @@ describe('PageController', () => {
 
 			await expect(caller.remove({ pageNumber: 2 })).resolves.toBe('ok')
 
-			expect(controls.deleteControl).toHaveBeenCalledWith('control-b1')
-			expect(controls.deleteControl).toHaveBeenCalledWith('control-b2')
+			expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('control-b1'))
+			expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('control-b2'))
 			expect(store.getPageIds()).toEqual(['page-a', 'page-c'])
 		})
 
@@ -391,8 +417,8 @@ describe('PageController', () => {
 
 			await expect(caller.clearPage({ pageNumber: 2 })).resolves.toBe('ok')
 
-			expect(controls.deleteControl).toHaveBeenCalledWith('control-b1')
-			expect(controls.deleteControl).toHaveBeenCalledWith('control-b2')
+			expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('control-b1'))
+			expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('control-b2'))
 			expect(store.getPageName(2)).toBe('PAGE')
 			expect(controls.createButtonControl).toHaveBeenCalledWith({ pageNumber: 2, column: 0, row: 0 }, 'pageup')
 		})
@@ -415,12 +441,25 @@ describe('PageController', () => {
 			// page-a was asked to become page 3, so it ends up at that absolute position
 			expect(store.getPageIds()).toEqual(['page-b', 'page-c', 'page-a'])
 			// the location cache reflects the new order
-			expect(store.getLocationOfControlId('control-b1')).toEqual({ pageNumber: 1, row: 1, column: 2 })
-			expect(store.getLocationOfControlId('control-a1')).toEqual({ pageNumber: 3, row: 0, column: 0 })
+			expect(store.getLocationOfControlId(CreateBankControlId('control-b1'))).toEqual({
+				pageNumber: 1,
+				row: 1,
+				column: 2,
+			})
+			expect(store.getLocationOfControlId(CreateBankControlId('control-a1'))).toEqual({
+				pageNumber: 3,
+				row: 0,
+				column: 0,
+			})
 
 			// Every control on a renumbered page must recompute its location-dependent state, so that
 			// pagenum buttons (this:page) and location feedbacks reflect the new page number
-			for (const controlId of ['control-a1', 'control-b1', 'control-b2', 'control-c1']) {
+			for (const controlId of [
+				CreateBankControlId('control-a1'),
+				CreateBankControlId('control-b1'),
+				CreateBankControlId('control-b2'),
+				CreateBankControlId('control-c1'),
+			]) {
 				expect(controlInstances.get(controlId)?.triggerLocationHasChanged).toHaveBeenCalledTimes(1)
 			}
 		})

@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
@@ -42,7 +43,7 @@ function makeExecAction(definitionId: string, options: Record<string, unknown>):
 
 function makeExtras(overrides: Partial<RunActionExtras> = {}): RunActionExtras {
 	return {
-		controlId: 'ctrl1',
+		controlId: CreateBankControlId('ctrl1'),
 		surfaceId: 'surface0',
 		location: undefined,
 		abortDelayed: new AbortController().signal,
@@ -266,7 +267,10 @@ describe('InternalSurface', () => {
 		test('lockout_device locks the surface after the immediate tick', async () => {
 			const { surface, surfaceController } = createSurface()
 
-			surface.executeAction(makeExecAction('lockout_device', { surfaceId: 'surface0' }), makeExtras({ controlId: '' }))
+			surface.executeAction(
+				makeExecAction('lockout_device', { surfaceId: 'surface0' }),
+				makeExtras({ controlId: CreateBankControlId('test') })
+			)
 
 			expect(surfaceController.setSurfaceOrGroupLocked).not.toHaveBeenCalled()
 			await flushImmediate()
@@ -290,10 +294,10 @@ describe('InternalSurface', () => {
 
 			surface.executeAction(
 				makeExecAction('lockout_device', { surfaceId: 'self' }),
-				makeExtras({ controlId: 'ctrl1', surfaceId: 'surface0' })
+				makeExtras({ controlId: CreateBankControlId('ctrl1'), surfaceId: 'surface0' })
 			)
 
-			expect(controlsStore.getControl).toHaveBeenCalledWith('ctrl1')
+			expect(controlsStore.getControl).toHaveBeenCalledWith(CreateBankControlId('ctrl1'))
 			expect(control.setPushed).toHaveBeenCalledWith(false, 'surface0')
 			await flushImmediate()
 			expect(surfaceController.setSurfaceOrGroupLocked).toHaveBeenCalledWith('surface0', true, true)
@@ -311,7 +315,7 @@ describe('InternalSurface', () => {
 		test('lockout_all locks everything when pin lock is enabled', async () => {
 			const { surface, surfaceController } = createSurface()
 
-			surface.executeAction(makeExecAction('lockout_all', {}), makeExtras({ controlId: '' }))
+			surface.executeAction(makeExecAction('lockout_all', {}), makeExtras({ controlId: CreateBankControlId('test') }))
 
 			await flushImmediate()
 			expect(surfaceController.setAllLocked).toHaveBeenCalledWith(true)
@@ -460,7 +464,7 @@ describe('InternalSurface', () => {
 				options: { page: { isExpression: false, value: '' } },
 			} as unknown as ActionEntityModel
 
-			const result = surface.actionUpgrade(action, 'ctrl1')
+			const result = surface.actionUpgrade(action, CreateBankControlId('ctrl1'))
 
 			expect(result).toBe(action)
 			expect((action.options.page as any).value).toBe('0')
@@ -473,7 +477,7 @@ describe('InternalSurface', () => {
 				options: { page: { isExpression: true, value: '' } },
 			} as unknown as ActionEntityModel
 
-			expect(surface.actionUpgrade(action, 'ctrl1')).toBeUndefined()
+			expect(surface.actionUpgrade(action, CreateBankControlId('ctrl1'))).toBeUndefined()
 		})
 
 		test('leaves non set_page actions untouched', () => {
@@ -483,13 +487,19 @@ describe('InternalSurface', () => {
 				options: { page: { isExpression: false, value: '' } },
 			} as unknown as ActionEntityModel
 
-			expect(surface.actionUpgrade(action, 'ctrl1')).toBeUndefined()
+			expect(surface.actionUpgrade(action, CreateBankControlId('ctrl1'))).toBeUndefined()
 		})
 	})
 
 	describe('executeFeedback', () => {
 		function makeFeedback(definitionId: string, options: Record<string, unknown>): FeedbackForInternalExecution {
-			return { controlId: 'ctrl1', location: undefined, id: 'fb1', definitionId, options: options as any }
+			return {
+				controlId: CreateBankControlId('ctrl1'),
+				location: undefined,
+				id: 'fb1',
+				definitionId,
+				options: options as any,
+			}
 		}
 
 		test('surface_on_page is true when the surface is on the requested page', () => {

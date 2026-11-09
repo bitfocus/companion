@@ -1,7 +1,7 @@
 import { faImage, faSquare, faTableCells, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
-import fuzzysort from 'fuzzysort'
+import fuzzysort, { type Prepared } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
@@ -26,7 +26,7 @@ const TILE_SIZES: readonly { size: ImageTileSize; label: string; icon: typeof fa
 
 interface ImageItem extends CollectionsNestingTableItem {
 	imageInfo: ImageLibraryInfo
-	fuzzy: Fuzzysort.Prepared
+	fuzzy: Prepared
 }
 
 interface ImageLibrarySelectorProps {

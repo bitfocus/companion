@@ -116,6 +116,18 @@
 		color: var(--color-muted);
 		font-size: 0.75rem;
 	}
+
+	/* Follows the type, so it reads as a detail of the button rather than another heading */
+	.edit-button-summary-step {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+
+		&::before {
+			content: '·';
+			margin-inline: 0.15rem;
+		}
+	}
 }
 
 .edit-button-summary-actions {
@@ -186,16 +198,6 @@
 	min-width: 0;
 }
 
-.edit-button-panel .entity-editor-heading-actions .button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 1.75rem;
-	height: 1.75rem;
-	padding: 0.25rem;
-	border-radius: 0.375rem;
-}
-
 .edit-button-panel .entity-category > .text-xs.text-muted {
 	display: block;
 	margin: -0.25rem 0 0.625rem;
@@ -262,89 +264,15 @@
 	background-color: var(--color-surface-dark);
 }
 
-/* The divide between the preview and the options, styled as the SplitPanels handle turned on its side: a
-   full-width rule with an opaque grip of dots over its centre. */
-.button-layer-resize-handle {
-	position: relative;
-	flex-shrink: 0;
-	height: 1rem;
-	z-index: 1;
-	cursor: row-resize;
-	touch-action: none;
-	--divider-color: var(--color-action-border);
-	background-image: linear-gradient(var(--divider-color), var(--divider-color));
-	background-position: center;
-	background-size: 100% 1px;
-	background-repeat: no-repeat;
-
-	&::before,
-	&::after {
-		content: '';
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		pointer-events: none;
-	}
-
-	&::before {
-		transform: translate(-50%, -50%);
-		width: 36px;
-		height: 16px;
-		border-radius: 6px;
-		background-color: var(--color-action-bg);
-		border: 1px solid var(--divider-color);
-		transition: background-color 0.15s ease;
-	}
-
-	&::after {
-		/* Two rows of three dots, centred inside the grip. */
-		transform: translate(-8.5px, -4.5px);
-		width: 3px;
-		height: 3px;
-		border-radius: 50%;
-		background-color: var(--color-action-text);
-		box-shadow:
-			7px 0 0 var(--color-action-text),
-			14px 0 0 var(--color-action-text),
-			0 6px 0 var(--color-action-text),
-			7px 6px 0 var(--color-action-text),
-			14px 6px 0 var(--color-action-text);
-	}
-
-	/* `active` is a drag in progress, `focus` a keyboard resize */
-	&:hover,
-	&[data-separator='active'],
-	&[data-separator='focus'] {
-		--divider-color: var(--color-action-border-hover);
-	}
-
-	&:hover::before,
-	&[data-separator='focus']::before {
-		background-color: var(--color-action-hover);
-	}
-
-	&[data-separator='active']::before {
-		background-color: var(--color-action-pressed);
-	}
-
-	&:focus-visible {
-		outline: none;
-	}
-
-	&[data-separator='focus']::before {
-		outline: 2px solid var(--color-action-focus);
-		outline-offset: 2px;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.button-layer-resize-handle::before {
-		transition: none;
-	}
-}
-
 .button-layer-style-editor {
-	/* PanelGroup sets display:flex; flex-direction:column internally */
+	/* The preview over the options, with a draggable divide in the gap (useSplitResize sets the rows) */
+	position: relative;
+	display: grid;
+	row-gap: 1rem;
+
+	> * {
+		min-height: 0;
+	}
 
 	.button-layer-top {
 		height: 100%;

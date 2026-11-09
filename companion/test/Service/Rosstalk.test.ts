@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { ServiceRosstalk } from '../../lib/Service/Rosstalk.js'
 import type { ServiceApi } from '../../lib/Service/ServiceApi.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -17,7 +19,7 @@ describe('Rosstalk', () => {
 			pressControl: vi.fn(),
 		})
 		const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-			getKey: () => false,
+			getKey: mockGetKey({ rosstalk_enabled: false }, 'throw'),
 		})
 
 		const service = new ServiceRosstalk(serviceApi, userconfig)
@@ -70,7 +72,7 @@ describe('Rosstalk', () => {
 
 		test('ok - index', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC 12:24')
 
@@ -82,17 +84,17 @@ describe('Rosstalk', () => {
 			})
 
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-			expect(serviceApi.pressControl).toHaveBeenLastCalledWith('myControl', true, 'rosstalk')
+			expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('myControl'), true, 'rosstalk')
 
 			vi.advanceTimersByTime(100)
 
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
-			expect(serviceApi.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')
+			expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('myControl'), false, 'rosstalk')
 		})
 
 		test('ok - index with duplicate CC prefix', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			// Some senders (e.g. ProPresenter) prepend their own `CC ` on top of a user-entered command
 			service.processIncoming(null as any, 'CC CC 12:24')
@@ -109,7 +111,7 @@ describe('Rosstalk', () => {
 
 		test('ok - coordinates with duplicate CC prefix', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC CC 12/3/4')
 
@@ -136,7 +138,7 @@ describe('Rosstalk', () => {
 
 		test('command with line terminator', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC 12:24\r\n')
 
@@ -152,7 +154,7 @@ describe('Rosstalk', () => {
 
 		test('command with null terminator', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC 12:24\0')
 
@@ -168,7 +170,7 @@ describe('Rosstalk', () => {
 
 		test('command with leading control characters', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, '\0CC 12:24')
 
@@ -184,7 +186,7 @@ describe('Rosstalk', () => {
 
 		test('multiple null separated commands in one chunk', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC 12:24\0CC 13/3/4\0')
 
@@ -205,7 +207,7 @@ describe('Rosstalk', () => {
 
 		test('multiple commands in one chunk', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC 12:24\nCC 13/3/4\n')
 
@@ -246,7 +248,7 @@ describe('Rosstalk', () => {
 
 		test('ok - coordinates', async () => {
 			const { serviceApi, service } = createService()
-			serviceApi.getControlIdAt.mockReturnValue('myControl')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('myControl'))
 
 			service.processIncoming(null as any, 'CC 12/3/4')
 
@@ -258,12 +260,12 @@ describe('Rosstalk', () => {
 			})
 
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-			expect(serviceApi.pressControl).toHaveBeenLastCalledWith('myControl', true, 'rosstalk')
+			expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('myControl'), true, 'rosstalk')
 
 			vi.advanceTimersByTime(100)
 
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
-			expect(serviceApi.pressControl).toHaveBeenLastCalledWith('myControl', false, 'rosstalk')
+			expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('myControl'), false, 'rosstalk')
 		})
 	})
 })

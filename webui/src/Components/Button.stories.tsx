@@ -55,7 +55,17 @@ export const StateMatrix: Story = {
 						<table>
 							<thead>
 								<tr>
-									{['Treatment', 'Rest', 'Hover', 'Focus', 'Pressed', 'Selected', 'Disabled', 'Busy'].map((label) => (
+									{[
+										'Treatment',
+										'Rest',
+										'Hover',
+										'Focus',
+										'Pressed',
+										'Selected',
+										'Disabled',
+										'Selected + disabled',
+										'Busy',
+									].map((label) => (
 										<th key={label} className="p-2">
 											{label}
 										</th>
@@ -66,20 +76,22 @@ export const StateMatrix: Story = {
 								{treatments.map(({ label, ...props }) => (
 									<tr key={label}>
 										<th className="p-2">{label}</th>
-										{['rest', 'hover', 'focus', 'pressed', 'selected', 'disabled', 'busy'].map((state) => (
-											<td key={state} className="p-2">
-												<Button
-													{...props}
-													size="sm"
-													data-preview-state={state}
-													active={state === 'selected'}
-													disabled={state === 'disabled' || state === 'busy'}
-													aria-busy={state === 'busy'}
-												>
-													{state === 'busy' ? 'Saving…' : 'Action'}
-												</Button>
-											</td>
-										))}
+										{['rest', 'hover', 'focus', 'pressed', 'selected', 'disabled', 'selected-disabled', 'busy'].map(
+											(state) => (
+												<td key={state} className="p-2">
+													<Button
+														{...props}
+														size="sm"
+														data-preview-state={state}
+														active={state === 'selected' || state === 'selected-disabled'}
+														disabled={state === 'disabled' || state === 'selected-disabled' || state === 'busy'}
+														aria-busy={state === 'busy'}
+													>
+														{state === 'busy' ? 'Saving…' : 'Action'}
+													</Button>
+												</td>
+											)
+										)}
 									</tr>
 								))}
 							</tbody>

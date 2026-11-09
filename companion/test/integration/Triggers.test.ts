@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlTrigger } from '../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -20,7 +21,7 @@ describe('trigger controls', () => {
 		await app?.close()
 	})
 
-	async function createTrigger(): Promise<{ triggerId: string; trigger: ControlTrigger }> {
+	async function createTrigger(): Promise<{ triggerId: TriggerControlId; trigger: ControlTrigger }> {
 		const triggerId = await app.trpc().controls.triggers.create()
 		const trigger = app.registry.controls.getControl(triggerId) as ControlTrigger
 		expect(trigger).toBeTruthy()
@@ -38,7 +39,7 @@ describe('trigger controls', () => {
 			value: exprVal('triggered'),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'variable_changed', enabled: true, options: { variableId: 'custom:watch' } })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		app.registry.variables.custom.setValue('watch', 'go')
@@ -46,6 +47,37 @@ describe('trigger controls', () => {
 		await vi.waitFor(() => {
 			expect(app.getCustomVariableValue('result')).toBe('triggered')
 		})
+	})
+
+	test('deleting a trigger part way through its actions stops them', async () => {
+		app.createCustomVariable('watch', 'initial')
+		app.createCustomVariable('started', 'no')
+		app.createCustomVariable('after', 'initial')
+
+		const { triggerId, trigger } = await createTrigger()
+		app.addTriggerAction(triggerId, 'custom_variable_set_value', {
+			name: exprVal('started'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+		app.addTriggerAction(triggerId, 'wait', { time: exprVal('100') })
+		app.addTriggerAction(triggerId, 'custom_variable_set_value', {
+			name: exprVal('after'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+		trigger.eventAdd({ id: nanoid(), type: 'variable_changed', enabled: true, options: { variableId: 'custom:watch' } })
+		trigger.optionsSetField({ key: 'enabled', value: true })
+		await settle()
+
+		app.registry.variables.custom.setValue('watch', 'go')
+		await vi.waitFor(() => {
+			expect(app.getCustomVariableValue('started')).toBe('yes')
+		})
+		await app.trpc().controls.triggers.delete({ controlId: triggerId })
+
+		await new Promise((resolve) => setTimeout(resolve, 250))
+		expect(app.getCustomVariableValue('after')).toBe('initial')
 	})
 
 	test('a disabled trigger does not run', async () => {
@@ -69,7 +101,7 @@ describe('trigger controls', () => {
 		expect(app.getCustomVariableValue('result')).toBe('initial')
 
 		// Enabling afterwards and changing again proves the first change was dropped, without an arbitrary sleep
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 		app.registry.variables.custom.setValue('watch', 'go again')
 		await vi.waitFor(() => {
@@ -90,7 +122,7 @@ describe('trigger controls', () => {
 			value: exprExpr('$(custom:count) + 1'),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'button_press', enabled: true, options: {} })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		app.pressButton(location, true)
@@ -117,7 +149,7 @@ describe('trigger controls', () => {
 			expression: exprVal(`$(custom:flag) == 'yes'`),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'variable_changed', enabled: true, options: { variableId: 'custom:input' } })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		// Condition false: the event fires but the actions must not run
@@ -144,7 +176,7 @@ describe('trigger controls', () => {
 			value: exprExpr('$(custom:count) + 1'),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'interval', enabled: true, options: { seconds: 1 } })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		// The first fire lands roughly two 1s ticks after arming

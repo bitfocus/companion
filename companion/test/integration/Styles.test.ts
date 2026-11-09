@@ -23,7 +23,10 @@ describe('legacy style api', () => {
 		await app.http.post('/api/location/1/1/1/style?text=Nope').expect(200)
 		expect(control.drawing.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: '' } })
 
-		await app.trpc().controls.setOptionsField({ controlId, key: 'canModifyStyleInApis', value: true })
+		await app.trpc().controls.setOptionsField({
+			controlId,
+			change: { controlType: 'button-layered', key: 'canModifyStyleInApis', value: true },
+		})
 
 		// text maps onto the text element, bgcolor onto the background box element
 		await app.http.post('/api/location/1/1/1/style?text=Hi&bgcolor=%23ff0000').expect(200)

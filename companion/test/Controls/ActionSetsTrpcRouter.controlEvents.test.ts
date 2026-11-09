@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import { describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { createActionSetsTrpcRouter } from '../../lib/Controls/ActionSetsTrpcRouter.js'
 import type { SomeStepManager } from '../../lib/Controls/Entities/ControlActionSetAndStepsManager.js'
 import { ControlEntityListPoolButton } from '../../lib/Controls/Entities/EntityListPoolButton.js'
@@ -8,16 +9,18 @@ import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
 import { createPool, createPoolDeps } from './Entities/EntityListPoolTestHelpers.js'
 
+const CONTROL_ID = CreateBankControlId('control0')
+
 const t = initTRPC.context<TrpcContext>().create()
 
 function createCaller(actionSets: SomeStepManager) {
-	const controls = new Map<string, SomeControl<any>>([
+	const controls = new Map<SomeControlId, SomeControl>([
 		[
-			'control0',
+			CONTROL_ID,
 			{
 				supportsActionSets: true,
 				actionSets,
-			} as SomeControl<any>,
+			} as SomeControl,
 		],
 	])
 	return t.createCallerFactory(createActionSetsTrpcRouter(controls))(createMockTrpcContext())
@@ -29,7 +32,7 @@ describe('action-set surface cue preference router', () => {
 		const caller = createCaller(pool)
 
 		await expect(
-			caller.setControlEvents({ controlId: 'control0', stepId: '0', setId: 'down', enabled: false })
+			caller.setControlEvents({ controlId: CONTROL_ID, stepId: '0', setId: 'down', enabled: false })
 		).resolves.toBe(true)
 		expect(pool.isActionSetControlEventsEnabled('0', 'down')).toBe(false)
 	})
@@ -40,7 +43,7 @@ describe('action-set surface cue preference router', () => {
 
 		await expect(
 			caller.setControlEvents({
-				controlId: 'control0',
+				controlId: CONTROL_ID,
 				stepId: '0',
 				setId: 'rotate_left' as never,
 				enabled: false,
@@ -49,11 +52,15 @@ describe('action-set surface cue preference router', () => {
 	})
 
 	test('refuses preference edits for a read-only action set manager', async () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'readonly' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('readonly') }).deps,
+			vi.fn(),
+			true
+		)
 		const caller = createCaller(pool)
 
 		await expect(
-			caller.setControlEvents({ controlId: 'control0', stepId: '0', setId: 'down', enabled: false })
+			caller.setControlEvents({ controlId: CONTROL_ID, stepId: '0', setId: 'down', enabled: false })
 		).rejects.toThrow('does not support this operation')
 	})
 })

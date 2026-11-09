@@ -6,7 +6,7 @@ import type { SomeControl } from './IControlFragments.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createEventsTrpcRouter(
-	controlsMap: Map<string, SomeControl<any>>,
+	controlsMap: Map<string, SomeControl>,
 	instanceDefinitions: InstanceDefinitions
 ) {
 	return router({

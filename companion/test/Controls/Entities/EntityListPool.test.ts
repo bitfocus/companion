@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
@@ -175,6 +176,75 @@ describe('EntityListPool - connection management', () => {
 		expect(reportChange).not.toHaveBeenCalled()
 	})
 
+	test('clearConnectionState drops feedback values and reports an invalidating change', () => {
+		const { pool, reportChange } = createPool({ isLayered: true })
+		const feedback = feedbackModel({ styleOverrides: [styleOverride()] })
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(1)
+		reportChange.mockClear()
+
+		pool.clearConnectionState('conn01')
+
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(0)
+		// Without invalidating, the drawer's element cache would keep the old overrides
+		expect(reportChange).toHaveBeenCalledWith({
+			redraw: true,
+			noSave: true,
+			invalidateAllElements: true,
+		} satisfies ControlEntityListChangeProps)
+	})
+
+	test('clearConnectionState notifies dependents of a cleared local variable', () => {
+		const { pool, internalModule, variableValues, controlId } = createPool()
+		const variable = feedbackModel({ variableName: 'foo' })
+		pool.entityAdd('local-variables', null, variable)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [variable.id]: true }))
+		vi.runAllTimers()
+		internalModule.onVariablesChanged.mockClear()
+		variableValues.emit.mockClear()
+
+		pool.clearConnectionState('conn01')
+
+		expect(pool.getLocalVariableValues()).toEqual({ foo: false })
+		expect(internalModule.onVariablesChanged).toHaveBeenCalledWith(new Set(['local:foo']), new Set([controlId]))
+		vi.runAllTimers()
+		expect(variableValues.emit).toHaveBeenCalledWith(
+			'variablesChanged',
+			new Set(['local:foo']),
+			expect.anything(),
+			controlId
+		)
+	})
+
+	test('clearConnectionState does not notify local variables when only a feedback was cleared', () => {
+		const { pool, internalModule, variableValues } = createPool()
+		pool.entityAdd('local-variables', null, feedbackModel({ variableName: 'foo', connectionId: 'conn02' }))
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
+		vi.runAllTimers()
+		internalModule.onVariablesChanged.mockClear()
+		variableValues.emit.mockClear()
+
+		pool.clearConnectionState('conn01')
+		vi.runAllTimers()
+
+		expect(internalModule.onVariablesChanged).not.toHaveBeenCalled()
+		expect(variableValues.emit).not.toHaveBeenCalled()
+	})
+
+	test('clearConnectionState for an unreferenced connection does not report a change', () => {
+		const { pool, reportChange } = createPool()
+
+		pool.entityAdd('feedbacks', null, feedbackModel())
+		reportChange.mockClear()
+
+		pool.clearConnectionState('conn-unknown')
+
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+
 	test('getAllEnabledConnectionIds collects connection ids from enabled entities', () => {
 		const { pool } = createPool()
 
@@ -200,9 +270,13 @@ describe('EntityListPool - destroy', () => {
 
 describe('EntityListPool - read-only by construction', () => {
 	test('the isEditable discriminant distinguishes the two pools', () => {
-		const readonly = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'disc0' }).deps, vi.fn(), true)
+		const readonly = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('disc0') }).deps,
+			vi.fn(),
+			true
+		)
 		const editable = new EditableControlEntityListPoolButton(
-			createPoolDeps({ controlId: 'disc1' }).deps,
+			createPoolDeps({ controlId: CreateBankControlId('disc1') }).deps,
 			vi.fn(),
 			vi.fn(),
 			true
@@ -213,7 +287,11 @@ describe('EntityListPool - read-only by construction', () => {
 	})
 
 	test('the read-only pool structurally lacks the edit mutators', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro00' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('ro00') }).deps,
+			vi.fn(),
+			true
+		)
 
 		// Compile-time: these properties do not exist on the read-only pool type.
 		// Runtime: confirm they are genuinely absent (not merely guarded).
@@ -229,7 +307,7 @@ describe('EntityListPool - read-only by construction', () => {
 
 	test('the editable pool has working edit mutators', () => {
 		const pool = new EditableControlEntityListPoolButton(
-			createPoolDeps({ controlId: 'rw00' }).deps,
+			createPoolDeps({ controlId: CreateBankControlId('rw00') }).deps,
 			vi.fn(),
 			vi.fn(),
 			true
@@ -243,7 +321,11 @@ describe('EntityListPool - read-only by construction', () => {
 	test('a local variable value can still be set on the read-only pool', () => {
 		// Setting a local variable's value is runtime state, not configuration - a preset reference must be
 		// able to drive its own local variables from the actions the preset carries.
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro02' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('ro02') }).deps,
+			vi.fn(),
+			true
+		)
 
 		const variable = feedbackModel({ connectionId: 'internal', definitionId: 'user_value', variableName: 'tap' })
 		pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [variable] }, true, false)
@@ -253,7 +335,11 @@ describe('EntityListPool - read-only by construction', () => {
 	})
 
 	test('loading and runtime step navigation work on the read-only pool', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro01' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('ro01') }).deps,
+			vi.fn(),
+			true
+		)
 
 		// Loading the cached data must work on a read-only pool
 		expect(() => pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [] }, true, false)).not.toThrow()
@@ -332,7 +418,9 @@ describe('EntityListPool - updateIsInvertedValues (button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		reportChange.mockClear()
 
-		pool.updateIsInvertedValues(new Map([[feedback.id, { entityId: feedback.id, controlId: '', value: true }]]))
+		pool.updateIsInvertedValues(
+			new Map([[feedback.id, { entityId: feedback.id, controlId: CreateBankControlId('test'), value: true }]])
+		)
 
 		expect(reportChange).toHaveBeenCalledWith({ redraw: true, noSave: true, changedElementIds: undefined })
 	})
@@ -342,7 +430,9 @@ describe('EntityListPool - updateIsInvertedValues (button)', () => {
 		pool.entityAdd('feedbacks', null, feedbackModel())
 		reportChange.mockClear()
 
-		pool.updateIsInvertedValues(new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: '', value: true }]]))
+		pool.updateIsInvertedValues(
+			new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: CreateBankControlId('test'), value: true }]])
+		)
 
 		expect(reportChange).not.toHaveBeenCalled()
 	})
@@ -356,7 +446,9 @@ describe('EntityListPool - updateStoreResultValues (button)', () => {
 		reportChange.mockClear()
 
 		expect(() =>
-			pool.updateStoreResultValues(new Map([[action.id, { entityId: action.id, controlId: '', value: undefined }]]))
+			pool.updateStoreResultValues(
+				new Map([[action.id, { entityId: action.id, controlId: CreateBankControlId('test'), value: undefined }]])
+			)
 		).not.toThrow()
 	})
 })
@@ -537,8 +629,40 @@ describe('EntityListPool - storage round-trip (button)', () => {
 
 		const steps = pool.asNormalButtonSteps()
 		expect(Object.keys(steps)).toEqual(['0'])
-		// loadStorage clones the entities (assigning fresh ids), so assert on the preserved content
 		expect(steps['0'].action_sets.down).toHaveLength(1)
 		expect(steps['0'].action_sets.down?.[0].definitionId).toBe('round-trip-action')
+	})
+
+	test.each([
+		['loading keeps', false],
+		['importing replaces', true],
+	] as const)('%s the stored entity ids', (_name, isImport) => {
+		const { pool } = createPool()
+		const feedback = feedbackModel()
+		const action = actionModel()
+
+		pool.loadStorage(
+			buttonStorage({
+				feedbacks: [feedback],
+				steps: {
+					'0': {
+						action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
+						options: { runWhileHeld: [] },
+					},
+				},
+			}),
+			true,
+			isImport
+		)
+
+		const loadedFeedbackId = pool.getFeedbackEntities()[0].id
+		const loadedActionId = pool.getAllEntitiesInList(downSet('0'))[0].id
+		if (isImport) {
+			expect(loadedFeedbackId).not.toBe(feedback.id)
+			expect(loadedActionId).not.toBe(action.id)
+		} else {
+			expect(loadedFeedbackId).toBe(feedback.id)
+			expect(loadedActionId).toBe(action.id)
+		}
 	})
 })

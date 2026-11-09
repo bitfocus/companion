@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
@@ -13,8 +14,10 @@ import type { ControlDependencies } from '../../../../lib/Controls/ControlDepend
 import { ControlButtonLayered } from '../../../../lib/Controls/ControlTypes/Button/Layered.js'
 import type { NewSpecialExpressionValue } from '../../../../lib/Controls/Entities/SpecialExpressions.js'
 import type { NewFeedbackValue } from '../../../../lib/Controls/Entities/Types.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
-const CONTROL_ID = 'ctrl1'
+const CONTROL_ID = CreateBankControlId('ctrl1')
 const CONNECTION_ID = 'conn01'
 const STYLE_ELEMENT_CHANGED = 'layeredStyleElementChanged'
 const DEFAULT_ELEMENT_IDS = ['canvas', 'box0', 'text0']
@@ -81,7 +84,7 @@ function makeStorage(
 function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
 	const map = new Map<string, NewFeedbackValue>()
 	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
+		map.set(entityId, { entityId, controlId: CreateBankControlId('test'), value })
 	}
 	return map
 }
@@ -89,7 +92,7 @@ function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackVal
 function invertedValues(values: Record<string, boolean>): Map<string, NewSpecialExpressionValue<'isInverted'>> {
 	const map = new Map<string, NewSpecialExpressionValue<'isInverted'>>()
 	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
+		map.set(entityId, { entityId, controlId: CreateBankControlId('test'), value })
 	}
 	return map
 }
@@ -142,6 +145,9 @@ describe('ControlButtonLayered', () => {
 			events: events as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			variableDependencies: new VariableDependencyRegistry(),
+			linkButtons: null as any,
+			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),
@@ -189,6 +195,14 @@ describe('ControlButtonLayered', () => {
 	})
 
 	describe('construction & metadata', () => {
+		it('stops tracking the variables it reads when destroyed', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+			expect(deps.variableDependencies.stats().dependencies).toBeGreaterThan(0)
+
+			control.destroy()
+			expect(deps.variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
+		})
+
 		it('reports its type and capability flags', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 
@@ -242,7 +256,7 @@ describe('ControlButtonLayered', () => {
 		it('returns an independent deep clone when clone=true', () => {
 			const control = createControl(makeStorage([boxElement('box0')], [feedbackModel('fb1')]))
 
-			const json = control.toJSON(true)
+			const json = structuredClone(control.toJSON())
 			json.feedbacks.push(feedbackModel('injected'))
 			json.style.layers.push(boxElement('injected'))
 
@@ -255,6 +269,22 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 
 			expect(control.toRuntimeJSON()).toEqual({ current_step_id: '0' })
+		})
+
+		it('replaces the whole config on the first change, then patches it', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+			const updates: unknown[] = []
+			control.updateEvents.on('update', (change) => updates.push(change))
+
+			control.commitChange(false)
+			expect(updates).toEqual([{ type: 'config', patch: [{ op: 'set', path: [], value: control.toJSON() }] }])
+
+			updates.length = 0
+			control.options.rotaryActions = true
+			control.commitChange(false)
+			expect(updates).toEqual([
+				{ type: 'config', patch: [{ op: 'set', path: ['options', 'rotaryActions'], value: true }] },
+			])
 		})
 	})
 
@@ -458,7 +488,7 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 			const stepSpy = vi.spyOn(control.entities, 'stepExpressionUpdate')
 
-			control.optionsSetField('stepProgression', 'expression')
+			control.optionsSetField({ key: 'stepProgression', value: 'expression' })
 
 			expect(stepSpy).toHaveBeenCalled()
 		})
@@ -467,9 +497,26 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 			const stepSpy = vi.spyOn(control.entities, 'stepExpressionUpdate')
 
-			control.optionsSetField('notes', 'hello')
+			control.optionsSetField({ key: 'notes', value: 'hello' })
 
 			expect(stepSpy).not.toHaveBeenCalled()
+		})
+
+		it('rejects a value the option does not allow, leaving the options as they were', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+			const before = structuredClone(control.options)
+
+			expect(control.optionsSetField({ key: 'stepProgression', value: 'sideways' } as any)).toBe(false)
+			expect(control.optionsSetField({ key: 'rotaryActions', value: 'yes' } as any)).toBe(false)
+
+			expect(control.options).toEqual(before)
+		})
+
+		it('rejects a key that is not an option', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+
+			expect(control.optionsSetField({ key: 'sparkle', value: true } as any)).toBe(false)
+			expect(control.options).not.toHaveProperty('sparkle')
 		})
 	})
 

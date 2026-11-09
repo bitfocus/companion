@@ -3,7 +3,7 @@ import { action, makeObservable, observable } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import { useContext, useEffect, useMemo } from 'react'
 import type { Equal, Expect } from 'type-testing'
-import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ThisLocationVariable, ThisPageVariable } from '@companion-app/shared/ControlLocation.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -35,14 +35,14 @@ export interface GetLocalVariableOptions {
 }
 
 export class LocalVariablesStore {
-	readonly controlId: string
+	readonly controlId: SomeControlId
 
 	#variables = observable.map<string, SomeEntityModel>()
 	/** The variables owned by this control's page, exposed to it as `$(page:x)` (grid controls only). */
 	#pageVariables = observable.map<string, SomeEntityModel>()
 	#values = observable.map<string, VariableValue | undefined>()
 
-	constructor(controlId: string) {
+	constructor(controlId: SomeControlId) {
 		this.controlId = controlId
 
 		makeObservable(this, {
@@ -129,12 +129,11 @@ function usePageVariableEntities(pageNumber: number | null | undefined): SomeEnt
 	const pageControlId = pageInfo ? CreatePageControlId(pageInfo.id) : null
 
 	const { controlConfig } = useControlConfig(pageControlId)
-	const config = controlConfig?.config
-	return config?.type === 'page' ? config.localVariables : null
+	return controlConfig?.config.localVariables ?? null
 }
 
 export function useLocalVariablesStore(
-	controlId: string,
+	controlId: SomeControlId,
 	localVariables: SomeEntityModel[] | null,
 	pageNumber?: number | null
 ): LocalVariablesStore {

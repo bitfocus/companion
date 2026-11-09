@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type FeedbackEntityStyleOverride,
@@ -13,6 +14,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
 import { NO_CONNECTION_LABELS, type VariablesValues } from '../../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
@@ -41,9 +43,10 @@ export interface ControlEntityListPoolProps {
 	processManager: InstanceProcessManager
 	variableValues: VariablesValues
 	pageStore: IPageStore
-	controlId: string
+	controlId: SomeControlId
 	reportChange: (options: ControlEntityListChangeProps) => void
 	renderClock: RenderClock
+	variableDependencies: VariableDependencyRegistry
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 }
@@ -80,7 +83,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #isLayeredDrawing: boolean
 	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
 
-	protected readonly controlId: string
+	protected readonly controlId: SomeControlId
 
 	/**
 	 * Report changes to the database and disk
@@ -108,7 +111,8 @@ export abstract class ControlEntityListPoolBase {
 				isInverted: this.updateIsInvertedValues.bind(this),
 				storeResult: this.updateStoreResultValues.bind(this),
 			},
-			props.renderClock
+			props.renderClock,
+			props.variableDependencies
 		)
 	}
 
@@ -187,15 +191,27 @@ export abstract class ControlEntityListPoolBase {
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
+		const localVariablesList = this.getLocalVariablesList()
+
 		let changed = false
+		let changedVariableEntities: ControlEntityInstance[] = []
 		for (const list of this.getAllEntityLists()) {
-			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
+			const changedEntities = list.clearCachedValueForConnectionId(connectionId)
+			if (changedEntities.length === 0) continue
+
+			changed = true
+			if (list === localVariablesList) changedVariableEntities = changedEntities
 		}
-		if (changed)
-			this.reportChange({
-				redraw: true,
-				noSave: true,
-			})
+		if (!changed) return
+
+		this.reportChange({
+			redraw: true,
+			noSave: true,
+			// Cleared values drop any style overrides they were applying
+			invalidateAllElements: true,
+		})
+
+		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
 	/** Build a parser for this control's variables. The injected `this:*` context is control-type specific, so each pool provides its own. */
@@ -218,6 +234,7 @@ export abstract class ControlEntityListPoolBase {
 
 	protected abstract getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined
 	protected abstract getAllEntityLists(): ControlEntityList[]
+	protected abstract getLocalVariablesList(): ControlEntityList
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
 
@@ -469,13 +486,5 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		return connectionIds
-	}
-
-	/**
-	 * Propagate variable changes
-	 * @param changedVariables - variables with changes
-	 */
-	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
-		this.#specialExpressionManager.onVariablesChanged(changedVariables)
 	}
 }

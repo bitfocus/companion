@@ -6,7 +6,7 @@ import classnames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
-import { isLabelValid } from '@companion-app/shared/Label.js'
+import { INVALID_LABEL_MESSAGE, isLabelValid } from '@companion-app/shared/Label.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
@@ -46,7 +46,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 	const createMutation = useMutationExt(trpc.controls.expressionVariables.create.mutationOptions())
 	const validateNewName = useCallback(
 		(name: string) => {
-			if (!isLabelValid(name)) return 'Name must be alphanumeric and can contain underscores and dashes'
+			if (!isLabelValid(name)) return INVALID_LABEL_MESSAGE
 			for (const variable of expressionVariablesList.expressionVariables.values()) {
 				if (variable.variableName === name) return 'A variable with this name already exists'
 			}

@@ -118,7 +118,7 @@ function makeGlobalRefs(): ExpressionReferences {
 		compositeElements: { drawn: new Set(), hidden: new Set() },
 		referencedLocations: { drawn: new Set(), hidden: new Set() },
 		cyclicLocations: new Set(),
-		clockSensitive: false,
+		clockCycleMs: 0,
 	}
 }
 
@@ -1037,7 +1037,7 @@ describe('ElementExpressionHelper', () => {
 		})
 	})
 
-	describe('clockSensitive propagation', () => {
+	describe('clock cycle propagation', () => {
 		// Build a helper exposing its per-element references so we can observe the propagation
 		function makeHelperWithRefs(
 			element: TestEl,
@@ -1048,29 +1048,29 @@ describe('ElementExpressionHelper', () => {
 			return { helper, refs }
 		}
 
-		test('an oscillate expression flips references.clockSensitive', () => {
+		test('an oscillate expression sets references.clockCycleMs', () => {
 			const { helper, refs } = makeHelperWithRefs(makeEl())
-			expect(refs.clockSensitive).toBe(false)
+			expect(refs.clockCycleMs).toBe(0)
 			helper.executeExpressionAndTrackVariables('oscillate(1000)', 'number')
-			expect(refs.clockSensitive).toBe(true)
+			expect(refs.clockCycleMs).toBe(1000)
 		})
 
-		test('a non-oscillate expression leaves clockSensitive false', () => {
+		test('a non-oscillate expression leaves clockCycleMs at 0', () => {
 			const { helper, refs } = makeHelperWithRefs(makeEl(), { ns: { x: 1 } })
 			helper.executeExpressionAndTrackVariables('$(ns:x) + 1', 'number')
-			expect(refs.clockSensitive).toBe(false)
+			expect(refs.clockCycleMs).toBe(0)
 		})
 
 		test('property getters that evaluate an oscillate expression also propagate', () => {
 			const { helper, refs } = makeHelperWithRefs(makeEl({ numProp: expr('oscillate(1000)') }))
 			helper.getNumber('numProp', 0)
-			expect(refs.clockSensitive).toBe(true)
+			expect(refs.clockCycleMs).toBe(1000)
 		})
 
-		test('variable interpolation never sets clockSensitive', () => {
+		test('variable interpolation never sets clockCycleMs', () => {
 			const { helper, refs } = makeHelperWithRefs(makeEl(), { ns: { name: 'World' } })
 			helper.parseVariablesInString('Hello $(ns:name)', '')
-			expect(refs.clockSensitive).toBe(false)
+			expect(refs.clockCycleMs).toBe(0)
 		})
 
 		test('a child row helper shares the same references', () => {
@@ -1078,7 +1078,7 @@ describe('ElementExpressionHelper', () => {
 			const rowHelper = helper.forRow({ cell: expr<number>('oscillate(1000)') })
 			rowHelper.getNumber('cell', 0)
 			// The oscillate in the child row flips the parent's shared references
-			expect(refs.clockSensitive).toBe(true)
+			expect(refs.clockCycleMs).toBe(1000)
 		})
 	})
 

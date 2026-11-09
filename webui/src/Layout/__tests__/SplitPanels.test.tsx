@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { clampFirstPercent } from '~/Hooks/useSplitResize.js'
 import {
-	clampPrimaryPercent,
 	SPLIT_PANELS_DEFAULT_MIN_PX,
 	SPLIT_PANELS_DEFAULT_PRIMARY_PERCENT,
 	SplitPanels,
@@ -125,7 +125,7 @@ describe('SplitPanels resize', () => {
 		const { root } = renderPanels(null, RESIZE)
 		expect(root).toHaveClass('split-panels-resizable')
 		expect(root.style.gridTemplateColumns).toBe('minmax(300px, 50fr) minmax(350px, 50fr)')
-		expect(root.querySelector('.split-panels-resize-handle')).not.toBeNull()
+		expect(root.querySelector('.resize-handle')).not.toBeNull()
 	})
 
 	it('falls back to the shared default min widths and split when only a storageKey is given', () => {
@@ -146,7 +146,7 @@ describe('SplitPanels resize', () => {
 		const { root } = renderPanels('primary', RESIZE)
 		expect(root).toHaveClass('split-panels-resizable')
 		expect(root.style.gridTemplateColumns).toBe('minmax(300px, 70fr) minmax(350px, 30fr)')
-		expect(root.querySelector('.split-panels-resize-handle')).not.toBeNull()
+		expect(root.querySelector('.resize-handle')).not.toBeNull()
 	})
 
 	it('does not resize (no handle, no inline columns) below the two-panel breakpoint', () => {
@@ -154,28 +154,28 @@ describe('SplitPanels resize', () => {
 		const { root } = renderPanels(null, RESIZE)
 		expect(root).not.toHaveClass('split-panels-resizable')
 		expect(root.style.gridTemplateColumns).toBe('')
-		expect(root.querySelector('.split-panels-resize-handle')).toBeNull()
+		expect(root.querySelector('.resize-handle')).toBeNull()
 	})
 
 	it('is fully inert when resize is null', () => {
 		const { root } = renderPanels(null, null)
 		expect(root).not.toHaveClass('split-panels-resizable')
-		expect(root.querySelector('.split-panels-resize-handle')).toBeNull()
+		expect(root.querySelector('.resize-handle')).toBeNull()
 	})
 })
 
-describe('clampPrimaryPercent', () => {
+describe('clampFirstPercent', () => {
 	// available = 1000, mins 300/350 → primary px is free to move within [300, 650]
 	it('maps an unconstrained width straight to its percentage', () => {
-		expect(clampPrimaryPercent(500, 1000, 300, 350)).toBe(50)
-		expect(clampPrimaryPercent(600, 1000, 300, 350)).toBe(60)
+		expect(clampFirstPercent(500, 1000, 300, 350)).toBe(50)
+		expect(clampFirstPercent(600, 1000, 300, 350)).toBe(60)
 	})
 
 	it('clamps to the primary minimum', () => {
-		expect(clampPrimaryPercent(100, 1000, 300, 350)).toBe(30)
+		expect(clampFirstPercent(100, 1000, 300, 350)).toBe(30)
 	})
 
 	it('clamps to the secondary minimum (available - minSecondary)', () => {
-		expect(clampPrimaryPercent(900, 1000, 300, 350)).toBe(65)
+		expect(clampFirstPercent(900, 1000, 300, 350)).toBe(65)
 	})
 })

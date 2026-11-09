@@ -96,6 +96,60 @@ describe('button action execution', () => {
 		)
 	})
 
+	test.each([
+		['moving', 'move', true],
+		['swapping', 'swap', true],
+		['copying', 'copy', false],
+	] as const)('%s a button part way through its actions (%s, stops them: %s)', async (_name, operation, stops) => {
+		app = await createTestApp({ configDir: null, extraModulePath: null })
+
+		app.createCustomVariable('after', 'initial')
+
+		const from = { pageNumber: 1, row: 1, column: 1 }
+		const controlId = app.createButton(from)
+		app.addInternalAction(controlId, 'wait', { time: exprVal('100') })
+		app.addInternalAction(controlId, 'custom_variable_set_value', {
+			name: exprVal('after'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+		// Something to swap with
+		app.createButton({ pageNumber: 1, row: 2, column: 2 })
+
+		app.pressButton(from, true)
+		expect(
+			await app.trpc().controls.gridBatchTransfer({
+				operation,
+				pairs: [{ fromLocation: from, toLocation: { pageNumber: 1, row: 2, column: 2 } }],
+			})
+		).toBe(true)
+
+		// Real timers: the wait sleeps with node:timers/promises, which vitest's fake timers don't patch
+		await new Promise((resolve) => setTimeout(resolve, 250))
+		expect(app.getCustomVariableValue('after')).toBe(stops ? 'initial' : 'yes')
+	})
+
+	test('deleting a button part way through its actions stops them', async () => {
+		app = await createTestApp({ configDir: null, extraModulePath: null })
+
+		app.createCustomVariable('after', 'initial')
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const controlId = app.createButton(location)
+		app.addInternalAction(controlId, 'wait', { time: exprVal('100') })
+		app.addInternalAction(controlId, 'custom_variable_set_value', {
+			name: exprVal('after'),
+			create: exprVal(false),
+			value: exprVal('yes'),
+		})
+
+		app.pressButton(location, true)
+		await app.trpc().controls.resetControls({ locations: [location], newType: null })
+
+		await new Promise((resolve) => setTimeout(resolve, 250))
+		expect(app.getCustomVariableValue('after')).toBe('initial')
+	})
+
 	test('logic_if only runs its children when the condition is true', async () => {
 		app = await createTestApp({ configDir: null, extraModulePath: null })
 

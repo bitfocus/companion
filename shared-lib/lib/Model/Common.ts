@@ -1,10 +1,11 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import z from 'zod'
+import type { ObjectPatch } from '../Diff.js'
 import type { LedGaugeDescription } from '../Graphics/GaugeLeds.js'
 import type { SomeCompanionInputField } from './Options.js'
 
 export interface ObjectsDiff<T> {
 	added: Record<string, T>
-	changed: Record<string, JsonPatchOperation<T>[]>
+	changed: Record<string, ObjectPatch<T>>
 	removed: string[]
 }
 
@@ -45,6 +46,16 @@ export interface ControlLocation {
 	column: number
 }
 
+/**
+ * A location as a `page/row/column` string, which its type comes from. It is branded so that one can only be made by
+ * `formatLocation` or this schema, rather than written by hand
+ */
+export const zodControlLocationString = z
+	.templateLiteral([z.number(), '/', z.number(), '/', z.number()])
+	.brand<'ControlLocationString', 'inout'>()
+
+export type ControlLocationString = z.output<typeof zodControlLocationString>
+
 export interface EmulatorConfig {
 	emulator_control_enable: boolean
 	emulator_prompt_fullscreen: boolean
@@ -63,6 +74,22 @@ export interface EmulatorLockedState {
 }
 
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
+
+/** What a bonjour-device field discovers: the query of a connection's module, or of a Link transport type */
+export type BonjourQuerySource =
+	| { type: 'connection'; connectionId: string; queryId: string }
+	| { type: 'link-transport'; transportType: string; fieldId: string }
+
+/** A query for services to discover, as a module manifest or a Link transport type describes one */
+export interface BonjourQuery {
+	type: string
+	protocol: 'tcp' | 'udp'
+	port?: number
+	txt?: Record<string, string>
+	addressFamily?: 'ipv4' | 'ipv6' | 'ipv4+6'
+	/** Leave out services whose txt record has all of these values, eg this installation's own announcement */
+	excludeTxt?: Record<string, string>
+}
 
 export interface ClientBonjourService {
 	subId: string
@@ -124,9 +151,9 @@ export type DropdownChoiceId = string | number
  *
  * Available for actions/feedbacks/config
  */
-export interface DropdownChoice {
+export interface DropdownChoice<TId extends DropdownChoiceId = DropdownChoiceId> {
 	/** Value of the option */
-	id: DropdownChoiceId
+	id: TId
 	/** Label to show to users */
 	label: string
 	/** Show the option but do not let it be picked */

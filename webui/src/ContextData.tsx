@@ -7,6 +7,7 @@ import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
 import { EntityDefinitionsStore } from '~/Stores/EntityDefinitionsStore.js'
 import { EventDefinitionsStore } from '~/Stores/EventDefinitionsStore.js'
 import { ImageLibraryStore } from '~/Stores/ImageLibraryStore.js'
+import { LinkStore } from '~/Stores/LinkStore.js'
 import { ModuleInfoStore } from '~/Stores/ModuleInfoStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { RootAppStoreContext, type RootAppStore } from '~/Stores/RootAppStore.js'
@@ -26,6 +27,7 @@ import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVar
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
 import { useImportTaskStatusSubscription } from './Hooks/useImportTaskStatusSubscription.js'
 import { useInstanceStatusesSubscription } from './Hooks/useInstanceStatusesSubscription.js'
+import { useLinkSubscription } from './Hooks/useLinkSubscription.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
 import { useModuleStoreRefreshProgressSubscription } from './Hooks/useModuleStoreRefreshProgress.js'
@@ -97,6 +99,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			imageLibrary: new ImageLibraryStore(),
 
+			link: new LinkStore(),
+
 			importTaskStatus: observable.box<ImportExportTask | null>(null, { deep: false }),
 
 			wizardOpen: observable.box(false),
@@ -166,6 +170,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		rootStore.compositeElementDefinitions
 	)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
+	const linkReady = useLinkSubscription(rootStore.link)
 
 	// Drives the shared import/reset task status; not part of initial loading, so not in `steps`
 	useImportTaskStatusSubscription(rootStore.importTaskStatus)
@@ -198,6 +203,7 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		activeLearnRequestsReady,
 		imageLibraryReady,
 		imageLibraryCollectionsReady,
+		linkReady,
 	]
 	const completedSteps = steps.filter((s) => !!s)
 

@@ -1,34 +1,84 @@
-import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import {
+	CreatePageControlId,
+	getControlIdKind,
+	zodSomeControlId,
+	type ControlIdKind,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
+import { SomeControlModelSchema, type SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView, SchemaTableViewKey } from '../Data/Tables/SchemaTableView.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { IPageStore } from '../Page/Store.js'
 import { MAX_REFERENCE_DEPTH } from '../Surface/ReferenceSurfaceId.js'
+import { buildActionExecutionOverrides } from '../Variables/Util.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
 import type { ButtonPressEvents } from './ButtonPressEvents.js'
+import { repairControl } from './ControlRepair.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { IControlStore } from './IControlStore.js'
+import { ReferencedLocationsIndex } from './ReferencedLocationsIndex.js'
 import { TriggerEvents } from './TriggerEvents.js'
+
+/** The kind of id a control of each type is stored with */
+function controlIdKindForType(type: SomeControlModel['type']): ControlIdKind {
+	switch (type) {
+		case 'pagenum':
+		case 'pageup':
+		case 'pagedown':
+		case 'button-layered':
+		case 'preset-reference':
+		case 'button-reference':
+		case 'link-button':
+			return 'bank'
+		case 'trigger':
+			return 'trigger'
+		case 'expression-variable':
+			return 'expression-variable'
+		case 'page':
+			return 'page'
+		default:
+			assertNever(type)
+			return 'bank'
+	}
+}
+
+/** A control is stored under an id of the kind its type is */
+const ControlsTableKey: SchemaTableViewKey<SomeControlId, SomeControlModel> = {
+	schema: zodSomeControlId,
+	matchesRow: (controlId, control) => {
+		const expectedKind = controlIdKindForType(control.type)
+		return getControlIdKind(controlId) === expectedKind
+			? null
+			: `A control of type "${control.type}" must have a ${expectedKind} id`
+	},
+}
 
 /**
  * The data-layer implementation of IControlStore.
  * Owns the controls map, and the trigger event bus.
  */
 export class ControlStore implements IControlStore {
-	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+	readonly dbTable: DataStoreSchemaTableView<typeof SomeControlModelSchema, SomeControlId>
 
 	/**
 	 * The currently configured controls.
 	 * Intentionally public so that ControlsController can mutate it.
 	 */
-	readonly controls = new Map<string, SomeControl<any>>()
+	readonly controls = new Map<SomeControlId, SomeControl>()
+
+	/**
+	 * The button locations each control referenced in its last draw
+	 */
+	readonly referencedLocations = new ReferencedLocationsIndex()
 
 	/**
 	 * Triggers event bus
@@ -43,15 +93,25 @@ export class ControlStore implements IControlStore {
 		this.#variablesValues = variablesValues
 		this.#pageStore = pageStore
 
-		this.dbTable = db.getTableView('controls')
+		// Controls are large and written on every change, so are only checked when read. One that fails has what failed
+		// replaced, so that a single invalid entity or element doesn't lose the whole control
+		this.dbTable = db.getSchemaTableView('controls', SomeControlModelSchema, {
+			key: ControlsTableKey,
+			validateWrites: false,
+			repair: (row, issues) => {
+				const result = repairControl(row, issues)
+				return result && { row: result.control, repairs: result.repairs }
+			},
+		})
 	}
 
 	/**
 	 * Internal: Delete a control by id. Does not emit any events or perform any checks, as this is only used internally by the ControlsController which handles those aspects.
 	 * @param controlId Id of the control to delete
 	 */
-	deleteControl(controlId: string): void {
+	deleteControl(controlId: SomeControlId): void {
 		this.controls.delete(controlId)
+		this.referencedLocations.forgetControl(controlId)
 
 		this.dbTable.delete(controlId)
 	}
@@ -59,7 +119,7 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Get a single control by id
 	 */
-	getControl(controlId: string): SomeControl<any> | undefined {
+	getControl(controlId: SomeControlId): SomeControl | undefined {
 		if (!controlId) return undefined
 		return this.controls.get(controlId)
 	}
@@ -68,7 +128,7 @@ export class ControlStore implements IControlStore {
 	 * Get a control by id, following button-references through to the control they currently mirror.
 	 * Returns undefined for an unresolved reference or a reference cycle
 	 */
-	getControlFollowingReferences(controlId: string | null): SomeControl<any> | undefined {
+	getControlFollowingReferences(controlId: SomeControlId | null): SomeControl | undefined {
 		const visited = new Set<string>()
 		while (controlId && !visited.has(controlId) && visited.size <= MAX_REFERENCE_DEPTH) {
 			visited.add(controlId)
@@ -87,7 +147,7 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Get all populated controls
 	 */
-	getAllControls(): ReadonlyMap<string, SomeControl<any>> {
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl> {
 		return this.controls // TODO - readonly?
 	}
 
@@ -122,7 +182,7 @@ export class ControlStore implements IControlStore {
 	 * @param force Trigger actions even if already in the state
 	 */
 	pressControl(
-		controlId: string,
+		controlId: SomeControlId,
 		pressed: boolean,
 		surfaceId: string | undefined,
 		pressEvents: ButtonPressEvents | null,
@@ -146,7 +206,7 @@ export class ControlStore implements IControlStore {
 	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean {
 		// A zero or non-finite delta is not a meaningful rotation. Reject it here so no producer can
 		// accidentally run the `rotate_left` set (chosen when `delta > 0` is false) for a zero delta.
 		if (!Number.isFinite(delta) || delta === 0) return false
@@ -159,9 +219,7 @@ export class ControlStore implements IControlStore {
 	 */
 	abortAllDelayedActions(exceptSignal: AbortSignal | null): void {
 		for (const control of this.controls.values()) {
-			if (control.supportsActions) {
-				control.abortDelayedActions(false, exceptSignal)
-			}
+			control.abortDelayedActions(false, exceptSignal, 0)
 		}
 	}
 
@@ -182,7 +240,7 @@ export class ControlStore implements IControlStore {
 	updateFeedbackValues(connectionId: string, result: NewFeedbackValue[]): void {
 		if (result.length === 0) return
 
-		const values = new Map<string, Map<string, NewFeedbackValue>>()
+		const values = new Map<SomeControlId, Map<string, NewFeedbackValue>>()
 
 		for (const item of result) {
 			const mapEntry = values.get(item.controlId) || new Map<string, NewFeedbackValue>()
@@ -199,8 +257,14 @@ export class ControlStore implements IControlStore {
 		}
 	}
 
+	createActionExecutionParser(extras: RunActionExtras): VariablesAndExpressionParser {
+		return this.createVariablesAndExpressionParser(extras.controlId, buildActionExecutionOverrides(extras), {
+			allowClockSensitive: false,
+		})
+	}
+
 	createVariablesAndExpressionParser(
-		controlId: string | null | undefined,
+		controlId: SomeControlId | null | undefined,
 		overrideVariableValues: VariableValues | null,
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {

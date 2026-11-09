@@ -18,6 +18,7 @@ import {
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
@@ -304,8 +305,8 @@ export class InternalBuildingBlocks
 
 				return this.#actionRunner
 					.runMultipleActions(childActions, newExtras, executeSequential)
-					.catch((e) => {
-						this.#logger.error(`Failed to run actions: ${e.message}`)
+					.catch((e: unknown) => {
+						this.#logger.error(`Failed to run actions: ${stringifyError(e)}`)
 					})
 					.then(() => ({ result: undefined }))
 			}
@@ -321,8 +322,8 @@ export class InternalBuildingBlocks
 
 				return this.#actionRunner
 					.runMultipleActions(childActions, extras, executeSequential)
-					.catch((e) => {
-						this.#logger.error(`Failed to run actions: ${e.message}`)
+					.catch((e: unknown) => {
+						this.#logger.error(`Failed to run actions: ${stringifyError(e)}`)
 					})
 					.then(() => ({ result: undefined }))
 			}
@@ -341,8 +342,8 @@ export class InternalBuildingBlocks
 
 						if (extras.abortDelayed.aborted) break
 
-						await this.#actionRunner.runMultipleActions(childActions, extras, executeSequential).catch((e) => {
-							this.#logger.error(`Failed to run actions: ${e.message}`)
+						await this.#actionRunner.runMultipleActions(childActions, extras, executeSequential).catch((e: unknown) => {
+							this.#logger.error(`Failed to run actions: ${stringifyError(e)}`)
 						})
 
 						// Yield to event loop to prevent tight loop

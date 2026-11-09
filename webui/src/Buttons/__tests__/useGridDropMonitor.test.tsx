@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 /** The handlers the hook subscribed with, so a drag can be played through them */
 let monitor: {
@@ -25,6 +26,7 @@ vi.mock('@dnd-kit/react', () => ({
 /** Every mutation the monitor fires, by the trpc path it was built from */
 const sent: { path: string; input: any }[] = []
 let mutationsFail = false
+const notifier = { show: vi.fn() }
 
 vi.mock('~/Resources/TRPC.js', async (importOriginal) => {
 	const original = await importOriginal<Record<string, unknown>>()
@@ -70,7 +72,13 @@ function setup(
 				isOccupied,
 				actions,
 			}),
-		{ wrapper: ({ children }) => <QueryClientProvider client={queryClient}>{children}</QueryClientProvider> }
+		{
+			wrapper: ({ children }) => (
+				<QueryClientProvider client={queryClient}>
+					<RootAppStoreContext.Provider value={{ notifier } as any}>{children}</RootAppStoreContext.Provider>
+				</QueryClientProvider>
+			),
+		}
 	)
 
 	const over = (operation: DragOperation) => act(() => monitor?.onDragOver({ operation }))
@@ -83,6 +91,7 @@ beforeEach(() => {
 	monitor = null
 	sent.length = 0
 	mutationsFail = false
+	notifier.show.mockClear()
 })
 
 describe('while a button is being dragged over the grid', () => {
@@ -239,7 +248,7 @@ describe('when a button is dropped on the grid', () => {
 describe('when a preset is dropped on the grid', () => {
 	const preset = {
 		type: 'preset',
-		data: { connectionId: 'conn1', presetId: 'preset1', variableValues: { a: 1 }, mode: 'button' },
+		data: { kind: 'connection', connectionId: 'conn1', presetId: 'preset1', variableValues: { a: 1 }, mode: 'button' },
 	}
 
 	it('imports it at the cell it landed on', () => {
@@ -261,6 +270,20 @@ describe('when a preset is dropped on the grid', () => {
 		])
 	})
 
+	it('places a button of another installation as a remote button showing it', () => {
+		const { drop } = setup()
+
+		const remote = { pageNumber: 4, row: 1, column: 2 }
+		drop({
+			source: { type: 'preset', data: { kind: 'link', peerId: 'peer', location: remote } },
+			target: { id: cellId(at(2, 3)) },
+		})
+
+		expect(sent).toEqual([
+			{ path: 'controls.importLinkButton', input: { location: at(2, 3), peerId: 'peer', remoteLocation: remote } },
+		])
+	})
+
 	it('does nothing when it lands on something that is not a cell', () => {
 		const { drop } = setup()
 
@@ -278,5 +301,17 @@ describe('when a preset is dropped on the grid', () => {
 
 		await vi.waitFor(() => expect(errors).toHaveBeenCalledWith('Preset import failed'))
 		errors.mockRestore()
+	})
+
+	it('tells the user when placing a remote button fails', async () => {
+		mutationsFail = true
+		const { drop } = setup()
+
+		drop({
+			source: { type: 'preset', data: { kind: 'link', peerId: 'peer', location: at(1, 2) } },
+			target: { id: cellId(at(2, 3)) },
+		})
+
+		await vi.waitFor(() => expect(notifier.show).toHaveBeenCalledWith('Failed to place remote button', 'nope'))
 	})
 })

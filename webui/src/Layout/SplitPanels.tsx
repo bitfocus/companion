@@ -1,10 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import './SplitPanels.css'
 import classNames from 'classnames'
-import { createContext, useCallback, useContext, useLayoutEffect, useRef, type HTMLAttributes } from 'react'
+import { createContext, useContext, type HTMLAttributes } from 'react'
+import { ResizeHandle } from '~/Components/ResizeHandle.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode.js'
-import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
-import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
+import { useSplitResize } from '~/Hooks/useSplitResize.js'
 
 // The two-panel page layout: a list on the left and what it opens on the right, side by side once
 // there is room and one at a time below that. The CSS lives in layout.css (`.split-panels`) — the
@@ -48,28 +48,6 @@ export interface SplitPanelsRootProps extends HTMLAttributes<HTMLDivElement> {
 	resize: SplitPanelsResizeConfig | null
 }
 
-/**
- * Clamp a desired primary-panel width to the two panels' minimums and return it as a percentage of
- * the available width (the two panels together, excluding the gap). Pure so it can be unit-tested
- * without a DOM.
- */
-export function clampPrimaryPercent(
-	desiredPrimaryPx: number,
-	availablePx: number,
-	minPrimaryPx: number,
-	minSecondaryPx: number
-): number {
-	const maxPrimaryPx = availablePx - minSecondaryPx
-	const clampedPx = Math.min(Math.max(desiredPrimaryPx, minPrimaryPx), maxPrimaryPx)
-	return (clampedPx / availablePx) * 100
-}
-
-function gridTemplateColumnsFor(minPrimaryPx: number, minSecondaryPx: number, primaryPercent: number): string {
-	// `minmax` keeps the px minimums enforced by the browser even if a stored percent no longer fits
-	// at a narrow (but still two-panel) width; the fr ratio otherwise splits by the stored percent.
-	return `minmax(${minPrimaryPx}px, ${primaryPercent}fr) minmax(${minSecondaryPx}px, ${100 - primaryPercent}fr)`
-}
-
 function SplitPanelsRoot({
 	showing,
 	resize,
@@ -110,150 +88,25 @@ function ResizableSplitPanelsRoot({
 }: ResizableSplitPanelsRootProps): React.JSX.Element {
 	const resizable = useTwoPanelMode()
 
-	const minPrimaryPx = resize.minPrimaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
-	const minSecondaryPx = resize.minSecondaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
-	const defaultPrimaryPercent = resize.defaultPrimaryPercent ?? SPLIT_PANELS_DEFAULT_PRIMARY_PERCENT
-
-	const [primaryPercent, setPrimaryPercent] = useLocalStorage<number>(
-		`split-panels-width:${resize.storageKey}`,
-		defaultPrimaryPercent
-	)
-
-	const rootRef = useRef<HTMLDivElement | null>(null)
-	const handleRef = useRef<HTMLDivElement | null>(null)
-
-	// Sit the handle at the boundary between the panels, centred in the column gap. Measured rather
-	// than computed so the gap + left-padding box model never has to be reproduced in CSS.
-	const positionHandle = useCallback(() => {
-		const root = rootRef.current
-		const handle = handleRef.current
-		if (!root || !handle) return
-		const primary = root.querySelector(':scope > .primary-panel')
-		const secondary = root.querySelector(':scope > .secondary-panel')
-		if (!primary || !secondary) return
-		const rootRect = root.getBoundingClientRect()
-		const primaryRect = primary.getBoundingClientRect()
-		const secondaryRect = secondary.getBoundingClientRect()
-		const gap = secondaryRect.left - primaryRect.right
-		handle.style.left = `${primaryRect.right - rootRect.left + gap / 2}px`
-	}, [])
-
-	useLayoutEffect(() => {
-		if (resizable) positionHandle()
-	}, [resizable, primaryPercent, positionHandle])
-
-	useResizeObserver({ ref: rootRef, onResize: () => resizable && positionHandle() })
-
-	const handlePointerDown = useCallback(
-		(e: React.PointerEvent<HTMLDivElement>) => {
-			const root = rootRef.current
-			if (!root) return
-			const primary = root.querySelector(':scope > .primary-panel')
-			const secondary = root.querySelector(':scope > .secondary-panel')
-			if (!primary || !secondary) return
-
-			e.preventDefault()
-
-			const primaryRect = primary.getBoundingClientRect()
-			const available = primaryRect.width + secondary.getBoundingClientRect().width
-			const startX = e.clientX
-			const startPrimaryW = primaryRect.width
-			const handleEl = e.currentTarget
-			let latestPercent = primaryPercent
-
-			const onMove = (ev: PointerEvent) => {
-				latestPercent = clampPrimaryPercent(
-					startPrimaryW + (ev.clientX - startX),
-					available,
-					minPrimaryPx,
-					minSecondaryPx
-				)
-				root.style.gridTemplateColumns = gridTemplateColumnsFor(minPrimaryPx, minSecondaryPx, latestPercent)
-				positionHandle()
-			}
-			const onUp = () => {
-				delete handleEl.dataset.dragging
-				if (handleEl.hasPointerCapture(e.pointerId)) handleEl.releasePointerCapture(e.pointerId)
-				handleEl.removeEventListener('pointermove', onMove)
-				handleEl.removeEventListener('pointerup', onUp)
-				handleEl.removeEventListener('pointercancel', onUp)
-				setPrimaryPercent(latestPercent)
-			}
-
-			handleEl.dataset.dragging = 'true'
-			handleEl.setPointerCapture(e.pointerId)
-			handleEl.addEventListener('pointermove', onMove)
-			handleEl.addEventListener('pointerup', onUp)
-			handleEl.addEventListener('pointercancel', onUp)
-		},
-		[minPrimaryPx, minSecondaryPx, primaryPercent, positionHandle, setPrimaryPercent]
-	)
-
-	const handleDoubleClick = useCallback(() => {
-		setPrimaryPercent(defaultPrimaryPercent)
-	}, [defaultPrimaryPercent, setPrimaryPercent])
-
-	const primaryPercentSafe = Number.isFinite(primaryPercent) ? primaryPercent : defaultPrimaryPercent
-
-	const handleKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLDivElement>) => {
-			let delta = 0
-			if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-				delta = e.shiftKey ? -10 : -2
-			} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-				delta = e.shiftKey ? 10 : 2
-			} else if (e.key === 'Home') {
-				e.preventDefault()
-				setPrimaryPercent(20)
-				return
-			} else if (e.key === 'End') {
-				e.preventDefault()
-				setPrimaryPercent(80)
-				return
-			} else if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault()
-				setPrimaryPercent(defaultPrimaryPercent)
-				return
-			} else {
-				return
-			}
-
-			e.preventDefault()
-			const newPercent = Math.min(80, Math.max(20, primaryPercentSafe + delta))
-			setPrimaryPercent(newPercent)
-		},
-		[primaryPercentSafe, defaultPrimaryPercent, setPrimaryPercent]
-	)
-
-	const mergedStyle = resizable
-		? { ...style, gridTemplateColumns: gridTemplateColumnsFor(minPrimaryPx, minSecondaryPx, primaryPercentSafe) }
-		: style
+	const { rootRef, rootStyle, handleProps } = useSplitResize({
+		orientation: 'horizontal',
+		enabled: resizable,
+		storageKey: `split-panels-width:${resize.storageKey}`,
+		panelSelectors: ['.primary-panel', '.secondary-panel'],
+		minFirstPx: resize.minPrimaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX,
+		minSecondPx: resize.minSecondaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX,
+		defaultFirstPercent: resize.defaultPrimaryPercent ?? SPLIT_PANELS_DEFAULT_PRIMARY_PERCENT,
+	})
 
 	return (
 		<div
 			ref={rootRef}
 			className={classNames('split-panels', resizable && 'split-panels-resizable', className)}
-			style={mergedStyle}
+			style={rootStyle ? { ...style, ...rootStyle } : style}
 			{...rest}
 		>
 			<ShowingContext.Provider value={showing}>{children}</ShowingContext.Provider>
-			{resizable && (
-				<div
-					ref={handleRef}
-					className="split-panels-resize-handle"
-					onPointerDown={handlePointerDown}
-					onDoubleClick={handleDoubleClick}
-					onKeyDown={handleKeyDown}
-					role="separator"
-					tabIndex={0}
-					aria-orientation="vertical"
-					aria-label="Resize panel split"
-					title="Drag to resize · Double-click to reset"
-					aria-valuenow={Math.round(primaryPercentSafe)}
-					aria-valuemin={20}
-					aria-valuemax={80}
-				/>
-			)}
+			{resizable && <ResizeHandle {...handleProps} />}
 		</div>
 	)
 }

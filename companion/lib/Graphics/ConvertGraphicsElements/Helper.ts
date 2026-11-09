@@ -1,8 +1,9 @@
 import { colord } from 'colord'
 import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
+import { combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
@@ -34,11 +35,11 @@ export interface DrawnAndHidden<T> {
 export interface ExpressionReferences {
 	readonly variables: DrawnAndHidden<string>
 	readonly compositeElements: DrawnAndHidden<CompositeElementIdString>
-	readonly referencedLocations: DrawnAndHidden<string>
+	readonly referencedLocations: DrawnAndHidden<ControlLocationString>
 	/** Locations where a cycle was detected during this conversion (a subset of referencedLocations.drawn). */
-	readonly cyclicLocations: Set<string>
-	/** Whether any expression evaluated during this conversion depends on the render clock */
-	clockSensitive: boolean
+	readonly cyclicLocations: Set<ControlLocationString>
+	/** How long until every expression evaluated during this conversion which depends on the render clock repeats, or 0 */
+	clockCycleMs: number
 }
 
 /**
@@ -50,19 +51,19 @@ export interface ExpressionReferences {
 export interface ElementReferences {
 	/** Variables referenced during expression evaluation for this element */
 	readonly usedVariables: Set<string>
-	/** Whether any expression evaluated for this element depends on the render clock */
-	clockSensitive: boolean
+	/** How long until every expression evaluated for this element which depends on the render clock repeats, or 0 */
+	clockCycleMs: number
 }
 
 /** Create a fresh, empty per-element references accumulator. */
 export function createElementReferences(): ElementReferences {
-	return { usedVariables: new Set(), clockSensitive: false }
+	return { usedVariables: new Set(), clockCycleMs: 0 }
 }
 
 /** Merge a single element's accumulated references into the global references. */
 export function mergeElementReferences(global: ExpressionReferences, element: ElementReferences): void {
 	for (const variable of element.usedVariables) global.variables.drawn.add(variable)
-	if (element.clockSensitive) global.clockSensitive = true
+	global.clockCycleMs = combineClockCycles(global.clockCycleMs, element.clockCycleMs)
 }
 
 /** Shared empty override map, so the common (no-override) path allocates nothing. */
@@ -126,7 +127,7 @@ export class ElementExpressionHelper<T> {
 		}
 
 		// Track clock sensitivity, even when the expression failed
-		if (result.clockSensitive) this.#references.clockSensitive = true
+		this.#references.clockCycleMs = combineClockCycles(this.#references.clockCycleMs, result.clockCycleMs)
 
 		return result
 	}
@@ -149,7 +150,7 @@ export class ElementExpressionHelper<T> {
 
 		if (undefinedFallback && (!result.ok || result.value === undefined)) {
 			if (!undefinedFallback.isExpression) {
-				return { ok: true, value: undefinedFallback.value, variableIds: EMPTY_VARIABLE_IDS, clockSensitive: false }
+				return { ok: true, value: undefinedFallback.value, variableIds: EMPTY_VARIABLE_IDS, clockCycleMs: 0 }
 			}
 			return this.#trackExpression(this.#parser, undefinedFallback.value, requiredType)
 		}
@@ -515,7 +516,7 @@ export interface ParseElementsContext {
 	readonly drawPixelBuffers: DrawPixelBuffers
 
 	/** Location string of the button being drawn (e.g. '1/0/0'), used for loop detection */
-	readonly currentLocationStr: string | null
+	readonly currentLocationStr: ControlLocationString | null
 
 	/** Callback to fetch the last-rendered ImageResult for a given location */
 	readonly getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null
@@ -550,7 +551,7 @@ export function createParseElementsContext(
 	cache: ElementConversionCache | null,
 	globalReferences: ExpressionReferences,
 	processedElementIds: Set<string>,
-	currentLocationStr: string | null,
+	currentLocationStr: ControlLocationString | null,
 	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null,
 	compositeAncestors: ReadonlySet<CompositeElementIdString>
 ): ParseElementsContext {

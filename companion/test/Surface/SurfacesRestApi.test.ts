@@ -290,6 +290,19 @@ describe('Surfaces REST API', () => {
 			expect(res.headers['access-control-allow-origin']).toBe('*')
 		})
 
+		test('the OpenAPI spec points at the API under the prefix Companion is hosted at', async () => {
+			const service = createService()
+
+			const plain = await supertest(service.app).get(`${REST_API_BASE_PATH}/openapi.json`).send()
+			expect(plain.body.servers).toEqual([expect.objectContaining({ url: '/api/v2' })])
+
+			const prefixed = await supertest(service.app)
+				.get(`${REST_API_BASE_PATH}/openapi.json`)
+				.set('companion-custom-prefix', 'companion')
+				.send()
+			expect(prefixed.body.servers).toEqual([expect.objectContaining({ url: '/companion/api/v2' })])
+		})
+
 		test('the OpenAPI spec is not exposed cross-origin', async () => {
 			const service = createService()
 

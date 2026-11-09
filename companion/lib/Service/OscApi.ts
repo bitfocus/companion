@@ -1,7 +1,7 @@
 import type { OscReceivedMessage } from 'osc'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import z from 'zod'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { parseColorToNumber, rgb } from '../Resources/Util.js'
@@ -9,6 +9,9 @@ import { RegexRouter } from './RegexRouter.js'
 import type { ServiceApi } from './ServiceApi.js'
 
 const OSC_API_SURFACE_ID = 'osc'
+
+/** The OSC argument values that can be a variable's value */
+const OscVariableValueSchema = z.union([z.string(), z.number(), z.boolean()])
 
 /**
  * Class providing the OSC API.
@@ -185,7 +188,7 @@ export class ServiceOscApi {
 	/**
 	 * Parse the location and controlId from a request
 	 */
-	#locationParse = (match: Record<string, string>): { location: ControlLocation; controlId: string | null } => {
+	#locationParse = (match: Record<string, string>): { location: ControlLocation; controlId: BankControlId | null } => {
 		const location = {
 			pageNumber: Number(match.page),
 			row: Number(match.row),
@@ -362,11 +365,14 @@ export class ServiceOscApi {
 	 */
 	#customVariableSetValue = (match: Record<string, string>, message: OscReceivedMessage): void => {
 		const variableName = match.name
-		const variableValue = message.args?.[0]?.value
+		// osc.js decodes some argument types (blobs, 64-bit integers, timetags) as objects, which aren't a variable value
+		const variableValue = OscVariableValueSchema.safeParse(message.args?.[0]?.value)
 
-		this.#logger.debug(`Got OSC custom variable set value name "${variableName}" to value "${variableValue}"`)
-		if (variableValue === undefined) return
+		this.#logger.debug(
+			`Got OSC custom variable set value name "${variableName}" to value "${String(message.args?.[0]?.value)}"`
+		)
+		if (!variableValue.success) return
 
-		this.#serviceApi.setCustomVariableValue(variableName, variableValue as VariableValue)
+		this.#serviceApi.setCustomVariableValue(variableName, variableValue.data)
 	}
 }

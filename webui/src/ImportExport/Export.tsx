@@ -4,26 +4,32 @@ import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef, useState } from 'react'
 import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
-import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
-import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import {
+	EXPORT_NOTES_MAX_LENGTH,
+	type ClientExportOutput,
+	type ClientExportSelection,
+} from '@companion-app/shared/Model/ImportExport.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { Modal } from '~/Components/Modal.js'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CONFIG_OPTION_META, ConfigOptionRow, CONTENT_OPTION_KEYS, SURFACE_CHILD_OPTIONS } from './ConfigSelection.js'
 import { SelectExportFormat } from './ExportFormat.js'
+import { useExportDownload } from './useExportDownload.js'
 
 export const ExportWizardModal = observer(function ExportWizardModal() {
-	const { userConfig } = useContext(RootAppStoreContext)
+	const { userConfig, notifier } = useContext(RootAppStoreContext)
 
 	const [show, setShow] = useState(false)
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
-	const defaultFormValues: ClientExportSelection = {
+	const exportDownload = useExportDownload()
+
+	const defaultFormValues: ClientExportSelection & ClientExportOutput = {
 		connections: true,
 		buttons: true,
 		surfaces: {
@@ -39,27 +45,23 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 		// userconfig: true,
 		format: userConfig.properties?.default_export_format ?? ExportFormatDefault,
 		filename: userConfig.properties?.default_export_filename ?? '',
+		notes: '',
 	}
 
 	const form = useForm({
 		defaultValues: defaultFormValues,
 		onSubmit: async ({ value }) => {
-			// Use generic flattening function to convert nested object to dot-notation query params
-			const flatParams = flattenToQueryParams(value)
+			const { format, filename, notes, ...selection } = value
 
-			const params = new URLSearchParams()
-			for (const [key, val] of Object.entries(flatParams)) {
-				params.set(key, val)
+			try {
+				await exportDownload({
+					target: { type: 'custom', selection },
+					output: { format, filename, notes },
+				})
+				setShow(false)
+			} catch (e) {
+				notifier.show('Export failed', stringifyError(e), 10000)
 			}
-
-			const link = document.createElement('a')
-			link.setAttribute('download', 'export.companionconfig')
-			link.href = makeAbsolutePath(`/int/export/custom?${params}`)
-			document.body.appendChild(link)
-			link.click()
-			link.remove()
-
-			setShow(false)
 		},
 	})
 
@@ -86,6 +88,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 
 	const exportFormatId = useId()
 	const exportNameId = useId()
+	const exportNotesId = useId()
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
@@ -265,6 +268,32 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 												/>
 											</div>
 										</div>
+									</div>
+
+									<div className="config-selection-section">
+										<FormLabel htmlFor={exportNotesId} className="config-selection-title">
+											Notes
+										</FormLabel>
+										<form.Field
+											name="notes"
+											validators={{
+												onChange: ({ value }) =>
+													value.length > EXPORT_NOTES_MAX_LENGTH
+														? `Notes must be at most ${EXPORT_NOTES_MAX_LENGTH} characters`
+														: undefined,
+											}}
+											children={(field) => (
+												<TextInputField
+													id={exportNotesId}
+													value={field.state.value}
+													setValue={(val) => field.handleChange(val)}
+													checkValid={(val) => (val.length > EXPORT_NOTES_MAX_LENGTH ? false : undefined)}
+													placeholder="Optional. Describe what changed, for whoever imports this file"
+													multiline
+													immediateValue
+												/>
+											)}
+										/>
 									</div>
 								</div>
 							</Modal.Body>

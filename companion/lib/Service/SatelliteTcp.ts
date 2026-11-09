@@ -1,5 +1,6 @@
 import net, { type Socket } from 'node:net'
 import { StringDecoder } from 'node:string_decoder'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
@@ -85,12 +86,12 @@ export class ServiceSatelliteTcp extends ServiceBase {
 				const decoder = new StringDecoder('utf8')
 				socket.on('data', (data) => api.processMessage(decoder.write(data)))
 			} catch (e) {
-				socketLogger.error(`Failed to initialise satellite connection: ${e}`)
+				socketLogger.error(`Failed to initialise satellite connection: ${stringifyError(e)}`)
 				socket.destroy()
 			}
 		})
 		this.#server.on('error', (e) => {
-			this.logger.debug(`listen-socket error: ${e}`)
+			this.logger.debug(`listen-socket error: ${stringifyError(e)}`)
 		})
 
 		try {

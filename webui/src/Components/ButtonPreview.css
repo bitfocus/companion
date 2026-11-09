@@ -44,6 +44,25 @@
 		filter: brightness(0.5);
 	}
 
+	/* The keys for a test press are held over the button: drawn pushed in, as it would be */
+	&.pending-press .button-border {
+		transform: scale(0.94);
+		filter: brightness(0.85);
+	}
+
+	/* Where the keyboard is, once it has moved off the selection. Drawn in the cell's own padding, clear of
+	   its neighbours, and as an outline so a selected cell keeps its solid border inside it. */
+	&.grid-cursor .button-border {
+		outline: 1px dashed var(--color-grid-selection);
+		outline-offset: 2px;
+	}
+
+	/* A cell can hold focus after it is clicked, but the cursor above marks the keyboard, not the browser's
+	   ring - which is drawn around the whole cell and into the buttons beside it */
+	&.grid-button:focus-visible {
+		outline: none;
+	}
+
 	&.context-menu-open .button-border {
 		filter: brightness(0.55);
 	}

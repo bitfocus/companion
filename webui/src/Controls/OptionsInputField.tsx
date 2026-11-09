@@ -2,6 +2,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	colorFieldExpressionHint,
@@ -29,7 +30,7 @@ import { OptionsInputControl } from './OptionsInputControl.js'
 
 interface OptionsInputFieldProps {
 	allowInternalFields: boolean
-	controlId?: string | null
+	controlId?: SomeControlId | null
 	isLocatedInGrid: boolean
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
@@ -75,11 +76,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 	let isInExpressionMode = isExpression
 
 	const setControlValue = useCallback(
-		(val: JsonValue) =>
-			setValue(option.id, {
-				isExpression: isExpression,
-				value: val as any,
-			} satisfies ExpressionOrValue<JsonValue>),
+		(val: JsonValue | undefined) =>
+			setValue(
+				option.id,
+				isExpression
+					? { isExpression: true, value: stringifyVariableValue(val) || '' }
+					: { isExpression: false, value: val }
+			),
 		[option.id, setValue, isExpression]
 	)
 

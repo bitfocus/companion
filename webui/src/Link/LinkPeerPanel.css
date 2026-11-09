@@ -1,0 +1,29 @@
+/* What is shared with an installation, one row per thing that can be shared, with a column for each direction */
+.link-sharing-table {
+	display: grid;
+	/* Fixed widths, so that toggling a switch (and its usage text) doesn't move the columns */
+	grid-template-columns: minmax(0, 1fr) 9rem 9rem;
+	align-items: center;
+	gap: 0.5rem 1.5rem;
+	max-width: 32rem;
+	font-size: 0.875rem;
+
+	.link-sharing-head {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-muted);
+	}
+
+	.link-sharing-label {
+		margin: 0;
+		font-weight: 600;
+	}
+
+	.link-sharing-cell {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+		white-space: nowrap;
+	}
+}

@@ -16,6 +16,7 @@
 import path from 'node:path'
 import chokidar from 'chokidar'
 import debounceFn from 'debounce-fn'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 // Start the backend. Under tsx this resolves to ./main.ts and runs normal startup as a side effect.
 import './main.js'
 
@@ -65,6 +66,6 @@ if (devModulesPath) {
 			fn()
 		})
 		.on('error', (error) => {
-			console.warn(`Module watcher error: ${error}`)
+			console.warn(`Module watcher error: ${stringifyError(error)}`)
 		})
 }

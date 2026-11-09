@@ -16,6 +16,7 @@ import fs from 'node:fs/promises'
 import net from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 
 /**
@@ -61,7 +62,7 @@ export class DataChannelServer extends EventEmitter<DataChannelServerEvents> {
 		this.#server = net.createServer((socket) => this.#handleConnection(socket))
 		this.#server.on('error', (err) => {
 			// Nothing to recover here - a child that cannot reach us fails to register and is restarted.
-			if (!this.#closed) this.#logger.error(`Data channel server error: ${err}`)
+			if (!this.#closed) this.#logger.error(`Data channel server error: ${stringifyError(err)}`)
 		})
 	}
 
@@ -78,10 +79,10 @@ export class DataChannelServer extends EventEmitter<DataChannelServerEvents> {
 	async #listen(): Promise<void> {
 		try {
 			await this.#listenOnce()
-		} catch (e: any) {
+		} catch (e) {
 			// A leftover socket file from an unclean exit. The path carries a random component so this should
 			// not be reachable, but recovering costs one unlink and it would otherwise be unstartable forever.
-			if (e?.code !== 'EADDRINUSE' || process.platform === 'win32') throw e
+			if (!(e instanceof Error && 'code' in e && e.code === 'EADDRINUSE') || process.platform === 'win32') throw e
 
 			this.#logger.warn(`Removing stale data channel socket "${this.socketPath}"`)
 			await fs.rm(this.socketPath, { force: true })

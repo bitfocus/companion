@@ -1,4 +1,5 @@
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import {
 	WIZARD_VERSION_2_2,
 	WIZARD_VERSION_3_4,
@@ -16,7 +17,7 @@ import { TimezoneStep } from './TimezoneStep.js'
 
 export interface WizardStepContext {
 	config: UserConfigModel
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export interface WizardStepDef {

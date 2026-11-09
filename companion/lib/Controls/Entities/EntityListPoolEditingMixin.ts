@@ -51,7 +51,7 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 	entityHeadline(listId: SomeSocketEntityLocation, id: string, headline: string): boolean
 
 	/** Learn the options for an entity, by asking the connection for the current values */
-	entityLearn(listId: SomeSocketEntityLocation, id: string): Promise<boolean>
+	entityLearn(listId: SomeSocketEntityLocation, id: string, signal: AbortSignal): Promise<boolean>
 
 	/** Remove an entity from this control */
 	entityRemove(listId: SomeSocketEntityLocation, id: string): boolean
@@ -236,15 +236,15 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			return true
 		}
 
-		async entityLearn(listId: SomeSocketEntityLocation, id: string): Promise<boolean> {
+		async entityLearn(listId: SomeSocketEntityLocation, id: string, signal: AbortSignal): Promise<boolean> {
 			const entityList = this.getEntityList(listId)
 			if (!entityList) return false
 
 			const entity = entityList.findById(id)
 			if (!entity) return false
 
-			const changed = await entity.learnOptions()
-			if (!changed) return false
+			const changed = await entity.learnOptions(signal)
+			if (!changed || signal.aborted) return false
 
 			// Time has passed due to the `await`
 			// So the entity may not still exist, meaning we should find it again to be sure
@@ -653,7 +653,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const stepId = existingKeys.length === 0 ? '0' : `${Math.max(...existingKeys) + 1}`
 
-			this.steps.set(stepId, this.getNewStepValue(null, null))
+			this.steps.set(stepId, this.getNewStepValue(null, null, false))
 
 			// Ensure current step is valid
 			this.stepCheckExpression(true)
@@ -677,7 +677,8 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const newStep = this.getNewStepValue(
 				structuredClone(this.stepAsActionSetsModel(stepToCopy)),
-				structuredClone(stepToCopy.options)
+				structuredClone(stepToCopy.options),
+				true
 			)
 
 			// add one after the last

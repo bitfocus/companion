@@ -1,5 +1,6 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
 import { connectDataChannel } from '../../Common/DataChannelClient.js'
@@ -258,8 +259,8 @@ ipcWrapper
 		// Release any 'init' that beat the import here
 		resolveInstanceReady()
 	})
-	.catch((err) => {
-		logger.error(`Module registration failed: ${err}`)
+	.catch((err: unknown) => {
+		logger.error(`Module registration failed: ${stringifyError(err)}`)
 
 		// Kill the process
 		process.exit(11)

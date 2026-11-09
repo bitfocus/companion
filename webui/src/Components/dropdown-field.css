@@ -60,8 +60,10 @@
 		overflow: hidden;
 		pointer-events: none;
 
+		/* Tight lines and a small description, so the two-line value isn't much taller than a plain dropdown */
 		.var-name {
 			font-weight: bold;
+			line-height: 1.25;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -69,10 +71,12 @@
 
 		.var-label {
 			font-weight: normal;
+			line-height: 1.2;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
-			font-size: 0.9em;
+			font-size: 0.75em;
+			color: var(--color-muted);
 		}
 	}
 

@@ -1,4 +1,4 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObjectPatch } from '../Diff.js'
 import type { ModuleInstanceType } from './Instance.js'
 
 export interface ModuleDisplayInfo {
@@ -18,6 +18,8 @@ export interface ClientModuleVersionInfo {
 	displayName: string
 	isLegacy: boolean
 	isBeta: boolean
+	/** Whether the module requested an end-of-life runtime, and is being run on a newer one instead */
+	isRuntimeOverridden: boolean
 	helpPath: string
 	versionId: string
 	/** Only applicable for surface modules. Whether multiple instances are allowed */
@@ -58,7 +60,7 @@ export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'
 	id: ModuleInfoUpdateId
 
-	patch: JsonPatchOperation<ClientModuleInfo>[]
+	patch: ObjectPatch<ClientModuleInfo>
 }
 
 /**

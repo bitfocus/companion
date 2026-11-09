@@ -1,9 +1,7 @@
-import { Combobox } from '@base-ui/react/combobox'
-import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef } from 'react'
+import { useContext } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
+import { AddDropdown } from '~/Components/AddDropdown.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -30,39 +28,7 @@ export const AddEventDropdown = observer(function AddEventDropdown({ onSelect }:
 		return options
 	}, [eventDefinitions])
 
-	const onChange = useCallback(
-		(id: DropdownChoice['id'] | null) => {
-			if (id) onSelect(id)
-		},
-		[onSelect]
-	)
-
-	const inputRef = useRef<HTMLInputElement>(null)
-
-	const onOpenChange = useCallback((open: boolean) => {
-		if (!open) {
-			inputRef.current?.blur()
-		}
-	}, [])
-
 	return (
-		<div className="dropdown-field">
-			<Combobox.Root
-				value={null}
-				items={options}
-				multiple={false}
-				autoHighlight
-				onValueChange={onChange}
-				onOpenChange={onOpenChange}
-			>
-				<Combobox.InputGroup className="form-input dropdown-field-input-group">
-					<Combobox.Input className="dropdown-field-input" placeholder={'+ Add event'} ref={inputRef} />
-					<Combobox.Trigger className="dropdown-field-trigger">
-						<ChevronDownIcon className="dropdown-field-icon" />
-					</Combobox.Trigger>
-				</Combobox.InputGroup>
-				<DropdownInputPopup noOptionsMessage="No events found" />
-			</Combobox.Root>
-		</div>
+		<AddDropdown choices={options} placeholder="+ Add event" noOptionsMessage="No events found" onSelect={onSelect} />
 	)
 })

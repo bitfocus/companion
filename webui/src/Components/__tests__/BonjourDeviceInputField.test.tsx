@@ -79,8 +79,7 @@ function ControlledField({
 					setValue(v !== null ? String(v) : null)
 					onSetValue?.(v)
 				}}
-				connectionId={connectionId}
-				queryId={queryId}
+				source={{ type: 'connection', connectionId, queryId }}
 			/>
 		</MenuPortalContext.Provider>
 	)
@@ -148,9 +147,9 @@ describe('BonjourDeviceInputField', () => {
 	// -------------------------------------------------------------------------
 
 	describe('subscription wiring', () => {
-		it('passes connectionId and queryId to the subscription', () => {
+		it('passes the query source to the subscription', () => {
 			renderField({ connectionId: 'myConn', queryId: 'myQuery' })
-			expect(bonjourMock.getLastInput()).toEqual({ connectionId: 'myConn', queryId: 'myQuery' })
+			expect(bonjourMock.getLastInput()).toEqual({ type: 'connection', connectionId: 'myConn', queryId: 'myQuery' })
 		})
 
 		it('clears discovered services when the subscription restarts (onStarted)', async () => {
@@ -211,6 +210,26 @@ describe('BonjourDeviceInputField', () => {
 			const listbox = await openDropdown(user, input)
 			expect(within(listbox).getByText('Camera (10.0.0.1:1234)')).toBeInTheDocument()
 			expect(within(listbox).getByText('Camera (10.0.0.2:1234)')).toBeInTheDocument()
+		})
+
+		it('merges services of different types that share a host:port', async () => {
+			const oldType = makeService('Companion', 'Companion._companion-satellite._tcp.local', ['10.0.0.7'], 16622)
+			const newType = makeService('Companion', 'Companion._companion-sat._tcp.local', ['10.0.0.7'], 16622)
+			const { user, input } = renderField()
+
+			act(() => {
+				bonjourMock.emit({ type: 'up', service: oldType })
+				bonjourMock.emit({ type: 'up', service: newType })
+			})
+
+			const listbox = await openDropdown(user, input)
+			expect(within(listbox).getAllByText('Companion (10.0.0.7:16622)')).toHaveLength(1)
+
+			// The address stays listed while either announcement is still up
+			act(() => {
+				bonjourMock.emit({ type: 'down', fqdn: oldType.fqdn })
+			})
+			expect(within(listbox).getAllByText('Companion (10.0.0.7:16622)')).toHaveLength(1)
 		})
 
 		it('always shows "Manual" as the first choice', async () => {

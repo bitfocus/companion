@@ -1,11 +1,13 @@
-import type { JsonValue } from 'type-fest'
-import type {
-	LayeredButtonModel,
-	LayeredButtonOptions,
-	NormalButtonRuntimeProps,
-	PresetReferenceButtonModel,
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
+import {
+	LayeredButtonOptionsSchema,
+	type LayeredButtonModel,
+	type LayeredButtonOptions,
+	type NormalButtonRuntimeProps,
+	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -20,6 +22,7 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutLayeredStyle,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import { ButtonControlRuntimeBase } from './Base.js'
 import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
@@ -49,7 +52,7 @@ export class ControlButtonPresetReference
 		ControlWithActions,
 		ControlWithoutEvents,
 		ControlWithActionSets,
-		ControlWithOptions,
+		ControlWithOptions<LayeredButtonOptions>,
 		ControlWithConvert
 {
 	readonly type = 'preset-reference'
@@ -99,8 +102,20 @@ export class ControlButtonPresetReference
 		return this.#presetId
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, storage: PresetReferenceButtonModel, isImport: boolean) {
-		super(deps, controlId, `Controls/Button/PresetReference/${controlId}`, true, ControlEntityListPoolButton)
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		storage: PresetReferenceButtonModel,
+		isImport: boolean
+	) {
+		super(
+			deps,
+			controlId,
+			`Controls/Button/PresetReference/${controlId}`,
+			true,
+			ControlEntityListPoolButton,
+			LayeredButtonOptionsSchema
+		)
 
 		if (storage.type !== 'preset-reference')
 			throw new Error(`Invalid type given to ControlButtonPresetReference: "${storage.type}"`)
@@ -110,12 +125,7 @@ export class ControlButtonPresetReference
 		this.#presetId = storage.presetRef.presetId
 		this.#variableValues = storage.presetRef.variableValues
 
-		this.options = {
-			...structuredClone(ButtonControlRuntimeBase.DefaultOptions),
-			rotaryActions: false,
-			canModifyStyleInApis: false,
-			notes: '',
-		}
+		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new LayeredButtonDrawer(deps, controlId, {
 			getButtonStateProps: () => this.getDrawStyleButtonStateProps(),
@@ -262,10 +272,13 @@ export class ControlButtonPresetReference
 	 * metadata, not part of the preset, and are preserved across preset updates). Any other option is
 	 * rejected - so a reference stays read-only even as new option fields are added in the future.
 	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
-		if (key !== 'notes' || typeof value !== 'string') return false
+	optionsSetField(change: KeyValueChange<LayeredButtonOptions>): boolean {
+		if (change.key !== 'notes') return false
 
-		this.options.notes = value
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
+
+		this.options = options
 		this.commitChange(false)
 		return true
 	}
@@ -346,8 +359,8 @@ export class ControlButtonPresetReference
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 */
-	override toJSON(clone = true): PresetReferenceButtonModel {
-		const obj: PresetReferenceButtonModel = {
+	override toJSON(): PresetReferenceButtonModel {
+		return {
 			type: this.type,
 			style: { layers: [...this.drawing.drawElements] },
 			options: this.options,
@@ -363,8 +376,6 @@ export class ControlButtonPresetReference
 			// Persist the checksum so a reload keeps its baseline (and doesn't rebuild once on the first report).
 			checksum: this.#lastPresetChecksum ?? undefined,
 		}
-
-		return clone ? structuredClone(obj) : obj
 	}
 
 	override toRuntimeJSON(): NormalButtonRuntimeProps {

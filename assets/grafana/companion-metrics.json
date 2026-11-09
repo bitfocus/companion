@@ -2341,6 +2341,387 @@
 					"instant": true
 				}
 			]
+		},
+		{
+			"type": "row",
+			"id": 600,
+			"title": "Variables",
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 125
+			}
+		},
+		{
+			"id": 60,
+			"type": "timeseries",
+			"title": "Time spent dispatching variable changes",
+			"description": "rate(companion_variable_change_dispatch_seconds_total) — seconds per second spent telling what reads a changed variable, including the re-evaluations that run synchronously (e.g. internal feedbacks). The fraction of wall-clock time the event loop spends on it.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 126
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "percentunit",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull", "max"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_variable_change_dispatch_seconds_total[$__rate_interval]))",
+					"legendFormat": "Dispatching"
+				}
+			]
+		},
+		{
+			"id": 61,
+			"type": "timeseries",
+			"title": "Variable change rate",
+			"description": "Variable changes dispatched per second, and how many registered readers they notified.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 126
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull", "max"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_variable_change_dispatches_total[$__rate_interval]))",
+					"legendFormat": "Changes dispatched"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_variable_dependency_notifications_total[$__rate_interval]))",
+					"legendFormat": "Readers notified"
+				}
+			]
+		},
+		{
+			"id": 62,
+			"type": "timeseries",
+			"title": "Readers notified per change",
+			"description": "Average readers notified per dispatched change. Everything else that reads variables is never visited.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 0,
+				"y": 134
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_variable_dependency_notifications_total[$__rate_interval])) / clamp_min(sum(rate(companion_variable_change_dispatches_total[$__rate_interval])), 1e-9)",
+					"legendFormat": "Per change"
+				}
+			]
+		},
+		{
+			"id": 63,
+			"type": "timeseries",
+			"title": "Registered variable readers",
+			"description": "Things registered as reading variables, the distinct variables they read (control-relative ones counted per control), and the controls they belong to. Should fall back when buttons or connections are removed — steady growth suggests a leak.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 8,
+				"y": 134
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_variable_dependencies)",
+					"legendFormat": "Readers"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_variable_dependency_keys)",
+					"legendFormat": "Variables read"
+				},
+				{
+					"refId": "C",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_variable_dependency_controls)",
+					"legendFormat": "Controls"
+				}
+			]
+		},
+		{
+			"id": 64,
+			"type": "timeseries",
+			"title": "Readers armed for an in-flight draw",
+			"description": "Readers hearing every change because their asynchronous evaluation (a button draw) is in flight. Normally near zero; brief spikes on startup or page loads are expected, a sustained level means draws are not completing.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 16,
+				"y": 134
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "short",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom"
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(companion_variable_dependencies_armed)",
+					"legendFormat": "Armed"
+				}
+			]
+		},
+		{
+			"id": 65,
+			"type": "timeseries",
+			"title": "Variable values reported vs changed",
+			"description": "Variable values reported per second (by connections, or for custom/internal variables) and how many of them actually differed from the previous value. The gap is values re-sent unchanged.",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 141
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull", "max"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_variable_values_reported_total[$__rate_interval]))",
+					"legendFormat": "Reported"
+				},
+				{
+					"refId": "B",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "sum(rate(companion_variable_values_changed_total[$__rate_interval]))",
+					"legendFormat": "Changed"
+				}
+			]
+		},
+		{
+			"id": 66,
+			"type": "timeseries",
+			"title": "Variable values changed by label (top 20)",
+			"description": "Variable values that actually changed per second, by connection label (plus custom and internal).",
+			"datasource": {
+				"type": "prometheus",
+				"uid": "${datasource}"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 141
+			},
+			"fieldConfig": {
+				"defaults": {
+					"unit": "ops",
+					"custom": {
+						"drawStyle": "line",
+						"fillOpacity": 10,
+						"showPoints": "never"
+					}
+				},
+				"overrides": []
+			},
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"calcs": ["lastNotNull", "max"]
+				},
+				"tooltip": {
+					"mode": "multi"
+				}
+			},
+			"targets": [
+				{
+					"refId": "A",
+					"datasource": {
+						"type": "prometheus",
+						"uid": "${datasource}"
+					},
+					"expr": "topk(20, sum by (label) (rate(companion_variable_values_changed_total[$__rate_interval])))",
+					"legendFormat": "{{label}}"
+				}
+			]
 		}
 	]
 }

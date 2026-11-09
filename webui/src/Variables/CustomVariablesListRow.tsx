@@ -7,6 +7,7 @@ import { useCallback } from 'react'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
+import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import type { CustomVariableDefinitionExt } from './CustomVariablesList'
 import { useCustomVariablesTableContext } from './CustomVariablesTableContext'
 
@@ -30,15 +31,8 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 		},
 		[tableContext, info.id]
 	)
-	const doEditKey = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (e.target !== e.currentTarget) return
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault()
-				tableContext.selectCustomVariable(info.id)
-			}
-		},
-		[tableContext, info.id]
+	const doEditKey = useActivateOnKey(
+		useCallback(() => tableContext.selectCustomVariable(info.id), [tableContext, info.id])
 	)
 
 	const doDelete = useCallback(

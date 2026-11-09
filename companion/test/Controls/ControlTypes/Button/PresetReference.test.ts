@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonPresetReference } from '../../../../lib/Controls/ControlTypes/Button/PresetReference.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
 /** A feedback as it comes from the preset definition - its id is owned by the definition, not by any control */
 function makeDefinitionFeedback(id: string) {
@@ -19,7 +22,13 @@ function makeDefinitionFeedback(id: string) {
 function makeModel(overrides: Partial<PresetReferenceButtonModel> = {}): PresetReferenceButtonModel {
 	return {
 		type: 'preset-reference',
-		options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+		options: {
+			rotaryActions: false,
+			stepProgression: 'auto',
+			stepExpression: '',
+			canModifyStyleInApis: false,
+			notes: '',
+		},
 		style: { layers: [] },
 		feedbacks: [],
 		steps: {
@@ -79,6 +88,9 @@ describe('ControlButtonPresetReference', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			variableDependencies: new VariableDependencyRegistry(),
+			linkButtons: null as any,
+			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),
@@ -88,7 +100,7 @@ describe('ControlButtonPresetReference', () => {
 	})
 
 	function createControl(model = makeModel()) {
-		return new ControlButtonPresetReference(deps, 'bank:test01', model, false)
+		return new ControlButtonPresetReference(deps, CreateBankControlId('test01'), model, false)
 	}
 
 	describe('preset definition ids', () => {
@@ -100,7 +112,7 @@ describe('ControlButtonPresetReference', () => {
 		it('regenerates entity ids when the reference is placed', () => {
 			const control = new ControlButtonPresetReference(
 				deps,
-				'bank:test01',
+				CreateBankControlId('test01'),
 				makeModel({ feedbacks: [presetFeedback] }),
 				true
 			)
@@ -126,7 +138,7 @@ describe('ControlButtonPresetReference', () => {
 		it('keeps stored entity ids when loading from the database', () => {
 			const control = new ControlButtonPresetReference(
 				deps,
-				'bank:test01',
+				CreateBankControlId('test01'),
 				makeModel({ feedbacks: [presetFeedback] }),
 				false
 			)
@@ -149,21 +161,21 @@ describe('ControlButtonPresetReference', () => {
 	describe('optionsSetField', () => {
 		it('allows editing notes', () => {
 			const control = createControl()
-			expect(control.optionsSetField('notes', 'my note')).toBe(true)
+			expect(control.optionsSetField({ key: 'notes', value: 'my note' })).toBe(true)
 			expect(control.toJSON().options.notes).toBe('my note')
 		})
 
 		it('rejects any option other than notes (stays read-only)', () => {
 			const control = createControl()
-			expect(control.optionsSetField('rotaryActions', true)).toBe(false)
-			expect(control.optionsSetField('stepProgression', 'manual')).toBe(false)
+			expect(control.optionsSetField({ key: 'rotaryActions', value: true })).toBe(false)
+			expect(control.optionsSetField({ key: 'stepProgression', value: 'manual' })).toBe(false)
 		})
 
 		it('preserves user notes across a preset refresh', () => {
 			definitions.convertPresetToReferenceControlModel.mockReturnValue(makeModel())
 			const control = createControl()
 
-			control.optionsSetField('notes', 'keep me')
+			control.optionsSetField({ key: 'notes', value: 'keep me' })
 			definitions.emit('updatePresets', 'conn1')
 
 			expect(control.toJSON().options.notes).toBe('keep me')
@@ -305,7 +317,7 @@ describe('ControlButtonPresetReference', () => {
 
 		it('carries the user notes into the converted button', () => {
 			const control = createControl()
-			control.optionsSetField('notes', 'remember this')
+			control.optionsSetField({ key: 'notes', value: 'remember this' })
 
 			const converted = control.convertControl()
 			expect(converted.options.notes).toBe('remember this')
@@ -338,7 +350,12 @@ describe('ControlButtonPresetReference', () => {
 		function reportImageBuffer(control: ControlButtonPresetReference) {
 			control.entities.updateFeedbackValues(
 				'conn1',
-				new Map([['fb-adv', { entityId: 'fb-adv', controlId: 'bank:test01', value: { imageBuffer: 'QUJD' } as any }]])
+				new Map([
+					[
+						'fb-adv',
+						{ entityId: 'fb-adv', controlId: CreateBankControlId('test01'), value: { imageBuffer: 'QUJD' } as any },
+					],
+				])
 			)
 		}
 

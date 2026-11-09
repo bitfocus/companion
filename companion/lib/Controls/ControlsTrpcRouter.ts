@@ -1,8 +1,14 @@
 import type EventEmitter from 'node:events'
 import z from 'zod'
-import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
-import type { ButtonReferenceButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { formatLocation, isLocationOnGrid, zodSomeControlId } from '@companion-app/shared/ControlId.js'
+import {
+	ButtonReferenceButtonOptionsSchema,
+	parseLinkButtonOptions,
+	type ButtonReferenceButtonModel,
+	type SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { zodControlOptionsChange } from '@companion-app/shared/Model/Controls.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
@@ -22,7 +28,7 @@ const MAX_BATCH_LOCATIONS = 4096
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createControlsTrpcRouter(
 	logger: Logger,
-	controlsMap: Map<string, SomeControl<any>>,
+	controlsMap: Map<string, SomeControl>,
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
@@ -59,6 +65,19 @@ export function createControlsTrpcRouter(
 				return controlsController.importControl(input.location, model)
 			}),
 
+		/** Place a remote button showing a button of another installation, eg one chosen from its pages */
+		importLinkButton: publicProcedure
+			.input(z.object({ location: zodLocation, peerId: z.string(), remoteLocation: zodLocation }))
+			.mutation(({ input }) =>
+				controlsController.importControl(input.location, {
+					type: 'link-button',
+					options: parseLinkButtonOptions({
+						peerId: input.peerId,
+						location: { value: formatLocation(input.remoteLocation), isExpression: false },
+					}).options,
+				})
+			),
+
 		createReferenceControl: publicProcedure
 			.input(
 				z.object({
@@ -78,9 +97,7 @@ export function createControlsTrpcRouter(
 				// Place a button that mirrors `fromLocation`. Stored as a plain (non-expression) location string.
 				const model: ButtonReferenceButtonModel = {
 					type: 'button-reference',
-					options: {
-						location: { value: fromStr, isExpression: false },
-					},
+					options: ButtonReferenceButtonOptionsSchema.parse({ location: { value: fromStr, isExpression: false } }),
 				}
 				return controlsController.importControl(input.toLocation, model)
 			}),
@@ -196,7 +213,7 @@ export function createControlsTrpcRouter(
 					if (placement.kind !== 'clone' || clonedJson.has(placement.sourceControlId)) continue
 
 					const control = controlsMap.get(placement.sourceControlId)
-					if (control) clonedJson.set(placement.sourceControlId, control.toJSON(true) as SomeButtonModel)
+					if (control) clonedJson.set(placement.sourceControlId, structuredClone(control.toJSON()) as SomeButtonModel)
 				}
 
 				// Where each control being moved started, so a change of page can be reported to it
@@ -206,6 +223,18 @@ export function createControlsTrpcRouter(
 
 					const previous = pageStore.getLocationOfControlId(placement.controlId)
 					if (previous) previousLocations.set(placement.controlId, previous)
+				}
+
+				// Stop the actions of any control which is moving, so a run isn't left part in the old place and part in the new.
+				// A link button's actions run on the remote installation, where nothing has moved
+				for (const placement of plan.placements) {
+					if (placement.kind !== 'existing') continue
+
+					const previous = previousLocations.get(placement.controlId)
+					if (previous && formatLocation(previous) === formatLocation(placement.location)) continue
+
+					const control = controlsMap.get(placement.controlId)
+					if (control && control.type !== 'link-button') control.abortDelayedActions(false, null, 0)
 				}
 
 				// Delete any controls, letting pageStore respond to the `controlRemovedFrom` events this emits.
@@ -341,26 +370,26 @@ export function createControlsTrpcRouter(
 				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
-				controlsController.abortAllDelayedActions(null)
+				controlsMap.get(controlId)?.abortDelayedActions(false, null, 0)
 			}),
 
 		setOptionsField: publicProcedure
 			.input(
 				z.object({
-					controlId: z.string(),
-					key: z.string(),
-					value: JsonValueSchema.optional(),
+					controlId: zodSomeControlId,
+					change: zodControlOptionsChange,
 				})
 			)
 			.mutation(async ({ input }) => {
 				const control = controlsMap.get(input.controlId)
 				if (!control) return false
 
-				if (control.supportsOptions) {
-					return control.optionsSetField(input.key, input.value)
-				} else {
-					throw new Error(`Control "${input.controlId}" does not support options`)
+				if (!control.supportsOptions) throw new Error(`Control "${input.controlId}" does not support options`)
+				if (control.type !== input.change.controlType) {
+					throw new Error(`Control "${input.controlId}" is a ${control.type}, not a ${input.change.controlType}`)
 				}
+
+				return control.optionsSetField(input.change)
 			}),
 	}
 }

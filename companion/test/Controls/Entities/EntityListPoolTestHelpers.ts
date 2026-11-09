@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -16,6 +17,7 @@ import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
 import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
+import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import type { VariablesValuesEvents } from '../../../lib/Variables/Values.js'
 
 /**
@@ -28,7 +30,7 @@ import type { VariablesValuesEvents } from '../../../lib/Variables/Values.js'
  */
 
 export interface CreatePoolOptions {
-	controlId?: string
+	controlId?: SomeControlId
 	isLayered?: boolean
 	getEntityDefinition?: (
 		entityType: EntityModelType,
@@ -55,7 +57,7 @@ export function defaultGetEntityDefinition(
  * which concrete pool they construct.
  */
 export function createPoolDeps(options: CreatePoolOptions = {}) {
-	const controlId = options.controlId ?? 'test01'
+	const controlId = options.controlId ?? CreateBankControlId('test01')
 
 	const reportChange = vi.fn<(options: ControlEntityListChangeProps) => void>()
 
@@ -94,6 +96,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		controlId,
 		reportChange,
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+		variableDependencies: new VariableDependencyRegistry(),
 		getPageVariableEntities: () => null,
 	}
 
@@ -182,7 +185,7 @@ export function downSet(stepId = '0') {
 export function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
 	const map = new Map<string, NewFeedbackValue>()
 	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
+		map.set(entityId, { entityId, controlId: CreateBankControlId('test'), value })
 	}
 	return map
 }

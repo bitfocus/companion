@@ -15,11 +15,8 @@ import { LocalVariableNameOption, PageVariableNameOption } from '@companion-app/
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
-import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
-import type { JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
-import { isPackaged } from '../Resources/Util.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
@@ -223,27 +220,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			},
 		}
 
-		if (!isPackaged()) {
-			feedbacks.debug_expression_value = {
-				feedbackType: FeedbackEntitySubType.Advanced,
-				label: '(Debug) Evaluate Expression',
-				description: 'Evaluate an expression and use the result as the feedback value',
-				feedbackStyle: undefined,
-				showInvert: false,
-				options: [
-					{
-						type: 'expression',
-						label: 'Expression',
-						id: 'expression',
-						default: '{}',
-						disableAutoExpression: true,
-						allowInvalidValues: true,
-					},
-				],
-				optionsSupportExpressions: true,
-			}
-		}
-
 		return feedbacks
 	}
 
@@ -324,25 +300,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			},
 		}
 
-		if (!isPackaged()) {
-			actions.debug_action_result = {
-				label: '(Debug) Action Result',
-				description: 'Return a provided expression/JSON blob as the action result, for testing store-result targets',
-				options: [
-					{
-						type: 'expression',
-						label: 'Expression',
-						id: 'expression',
-						default: '{}',
-						disableAutoExpression: true,
-						allowInvalidValues: true,
-					},
-				],
-				actionHasResult: true,
-				optionsSupportExpressions: true,
-			}
-		}
-
 		return actions
 	}
 
@@ -352,7 +309,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 	executeFeedback(
 		feedback: FeedbackForInternalExecution,
 		parser: VariablesAndExpressionParser
-	): boolean | CompanionFeedbackButtonStyleResult | ExecuteFeedbackResultWithReferences | void {
+	): boolean | ExecuteFeedbackResultWithReferences | void {
 		if (feedback.definitionId == 'variable_value') {
 			const variableName = stringifyVariableValue(feedback.options.variable)
 			if (!variableName) return false
@@ -379,10 +336,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			return !!feedback.options.expression
 		} else if (feedback.definitionId == 'expression_value') {
 			return feedback.options.expression as any
-		} else if (feedback.definitionId == 'debug_expression_value') {
-			const value = feedback.options.expression
-			// Advanced feedbacks must return a style object
-			return typeof value === 'object' && value !== null ? (value as CompanionFeedbackButtonStyleResult) : {}
 		} else if (feedback.definitionId == 'user_value') {
 			// Not used
 			return false
@@ -479,9 +432,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 
 				break
 			}
-			case 'debug_action_result':
-				// The expression option is already evaluated (optionsSupportExpressions), so its value is the result.
-				return { result: action.options.expression as JsonValue }
 			default:
 				return null
 		}

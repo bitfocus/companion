@@ -1,3 +1,5 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+
 /**
  * Mangled surfaceIds for button-reference forwarding. A reference forwards to its target with its own control id
  * appended to the surfaceId, isolating the target's per-surface press/hold state per reference. Surface resolution
@@ -15,7 +17,7 @@ export const MAX_REFERENCE_DEPTH = 8
  * Append a reference control id to a surfaceId. A missing surfaceId becomes an empty real part, so the result is
  * still depth-countable - this is what bounds a surface-less reference cycle via {@link referenceSurfaceIdDepth}.
  */
-export function mangleReferenceSurfaceId(surfaceId: string | undefined, referenceControlId: string): string {
+export function mangleReferenceSurfaceId(surfaceId: string | undefined, referenceControlId: SomeControlId): string {
 	return `${surfaceId ?? ''}${SEP}${referenceControlId}`
 }
 

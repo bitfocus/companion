@@ -49,11 +49,11 @@
 	}
 
 	&[data-checked] {
-		background-color: var(--color-primary);
+		background-color: var(--color-switch-on);
 		box-shadow: none;
 
 		&:hover:not([data-disabled]) {
-			background-color: var(--color-primary-hover);
+			background-color: var(--color-switch-on-hover);
 		}
 
 		.switch-thumb {

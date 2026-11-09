@@ -24,6 +24,11 @@
 		}
 	}
 
+	/* An entity editor drawing the section's title is as tall as the other sections' heading rows with actions */
+	.entity-category > .entity-editor-heading {
+		min-height: 2rem;
+	}
+
 	.buttons-sidebar-heading {
 		margin: 0;
 		color: var(--color-text-strong);

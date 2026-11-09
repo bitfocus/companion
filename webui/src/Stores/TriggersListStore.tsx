@@ -1,4 +1,6 @@
 import { action, observable } from 'mobx'
+import { isControlIdOfKind, type TriggerControlId } from '@companion-app/shared/ControlId.js'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientTriggerData,
 	TriggerCollection,
@@ -6,11 +8,11 @@ import type {
 	TriggersUpdate,
 } from '@companion-app/shared/Model/TriggerModel.js'
 import { assertNever } from '~/Resources/util.js'
-import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
+import { updateObjectInPlace } from './ApplyDiffToMap'
 import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
 export class TriggersListStore implements GenericCollectionsStore<TriggerCollectionData> {
-	readonly triggers = observable.map<string, ClientTriggerData>()
+	readonly triggers = observable.map<TriggerControlId, ClientTriggerData>()
 	readonly collections = observable.map<string, TriggerCollection>()
 
 	public updateTriggers = action((change: TriggersUpdate | null) => {
@@ -25,7 +27,8 @@ export class TriggersListStore implements GenericCollectionsStore<TriggerCollect
 				this.triggers.clear()
 
 				for (const [triggerId, triggerInfo] of Object.entries(change.triggers)) {
-					if (!triggerInfo) continue
+					// Object.entries loses the type of the keys
+					if (!triggerInfo || !isControlIdOfKind(triggerId, 'trigger')) continue
 
 					this.triggers.set(triggerId, triggerInfo)
 				}
@@ -39,7 +42,7 @@ export class TriggersListStore implements GenericCollectionsStore<TriggerCollect
 			case 'update': {
 				const oldObj = this.triggers.get(change.controlId)
 				if (!oldObj) throw new Error(`Got update for unknown trigger: ${change.controlId}`)
-				applyJsonPatchInPlace(oldObj, change.patch)
+				applyObjectPatch(oldObj, change.patch)
 				break
 			}
 			default:

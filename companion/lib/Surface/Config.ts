@@ -1,17 +1,13 @@
-import type { SurfaceConfig, SurfacePanelConfig } from '@companion-app/shared/Model/Surfaces.js'
+import {
+	SurfaceConfigSchema,
+	SurfacePanelConfigSchema,
+	type SurfaceConfig,
+	type SurfacePanelConfig,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { SurfacePanel } from './Types.js'
 
-export const PanelDefaults: SurfacePanelConfig = {
-	// defaults from the panel - TODO properly
-	brightness: 100,
-	rotation: 0,
-
-	// companion owned defaults
-	xOffset: 0,
-	yOffset: 0,
-	groupId: null,
-}
+export const PanelDefaults: SurfacePanelConfig = SurfacePanelConfigSchema.parse({})
 
 export function createDefaultSurfacePanelConfig(panel: SurfacePanel): SurfacePanelConfig {
 	const panelConfig = structuredClone(PanelDefaults)
@@ -57,21 +53,8 @@ export function createOrSanitizeSurfaceHandlerConfig(
 	}
 
 	const newConfig: SurfaceConfig = {
-		// New default groupConfig
-		groupConfig: {
-			// @ts-expect-error migrate old field
-			page: existingConfig?.page ?? 1,
-			startup_page: panelConfig.page ?? 1,
-			// Fill in the new field based on previous behaviour:
-			// If a page had been chosen, then it would start on that
-			use_last_page: panelConfig.use_last_page ?? panelConfig.page === undefined,
-		},
-
-		// Default enabled to true (existing configs without this field are treated as enabled)
-		enabled: true,
-
-		// Use existing config
-		...existingConfig,
+		// Use existing config, or the defaults for a new surface
+		...(existingConfig ?? SurfaceConfigSchema.parse({})),
 
 		config: panelConfig,
 
@@ -83,15 +66,6 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		appearance: panel.surfaceAppearance,
 		modelId: panel.surfaceModelId,
 		lastSeen: Date.now(),
-	}
-
-	// Forget old values
-	delete panelConfig.use_last_page
-	delete panelConfig.page
-
-	if (existingConfig) {
-		// @ts-expect-error old field
-		delete existingConfig.page
 	}
 
 	return newConfig

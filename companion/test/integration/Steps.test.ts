@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlButtonLayered } from '../../lib/Controls/ControlTypes/Button/Layered.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -16,7 +17,7 @@ describe('button steps', () => {
 		await app?.close()
 	})
 
-	function getControl(controlId: string): ControlButtonLayered {
+	function getControl(controlId: SomeControlId): ControlButtonLayered {
 		return app.registry.controls.getControl(controlId) as ControlButtonLayered
 	}
 

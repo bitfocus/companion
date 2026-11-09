@@ -9,7 +9,6 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { Logger } from '../../Log/Controller.js'
-import { REST_API_BASE_PATH } from '../../Service/RestApi/constants.js'
 import { RestApiError } from '../../Service/RestApi/errors.js'
 import {
 	collectionResponse,
@@ -61,29 +60,31 @@ export const ConnectionStatusSchema = z
 const VersionIdSchema = z.string().min(1, 'versionId cannot be empty')
 
 /** Schema for a connection in API responses — used for both validation and stripping */
-export const ConnectionResponseSchema = z.object({
-	id: z.string().describe('Unique connection instance id.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
-	label: z.string().describe('Display name shown for the connection in Companion.').meta({ example: 'ATEM' }),
-	moduleId: z
-		.string()
-		.describe('Connection module id, such as "bmd-atem" or "obs-websocket".')
-		.meta({ example: 'bmd-atem' }),
-	moduleVersionId: z
-		.string()
-		.nullable()
-		.describe(
-			'Module version id used by this connection, such as "1.2.0". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.'
-		)
-		.meta({ example: '1.2.0' }),
-	updatePolicy: z
-		.enum(InstanceVersionUpdatePolicy)
-		.describe('Module version update policy for this connection.')
-		.meta({ example: InstanceVersionUpdatePolicy.Stable }),
-	enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.').meta({ example: true }),
-	status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
-	config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
-	secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
-})
+export const ConnectionResponseSchema = z
+	.object({
+		id: z.string().describe('Unique connection instance id.').meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
+		label: z.string().describe('Display name shown for the connection in Companion.').meta({ example: 'ATEM' }),
+		moduleId: z
+			.string()
+			.describe('Connection module id, such as "bmd-atem" or "obs-websocket".')
+			.meta({ example: 'bmd-atem' }),
+		moduleVersionId: z
+			.string()
+			.nullable()
+			.describe(
+				'Module version id used by this connection, such as "1.2.0". Null means the newest compatible stable version is selected automatically, and may be returned while that version is being installed.'
+			)
+			.meta({ example: '1.2.0' }),
+		updatePolicy: z
+			.enum(InstanceVersionUpdatePolicy)
+			.describe('Module version update policy for this connection.')
+			.meta({ example: InstanceVersionUpdatePolicy.Stable }),
+		enabled: z.boolean().describe('Whether the connection is enabled and allowed to run.').meta({ example: true }),
+		status: ConnectionStatusSchema.nullable().describe('Latest runtime status reported by the connection.'),
+		config: z.record(z.string(), z.unknown()).optional().describe('Non-secret connection configuration values.'),
+		secrets: z.record(z.string(), z.unknown()).optional().describe('Secret connection configuration values.'),
+	})
+	.meta({ id: 'Connection' })
 
 /** Minimal response returned after creating a connection */
 export const ConnectionCreateResponseSchema = z.object({
@@ -228,70 +229,72 @@ const ConfigFieldBaseResponseSchema = z
 	.catchall(z.unknown())
 
 /** Schema for a raw config field definition in API responses */
-export const ConfigFieldResponseSchema = z.discriminatedUnion('type', [
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('bonjour-device').describe('Bonjour device selector field.'),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('secret-text').describe('Secret text field. Values for this field belong in secrets.'),
-		default: z.string().optional().describe('Default secret text value.'),
-		minLength: z.number().optional().describe('Minimum string length allowed.'),
-		regex: z.string().optional().describe('Regular expression that string values must match.'),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('static-text').describe('Read-only text shown alongside other config fields.'),
-		value: z.string().describe('Static text content to display.').meta({ example: 'Network settings' }),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('textinput').describe('Plain text input field.'),
-		default: z.string().optional().describe('Default text value.').meta({ example: '' }),
-		minLength: z.number().optional().describe('Minimum string length allowed.'),
-		regex: z.string().optional().describe('Regular expression that string values must match.'),
-		placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
-		multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('checkbox').describe('Boolean checkbox field.'),
-		default: z.boolean().optional().describe('Default checked state.').meta({ example: false }),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('colorpicker').describe('Color picker field.'),
-		default: z.union([z.string(), z.number()]).optional().describe('Default color value.'),
-		enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
-		returnType: z.enum(['string', 'number']).optional().describe('Value type returned by the field.'),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('number').describe('Numeric input field.'),
-		default: z.number().optional().describe('Default numeric value.').meta({ example: 10 }),
-		min: z.number().optional().describe('Minimum numeric value allowed.'),
-		max: z.number().optional().describe('Maximum numeric value allowed.'),
-		step: z.number().optional().describe('Numeric step size.'),
-		range: z.boolean().optional().describe('Whether the field is shown as a range slider.'),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('dropdown').describe('Single-select dropdown field.'),
-		default: z
-			.union([z.string(), z.number()])
-			.optional()
-			.describe('Default selected choice id.')
-			.meta({ example: 'auto' }),
-		choices: z.array(DropdownChoiceSchema).describe('Allowed choices for the dropdown.'),
-		allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
-		regex: z.string().optional().describe('Regular expression that custom string values must match.'),
-	}),
-	ConfigFieldBaseResponseSchema.extend({
-		type: z.literal('multidropdown').describe('Multi-select dropdown field.'),
-		default: z
-			.array(z.union([z.string(), z.number()]))
-			.optional()
-			.describe('Default selected choice ids.'),
-		choices: z.array(DropdownChoiceSchema).describe('Allowed choices for the dropdown.'),
-		minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
-		maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
-		allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
-		regex: z.string().optional().describe('Regular expression that custom string values must match.'),
-	}),
-])
+export const ConfigFieldResponseSchema = z
+	.discriminatedUnion('type', [
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('bonjour-device').describe('Bonjour device selector field.'),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('secret-text').describe('Secret text field. Values for this field belong in secrets.'),
+			default: z.string().optional().describe('Default secret text value.'),
+			minLength: z.number().optional().describe('Minimum string length allowed.'),
+			regex: z.string().optional().describe('Regular expression that string values must match.'),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('static-text').describe('Read-only text shown alongside other config fields.'),
+			value: z.string().describe('Static text content to display.').meta({ example: 'Network settings' }),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('textinput').describe('Plain text input field.'),
+			default: z.string().optional().describe('Default text value.').meta({ example: '' }),
+			minLength: z.number().optional().describe('Minimum string length allowed.'),
+			regex: z.string().optional().describe('Regular expression that string values must match.'),
+			placeholder: z.string().optional().describe('Placeholder text shown for empty text fields.'),
+			multiline: z.boolean().optional().describe('Whether the text field supports multiple lines.'),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('checkbox').describe('Boolean checkbox field.'),
+			default: z.boolean().optional().describe('Default checked state.').meta({ example: false }),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('colorpicker').describe('Color picker field.'),
+			default: z.union([z.string(), z.number()]).optional().describe('Default color value.'),
+			enableAlpha: z.boolean().optional().describe('Whether color values include an alpha channel.'),
+			returnType: z.enum(['string', 'number']).optional().describe('Value type returned by the field.'),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('number').describe('Numeric input field.'),
+			default: z.number().optional().describe('Default numeric value.').meta({ example: 10 }),
+			min: z.number().optional().describe('Minimum numeric value allowed.'),
+			max: z.number().optional().describe('Maximum numeric value allowed.'),
+			step: z.number().optional().describe('Numeric step size.'),
+			range: z.boolean().optional().describe('Whether the field is shown as a range slider.'),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('dropdown').describe('Single-select dropdown field.'),
+			default: z
+				.union([z.string(), z.number()])
+				.optional()
+				.describe('Default selected choice id.')
+				.meta({ example: 'auto' }),
+			choices: z.array(DropdownChoiceSchema).describe('Allowed choices for the dropdown.'),
+			allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+			regex: z.string().optional().describe('Regular expression that custom string values must match.'),
+		}),
+		ConfigFieldBaseResponseSchema.extend({
+			type: z.literal('multidropdown').describe('Multi-select dropdown field.'),
+			default: z
+				.array(z.union([z.string(), z.number()]))
+				.optional()
+				.describe('Default selected choice ids.'),
+			choices: z.array(DropdownChoiceSchema).describe('Allowed choices for the dropdown.'),
+			minSelection: z.number().optional().describe('Minimum number of choices that must be selected.'),
+			maxSelection: z.number().optional().describe('Maximum number of choices that can be selected.'),
+			allowCustom: z.boolean().optional().describe('Whether custom values outside the choices list are allowed.'),
+			regex: z.string().optional().describe('Regular expression that custom string values must match.'),
+		}),
+	])
+	.meta({ id: 'ConnectionConfigField' })
 
 export type ConnectionResponse = z.infer<typeof ConnectionResponseSchema>
 export type ConnectionCreateBody = z.infer<typeof ConnectionCreateBodySchema>
@@ -590,7 +593,7 @@ const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
 			errorResponses,
 		},
 		({ connectionOperations }) => {
-			return async ({ body }) => {
+			return async ({ body, basePath }) => {
 				const { moduleId, label, versionId, updatePolicy, disabled } = body
 
 				try {
@@ -604,7 +607,7 @@ const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
 
 					return {
 						status: 201,
-						location: `${REST_API_BASE_PATH}${CONNECTIONS_API_BASE_PATH}/${id}`,
+						location: `${basePath}${CONNECTIONS_API_BASE_PATH}/${id}`,
 						body: successResponse({ id }),
 					}
 				} catch (e) {
@@ -691,8 +694,9 @@ const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
 						connectionId,
 						label,
 						enabled: disabled === undefined ? null : !disabled,
-						config,
-						secrets,
+						// Parsed from the JSON body, so are JSON. The body schema can't say so, as the OpenAPI docs can't describe it
+						config: config as InstanceConfig['config'] | undefined,
+						secrets: secrets as InstanceConfig['secrets'] | undefined,
 						updatePolicy,
 						versionId,
 						patchConfig: true,

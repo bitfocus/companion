@@ -12,9 +12,9 @@
 import EventEmitter from 'node:events'
 import { setTimeout } from 'node:timers/promises'
 import debounceFn from 'debounce-fn'
-import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { formatLocation, isControlIdOfKind, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import {
 	FeedbackEntitySubType,
 	type ActionEntityModel,
@@ -55,7 +55,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	/**
 	 * The dependencies of locations that should retrigger each feedback when buttons are drawn
 	 */
-	#buttonDrawnSubscriptions = new Map<string, string>()
+	#buttonDrawnSubscriptions = new Map<string, ControlLocationString>()
 
 	/**
 	 * The dependencies of locations that should retrigger each feedback when push state changes
@@ -74,7 +74,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
 
-		const pendingLocationInvalidations = new Set<string>()
+		const pendingLocationInvalidations = new Set<ControlLocationString>()
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
 				// Find all feedbacks that are affected by the pending location invalidations
@@ -129,7 +129,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		options: CompanionOptionValues,
 		extras: RunActionExtras | FeedbackForInternalExecution
 	): {
-		theControlId: string | null
+		theControlId: SomeControlId | null
 		theLocation: ControlLocation | null
 	} {
 		const location = ParseLocationString(stringifyVariableValue(options.location), extras.location)
@@ -462,7 +462,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
-	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: SomeControlId): FeedbackEntityModel | void {
 		let changed = false
 
 		if (feedback.definitionId === 'bank_style' && feedback.styleOverrides) {
@@ -582,7 +582,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#pushStateSubscriptions.delete(feedback.id)
 	}
 
-	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+	actionUpgrade(action: ActionEntityModel, _controlId: SomeControlId): ActionEntityModel | void {
 		// The separate rotate-left/right actions were merged into a single `button_rotate` action that takes a
 		// signed delta. Map the old direction onto -1 (left) / +1 (right), preserving the other options.
 		if (action.definitionId === 'button_rotate_left' || action.definitionId === 'button_rotate_right') {
@@ -655,7 +655,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (theControlId) {
 					const control = this.#controlsStore.getControl(theControlId)
 					if (control && control.supportsLayeredStyle) {
-						const color = parseColorToNumber(action.options.color as any) || 0
+						const color = parseColorToNumber(action.options.color) || 0
 						control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
 					}
 				}
@@ -666,7 +666,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (theControlId) {
 					const control = this.#controlsStore.getControl(theControlId)
 					if (control && control.supportsLayeredStyle) {
-						const color = parseColorToNumber(action.options.color as any) || 0
+						const color = parseColorToNumber(action.options.color) || 0
 						control.layeredStyleUpdateFromLegacyProperties({ color: color })
 					}
 				}
@@ -693,23 +693,22 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 					break
 				} else if (rawControlId === 'this-all-runs') {
-					const control = this.#controlsStore.getControl(extras.controlId)
-					if (control && control.supportsActions) {
-						control.abortDelayedActions(Boolean(action.options.unlatch), null)
-					}
+					this.#controlsStore
+						.getControl(extras.controlId)
+						?.abortDelayedActions(Boolean(action.options.unlatch), null, 0)
 
 					break
 				}
 
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					const control = this.#controlsStore.getControl(theControlId)
-					if (control && control.supportsActions) {
-						control.abortDelayedActions(
+					this.#controlsStore
+						.getControl(theControlId)
+						?.abortDelayedActions(
 							Boolean(action.options.unlatch),
-							theControlId === extras.controlId ? extras.abortDelayed : null
+							theControlId === extras.controlId ? extras.abortDelayed : null,
+							0
 						)
-					}
 				}
 				break
 			}
@@ -723,10 +722,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					for (const controlId of controlIdsOnPage) {
 						if (action.options.ignoreSelf && controlId === extras.controlId) continue
 
-						const control = this.#controlsStore.getControl(controlId)
-						if (control && control.supportsActions) {
-							control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
-						}
+						this.#controlsStore
+							.getControl(controlId)
+							?.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null, 0)
 					}
 				}
 				break
@@ -736,15 +734,15 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				let controlId = rawControlId
 				if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
 
-				if (controlId && ParseControlId(controlId)?.type === 'trigger') {
+				if (controlId && isControlIdOfKind(controlId, 'trigger')) {
 					const control = this.#controlsStore.getControl(controlId)
 					if (control && control.supportsActions) {
 						if (rawControlId === 'self') {
-							control.abortDelayedActions(false, extras.abortDelayed)
+							control.abortDelayedActions(false, extras.abortDelayed, 0)
 						} else if (rawControlId === 'self:only-this-run') {
 							control.abortDelayedActionsSingle(false, extras.abortDelayed)
 						} else {
-							control.abortDelayedActions(false, null)
+							control.abortDelayedActions(false, null, 0)
 						}
 					}
 				}

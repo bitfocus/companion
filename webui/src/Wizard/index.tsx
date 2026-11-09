@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 import './wizard.css'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { keyValueChange, type KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
@@ -108,7 +109,7 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 	const onOpenChangeComplete = useCallback(
 		(open: boolean) => {
 			if (!open && startConfig) {
-				setConfigKeyMutation.mutate({ key: 'setup_wizard', value: WIZARD_CURRENT_VERSION })
+				setConfigKeyMutation.mutate({ change: { key: 'setup_wizard', value: WIZARD_CURRENT_VERSION } })
 			}
 		},
 		[setConfigKeyMutation, startConfig]
@@ -130,19 +131,15 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 
 			if (!oldConfig || !newConfig) return
 
-			const saveConfig: Partial<UserConfigModel> = {}
-
-			for (const id0 in oldConfig) {
-				const id = id0 as keyof UserConfigModel
-				if (oldConfig[id] !== newConfig[id]) {
-					saveConfig[id] = newConfig[id] as any
-				}
+			const changes: KeyValueChange<UserConfigModel>[] = []
+			for (const key of Object.keys(oldConfig) as (keyof UserConfigModel)[]) {
+				if (oldConfig[key] !== newConfig[key]) changes.push(keyValueChange(key, newConfig[key]))
 			}
 
 			// Only advance to the finish step (and allow the wizard to be marked complete) once the write succeeds.
 			// Otherwise a failed save could finish the wizard and suppress it permanently without persisting anything.
 			setConfigKeysMutation.mutate(
-				{ values: saveConfig },
+				{ changes },
 				{
 					onSuccess: () => {
 						setError(null)
@@ -158,12 +155,12 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 		[setConfigKeysMutation, newConfig, oldConfig, doNextStep]
 	)
 
-	const setValue = (key: keyof UserConfigModel, value: any) => {
+	const setValue = (change: KeyValueChange<UserConfigModel>) => {
 		setNewConfig(
 			(oldState) =>
 				oldState && {
 					...oldState,
-					[key]: value,
+					[change.key]: change.value,
 				}
 		)
 	}

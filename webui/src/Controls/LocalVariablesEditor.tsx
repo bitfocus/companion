@@ -1,5 +1,6 @@
 import { faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -11,7 +12,7 @@ import type { LocalVariablesStore } from './LocalVariablesStore.js'
 
 interface LocalVariablesEditorProps {
 	className?: string
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation | undefined
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore

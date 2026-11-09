@@ -20,6 +20,7 @@ import { nanoid } from 'nanoid'
 import { parseLogLevel } from '@companion-app/shared/LaunchOptions.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { registerLaunchOptions } from './LaunchOptionsCli.js'
 import { Registry } from './Registry.js'
 import { DISABLE_IPv6, GLOBAL_BIND_ADDRESS } from './Resources/Constants.js'
@@ -225,14 +226,14 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 					machineId = text.toString()
 				}
 			} catch (e) {
-				console.warn(`Error reading machid file: ${e}`)
+				console.warn(`Error reading machid file: ${stringifyError(e)}`)
 			}
 		} else {
 			machineId = nanoid()
 			try {
 				fs.writeFileSync(machineIdPath, machineId)
 			} catch (e) {
-				console.warn(`Error writing machid file: ${e}`)
+				console.warn(`Error writing machid file: ${stringifyError(e)}`)
 			}
 		}
 	}
@@ -280,8 +281,8 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 				registry.userconfig.setKey('admin_lockout', false)
 			}
 		})
-		.catch((e) => {
-			console.error(`Startup failed: ${e} ${e.stack}`)
+		.catch((e: unknown) => {
+			console.error(`Startup failed: ${stringifyError(e)}`)
 			process.exit(1)
 		})
 })

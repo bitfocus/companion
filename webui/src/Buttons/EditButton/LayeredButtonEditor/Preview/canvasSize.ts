@@ -35,8 +35,8 @@ export function fitCanvasSize(
 	// Before the first measurement there's nothing to fit to, so start from the floor
 	if (availableWidth <= 0 || availableHeight <= 0) {
 		return ratio >= 1
-			? { width: MIN_CANVAS_SIZE * ratio, height: MIN_CANVAS_SIZE }
-			: { width: MIN_CANVAS_SIZE, height: MIN_CANVAS_SIZE / ratio }
+			? { width: Math.floor(MIN_CANVAS_SIZE * ratio), height: MIN_CANVAS_SIZE }
+			: { width: MIN_CANVAS_SIZE, height: Math.floor(MIN_CANVAS_SIZE / ratio) }
 	}
 
 	// Fit to whichever axis runs out first

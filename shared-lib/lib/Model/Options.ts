@@ -1,10 +1,14 @@
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
 import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
-import type { ControlIdKind } from '../ControlId.js'
-import type { DropdownChoice, DropdownChoiceId } from './Common.js'
+import { ALL_CONTROL_ID_KINDS, type ControlIdKind } from '../ControlId.js'
+import { assertNever } from '../Util.js'
+import type { DropdownChoice } from './Common.js'
 
+/** Any JSON value */
 export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
+// Registered rather than `.meta()`, which would name a copy, not the schema that `z.json()` recurses through
+z.globalRegistry.add(JsonValueSchema, { id: 'JsonValue' })
 
 export const JsonObjectSchema = z.record(z.string(), JsonValueSchema.optional())
 
@@ -29,12 +33,14 @@ export const ExpressionableOptionsObjectSchema: z.ZodType<ExpressionableOptionsO
 	ExpressionOrJsonValueSchema.optional()
 )
 
-export type CompanionColorPresetValue =
-	| string
-	| {
-			color: string
-			title: string
-	  }
+export const CompanionColorPresetValueSchema = z.union([
+	z.string(),
+	z.object({
+		color: z.string(),
+		title: z.string(),
+	}),
+])
+export type CompanionColorPresetValue = z.infer<typeof CompanionColorPresetValueSchema>
 
 export enum CompanionFieldVariablesSupport {
 	/** Uses the internal parser, and supports all the features */
@@ -45,225 +51,279 @@ export enum CompanionFieldVariablesSupport {
 	Basic = 'basic',
 }
 
+export const DropdownChoiceSchema: z.ZodType<DropdownChoice> = z.object({
+	id: z.union([z.string(), z.number()]),
+	label: z.string(),
+	disabled: z.boolean().optional(),
+})
+
+export const IsVisibleUiFnSchema = z.object({
+	type: z.enum(['function', 'expression']),
+	fn: z.string(),
+	data: z.any().optional(),
+})
+export type IsVisibleUiFn = z.infer<typeof IsVisibleUiFnSchema>
+
+export const ContextVariableResolutionSchema = z.discriminatedUnion('type', [
+	z.object({ type: z.literal('localVariable'), locationFieldId: z.string(), nameFieldId: z.string() }),
+	z.object({ type: z.literal('pageVariable'), pageFieldId: z.string(), nameFieldId: z.string() }),
+	z.object({ type: z.literal('customVariable'), nameFieldId: z.string() }),
+])
+export type ContextVariableResolution = z.infer<typeof ContextVariableResolutionSchema>
+
+const ControlIdKindSchema = z.enum(ALL_CONTROL_ID_KINDS)
+
 /**
- * The base of every input field. `default` is required unless `TDefault` includes `undefined`
- * @typeParam TDefault - the type of the field's `default` value, `undefined` for fields without one
+ * The properties shared by every input field, except for `type`, `default` and `defaultForControlType`
  */
-export type CompanionInputFieldBaseExtended<TDefault extends JsonValue | undefined> =
-	CompanionInputFieldCommonExtended<TDefault> &
-		(undefined extends TDefault
-			? {
-					/** The default value */
-					default?: TDefault
-				}
-			: {
-					/** The default value */
-					default: TDefault
-				})
-
-interface CompanionInputFieldCommonExtended<TDefault extends JsonValue | undefined> {
+const CompanionInputFieldCommonShape = {
 	/** The unique id of this input field within the input group */
-	id: string
-	/** The type of this input field */
-	type:
-		| 'static-text'
-		| 'textinput'
-		| 'expression'
-		| 'dropdown'
-		| 'multidropdown'
-		| 'colorpicker'
-		| 'number'
-		| 'checkbox'
-		| 'custom-variable'
-		| 'bonjour-device'
-		| 'secret-text'
-		| 'internal:time'
-		| 'internal:date'
-		| 'internal:variable'
-		| 'internal:variable_value'
-		| 'internal:custom_variable'
-		| 'internal:trigger'
-		| 'internal:trigger_collection'
-		| 'internal:connection_id'
-		| 'internal:connection_collection'
-		| 'internal:surface_serial'
-		| 'internal:outbound_surface_id'
-		| 'internal:page'
-		| 'internal:horizontal-alignment'
-		| 'internal:vertical-alignment'
-		| 'internal:text-styles'
-		| 'internal:image-file'
-		| 'internal:table'
-		| 'internal:list'
+	id: z.string(),
 	/** The label of the field */
-	label: string
+	label: z.string(),
 	/** A hover tooltip for this field */
-	tooltip?: string
+	tooltip: z.string().optional(),
 	/** A description for this field */
-	description?: string
+	description: z.string().optional(),
 	/** A description for this field when in expression mode. This will replace the normal description */
-	expressionDescription?: string
+	expressionDescription: z.string().optional(),
 
-	isVisibleUi?: IsVisibleUiFn
+	isVisibleUi: IsVisibleUiFnSchema.optional(),
 
-	width?: number // For connection config
+	/** For connection config */
+	width: z.number().optional(),
 
 	/**
 	 * Whether to disable support for toggling this field to be an expression
 	 * Note: This is only available for internal connections
 	 */
-	disableAutoExpression?: boolean
+	disableAutoExpression: z.boolean().optional(),
 
 	/**
 	 * Whether to allow 'invalid' values to be passed to the module when an expression is used in this field.
 	 * If false, the default value will be used instead.
 	 */
-	allowInvalidValues?: boolean
+	allowInvalidValues: z.boolean().optional(),
 
 	/**
 	 * If true, this field is skipped during the standard parseEntityOptions pass.
 	 * The action handler must parse the raw value itself via action.rawEntity.rawOptions using an enhanced parser.
 	 * Only valid for internal actions that need runtime context (e.g. current variable value) before parsing.
 	 */
-	deferParsing?: boolean
+	deferParsing: z.boolean().optional(),
 
 	/**
 	 * Describes which sibling option fields identify the target variable for a deferred-parsing
 	 * field. Drives both the variable picker (showing $(this:current)) and the live expression preview.
 	 * Only valid alongside deferParsing: true.
 	 */
-	contextVariableResolution?: ContextVariableResolution
+	contextVariableResolution: ContextVariableResolutionSchema.optional(),
 
+	/**
+	 * Disable this field when the entity is on one of the given kinds of control, as it has no meaning there.
+	 * It is hidden in the editor, and parsed as its `defaultForControlType` (or `default`) instead of its value.
+	 * Only available for internal connections
+	 */
+	disabledForControlTypes: z.array(ControlIdKindSchema).optional(),
+}
+
+/**
+ * Build the properties of a field relating to its default value
+ * @param valueSchema The schema of a value of the field (excluding `undefined`)
+ * @param required Whether the default value is required
+ */
+function defaultShape<TValue extends z.ZodType<JsonValue>, TRequired extends boolean>(
+	valueSchema: TValue,
+	required: TRequired
+) {
+	return {
+		/** The default value */
+		default: (required ? valueSchema : valueSchema.optional()) as TRequired extends true
+			? TValue
+			: z.ZodOptional<TValue>,
+		/**
+		 * Replaces `default` when creating an entity on the given kinds of control, eg a trigger has no grid location.
+		 * Only available for internal connections
+		 */
+		defaultForControlType: z.partialRecord(ControlIdKindSchema, valueSchema).optional(),
+	}
+}
+
+/**
+ * Build the properties shared by every input field
+ * @param type The type of the field
+ * @param valueSchema The schema of a value of the field (excluding `undefined`)
+ * @param required Whether the default value is required
+ */
+function fieldShape<const TType extends string, TValue extends z.ZodType<JsonValue>, TRequired extends boolean>(
+	type: TType,
+	valueSchema: TValue,
+	required: TRequired
+) {
+	return {
+		...CompanionInputFieldCommonShape,
+		/** The type of this input field */
+		type: z.literal(type),
+		...defaultShape(valueSchema, required),
+	}
+}
+
+/**
+ * The base of every input field. `default` is required unless `TDefault` includes `undefined`
+ * @typeParam TDefault - the type of the field's `default` value, `undefined` for fields without one
+ */
+export type CompanionInputFieldBaseExtended<TDefault extends JsonValue | undefined> = z.infer<
+	z.ZodObject<typeof CompanionInputFieldCommonShape>
+> & {
 	/**
 	 * Replaces `default` when creating an entity on the given kinds of control, eg a trigger has no grid location.
 	 * Only available for internal connections
 	 */
 	defaultForControlType?: Partial<Record<ControlIdKind, Exclude<TDefault, undefined>>>
-}
+} & (undefined extends TDefault
+		? {
+				/** The default value */
+				default?: TDefault
+			}
+		: {
+				/** The default value */
+				default: TDefault
+			})
 
-export type ContextVariableResolution =
-	| { type: 'localVariable'; locationFieldId: string; nameFieldId: string }
-	| { type: 'pageVariable'; pageFieldId: string; nameFieldId: string }
-	| { type: 'customVariable'; nameFieldId: string }
+/** A field without a value */
+const NoValueSchema = z.never() as unknown as z.ZodType<never>
 
-export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'internal:time'
-}
-export interface InternalInputFieldDate extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'internal:date'
-}
-export interface InternalInputFieldVariable extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'internal:variable'
-	supportsLocal: boolean
-}
-export interface InternalInputFieldCustomVariable extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'internal:custom_variable'
-	includeNone?: boolean
-}
-export interface InternalInputFieldVariableValue extends CompanionInputFieldBaseExtended<JsonValue> {
-	type: 'internal:variable_value'
-}
-export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended<string | undefined> {
-	type: 'internal:trigger'
-	includeSelf?: boolean | 'abort'
-}
-export interface InternalInputFieldTriggerCollection extends CompanionInputFieldBaseExtended<string | undefined> {
-	type: 'internal:trigger_collection'
-}
-export interface InternalInputFieldConnectionCollection extends CompanionInputFieldBaseExtended<string | undefined> {
-	type: 'internal:connection_collection'
-}
-export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended<string[] | undefined> {
-	type: 'internal:connection_id'
-	multiple: boolean
-	includeAll?: boolean
-	filterActionsRecorder?: boolean
-}
-export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBaseExtended<string> {
-	type: 'internal:surface_serial'
-	includeSelf: boolean
+const DropdownChoiceIdSchema = z.union([z.string(), z.number()])
+
+export const InternalInputFieldTimeSchema = z.object(fieldShape('internal:time', NoValueSchema, false))
+export type InternalInputFieldTime = z.infer<typeof InternalInputFieldTimeSchema>
+
+export const InternalInputFieldDateSchema = z.object(fieldShape('internal:date', NoValueSchema, false))
+export type InternalInputFieldDate = z.infer<typeof InternalInputFieldDateSchema>
+
+export const InternalInputFieldVariableSchema = z.object({
+	...fieldShape('internal:variable', NoValueSchema, false),
+	supportsLocal: z.boolean(),
+})
+export type InternalInputFieldVariable = z.infer<typeof InternalInputFieldVariableSchema>
+
+export const InternalInputFieldCustomVariableSchema = z.object({
+	...fieldShape('internal:custom_variable', NoValueSchema, false),
+	includeNone: z.boolean().optional(),
+})
+export type InternalInputFieldCustomVariable = z.infer<typeof InternalInputFieldCustomVariableSchema>
+
+export const InternalInputFieldVariableValueSchema = z.object(
+	fieldShape('internal:variable_value', JsonValueSchema, true)
+)
+export type InternalInputFieldVariableValue = z.infer<typeof InternalInputFieldVariableValueSchema>
+
+export const InternalInputFieldTriggerSchema = z.object({
+	...fieldShape('internal:trigger', z.string(), false),
+	includeSelf: z.union([z.boolean(), z.literal('abort')]).optional(),
+})
+export type InternalInputFieldTrigger = z.infer<typeof InternalInputFieldTriggerSchema>
+
+export const InternalInputFieldTriggerCollectionSchema = z.object(
+	fieldShape('internal:trigger_collection', z.string(), false)
+)
+export type InternalInputFieldTriggerCollection = z.infer<typeof InternalInputFieldTriggerCollectionSchema>
+
+export const InternalInputFieldConnectionCollectionSchema = z.object(
+	fieldShape('internal:connection_collection', z.string(), false)
+)
+export type InternalInputFieldConnectionCollection = z.infer<typeof InternalInputFieldConnectionCollectionSchema>
+
+export const InternalInputFieldConnectionIdSchema = z.object({
+	...fieldShape('internal:connection_id', z.array(z.string()), false),
+	multiple: z.boolean(),
+	includeAll: z.boolean().optional(),
+	filterActionsRecorder: z.boolean().optional(),
+})
+export type InternalInputFieldConnectionId = z.infer<typeof InternalInputFieldConnectionIdSchema>
+
+export const InternalInputFieldSurfaceSerialSchema = z.object({
+	...fieldShape('internal:surface_serial', z.string(), true),
+	includeSelf: z.boolean(),
 	/**
 	 * Which entries to offer in the picker:
 	 * - `groups`: surface groups only (group-level actions, e.g. lock, set page)
 	 * - `surfaces`: individual surfaces only (per-surface actions where a group makes no sense)
 	 * - `groups-and-surfaces`: both, so either a whole group or a single surface can be targeted
 	 */
-	listMode: 'groups' | 'surfaces' | 'groups-and-surfaces'
-}
-export interface InternalInputFieldOutboundSurfaceId extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'internal:outbound_surface_id'
-}
-export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended<number> {
-	type: 'internal:page'
-	includeStartup: boolean
-	includeDirection: boolean
-}
-export interface InternalInputFieldHorizontalAlignment extends CompanionInputFieldBaseExtended<
-	'left' | 'center' | 'right'
-> {
-	type: 'internal:horizontal-alignment'
-}
-export interface InternalInputFieldVerticalAlignment extends CompanionInputFieldBaseExtended<
-	'top' | 'center' | 'bottom'
-> {
-	type: 'internal:vertical-alignment'
-}
-export interface InternalInputFieldTextStyles extends CompanionInputFieldBaseExtended<
-	('italic' | 'underline' | 'strikethrough')[]
-> {
-	type: 'internal:text-styles'
-}
-export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExtended<string | null> {
-	type: 'internal:image-file'
-	/** Minimum image dimensions */
-	min?: { width: number; height: number }
-}
+	listMode: z.enum(['groups', 'surfaces', 'groups-and-surfaces']),
+})
+export type InternalInputFieldSurfaceSerial = z.infer<typeof InternalInputFieldSurfaceSerialSchema>
 
-export interface InternalInputFieldTable extends CompanionInputFieldBaseExtended<Record<string, JsonValue>[]> {
-	type: 'internal:table'
+export const InternalInputFieldOutboundSurfaceIdSchema = z.object(
+	fieldShape('internal:outbound_surface_id', NoValueSchema, false)
+)
+export type InternalInputFieldOutboundSurfaceId = z.infer<typeof InternalInputFieldOutboundSurfaceIdSchema>
+
+export const InternalInputFieldPageSchema = z.object({
+	...fieldShape('internal:page', z.number(), true),
+	includeStartup: z.boolean(),
+	includeDirection: z.boolean(),
+})
+export type InternalInputFieldPage = z.infer<typeof InternalInputFieldPageSchema>
+
+export const InternalInputFieldHorizontalAlignmentSchema = z.object(
+	fieldShape('internal:horizontal-alignment', z.enum(['left', 'center', 'right']), true)
+)
+export type InternalInputFieldHorizontalAlignment = z.infer<typeof InternalInputFieldHorizontalAlignmentSchema>
+
+export const InternalInputFieldVerticalAlignmentSchema = z.object(
+	fieldShape('internal:vertical-alignment', z.enum(['top', 'center', 'bottom']), true)
+)
+export type InternalInputFieldVerticalAlignment = z.infer<typeof InternalInputFieldVerticalAlignmentSchema>
+
+export const InternalInputFieldTextStylesSchema = z.object(
+	fieldShape('internal:text-styles', z.array(z.enum(['italic', 'underline', 'strikethrough'])), true)
+)
+export type InternalInputFieldTextStyles = z.infer<typeof InternalInputFieldTextStylesSchema>
+
+export const InternalInputFieldPngImageSchema = z.object({
+	...fieldShape('internal:image-file', z.string().nullable(), true),
+	/** Minimum image dimensions */
+	min: z.object({ width: z.number(), height: z.number() }).optional(),
+})
+export type InternalInputFieldPngImage = z.infer<typeof InternalInputFieldPngImageSchema>
+
+const TableRowSchema = z.record(z.string(), JsonValueSchema)
+
+const InternalInputFieldTableBaseSchema = z.object(fieldShape('internal:table', z.array(TableRowSchema), true))
+export type InternalInputFieldTable = z.infer<typeof InternalInputFieldTableBaseSchema> & {
 	columns: SomeCompanionInputField[]
 }
+export const InternalInputFieldTableSchema = InternalInputFieldTableBaseSchema.extend({
+	columns: z.array(z.lazy(() => SomeCompanionInputFieldSchema)),
+})
 
-export interface InternalInputFieldList extends CompanionInputFieldBaseExtended<Record<string, JsonValue>[]> {
-	type: 'internal:list'
+const InternalInputFieldListBaseSchema = z.object({
+	...fieldShape('internal:list', z.array(TableRowSchema), true),
+	addLabel: z.string().optional(),
+	minItems: z.number().optional(),
+})
+export type InternalInputFieldList = z.infer<typeof InternalInputFieldListBaseSchema> & {
 	fields: SomeCompanionInputField[]
-	addLabel?: string
-	minItems?: number
 }
+export const InternalInputFieldListSchema = InternalInputFieldListBaseSchema.extend({
+	fields: z.array(z.lazy(() => SomeCompanionInputFieldSchema)),
+})
 
-export type InternalInputField =
-	| InternalInputFieldTime
-	| InternalInputFieldDate
-	| InternalInputFieldVariable
-	| InternalInputFieldVariableValue
-	| InternalInputFieldCustomVariable
-	| InternalInputFieldTrigger
-	| InternalInputFieldTriggerCollection
-	| InternalInputFieldConnectionId
-	| InternalInputFieldConnectionCollection
-	| InternalInputFieldSurfaceSerial
-	| InternalInputFieldOutboundSurfaceId
-	| InternalInputFieldPage
-	| InternalInputFieldHorizontalAlignment
-	| InternalInputFieldVerticalAlignment
-	| InternalInputFieldTextStyles
-	| InternalInputFieldPngImage
-	| InternalInputFieldTable
-	| InternalInputFieldList
+export const CompanionInputFieldStaticTextExtendedSchema = z.object({
+	...fieldShape('static-text', NoValueSchema, false),
+	value: z.string(),
+})
+export type CompanionInputFieldStaticTextExtended = z.infer<typeof CompanionInputFieldStaticTextExtendedSchema>
 
-export interface CompanionInputFieldStaticTextExtended extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'static-text'
-
-	value: string
-}
-export interface CompanionInputFieldColorExtended extends CompanionInputFieldBaseExtended<string | number> {
-	type: 'colorpicker'
-
-	enableAlpha: boolean
-	returnType: 'string' | 'number'
-
-	presetColors?: CompanionColorPresetValue[]
-}
+export const CompanionInputFieldColorExtendedSchema = z.object({
+	...fieldShape('colorpicker', z.union([z.string(), z.number()]), true),
+	enableAlpha: z.boolean(),
+	returnType: z.enum(['string', 'number']),
+	presetColors: z.array(CompanionColorPresetValueSchema).optional(),
+})
+export type CompanionInputFieldColorExtended = z.infer<typeof CompanionInputFieldColorExtendedSchema>
 
 /**
  * Default expression-mode hint for a color field. Any color field accepts either form and normalizes it to
@@ -278,131 +338,256 @@ export const DEFAULT_COLOR_EXPRESSION_DESCRIPTION =
 export function colorFieldExpressionHint(field: SomeCompanionInputField): string | undefined {
 	return field.type === 'colorpicker' ? DEFAULT_COLOR_EXPRESSION_DESCRIPTION : undefined
 }
-export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldBaseExtended<string | undefined> {
-	type: 'textinput'
 
-	minLength?: number
+export const CompanionInputFieldTextInputExtendedSchema = z.object({
+	...fieldShape('textinput', z.string(), false),
 
-	regex?: string
+	minLength: z.number().optional(),
 
-	useVariables?: CompanionFieldVariablesSupport
+	regex: z.string().optional(),
 
-	placeholder?: string
-	multiline?: boolean
+	useVariables: z.enum(CompanionFieldVariablesSupport).optional(),
+
+	placeholder: z.string().optional(),
+	multiline: z.boolean().optional(),
 
 	/**
 	 * Internal use only: disable the sanitisation and validation rules defined above, and allow any value to be passed to the execution
 	 * This is so that expression results don't get mangled
 	 */
-	disableSanitisation?: boolean
+	disableSanitisation: z.boolean().optional(),
 
 	/**
 	 * Internal use only: when a `$(...)` variable reference is pasted into this field (in value mode), unwrap it to
 	 * just the inner name. Set to a namespace (e.g. `local`) to also strip a matching `namespace:` prefix, so pasting
 	 * `$(local:foo)` yields `foo`. Used by the local/page variable name fields.
 	 */
-	unwrapPastedVariableNamespace?: string
-}
-export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended<string | undefined> {
-	type: 'expression'
+	unwrapPastedVariableNamespace: z.string().optional(),
+})
+export type CompanionInputFieldTextInputExtended = z.infer<typeof CompanionInputFieldTextInputExtendedSchema>
 
-	// placeholder?: string
-}
-export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended<DropdownChoiceId> {
-	type: 'dropdown'
-	choices: DropdownChoice[]
-	allowCustom?: boolean
-	regex?: string
-}
-export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldBaseExtended<DropdownChoiceId[]> {
-	type: 'multidropdown'
+export const CompanionInputFieldExpressionExtendedSchema = z.object(fieldShape('expression', z.string(), false))
+export type CompanionInputFieldExpressionExtended = z.infer<typeof CompanionInputFieldExpressionExtendedSchema>
+
+export const CompanionInputFieldDropdownExtendedSchema = z.object({
+	...fieldShape('dropdown', DropdownChoiceIdSchema, true),
+	choices: z.array(DropdownChoiceSchema),
+	allowCustom: z.boolean().optional(),
+	regex: z.string().optional(),
+})
+export type CompanionInputFieldDropdownExtended = z.infer<typeof CompanionInputFieldDropdownExtendedSchema>
+
+export const CompanionInputFieldMultiDropdownExtendedSchema = z.object({
+	...fieldShape('multidropdown', z.array(DropdownChoiceIdSchema), true),
 	/** The possible choices */
-	choices: DropdownChoice[]
+	choices: z.array(DropdownChoiceSchema),
 	/** The minimum number of selected values */
-	minSelection?: number
+	minSelection: z.number().optional(),
 	/** The maximum number of selected values */
-	maxSelection?: number
+	maxSelection: z.number().optional(),
 	/**
 	 * If true, the ui should sort the selected values by the order they appear in the choices array
 	 * Any custom values will be sorted alphabetically at the end of the list
 	 */
-	sortSelection?: boolean
+	sortSelection: z.boolean().optional(),
 
-	allowCustom?: boolean
-	regex?: string
-}
-export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBaseExtended<number | null> {
-	type: 'number'
+	allowCustom: z.boolean().optional(),
+	regex: z.string().optional(),
+})
+export type CompanionInputFieldMultiDropdownExtended = z.infer<typeof CompanionInputFieldMultiDropdownExtendedSchema>
+
+export const CompanionInputFieldNumberExtendedSchema = z.object({
+	...fieldShape('number', z.number().nullable(), true),
 	/**
 	 * The minimum value to allow
 	 * Note: values may not conform to this
 	 */
-	min: number
+	min: z.number(),
 	/**
 	 * The maximum value to allow
 	 * Note: values may not conform to this
 	 */
-	max: number
+	max: z.number(),
 	/** The stepping of the arrows */
-	step?: number
+	step: z.number().optional(),
 	/** Whether to show a slider for the input */
-	range?: boolean
+	range: z.boolean().optional(),
 	/** When true, show the min value as a visual -∞ when value <= min */
-	showMinAsNegativeInfinity?: boolean
+	showMinAsNegativeInfinity: z.boolean().optional(),
 	/** When true, show the max value as a visual ∞ when value >= max */
-	showMaxAsPositiveInfinity?: boolean
+	showMaxAsPositiveInfinity: z.boolean().optional(),
 
 	/** When value validation occurs, clamp values to the min/max instead of rejecting them as invalid */
-	clampValues?: boolean
+	clampValues: z.boolean().optional(),
 	/** Whether to only allow integer values */
-	asInteger?: boolean
+	asInteger: z.boolean().optional(),
 	/**
 	 * When true, the field can be cleared to `null`, shown in the UI as "auto". The consumer decides what
 	 * "auto" resolves to. Requires the value type to permit `null`. A `null` default is only valid with this set.
 	 */
-	allowNull?: boolean
-}
-export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended<boolean> {
-	type: 'checkbox'
+	allowNull: z.boolean().optional(),
+})
+export type CompanionInputFieldNumberExtended = z.infer<typeof CompanionInputFieldNumberExtendedSchema>
+
+export const CompanionInputFieldCheckboxExtendedSchema = z.object({
+	...fieldShape('checkbox', z.boolean(), true),
 	/** Display as a toggle */
-	displayToggle?: boolean
-}
-export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'custom-variable'
-}
+	displayToggle: z.boolean().optional(),
+})
+export type CompanionInputFieldCheckboxExtended = z.infer<typeof CompanionInputFieldCheckboxExtendedSchema>
 
-export type ExtendedInputField =
-	| CompanionInputFieldStaticTextExtended
-	| CompanionInputFieldColorExtended
-	| CompanionInputFieldTextInputExtended
-	| CompanionInputFieldExpressionExtended
-	| CompanionInputFieldDropdownExtended
-	| CompanionInputFieldMultiDropdownExtended
-	| CompanionInputFieldNumberExtended
-	| CompanionInputFieldCheckboxExtended
-	| CompanionInputFieldCustomVariableExtended
+export const CompanionInputFieldCustomVariableExtendedSchema = z.object(
+	fieldShape('custom-variable', NoValueSchema, false)
+)
+export type CompanionInputFieldCustomVariableExtended = z.infer<typeof CompanionInputFieldCustomVariableExtendedSchema>
 
-export interface CompanionInputFieldBonjourDeviceExtended extends CompanionInputFieldBaseExtended<undefined> {
-	type: 'bonjour-device'
-}
-export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBaseExtended<string | undefined> {
-	type: 'secret-text'
+export const CompanionInputFieldBonjourDeviceExtendedSchema = z.object(
+	fieldShape('bonjour-device', NoValueSchema, false)
+)
+export type CompanionInputFieldBonjourDeviceExtended = z.infer<typeof CompanionInputFieldBonjourDeviceExtendedSchema>
+
+export const CompanionInputFieldSecretExtendedSchema = z.object({
+	...fieldShape('secret-text', z.string(), false),
 	/**
 	 * Whether a value is required
 	 */
-	minLength?: number
+	minLength: z.number().optional(),
 
-	regex?: string
-}
-export type SomeCompanionConfigInputField = CompanionInputFieldBonjourDeviceExtended | CompanionInputFieldSecretExtended
+	regex: z.string().optional(),
+})
+export type CompanionInputFieldSecretExtended = z.infer<typeof CompanionInputFieldSecretExtendedSchema>
 
-export interface IsVisibleUiFn {
-	type: 'function' | 'expression'
-	fn: string
-	data?: any
-}
+/** The input fields available to modules */
+export const ExtendedInputFieldSchemas = [
+	CompanionInputFieldStaticTextExtendedSchema,
+	CompanionInputFieldColorExtendedSchema,
+	CompanionInputFieldTextInputExtendedSchema,
+	CompanionInputFieldExpressionExtendedSchema,
+	CompanionInputFieldDropdownExtendedSchema,
+	CompanionInputFieldMultiDropdownExtendedSchema,
+	CompanionInputFieldNumberExtendedSchema,
+	CompanionInputFieldCheckboxExtendedSchema,
+	CompanionInputFieldCustomVariableExtendedSchema,
+] as const
+export type ExtendedInputField = z.infer<(typeof ExtendedInputFieldSchemas)[number]>
+
+/** The input fields only available for connection config */
+export const SomeCompanionConfigInputFieldSchemas = [
+	CompanionInputFieldBonjourDeviceExtendedSchema,
+	CompanionInputFieldSecretExtendedSchema,
+] as const
+export type SomeCompanionConfigInputField = z.infer<(typeof SomeCompanionConfigInputFieldSchemas)[number]>
+
+/** The input fields only available to the internal module, which are not recursive */
+const InternalInputFieldSimpleSchemas = [
+	InternalInputFieldTimeSchema,
+	InternalInputFieldDateSchema,
+	InternalInputFieldVariableSchema,
+	InternalInputFieldVariableValueSchema,
+	InternalInputFieldCustomVariableSchema,
+	InternalInputFieldTriggerSchema,
+	InternalInputFieldTriggerCollectionSchema,
+	InternalInputFieldConnectionIdSchema,
+	InternalInputFieldConnectionCollectionSchema,
+	InternalInputFieldSurfaceSerialSchema,
+	InternalInputFieldOutboundSurfaceIdSchema,
+	InternalInputFieldPageSchema,
+	InternalInputFieldHorizontalAlignmentSchema,
+	InternalInputFieldVerticalAlignmentSchema,
+	InternalInputFieldTextStylesSchema,
+	InternalInputFieldPngImageSchema,
+] as const
+export type InternalInputField =
+	z.infer<(typeof InternalInputFieldSimpleSchemas)[number]> | InternalInputFieldTable | InternalInputFieldList
 
 export type SomeCompanionInputField = ExtendedInputField | SomeCompanionConfigInputField | InternalInputField
+
+/**
+ * Schema of any input field definition
+ */
+export const SomeCompanionInputFieldSchema: z.ZodType<SomeCompanionInputField> = z.discriminatedUnion('type', [
+	...ExtendedInputFieldSchemas,
+	...SomeCompanionConfigInputFieldSchemas,
+	...InternalInputFieldSimpleSchemas,
+	InternalInputFieldTableSchema,
+	InternalInputFieldListSchema,
+])
+
+/**
+ * The properties of an input field which a user can't author: those only used by fields defined by Companion or a
+ * module, and visibility, as user authored fields are always shown and always allow expressions
+ */
+const NOT_AUTHORABLE_FIELD_PROPERTIES = {
+	expressionDescription: true,
+	width: true,
+	allowInvalidValues: true,
+	deferParsing: true,
+	contextVariableResolution: true,
+	disabledForControlTypes: true,
+	defaultForControlType: true,
+	isVisibleUi: true,
+	disableAutoExpression: true,
+} as const
+
+/** The pattern the id of an input field authored by a user must match, as it is used in a variable */
+export const INPUT_FIELD_ID_PATTERN = /^[\w-]+$/
+
+/**
+ * Schema of an input field which a user can author, such as an input of a custom action. It is one of the types of
+ * field which the input field editor offers, without the properties a user can't author, which are dropped when
+ * parsed
+ */
+export const AuthorableInputFieldSchema = z
+	.discriminatedUnion('type', [
+		// Variables are always parsed by the internal parser, as the other ways are only kept for modules
+		CompanionInputFieldTextInputExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES).extend({
+			useVariables: z.literal(CompanionFieldVariablesSupport.InternalParser).optional(),
+		}),
+		// The value is never 'auto', so the default is always a number
+		CompanionInputFieldNumberExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, allowNull: true }).extend({
+			default: z.number(),
+		}),
+		CompanionInputFieldCheckboxExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, displayToggle: true }),
+		CompanionInputFieldDropdownExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		CompanionInputFieldMultiDropdownExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		// The value of a colour is always a CSS string, so it isn't stored (see toCompanionInputField)
+		CompanionInputFieldColorExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, returnType: true }),
+		CompanionInputFieldExpressionExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		CompanionInputFieldStaticTextExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+	])
+	.refine((field) => INPUT_FIELD_ID_PATTERN.test(field.id), {
+		message: "Id can't be used in a variable",
+		path: ['id'],
+	})
+	.meta({ id: 'AuthorableInputField' })
+
+export type AuthorableInputField = z.infer<typeof AuthorableInputFieldSchema>
+
+/**
+ * The full definition of an input field authored by a user, with what is implied by it not being stored
+ */
+export function toCompanionInputField(field: AuthorableInputField): SomeCompanionInputField {
+	switch (field.type) {
+		case 'colorpicker':
+			return { ...field, returnType: 'string' as const }
+		case 'textinput':
+		case 'number':
+		case 'checkbox':
+		case 'dropdown':
+		case 'multidropdown':
+		case 'expression':
+		case 'static-text':
+			return field
+		default:
+			assertNever(field)
+			return field
+	}
+}
+
+/** The types of input field which a user can author */
+export const AUTHORABLE_INPUT_FIELD_TYPES: ReadonlySet<AuthorableInputField['type']> = new Set(
+	AuthorableInputFieldSchema.options.map((option) => option.shape.type.value)
+)
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type ExpressionableOptionsObject = {
@@ -462,6 +647,13 @@ export function getFieldDefaultForControl<TField extends SomeCompanionInputField
 	const override = controlKind ? field.defaultForControlType?.[controlKind] : undefined
 	if (override !== undefined) return override as FieldDefaultValue<TField>
 	return field.default as FieldDefaultValue<TField>
+}
+
+/**
+ * Whether a field is disabled for an entity on a control of the given kind
+ */
+export function isFieldDisabledForControl(field: SomeCompanionInputField, controlKind: ControlIdKind | null): boolean {
+	return !!controlKind && !!field.disabledForControlTypes?.includes(controlKind)
 }
 
 export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {

@@ -2,6 +2,7 @@ import { faBan, faEyeSlash, faSliders, faThumbtack } from '@fortawesome/free-sol
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
@@ -29,7 +30,7 @@ interface PinnedSection {
 }
 
 interface PinnedPropertiesEditorProps {
-	controlId: string
+	controlId: SomeControlId
 	styleStore: LayeredStyleStore
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden

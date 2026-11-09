@@ -7,6 +7,7 @@ import {
 	faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Link } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { Note } from '~/Components/Note.js'
 import './cloud.css'
@@ -37,8 +38,12 @@ export function CloudPage(): React.JSX.Element {
 					<div className="text-xs text-body leading-relaxed space-y-1">
 						<div className="font-bold text-sm text-body">Service Deprecation Notice</div>
 						<p className="mb-0 text-muted">
-							This service is deprecated and will be removed in a future version of Companion. As an alternative, you
-							can use the <strong>companion-satellite</strong> module over a local network or VPN.
+							This service is deprecated and will be removed in Companion 5.3. Use{' '}
+							<Link to="/link" className="text-primary hover:underline font-medium">
+								Companion Link
+							</Link>{' '}
+							instead: it links installations directly, on the same network or over a VPN, and a{' '}
+							<strong>Remote button</strong> shows and presses a button of another installation.
 						</p>
 					</div>
 				</div>

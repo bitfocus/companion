@@ -16,13 +16,15 @@ When exporting, you can choose the file format:
 
 The format which is selected to start with can be changed with the **Default Export Format** in [Settings](./settings.md#general).
 
+You can also write some **Notes** to save in the file, such as what you changed since the last export. They are shown to whoever imports the file.
+
 You're also able to completely reset your configuration here as well.
 
 ![Import/Export](images/import-export.png?raw=true 'Import/Export')
 
 ## Import
 
-Here you can import a `.companionconfig` file. Various options will be disabled if it is not possible to import them from the file you have provided.
+Here you can import a `.companionconfig` file. Various options will be disabled if it is not possible to import them from the file you have provided. Any notes written when the file was exported are shown at the top.
 
 ![Import](images/import.png?raw=true 'Import')
 

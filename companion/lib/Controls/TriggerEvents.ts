@@ -1,5 +1,7 @@
 import EventEmitter from 'node:events'
 import { performance } from 'node:perf_hooks'
+import type { SomeControlId, TriggerControlId } from '@companion-app/shared/ControlId.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 
 interface TriggerEventsEvents {
@@ -8,10 +10,10 @@ interface TriggerEventsEvents {
 	client_connect: []
 	locked: [locked: boolean]
 
-	trigger_enabled: [controlId: string, enabled: boolean]
+	trigger_enabled: [controlId: TriggerControlId, enabled: boolean]
 	trigger_collections_enabled: []
-	control_press: [controlId: string, pressed: boolean, surfaceId: string | undefined]
-	variables_changed: [changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null]
+	control_press: [controlId: SomeControlId, pressed: boolean, surfaceId: string | undefined]
+	variables_changed: [changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null]
 }
 
 /**
@@ -51,7 +53,7 @@ export class TriggerEvents extends EventEmitter<TriggerEventsEvents> {
 				this.#lastTick = nowSeconds
 				this.emit('tick', nowSeconds, Date.now())
 			} catch (e) {
-				this.#logger.error(`Unhandled error: ${e}`)
+				this.#logger.error(`Unhandled error: ${stringifyError(e)}`)
 			}
 		}, 1000)
 	}

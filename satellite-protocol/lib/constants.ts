@@ -32,12 +32,16 @@
  *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
  *          advertised via ROTARY_AMOUNT in CAPS.
  * 1.15.0 - Add DEVICE-APPEARANCE message, describing how to draw the face of the surface
- *        - Add CONTROL-EVENT message, sent to a surface that sets CONTROL_EVENTS on ADD-DEVICE. It carries KEY or
+ * 1.16.0 - Add bitmap caching: BITMAP_CACHE in CAPS, BITMAP-CACHE and BITMAP-COST messages from the client,
+ *          BITMAP-EVICT from Companion, and BITMAP_ID on KEY-STATE and SUB-STATE.
+ *          Add ENCODING to SET-VARIABLE-VALUE and VARIABLE-VALUE, so a VALUE can be JSON instead of a string.
+ *          A surface opts in to receiving JSON values with VARIABLE_ENCODING=json on ADD-DEVICE
+ * 1.17.0 - Add CONTROL-EVENT message, sent to a surface that sets CONTROL_EVENTS on ADD-DEVICE. It carries KEY or
  *          CONTROLID and EVENT when a press of that control ran actions (EVENT=press) or a group set to run while
  *          held fired (EVENT=hold). How to show it is up to the surface. Clients must ignore unknown EVENT values,
  *          as more may be added. Support is advertised via CONTROL_EVENTS in CAPS.
  */
-export const API_VERSION = '1.15.0'
+export const API_VERSION = '1.17.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the
@@ -65,3 +69,14 @@ export type SatelliteBitmapFormat = 'rgb' | 'png' | 'webp'
  * `rgb` must always be present as the fallback for surfaces without an image decoder.
  */
 export const SATELLITE_BITMAP_FORMATS: readonly SatelliteBitmapFormat[] = ['rgb', 'png', 'webp']
+
+/**
+ * Encodings of the VALUE of a variable (SET-VARIABLE-VALUE and VARIABLE-VALUE), before it is base64 encoded.
+ * `string` is the text of the value (the default), `json` is the value as JSON, preserving its type.
+ */
+export type SatelliteVariableEncoding = 'string' | 'json'
+
+/**
+ * The variable value encodings defined by the protocol
+ */
+export const SATELLITE_VARIABLE_ENCODINGS: readonly SatelliteVariableEncoding[] = ['string', 'json']

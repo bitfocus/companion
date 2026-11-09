@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -266,9 +268,9 @@ function makeReferenceEl(overrides: Partial<ButtonGraphicsReferenceElement> = {}
  */
 function createMockImageResult(
 	drawElements: SomeButtonGraphicsDrawElement[] = [],
-	referencedLocations: ReadonlySet<string> = new Set()
+	referencedLocations: ReadonlySet<ControlLocationString> = new Set()
 ): ImageResult {
-	return new ImageResult(undefined, null, async () => Buffer.alloc(0), drawElements, referencedLocations)
+	return new ImageResult(undefined, null, 1, 0, async () => Buffer.alloc(0), drawElements, referencedLocations)
 }
 
 /**
@@ -1334,11 +1336,15 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				cache,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
-			expect(enabledResult.referencedLocations.drawn.has('2/0/0')).toBe(true)
-			expect(enabledResult.referencedLocations.hidden.has('2/0/0')).toBe(false)
+			expect(enabledResult.referencedLocations.drawn.has(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBe(
+				true
+			)
+			expect(enabledResult.referencedLocations.hidden.has(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBe(
+				false
+			)
 
 			// Disable the group - the reference child is preserved but no longer drawn.
 			const disabledElements: SomeButtonGraphicsElement[] = [
@@ -1354,11 +1360,15 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				cache,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
-			expect(disabledResult.referencedLocations.drawn.has('2/0/0')).toBe(false)
-			expect(disabledResult.referencedLocations.hidden.has('2/0/0')).toBe(true)
+			expect(disabledResult.referencedLocations.drawn.has(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBe(
+				false
+			)
+			expect(disabledResult.referencedLocations.hidden.has(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBe(
+				true
+			)
 		})
 
 		test('preserves nested child cache entries when parent composite is disabled', async () => {
@@ -1490,10 +1500,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				cache,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
-			expect(result1.referencedLocations.drawn.has('2/0/0')).toBe(true)
+			expect(result1.referencedLocations.drawn.has(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBe(true)
 
 			// Second call — cache hit path
 			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1504,11 +1514,11 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				cache,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 			// Must still report '2/0/0' even though element was served from cache
-			expect(result2.referencedLocations.drawn.has('2/0/0')).toBe(true)
+			expect(result2.referencedLocations.drawn.has(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBe(true)
 		})
 	})
 
@@ -1959,8 +1969,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 	})
 
-	describe('clockSensitive', () => {
-		test('reports clockSensitive when an element expression uses oscillate', async () => {
+	describe('clockCycleMs', () => {
+		test('reports the clock cycle when an element expression uses oscillate', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: expr('oscillate(1000)') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1975,10 +1985,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(1000)
 		})
 
-		test('reports clockSensitive false for a plain element', async () => {
+		test('reports no clock cycle for a plain element', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1993,7 +2003,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(false)
+			expect(result.clockCycleMs).toBe(0)
 		})
 
 		test('does not cache a clock-sensitive element, but does cache a plain one', async () => {
@@ -2015,12 +2025,43 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(1000)
 			// The clock-sensitive element must recompute each tick, so it is not cached
 			expect(cache.get('osc')).toBeUndefined()
 			// A plain element running alongside a clock-sensitive one is not itself
 			// clock-sensitive, so it is still cached
 			expect(cache.get('plain')).toBeDefined()
+		})
+
+		test('follows the clock cycle of a referenced button', async () => {
+			const target = new ImageResult(
+				undefined,
+				null,
+				1,
+				3000,
+				async () => Buffer.alloc(0),
+				[makeTextDrawEl({ id: 'ref-text', text: 'Hi' })],
+				new Set()
+			)
+			const elements: SomeButtonGraphicsElement[] = [
+				makeReferenceEl({ location: val('2/0/0') }),
+				makeTextEl({ id: 'osc', text: expr('oscillate(2000)') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
+				vi.fn(() => target)
+			)
+
+			// The 3s cycle of the referenced button and the local 2s oscillate repeat together every 6s
+			expect(result.clockCycleMs).toBe(6000)
 		})
 
 		test('does not cache either of two clock-sensitive siblings', async () => {
@@ -2045,7 +2086,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(2000)
 			expect(cache.get('osc1')).toBeUndefined()
 			expect(cache.get('osc2')).toBeUndefined()
 		})
@@ -2939,7 +2980,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -2961,7 +3002,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -2981,7 +3022,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -3006,7 +3047,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -3015,6 +3056,72 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(refEl.type).toBe('reference')
 			expect(refEl.children).toHaveLength(1)
 			expect(refEl.children[0]).toMatchObject({ type: 'text', text: 'Hello from ref' })
+		})
+
+		test('prefixes the ids of the embedded elements, so two references to the same button are unique', async () => {
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [
+				makeTextDrawEl({ id: 'ref-text' }),
+				{
+					...makeTextDrawEl({ id: 'nested-ref' }),
+					type: 'reference',
+					children: [makeTextDrawEl({ id: 'nested-ref/deep' })],
+				} as unknown as SomeButtonGraphicsDrawElement,
+			]
+			const getRenderAtLocation = vi.fn(() => createMockImageResult(referencedDrawElements))
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeReferenceEl({ id: 'refA', location: val('1/0/1') }),
+				makeReferenceEl({ id: 'refB', location: val('1/0/1') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
+				getRenderAtLocation
+			)
+
+			const ids = (element: SomeButtonGraphicsDrawElement): unknown =>
+				element.type === 'group' || element.type === 'reference'
+					? { [element.id]: element.children.map(ids) }
+					: element.id
+			expect(result.elements.map(ids)).toEqual([
+				{ refA: ['refA/ref-text', { 'refA/nested-ref': ['refA/nested-ref/deep'] }] },
+				{ refB: ['refB/ref-text', { 'refB/nested-ref': ['refB/nested-ref/deep'] }] },
+			])
+			// The referenced render is shared, so must not be changed
+			expect(ids(referencedDrawElements[0])).toBe('ref-text')
+			expect(ids(referencedDrawElements[1])).toEqual({ 'nested-ref': ['nested-ref/deep'] })
+		})
+
+		test("prefixes the ids of the embedded elements, so they can't collide with the button's own", async () => {
+			const getRenderAtLocation = vi.fn(() => createMockImageResult([makeTextDrawEl({ id: 'text1' })]))
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'text1' }),
+				makeReferenceEl({ id: 'ref1', location: val('1/0/1') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
+				getRenderAtLocation
+			)
+
+			expect(result.elements[0].id).toBe('text1')
+			const refEl = result.elements[1] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children.map((child) => child.id)).toEqual(['ref1/text1'])
 		})
 
 		test('excludes canvas elements from the referenced location', async () => {
@@ -3043,7 +3150,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -3068,11 +3175,11 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
-			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 1 }))).toBe(true)
 		})
 
 		test('shows placeholder when reference target is the current location (self-loop)', async () => {
@@ -3088,7 +3195,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0', // same location as target → self-reference loop
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }), // same location as target → self-reference loop
 				getRenderAtLocation
 			)
 
@@ -3102,7 +3209,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			// Target '1/0/1' has already been rendered, and its render references back to '1/0/0'
 			const targetRender = createMockImageResult(
 				[makeTextDrawEl({ id: 'ref-text', text: 'Unreachable' })],
-				new Set(['1/0/0']) // back-reference to current button
+				new Set([formatLocation({ pageNumber: 1, row: 0, column: 0 })]) // back-reference to current button
 			)
 			const getRenderAtLocation = vi.fn(() => targetRender)
 
@@ -3116,7 +3223,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -3129,7 +3236,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		test('propagates transitive referencedLocations from the target render', async () => {
 			const targetRender = createMockImageResult(
 				[makeTextDrawEl({ id: 'ref-text', text: 'Hi' })],
-				new Set(['1/0/2', '1/0/3'])
+				new Set([
+					formatLocation({ pageNumber: 1, row: 0, column: 2 }),
+					formatLocation({ pageNumber: 1, row: 0, column: 3 }),
+				])
 			)
 			const getRenderAtLocation = vi.fn(() => targetRender)
 
@@ -3143,13 +3253,13 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
-			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
-			expect(result.referencedLocations.drawn.has('1/0/2')).toBe(true)
-			expect(result.referencedLocations.drawn.has('1/0/3')).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 1 }))).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 2 }))).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 3 }))).toBe(true)
 		})
 
 		test('reference element is omitted when disabled and onlyEnabled=true', async () => {
@@ -3163,7 +3273,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				vi.fn(() => null)
 			)
 
@@ -3185,12 +3295,12 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
 			expect(getRenderAtLocation).toHaveBeenCalledWith({ pageNumber: 1, row: 0, column: 1 })
-			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 1 }))).toBe(true)
 		})
 
 		test('tracks variables used in the location string', async () => {
@@ -3206,7 +3316,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -3227,7 +3337,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
@@ -3247,18 +3357,21 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0', // self-reference
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }), // self-reference
 				getRenderAtLocation
 			)
 
-			expect(result.cyclicLocations.has('1/0/0')).toBe(true)
+			expect(result.cyclicLocations.has(formatLocation({ pageNumber: 1, row: 0, column: 0 }))).toBe(true)
 			// Also tracked in referencedLocations
-			expect(result.referencedLocations.drawn.has('1/0/0')).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 0 }))).toBe(true)
 		})
 
 		test('cyclicLocations contains the location on an indirect loop', async () => {
 			// Target '1/0/1' has a render that references back to '1/0/0'
-			const targetRender = createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Loop' })], new Set(['1/0/0']))
+			const targetRender = createMockImageResult(
+				[makeTextDrawEl({ id: 'ref-text', text: 'Loop' })],
+				new Set([formatLocation({ pageNumber: 1, row: 0, column: 0 })])
+			)
 			const getRenderAtLocation = vi.fn(() => targetRender)
 
 			const elements: SomeButtonGraphicsElement[] = [makeReferenceEl({ location: val('1/0/1') })]
@@ -3271,13 +3384,13 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				new Map(),
 				true,
 				null,
-				'1/0/0',
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
 				getRenderAtLocation
 			)
 
-			expect(result.cyclicLocations.has('1/0/1')).toBe(true)
+			expect(result.cyclicLocations.has(formatLocation({ pageNumber: 1, row: 0, column: 1 }))).toBe(true)
 			// The direct location is still in referencedLocations
-			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has(formatLocation({ pageNumber: 1, row: 0, column: 1 }))).toBe(true)
 			// Only the cyclic entry, not an unrelated location
 			expect(result.cyclicLocations.size).toBe(1)
 		})

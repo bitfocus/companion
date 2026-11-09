@@ -2,6 +2,7 @@ import { useCallback, useSyncExternalStore } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { formatPreviewRenderSize, type PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { trpcClient } from '~/Resources/TRPC'
 
 /**
@@ -60,8 +61,8 @@ function acquire(key: string, location: ControlLocation, size: PreviewRenderSize
 				entry.image = data
 				for (const l of entry.listeners) l()
 			},
-			onError: (e: unknown) => {
-				console.error(`Button image subscription failed for ${key}: ${e}`)
+			onError: (e) => {
+				console.error(`Button image subscription failed for ${key}: ${stringifyError(e)}`)
 			},
 		}
 	)

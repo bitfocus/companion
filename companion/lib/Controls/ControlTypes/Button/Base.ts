@@ -1,9 +1,17 @@
-import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import type z from 'zod'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	ButtonOptionsBase,
+	ButtonStatus,
+	LayeredButtonModel,
+	NormalButtonRuntimeProps,
+	PresetReferenceButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import type { ButtonPressEvents } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
@@ -15,6 +23,7 @@ import {
 	type SomeButtonEntityPool,
 } from '../../Entities/EntityListPoolButton.js'
 import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import type { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
 /**
@@ -33,23 +42,17 @@ import type { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * this program.
  */
 export abstract class ButtonControlRuntimeBase<
-	TJson,
+	TJson extends LayeredButtonModel | PresetReferenceButtonModel,
 	TOptions extends ButtonOptionsBase,
 	TPool extends SomeButtonEntityPool,
 >
-	extends ControlBase<TJson>
+	extends ControlBase<BankControlId, TJson, NormalButtonRuntimeProps>
 	implements ControlWithEntities, ControlWithPushed
 {
 	readonly supportsEntities = true
 	readonly supportsPushed = true
 
-	/**
-	 * The defaults options for a button
-	 */
-	static DefaultOptions: ButtonOptionsBase = {
-		stepProgression: 'auto',
-		stepExpression: '',
-	}
+	readonly optionsSchema: z.ZodType<TOptions>
 
 	/**
 	 * Button hold state for each surface
@@ -84,13 +87,15 @@ export abstract class ButtonControlRuntimeBase<
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		debugNamespace: string,
 		isLayered: boolean,
-		EntityPoolClass: ButtonEntityPoolConstructor<TPool>
+		EntityPoolClass: ButtonEntityPoolConstructor<TPool>,
+		optionsSchema: z.ZodType<TOptions>
 	) {
 		super(deps, controlId, debugNamespace)
 
+		this.optionsSchema = optionsSchema
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerInvalidation.bind(this))
 
 		this.entities = new EntityPoolClass(
@@ -103,6 +108,7 @@ export abstract class ButtonControlRuntimeBase<
 				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
 				renderClock: deps.renderClock,
+				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
@@ -116,11 +122,7 @@ export abstract class ButtonControlRuntimeBase<
 	 */
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
-	/**
-	 * Abort pending delayed actions for a control
-	 * @param skip_up Mark button as released
-	 */
-	abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null): void {
+	override abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		this.#finishPressEvents()
 		if (skip_up) {
 			this.setPushed(false)
@@ -211,6 +213,7 @@ export abstract class ButtonControlRuntimeBase<
 	 */
 	destroy(): void {
 		this.#finishPressEvents()
+		this.actionRunner.abortAll(null)
 		this.abortRunningHoldTimers(undefined)
 
 		// Buttons always host a drawer, so the base owns tearing it down
@@ -333,8 +336,8 @@ export abstract class ButtonControlRuntimeBase<
 							location,
 							rotationDelta: null,
 						})
-						.catch((e) => {
-							this.logger.error(`action execution failed: ${e}`)
+						.catch((e: unknown) => {
+							this.logger.error(`action execution failed: ${stringifyError(e)}`)
 						})
 
 					if (
@@ -362,7 +365,7 @@ export abstract class ButtonControlRuntimeBase<
 								try {
 									runActionSet(time)
 								} catch (e) {
-									this.logger.warn(`hold actions execution failed: ${e}`)
+									this.logger.warn(`hold actions execution failed: ${stringifyError(e)}`)
 								}
 							}, time)
 						)
@@ -394,8 +397,8 @@ export abstract class ButtonControlRuntimeBase<
 				location,
 				rotationDelta: delta,
 			})
-			.catch((e) => {
-				this.logger.error(`action execution failed: ${e}`)
+			.catch((e: unknown) => {
+				this.logger.error(`action execution failed: ${stringifyError(e)}`)
 			})
 
 		return true
@@ -448,30 +451,36 @@ export abstract class ButtonControlRuntimeBase<
  * (e.g. a preset reference) extend {@link ButtonControlRuntimeBase} directly so they cannot inherit this -
  * or any future control-level mutator added here.
  */
-export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
+export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptions extends ButtonOptionsBase>
 	extends ButtonControlRuntimeBase<TJson, TOptions, EditableControlEntityListPoolButton>
-	implements ControlWithOptions
+	implements ControlWithOptions<TOptions>
 {
 	readonly supportsConvert = false
 	readonly supportsOptions = true
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, isLayered: boolean) {
-		super(deps, controlId, debugNamespace, isLayered, EditableControlEntityListPoolButton)
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		debugNamespace: string,
+		isLayered: boolean,
+		optionsSchema: z.ZodType<TOptions>
+	) {
+		super(deps, controlId, debugNamespace, isLayered, EditableControlEntityListPoolButton, optionsSchema)
 	}
 
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
+	optionsSetField(change: KeyValueChange<TOptions>): boolean {
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
 		// Check if rotary_actions should be added/remove
-		if (key === 'rotaryActions') {
-			this.entities.setupRotaryActionSets(!!value, true)
+		if (change.key === 'rotaryActions') {
+			this.entities.setupRotaryActionSets(!!change.value, true)
 		}
 
-		// @ts-expect-error mismatch in key type
-		this.options[key] = value
+		this.options = options
 
 		this.commitChange()
 

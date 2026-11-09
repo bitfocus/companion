@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { resolveMarkerTransform } from '@companion-app/shared/Graphics/Geometry.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -20,7 +21,7 @@ import { collectSnapTargets, snapAxis, thresholdFractionFor } from './snapping.j
 type LineDragMode = 'move' | 'from' | 'to'
 
 interface LineSelectionOverlayProps {
-	controlId: string
+	controlId: SomeControlId
 	canvas: HTMLCanvasElement
 	selectedElement: SomeButtonGraphicsElement
 	/** Absolute rect of the selection, used to outline a line the overlay can't edit */

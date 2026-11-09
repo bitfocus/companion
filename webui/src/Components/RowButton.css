@@ -1,0 +1,60 @@
+/* A full-width row in a list card, opening what it names. Rows next to each other are
+   divided by a rule, as the card's other rows are. */
+.row-button {
+	--btn-padding-y: 0.625rem;
+	--btn-padding-x: 0.75rem;
+	--btn-font-size: inherit;
+	--btn-border-width: 0;
+	--btn-border-radius: 0;
+	--btn-color: inherit;
+	--btn-bg: transparent;
+	--btn-border-color: var(--color-border);
+	--btn-hover-bg: var(--color-surface-muted);
+	--btn-hover-border-color: var(--color-border);
+	--btn-active-border-color: var(--color-border);
+
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	text-align: start;
+
+	& + & {
+		border-top-width: 1px;
+	}
+
+	/* Inset, as the row runs to the edges of a card that clips it */
+	&:focus-visible {
+		outline-offset: -2px;
+	}
+
+	.row-button-text {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.row-button-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-weight: 600;
+	}
+
+	.row-button-description {
+		margin-top: 0.125rem;
+		color: var(--color-muted);
+		font-size: 0.875em;
+	}
+
+	.row-button-arrow {
+		flex-shrink: 0;
+		opacity: 0.3;
+		transition: opacity 0.15s ease;
+	}
+
+	&:hover .row-button-arrow {
+		opacity: 0.8;
+	}
+}

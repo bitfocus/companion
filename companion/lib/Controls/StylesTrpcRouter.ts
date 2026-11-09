@@ -5,7 +5,7 @@ import { publicProcedure, router } from '../UI/TRPC.js'
 import type { SomeControl } from './IControlFragments.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>>) {
+export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl>) {
 	return router({
 		addElement: publicProcedure
 			.input(

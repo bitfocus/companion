@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type FeedbackEntityModel,
@@ -6,8 +7,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { EntityListActionContext, LocalVariablesStore, type GetLocalVariableOptions } from '../LocalVariablesStore.js'
 
-const GRID_CONTROL = 'bank:1'
-const PAGE_CONTROL = 'page:1'
+const GRID_CONTROL = CreateBankControlId('1')
+const PAGE_CONTROL = CreatePageControlId('1')
 
 /** Call getOptions with sensible defaults (grid feedback, internal parser) and return just the values. */
 function valuesFor(store: LocalVariablesStore, opts: Partial<GetLocalVariableOptions> = {}) {
@@ -173,7 +174,7 @@ describe('local variables from the control entities', () => {
 	test('a page control exposes its own entities under the page namespace', () => {
 		const store = new LocalVariablesStore(PAGE_CONTROL)
 		store.setEntities([valueFeedback({ id: 'a', variableName: 'foo' })])
-		expect(valuesFor(store, { isLocatedInGrid: false })).toContain('page:foo')
+		expect(valuesFor(store, { isLocatedInGrid: false })).toContain(CreatePageControlId('foo'))
 	})
 })
 
@@ -181,6 +182,6 @@ describe('page variables', () => {
 	test("exposes the page's variables under the page namespace", () => {
 		const store = new LocalVariablesStore(GRID_CONTROL)
 		store.setPageVariables([valueFeedback({ id: 'p', variableName: 'bar' })])
-		expect(valuesFor(store)).toContain('page:bar')
+		expect(valuesFor(store)).toContain(CreatePageControlId('bar'))
 	})
 })

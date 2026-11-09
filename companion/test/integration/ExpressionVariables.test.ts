@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlExpressionVariable } from '../../lib/Controls/ControlTypes/ExpressionVariable.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -17,7 +18,7 @@ describe('expression variables', () => {
 	})
 
 	/** Create an expression variable and configure it the way the ui does */
-	async function createExpressionVariable(name: string, expression: string): Promise<string> {
+	async function createExpressionVariable(name: string, expression: string): Promise<ExpressionVariableControlId> {
 		const controlId = await app.trpc().controls.expressionVariables.create({ variableName: name })
 
 		const control = app.registry.controls.getControl(controlId) as ControlExpressionVariable
@@ -81,5 +82,36 @@ describe('expression variables', () => {
 		await vi.waitFor(() => {
 			expect(expressionValue('doomed')).toBeUndefined()
 		})
+	})
+
+	test('renaming an expression variable moves its value', async () => {
+		const controlId = await createExpressionVariable('before', '1 + 1')
+		await vi.waitFor(() => {
+			expect(expressionValue('before')).toBe(2)
+		})
+
+		await app.trpc().controls.setOptionsField({
+			controlId,
+			change: { controlType: 'expression-variable', key: 'variableName', value: 'after' },
+		})
+		await vi.waitFor(() => {
+			expect(expressionValue('after')).toBe(2)
+		})
+		expect(expressionValue('before')).toBeUndefined()
+	})
+
+	test('an invalid new name is refused, without throwing', async () => {
+		const controlId = await createExpressionVariable('kept', '1 + 1')
+
+		// Users trying invalid names would otherwise flood sentry
+		expect(
+			await app.trpc().controls.setOptionsField({
+				controlId,
+				change: { controlType: 'expression-variable', key: 'variableName', value: 'not valid!' },
+			})
+		).toBe(false)
+
+		const control = app.registry.controls.getControl(controlId) as ControlExpressionVariable
+		expect(control.options.variableName).toBe('kept')
 	})
 })

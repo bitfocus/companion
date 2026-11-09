@@ -521,6 +521,14 @@ describe('what is under the cursor', () => {
 		expect(onHoverLocation).toHaveBeenCalledWith(at(0, 0), { range: false, toggle: true })
 	})
 
+	it('previews neither a range nor a toggle with ctrl+shift, which presses rather than selects', () => {
+		const { grid, onHoverLocation } = setup()
+
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerType: 'mouse', shiftKey: true, ctrlKey: true })
+
+		expect(onHoverLocation).toHaveBeenCalledWith(at(1, 2), { range: false, toggle: false })
+	})
+
 	it('reports nothing for the padding around the canvas, which is not a cell', () => {
 		const { grid, onHoverLocation } = setup()
 

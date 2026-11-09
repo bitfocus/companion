@@ -7,6 +7,7 @@ import { DataMetrics } from '../../lib/Data/Metrics.js'
 import { registerDatabaseDurationHistogram, registerDatabaseMetrics } from '../../lib/Data/StoreMetrics.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { AppInfo } from '../../lib/Registry.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -20,11 +21,7 @@ describe('registerDatabaseMetrics', () => {
 	test('exposes SQLite metrics for a store through a scrape', async () => {
 		const appInfo = { appVersion: '1.2.3', appBuild: 'abc123' } as AppInfo
 		const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-			getKey: (key: string) => {
-				if (key === 'prometheus_enabled') return true
-				if (key === 'prometheus_token') return 'secret-token'
-				throw new Error(`unexpected key ${String(key)}`)
-			},
+			getKey: mockGetKey({ prometheus_enabled: true, prometheus_token: 'secret-token' }, 'throw'),
 		})
 		const metrics = new DataMetrics(appInfo, () => userconfig)
 

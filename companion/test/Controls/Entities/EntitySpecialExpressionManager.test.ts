@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, type RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
@@ -10,6 +11,7 @@ import type {
 	NewSpecialExpressionValue,
 	UpdateSpecialExpressionValuesFn,
 } from '../../../lib/Controls/Entities/SpecialExpressions.js'
+import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../../lib/Variables/VariablesAndExpressionParser.js'
 
 describe('EntityPoolSpecialExpressionManager', () => {
@@ -22,7 +24,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		value?: unknown
 		error?: string
 		variableIds: Set<string>
-		clockSensitive?: boolean
+		clockCycleMs?: number
 	}
 	let mockParseExpressionResult: MockExprResult
 	let mockParseVariablesResult: ReturnType<VariablesAndExpressionParser['parseVariables']>
@@ -32,7 +34,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			.fn<VariablesAndExpressionParser['executeExpression']>()
 			.mockImplementation(
 				(_expression: string, _type: string | undefined) =>
-					({ clockSensitive: false, ...mockParseExpressionResult }) as ReturnType<
+					({ clockCycleMs: 0, ...mockParseExpressionResult }) as ReturnType<
 						VariablesAndExpressionParser['executeExpression']
 					>
 			),
@@ -46,6 +48,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		.mockReturnValue(mockVariablesParser as any)
 
 	let manager: EntityPoolSpecialExpressionManager
+	let variableDependencies: VariableDependencyRegistry
 
 	// Helper to create mock entities
 	function createMockFeedbackEntity(
@@ -66,9 +69,24 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		} as ControlEntityInstance
 	}
 
+	/** The render clock listeners currently subscribed */
+	let renderClockListeners: Set<() => void>
+	let renderClock: { subscribe: (listener: () => void) => () => void }
+	const tickRenderClock = () => {
+		for (const listener of [...renderClockListeners]) listener()
+	}
+
 	// Reset mocks before each test
 	beforeEach(() => {
 		vi.clearAllMocks()
+
+		renderClockListeners = new Set()
+		renderClock = {
+			subscribe: (listener) => {
+				renderClockListeners.add(listener)
+				return () => renderClockListeners.delete(listener)
+			},
+		}
 
 		// Reset mock implementations to defaults
 		mockParseExpressionResult = {
@@ -83,14 +101,16 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		mockCreateVariablesAndExpressionParser.mockReturnValue(mockVariablesParser as any)
 
 		// Create a new instance for each test
+		variableDependencies = new VariableDependencyRegistry()
 		manager = new EntityPoolSpecialExpressionManager(
-			'control-1',
+			CreateBankControlId('control-1'),
 			mockCreateVariablesAndExpressionParser,
 			{
 				isInverted: mockUpdateIsInvertedFn,
 				storeResult: mockUpdateStoreResultFn,
 			},
-			{ subscribe: vi.fn(() => () => {}) } as any
+			renderClock as any,
+			variableDependencies
 		)
 
 		vi.useFakeTimers()
@@ -110,7 +130,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -132,7 +152,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -154,7 +174,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -180,7 +200,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -205,7 +225,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -213,7 +233,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-2',
 						{
 							entityId: 'entity-2',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -273,7 +293,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-niner',
 						{
 							entityId: 'entity-niner',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -338,7 +358,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-lion',
 						{
 							entityId: 'entity-lion',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -403,7 +423,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-tiger',
 						{
 							entityId: 'entity-tiger',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -512,7 +532,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-batman',
 						{
 							entityId: 'entity-batman',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -527,7 +547,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-robin',
 						{
 							entityId: 'entity-robin',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'custom:variable-name',
@@ -561,7 +581,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -586,7 +606,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: undefined,
 						},
 					],
@@ -622,7 +642,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-17',
 						{
 							entityId: 'entity-17',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'overridden-parse-variables-result',
@@ -670,7 +690,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-17',
 						{
 							entityId: 'entity-17',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: '1/2/4',
@@ -690,7 +710,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			}
 			mockParseVariablesResult = {
 				text: 'parsed-variable-name',
-				variableIds: new Set<string>(['page:foo']),
+				variableIds: new Set<string>([CreatePageControlId('foo')]),
 			}
 
 			const mockEntity = createMockActionEntity('entity-18', {
@@ -718,7 +738,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-18',
 						{
 							entityId: 'entity-18',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'page-variable',
 								page: '2',
@@ -749,7 +769,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -794,7 +814,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-42',
 						{
 							entityId: 'entity-42',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: '',
@@ -825,7 +845,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -853,7 +873,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -889,7 +909,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'will stringify to this',
@@ -903,6 +923,31 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 	})
 
 	describe('forgetEntity', () => {
+		it('stops tracking the variables only the forgotten entity read', () => {
+			mockParseExpressionResult = { ok: true, value: false, variableIds: new Set(['var1']) }
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-1', { isExpression: true, value: '$(internal:var1)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+
+			mockParseExpressionResult = { ok: true, value: false, variableIds: new Set(['var2']) }
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-2', { isExpression: true, value: '$(internal:var2)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(2)
+
+			manager.forgetEntity('entity-1')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(1)
+
+			manager.forgetEntity('entity-2')
+			vi.runAllTimers()
+			expect(variableDependencies.stats().keys).toBe(0)
+		})
+
 		it('should remove potentially isInverted entity from tracking', () => {
 			const mockEntity = createMockFeedbackEntity('entity-1', { isExpression: false, value: true })
 
@@ -914,7 +959,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.forgetEntity('entity-1')
 
 			// Trigger variable change to verify entity is not processed
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -945,7 +990,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-314',
 						{
 							entityId: 'entity-314',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'foobar',
@@ -963,7 +1008,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			const UsedVariables: ReadonlySet<string> = new Set<string>(['var42'])
 
 			// Trigger variable change to verify entity would be processed
-			manager.onVariablesChanged(UsedVariables)
+			variableDependencies.dispatch(UsedVariables, null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -975,7 +1020,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.forgetEntity('entity-314')
 
 			// Trigger variable change to verify entity is not processed
-			manager.onVariablesChanged(UsedVariables)
+			variableDependencies.dispatch(UsedVariables, null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1035,7 +1080,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				variableIds: new Set(['var1', 'var2']),
 			}
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).toHaveBeenCalledWith(
@@ -1044,7 +1089,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -1090,7 +1135,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-86',
 						{
 							entityId: 'entity-86',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: 'expr-location',
@@ -1106,7 +1151,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				// Change the parse results for re-processing
 				resetParseResults()
 
-				manager.onVariablesChanged(new Set([singleVar]))
+				variableDependencies.dispatch(new Set([singleVar]), null)
 				vi.runAllTimers()
 
 				expect(mockUpdateStoreResultFn).toHaveBeenCalledWith(
@@ -1115,7 +1160,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 							'entity-86',
 							{
 								entityId: 'entity-86',
-								controlId: 'control-1',
+								controlId: CreateBankControlId('control-1'),
 								value: {
 									type: 'local-variable',
 									location: 'expr-location',
@@ -1158,7 +1203,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-86',
 						{
 							entityId: 'entity-86',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'expr-variableName',
@@ -1174,7 +1219,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				// Change the parse results for re-processing
 				resetParseResult()
 
-				manager.onVariablesChanged(new Set([singleVar]))
+				variableDependencies.dispatch(new Set([singleVar]), null)
 				vi.runAllTimers()
 
 				expect(mockUpdateStoreResultFn).toHaveBeenCalledWith(
@@ -1183,7 +1228,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 							'entity-86',
 							{
 								entityId: 'entity-86',
-								controlId: 'control-1',
+								controlId: CreateBankControlId('control-1'),
 								value: {
 									type: 'custom-variable',
 									variableName: 'expr-variableName',
@@ -1209,7 +1254,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateIsInvertedFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['unrelated-var']))
+			variableDependencies.dispatch(new Set(['unrelated-var']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1242,7 +1287,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateStoreResultFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['unrelated-var']))
+			variableDependencies.dispatch(new Set(['unrelated-var']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
@@ -1255,7 +1300,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateIsInvertedFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1268,7 +1313,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			vi.runAllTimers()
 			mockUpdateStoreResultFn.mockClear()
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateStoreResultFn).not.toHaveBeenCalled()
@@ -1317,7 +1362,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				variableIds: new Set(['shared-var']),
 			}
 
-			manager.onVariablesChanged(new Set(['shared-var']))
+			variableDependencies.dispatch(new Set(['shared-var']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateStoreResultFn).toHaveBeenCalledTimes(1)
@@ -1327,7 +1372,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'variable-name',
@@ -1339,7 +1384,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-2',
 						{
 							entityId: 'entity-2',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: '4/5/6',
@@ -1363,7 +1408,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.trackEntity(mockEntity, 'isInverted')
 			// Don't run timers yet - entity is still pending
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Should only be called once despite both trackEntity and onVariablesChanged
@@ -1396,7 +1441,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			manager.trackEntity(mockEntity, 'storeResult')
 			// Don't run timers yet - entity is still pending
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Should only be called once despite both trackEntity and onVariablesChanged
@@ -1459,9 +1504,11 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			mockUpdateIsInvertedFn.mockClear()
 			mockUpdateStoreResultFn.mockClear()
 
+			expect(variableDependencies.stats().keys).toBe(1)
 			manager.destroy()
+			expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			expect(mockUpdateIsInvertedFn).not.toHaveBeenCalled()
@@ -1477,7 +1524,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1496,7 +1543,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-static', { isExpression: true, value: 'true' })
@@ -1512,7 +1559,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1531,7 +1578,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(['custom:var']),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-var', { isExpression: true, value: '$(custom:var)' })
@@ -1550,7 +1597,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const oscEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1573,12 +1620,95 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			expect(updatedMap.has('entity-osc')).toBe(false)
 		})
 
+		it('does not subscribe to the render clock without a clock-sensitive entity', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(['custom:var']),
+				clockCycleMs: 0,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-var', { isExpression: true, value: '$(custom:var)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+
+			expect(renderClockListeners.size).toBe(0)
+		})
+
+		it('subscribes to the render clock once an entity is clock-sensitive, and recomputes it on a tick', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockCycleMs: 1000,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' }),
+				'isInverted'
+			)
+			expect(renderClockListeners.size).toBe(0)
+			vi.runAllTimers()
+			expect(renderClockListeners.size).toBe(1)
+			mockUpdateIsInvertedFn.mockClear()
+
+			tickRenderClock()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			// Still subscribed once only
+			expect(renderClockListeners.size).toBe(1)
+		})
+
+		it('unsubscribes from the render clock on a tick once nothing is clock-sensitive', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockCycleMs: 1000,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(renderClockListeners.size).toBe(1)
+
+			manager.forgetEntity('entity-osc')
+			tickRenderClock()
+
+			expect(renderClockListeners.size).toBe(0)
+		})
+
+		it('unsubscribes from the render clock on destroy', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockCycleMs: 1000,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(renderClockListeners.size).toBe(1)
+
+			manager.destroy()
+
+			expect(renderClockListeners.size).toBe(0)
+		})
+
 		it('is a no-op after destroy', () => {
 			mockParseExpressionResult = {
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1720,7 +1850,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -1747,7 +1877,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false, // empty string is falsy
 						},
 					],
@@ -1774,7 +1904,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false, // undefined is falsy
 						},
 					],
@@ -1784,7 +1914,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 
 		it('should not call updateFn if no entities need processing', () => {
 			// Trigger variable change without any tracked entities
-			manager.onVariablesChanged(new Set(['var1']))
+			variableDependencies.dispatch(new Set(['var1']), null)
 
 			vi.runAllTimers()
 

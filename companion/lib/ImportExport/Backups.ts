@@ -16,7 +16,14 @@ import { nanoid } from 'nanoid'
 import nodeCron, { type ScheduledTask } from 'node-cron'
 import z from 'zod'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import {
+	BackupRuleChangeSchema,
+	type BackupRuleChange,
+	type BackupRulesConfig,
+	type PreviousBackupInfo,
+} from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController, { type Logger } from '../Log/Controller.js'
@@ -62,10 +69,12 @@ export class BackupController {
 		this.#exportController = exportController
 
 		// Listen for config changes
-		this.#userConfig.on('keyChanged', (key, value) => {
-			if (key === 'backups') {
-				this.#backupRules = value as BackupRulesConfig[]
-				this.#scheduleBackups()
+		this.#userConfig.on('keyChanged', (change) => {
+			if (change.key === 'backups') {
+				const scheduleChanged = scheduleOf(this.#backupRules) !== scheduleOf(change.value)
+				this.#backupRules = change.value
+				// Recording a backup changes the rules too, which must not restart the jobs
+				if (scheduleChanged) this.#scheduleBackups()
 			}
 		})
 	}
@@ -97,12 +106,16 @@ export class BackupController {
 				.input(
 					z.object({
 						ruleId: z.string(),
-						field: z.string(),
-						value: z.unknown(),
+						change: BackupRuleChangeSchema,
 					})
 				)
-				.mutation(async ({ input }) => {
-					return this.updateRuleField(input.ruleId, input.field, input.value)
+				.mutation(async ({ input }): Promise<string | null> => {
+					// The reason for a refusal is returned for the ui to show, not thrown, as a thrown error is reported to sentry
+					const refusal = this.#validateRuleChange(input.change)
+					if (refusal) return refusal
+
+					if (!(await this.updateRuleField(input.ruleId, input.change))) return 'Failed to update the backup rule'
+					return null
 				}),
 
 			createRule: publicProcedure
@@ -179,8 +192,8 @@ export class BackupController {
 
 			this.#userConfig.setKeyUnchecked('backups', newBackupRules)
 
-			this.cleanupOldBackups(updatedRule).catch((err) => {
-				this.#logger.error(`Failed to clean up old backups for rule ${ruleId}: ${err}`)
+			this.cleanupOldBackups(updatedRule).catch((err: unknown) => {
+				this.#logger.error(`Failed to clean up old backups for rule ${ruleId}: ${stringifyError(err)}`)
 			})
 		}
 	}
@@ -190,8 +203,8 @@ export class BackupController {
 	 * @param backupRules Backup rules configuration object
 	 */
 	initializeWithConfig(backupRules: BackupRulesConfig[]): void {
-		this.#ensureBackupDirExists().catch((err) => {
-			this.#logger.error(`Failed to ensure backup directory exists: ${err}`)
+		this.#ensureBackupDirExists().catch((err: unknown) => {
+			this.#logger.error(`Failed to ensure backup directory exists: ${stringifyError(err)}`)
 		})
 
 		this.#backupRules = backupRules
@@ -217,8 +230,8 @@ export class BackupController {
 	 */
 	#clearScheduledJobs(): void {
 		for (const [id, job] of this.#cronJobs.entries()) {
-			Promise.resolve(job.stop()).catch((err) => {
-				this.#logger.error(`Failed to stop cron job ${id}: ${err}`)
+			Promise.resolve(job.stop()).catch((err: unknown) => {
+				this.#logger.error(`Failed to stop cron job ${id}: ${stringifyError(err)}`)
 			})
 			this.#cronJobs.delete(id)
 		}
@@ -233,8 +246,8 @@ export class BackupController {
 			// Stop existing job if it exists
 			const existingJob = this.#cronJobs.get(rule.id)
 			if (existingJob) {
-				Promise.resolve(existingJob.stop()).catch((err) => {
-					this.#logger.error(`Failed to stop cron job ${rule.id}: ${err}`)
+				Promise.resolve(existingJob.stop()).catch((err: unknown) => {
+					this.#logger.error(`Failed to stop cron job ${rule.id}: ${stringifyError(err)}`)
 				})
 				this.#cronJobs.delete(rule.id)
 			}
@@ -248,12 +261,16 @@ export class BackupController {
 			const job = nodeCron.schedule(
 				rule.cron,
 				async () => {
-					const logger = LogController.createLogger(`ImportExport/BackupController/${rule.name}`)
+					// The rule may have changed since it was scheduled, without changing its schedule
+					const currentRule = this.#backupRules.find((r) => r.id === rule.id)
+					if (!currentRule) return
+
+					const logger = LogController.createLogger(`ImportExport/BackupController/${currentRule.name}`)
 					try {
 						logger.info(`Running scheduled backup for rule`)
-						const backupInfo = await this.#createBackup(logger, rule)
+						const backupInfo = await this.#createBackup(logger, currentRule)
 						if (backupInfo) {
-							this.#updateLastRanTimestamp(rule.id, backupInfo)
+							this.#updateLastRanTimestamp(currentRule.id, backupInfo)
 							logger.info(
 								`Scheduled backup created successfully: ${backupInfo.filePath} (${backupInfo.fileSize} bytes)`
 							)
@@ -261,7 +278,7 @@ export class BackupController {
 							logger.error(`Failed to create scheduled backup for rule`)
 						}
 					} catch (err) {
-						logger.error(`Error in scheduled backup: ${err}`)
+						logger.error(`Error in scheduled backup: ${stringifyError(err)}`)
 					}
 				},
 				{
@@ -273,7 +290,7 @@ export class BackupController {
 			this.#cronJobs.set(rule.id, job)
 			this.#logger.info(`Scheduled backup rule: ${rule.name} with cron: ${rule.cron}`)
 		} catch (err) {
-			this.#logger.error(`Failed to schedule backup rule ${rule.name}: ${err}`)
+			this.#logger.error(`Failed to schedule backup rule ${rule.name}: ${stringifyError(err)}`)
 		}
 	}
 
@@ -304,7 +321,7 @@ export class BackupController {
 					this.#logger.info(`Deleted old backup: ${backup.filePath}`)
 					return backup
 				} catch (err) {
-					this.#logger.warn(`Failed to delete backup file ${backup.filePath}: ${err}`)
+					this.#logger.warn(`Failed to delete backup file ${backup.filePath}: ${stringifyError(err)}`)
 					// Return null to indicate this backup wasn't deleted
 					return null
 				}
@@ -312,30 +329,22 @@ export class BackupController {
 
 			const deletionResults = await Promise.all(deletionPromises)
 
-			// Update the rule's previousBackups list to remove successfully deleted backups
-			// Note: this needs to lookup the list again, as the original array may have been modified during the delete
-			const updatedPreviousBackups = rule.previousBackups.filter(
-				(backup) => !deletionResults.some((deleted) => deleted && deleted.filePath === backup.filePath)
-			)
+			// Remove the deleted backups from the rule as it is now, as it may have changed during the delete
+			const deletedPaths = new Set(deletionResults.flatMap((deleted) => (deleted ? [deleted.filePath] : [])))
+			const currentRule = this.#backupRules.find((r) => r.id === rule.id)
+			if (!currentRule) return
 
-			// Update the rule in the configuration if any backups were deleted
-			if (updatedPreviousBackups.length !== rule.previousBackups.length) {
-				const updatedBackupRules = [...this.#backupRules]
-				const ruleIndex = updatedBackupRules.findIndex((r) => r.id === rule.id)
+			const updatedPreviousBackups = currentRule.previousBackups.filter((backup) => !deletedPaths.has(backup.filePath))
+			if (updatedPreviousBackups.length !== currentRule.previousBackups.length) {
+				const updatedBackupRules = this.#backupRules.map((r) =>
+					r.id === rule.id ? { ...r, previousBackups: updatedPreviousBackups } : r
+				)
 
-				if (ruleIndex !== -1) {
-					updatedBackupRules[ruleIndex] = {
-						...updatedBackupRules[ruleIndex],
-						previousBackups: updatedPreviousBackups,
-					}
-
-					// Update the userConfig
-					this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
-					this.#backupRules = updatedBackupRules
-				}
+				this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
+				this.#backupRules = updatedBackupRules
 			}
 		} catch (err) {
-			this.#logger.error(`Failed to clean up old backups for rule ${rule.name}: ${err}`)
+			this.#logger.error(`Failed to clean up old backups for rule ${rule.name}: ${stringifyError(err)}`)
 		}
 	}
 
@@ -410,28 +419,30 @@ export class BackupController {
 				}
 
 				case 'export-gz':
-					return this.#generateExportBackup(logger, backupDir, backupName, 'json-gz')
+					return this.#generateExportBackup(logger, rule, backupDir, backupName, 'json-gz')
 				case 'export-json':
-					return this.#generateExportBackup(logger, backupDir, backupName, 'json')
+					return this.#generateExportBackup(logger, rule, backupDir, backupName, 'json')
 				case 'export-yaml':
-					return this.#generateExportBackup(logger, backupDir, backupName, 'yaml')
+					return this.#generateExportBackup(logger, rule, backupDir, backupName, 'yaml')
 
 				default:
 					throw new Error(`Unsupported backup type: ${rule.backupType}`)
 			}
-		} catch (err: any) {
-			logger.error(`Failed to create backup: ${err}`)
-			throw new Error(`Failed to create backup: ${err.message || err}`)
+		} catch (err) {
+			logger.error(`Failed to create backup: ${stringifyError(err)}`)
+			throw new Error(`Failed to create backup: ${stringifyError(err, true)}`)
 		}
 	}
 
 	async #generateExportBackup(
 		logger: Logger,
+		rule: BackupRulesConfig,
 		backupDir: string,
 		filename: string,
 		format: ExportFormat
 	): Promise<PreviousBackupInfo> {
-		const data = this.#exportController.generateCustomExport(null)
+		const notes = `Automated backup by the backup rule "${rule.name}", made at ${new Date().toISOString()}`
+		const data = this.#exportController.generateCustomExport(null, notes)
 
 		const filePath = path.join(backupDir, `${filename}.companionconfig`)
 
@@ -476,19 +487,15 @@ export class BackupController {
 				await fs.unlink(filePath)
 				this.#logger.info(`Deleted backup file: ${filePath}`)
 			} catch (err) {
-				this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${err}`)
+				this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${stringifyError(err)}`)
 			}
 
-			// Update backup rules to remove this backup from the specific rule
-			const updatedBackupRules = [...this.#backupRules]
-			const updatedRule = updatedBackupRules.find((r) => r.id === ruleId)
-			if (updatedRule) {
-				updatedRule.previousBackups.splice(backupIndex, 1)
-
-				// Update the userConfig through the database
-				this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
-				this.#backupRules = updatedBackupRules
-			}
+			// Remove this backup from the rule as it is now, without changing the rule
+			const updatedBackupRules = this.#backupRules.map((r) =>
+				r.id === ruleId ? { ...r, previousBackups: r.previousBackups.filter((b) => b.filePath !== filePath) } : r
+			)
+			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
+			this.#backupRules = updatedBackupRules
 
 			return true
 		} catch (e) {
@@ -498,75 +505,41 @@ export class BackupController {
 	}
 
 	/**
-	 * Validate a field update for a backup rule
-	 * @param field The field name to update
-	 * @param value The value to set
-	 * @returns Validation result with success status and error message
+	 * Check a change to a backup rule for what its schema can't: the schema has already checked its type
+	 * @returns why the change is invalid, or undefined when it is valid
 	 */
-	#validateFieldUpdate(field: string, value: unknown): { valid: boolean; error?: string } {
-		// Type validation for each field
-		switch (field) {
+	#validateRuleChange(change: BackupRuleChange): string | undefined {
+		switch (change.key) {
 			case 'name':
+				if (change.value.trim().length === 0) return 'Name cannot be empty'
+				return undefined
+			case 'cron':
+				if (!nodeCron.validate(change.value)) return `'${change.value}' is not a valid cron expression`
+				return undefined
+			case 'keep':
+				if (!Number.isInteger(change.value) || change.value < 0) {
+					return `Keep must be a non-negative integer, got ${change.value}`
+				}
+				if (change.value > 1000) return `Keep cannot exceed 1000 backups, got ${change.value}`
+				return undefined
+			case 'enabled':
+			case 'backupType':
 			case 'backupPath':
 			case 'backupNamePattern':
-				if (typeof value !== 'string') {
-					return { valid: false, error: `Field '${field}' must be a string, got ${typeof value}` }
-				}
-				if (field === 'name' && value.trim().length === 0) {
-					return { valid: false, error: 'Name cannot be empty' }
-				}
-				break
-
-			case 'cron':
-				if (typeof value !== 'string') {
-					return { valid: false, error: `Field '${field}' must be a string, got ${typeof value}` }
-				}
-				if (!nodeCron.validate(value)) {
-					return { valid: false, error: `Field '${field}' must be a valid cron expression, got '${value}'` }
-				}
-				break
-
-			case 'enabled':
-				if (typeof value !== 'boolean') {
-					return { valid: false, error: `Field '${field}' must be a boolean, got ${typeof value}` }
-				}
-				break
-
-			case 'keep':
-				if (!Number.isInteger(value) || (value as number) < 0) {
-					return { valid: false, error: `Field '${field}' must be a non-negative integer, got ${value}` }
-				}
-				if ((value as number) > 1000) {
-					return { valid: false, error: `Field '${field}' cannot exceed 1000 backups, got ${value}` }
-				}
-				break
-
-			case 'backupType': {
-				const validBackupTypes = ['db', 'export-gz', 'export-json', 'export-yaml']
-				if (typeof value !== 'string' || !validBackupTypes.includes(value)) {
-					return {
-						valid: false,
-						error: `Field '${field}' must be one of: ${validBackupTypes.join(', ')}, got ${value}`,
-					}
-				}
-				break
-			}
-
+				return undefined
 			default:
-				return { valid: false, error: `Unknown field: ${field}` }
+				assertNever(change)
+				return undefined
 		}
-
-		return { valid: true }
 	}
 
 	/**
 	 * Update a specific field in a backup rule
 	 * @param ruleId ID of the rule to update
-	 * @param field Field name to update
-	 * @param value New value for the field
+	 * @param change The field to update, and its new value
 	 * @returns Promise resolving to true if update was successful
 	 */
-	async updateRuleField(ruleId: string, field: string, value: unknown): Promise<boolean> {
+	async updateRuleField(ruleId: string, change: BackupRuleChange): Promise<boolean> {
 		try {
 			const updatedBackupRules = [...this.#backupRules]
 			const ruleIndex = updatedBackupRules.findIndex((r) => r.id === ruleId)
@@ -576,30 +549,26 @@ export class BackupController {
 				return false
 			}
 
-			// Validate the field name and value type
-			const validationResult = this.#validateFieldUpdate(field, value)
-			if (!validationResult.valid) {
-				this.#logger.warn(`Invalid field update for backup rule: ${validationResult.error}`)
+			const error = this.#validateRuleChange(change)
+			if (error) {
+				this.#logger.warn(`Invalid field update for backup rule: ${error}`)
 				return false
 			}
 
 			// Update the field
-			updatedBackupRules[ruleIndex] = {
-				...updatedBackupRules[ruleIndex],
-				[field]: value,
-			}
+			updatedBackupRules[ruleIndex] = Object.assign(
+				{ ...updatedBackupRules[ruleIndex] },
+				{ [change.key]: change.value }
+			)
 
 			// Update the userConfig through the UserConfig controller
 			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
 			this.#backupRules = updatedBackupRules
 
-			// Reschedule if the rule was updated
-			this.#scheduleBackups()
-
-			this.#logger.info(`Updated backup rule ${ruleId} field ${field}`)
+			this.#logger.info(`Updated backup rule ${ruleId} field ${change.key}`)
 			return true
 		} catch (e) {
-			this.#logger.error(`Failed to update backup rule ${ruleId} field ${field}:`, e)
+			this.#logger.error(`Failed to update backup rule ${ruleId} field ${change.key}:`, e)
 			return false
 		}
 	}
@@ -627,12 +596,9 @@ export class BackupController {
 
 			const updatedBackupRules = [...this.#backupRules, newRule]
 
-			// Update the userConfig through the UserConfig controller
+			// Saving it schedules it, through the change to the rules
 			this.#userConfig.setKeyUnchecked('backups', updatedBackupRules)
 			this.#backupRules = updatedBackupRules
-
-			// Reschedule backups
-			this.#scheduleBackups()
 
 			this.#logger.info(`Created backup rule: ${newRule.name} (${newRuleId})`)
 			return newRuleId
@@ -666,8 +632,8 @@ export class BackupController {
 			// Remove any scheduled job for this rule
 			const job = this.#cronJobs.get(ruleId)
 			if (job) {
-				Promise.resolve(job.stop()).catch((err) => {
-					this.#logger.error(`Failed to stop cron job ${ruleId}: ${err}`)
+				Promise.resolve(job.stop()).catch((err: unknown) => {
+					this.#logger.error(`Failed to stop cron job ${ruleId}: ${stringifyError(err)}`)
 				})
 				this.#cronJobs.delete(ruleId)
 			}
@@ -713,4 +679,9 @@ export class BackupController {
 			return false
 		}
 	}
+}
+
+/** What decides the scheduled jobs: the enabled rules and their cron expressions */
+function scheduleOf(rules: BackupRulesConfig[]): string {
+	return JSON.stringify(rules.filter((rule) => rule.enabled).map((rule) => [rule.id, rule.cron]))
 }

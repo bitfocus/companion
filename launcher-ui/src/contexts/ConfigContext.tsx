@@ -67,16 +67,6 @@ export interface ConfigContextType {
 // eslint-disable-next-line react-refresh/only-export-components
 export const ConfigContext = createContext<ConfigContextType | undefined>(undefined)
 
-// Extend the global Window interface to include our API
-declare global {
-	interface Window {
-		api: {
-			send: (channel: string, data?: any) => void
-			receive: (channel: string, func: (...args: any[]) => void) => void
-		}
-	}
-}
-
 interface ConfigProviderProps {
 	children: ReactNode
 }
@@ -138,11 +128,16 @@ export function ConfigProvider({ children }: ConfigProviderProps): React.JSX.Ele
 		}
 
 		// Listen for responses from the main process
-		window.api.receive('info', handleConfigResponse)
-		window.api.receive('config-error', handleError)
+		const unsubscribeInfo = window.api.receive('info', handleConfigResponse)
+		const unsubscribeError = window.api.receive('config-error', handleError)
 
 		// Initial fetch
 		fetchConfig()
+
+		return () => {
+			unsubscribeInfo()
+			unsubscribeError()
+		}
 	}, [dispatch])
 
 	const contextValue: ConfigContextType = {

@@ -2,9 +2,13 @@ import express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { DataMetrics } from '../../lib/Data/Metrics.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { AppInfo } from '../../lib/Registry.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
+import { VariablesValues } from '../../lib/Variables/Values.js'
+import { mockGetKey, mockUserConfig } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -17,11 +21,7 @@ describe('DataMetrics', () => {
 		const appInfo = { appVersion: '1.2.3', appBuild: 'abc123' } as AppInfo
 
 		const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-			getKey: (key: keyof typeof config | string) => {
-				if (key === 'prometheus_enabled') return config.enabled
-				if (key === 'prometheus_token') return config.token
-				throw new Error(`unexpected key ${String(key)}`)
-			},
+			getKey: mockGetKey({ prometheus_enabled: config.enabled, prometheus_token: config.token }, 'throw'),
 		})
 
 		const metrics = new DataMetrics(appInfo, () => userconfig)
@@ -95,6 +95,69 @@ describe('DataMetrics', () => {
 		counterSource = 8
 		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
 		expect(second.text).toContain('companion_test_counter_total 8')
+	})
+
+	test('serves the variable dependency registry metrics', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const registry = new VariableDependencyRegistry()
+		registry.registerMetrics(metrics)
+		registry
+			.create({ onVariableDependenciesChanged: () => {} }, CreateBankControlId('c1'), null)
+			.set(new Set(['conn:x']))
+		registry.dispatch(new Set(['conn:x']), null)
+
+		const res = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(res.status).toBe(200)
+		expect(res.text).toContain('companion_variable_dependencies 1')
+		expect(res.text).toContain('companion_variable_dependency_keys 1')
+		expect(res.text).toContain('companion_variable_dependency_controls 1')
+		expect(res.text).toContain('companion_variable_dependencies_armed 0')
+		expect(res.text).toContain('companion_variable_change_dispatches_total 1')
+		expect(res.text).toContain('companion_variable_dependency_notifications_total 1')
+		expect(res.text).toMatch(/^companion_variable_change_dispatch_seconds_total \d/m)
+	})
+
+	test('serves the variable value metrics', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const values = new VariablesValues(mockUserConfig({ timezone: '' }))
+		values.registerMetrics(metrics)
+		values.setVariableValues('conn', [
+			{ id: 'a', value: 1 },
+			{ id: 'b', value: 2 },
+		])
+		values.setVariableValues('conn', [{ id: 'a', value: 1 }])
+
+		const res = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(res.text).toContain('companion_variable_values_reported_total{label="conn"} 3')
+		expect(res.text).toContain('companion_variable_values_changed_total{label="conn"} 2')
+	})
+
+	test('the variable value metrics survive a label being removed and reused between scrapes', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const values = new VariablesValues(mockUserConfig({ timezone: '' }))
+		values.registerMetrics(metrics)
+		values.setVariableValues('conn', [
+			{ id: 'a', value: 1 },
+			{ id: 'b', value: 2 },
+		])
+		const first = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(first.text).toContain('companion_variable_values_reported_total{label="conn"} 2')
+
+		// Deleted and a new connection given the same label, before the next scrape
+		values.forgetConnection('old-id', 'conn')
+		values.setVariableValues('conn', [{ id: 'c', value: 3 }])
+		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(second.status).toBe(200)
+		expect(second.text).toContain('companion_variable_values_reported_total{label="conn"} 3')
+
+		// Deleted, and scraped while gone: the series is retired
+		values.forgetConnection('new-id', 'conn')
+		const third = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(third.status).toBe(200)
+		expect(third.text).not.toContain('label="conn"')
 	})
 
 	test('histograms record observations (count/sum/buckets)', async () => {

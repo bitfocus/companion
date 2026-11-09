@@ -3,7 +3,9 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
@@ -47,7 +49,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 		(value: DropdownChoiceId) => {
 			setConnectionMutation
 				.mutateAsync({ location, connectionId: String(value) })
-				.catch((err) => console.error(`Failed to switch preset reference connection: ${err}`))
+				.catch((err) => console.error(`Failed to switch preset reference connection: ${stringifyError(err)}`))
 		},
 		[setConnectionMutation, location]
 	)
@@ -97,6 +99,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 								key={variableName}
 								location={location}
 								variableName={variableName}
+								headline={findLocalVariableHeadline(config.localVariables, variableName)}
 								value={variableValues?.[variableName]}
 							/>
 						))}
@@ -107,20 +110,28 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 	)
 })
 
+function findLocalVariableHeadline(localVariables: SomeEntityModel[], variableName: string): string | undefined {
+	const localVariable = localVariables.find(
+		(lv) => lv.type === EntityModelType.Feedback && lv.variableName === variableName
+	)
+	return localVariable?.headline || undefined
+}
+
 interface PresetReferenceVariableRowProps {
 	location: ControlLocation
 	variableName: string
+	headline: string | undefined
 	value: VariableValue
 }
 
-function PresetReferenceVariableRow({ location, variableName, value }: PresetReferenceVariableRowProps) {
+function PresetReferenceVariableRow({ location, variableName, headline, value }: PresetReferenceVariableRowProps) {
 	const setVariableMutation = useMutationExt(trpc.controls.setPresetReferenceVariable.mutationOptions())
 
 	const setValue = useCallback(
 		(newValue: VariableValue | undefined) => {
 			setVariableMutation
 				.mutateAsync({ location, variableName, value: newValue })
-				.catch((e) => console.error(`Failed to set preset reference variable: ${e}`))
+				.catch((e) => console.error(`Failed to set preset reference variable: ${stringifyError(e)}`))
 		},
 		[setVariableMutation, location, variableName]
 	)
@@ -129,8 +140,8 @@ function PresetReferenceVariableRow({ location, variableName, value }: PresetRef
 
 	return (
 		<>
-			<FormLabel htmlFor={fieldId} sm={4} column="sm">
-				{variableName}
+			<FormLabel htmlFor={fieldId} sm={4} column="sm" title={headline ? variableName : undefined}>
+				{headline || variableName}
 			</FormLabel>
 			<Grid.Col sm={8}>
 				<VariableInputGroup id={fieldId} value={value} setValue={setValue} />

@@ -109,6 +109,15 @@
 			}
 		}
 
+		&.disabled {
+			cursor: default;
+			opacity: 0.6;
+
+			&:hover {
+				background-color: transparent;
+			}
+		}
+
 		/* Matches the selected row of the CollectionsNestingTable-based list pages. */
 		&.selected {
 			background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);

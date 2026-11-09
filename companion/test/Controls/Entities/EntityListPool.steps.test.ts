@@ -69,6 +69,8 @@ describe('EntityListPool - stepDuplicate', () => {
 		expect(ok).toBe(true)
 		expect(pool.getStepIds()).toEqual(['0', '1'])
 		expect(pool.getAllEntitiesInList(downSet('1'))).toHaveLength(1)
+		// The copy is a separate action, not the same one twice
+		expect(pool.getAllEntitiesInList(downSet('1'))[0].id).not.toBe(pool.getAllEntitiesInList(downSet('0'))[0].id)
 	})
 
 	test('returns false for an unknown step', () => {
@@ -312,6 +314,19 @@ describe('EntityListPool - expression step progression', () => {
 		expect(pool.getActiveStepIndex()).toBe(1)
 	})
 
+	test('the step expression may not reference this:step', () => {
+		const { pool, variableValues } = createPool()
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '$(this:step)' })
+
+		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenLastCalledWith(
+			null,
+			[],
+			null,
+			null,
+			expect.objectContaining({ blockedThisVariables: new Set(['this:step']) })
+		)
+	})
+
 	test('manual navigation is rejected while in expression mode', () => {
 		const { pool } = createPool()
 		pool.stepAdd() // '1'
@@ -350,7 +365,7 @@ describe('EntityListPool - expression step progression', () => {
 		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '2' })
 		expect(pool.getActiveStepIndex()).toBe(1)
 
-		pool.stepExpressionUpdate({ stepProgression: 'manual' })
+		pool.stepExpressionUpdate({ stepProgression: 'manual', stepExpression: '' })
 
 		// Frozen on the last evaluated step, and manual navigation works again
 		expect(pool.getActiveStepIndex()).toBe(1)
@@ -358,8 +373,8 @@ describe('EntityListPool - expression step progression', () => {
 		expect(pool.getActiveStepIndex()).toBe(0)
 	})
 
-	test('onVariablesChanged re-evaluates the step only when a tracked variable changes', () => {
-		const { pool, executeExpression } = createPool()
+	test('a variable change re-evaluates the step only when a tracked variable changes', () => {
+		const { pool, deps, executeExpression } = createPool()
 		pool.stepAdd() // '1'
 		// First evaluation tracks variable 'internal:custom_a' and selects step index 1
 		executeExpression.mockReturnValue({ ok: true, value: 2, variableIds: new Set(['internal:custom_a']) })
@@ -368,11 +383,36 @@ describe('EntityListPool - expression step progression', () => {
 
 		// A change to an unrelated variable must not move the step
 		executeExpression.mockReturnValue({ ok: true, value: 1, variableIds: new Set(['internal:custom_a']) })
-		pool.onVariablesChanged(new Set(['internal:custom_b']))
+		deps.variableDependencies.dispatch(new Set(['internal:custom_b']), null)
 		expect(pool.getActiveStepIndex()).toBe(1)
 
 		// A change to the tracked variable re-evaluates and moves to step index 0
-		pool.onVariablesChanged(new Set(['internal:custom_a']))
+		deps.variableDependencies.dispatch(new Set(['internal:custom_a']), null)
 		expect(pool.getActiveStepIndex()).toBe(0)
+	})
+
+	test('a failed step expression re-evaluates when a variable it read changes', () => {
+		const { pool, deps, executeExpression } = createPool()
+		pool.stepAdd() // '1'
+		executeExpression.mockReturnValue({ ok: false, error: 'boom', variableIds: new Set(['internal:custom_a']) })
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '$(internal:custom_a)' })
+		expect(pool.getActiveStepIndex()).toBe(0)
+
+		executeExpression.mockReturnValue({ ok: true, value: 2, variableIds: new Set(['internal:custom_a']) })
+		deps.variableDependencies.dispatch(new Set(['internal:custom_a']), null)
+		expect(pool.getActiveStepIndex()).toBe(1)
+	})
+
+	test('stops tracking the step expression variables when leaving expression mode or destroyed', () => {
+		const { pool, deps, executeExpression } = createPool()
+		executeExpression.mockReturnValue({ ok: true, value: 1, variableIds: new Set(['internal:custom_a']) })
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '$(internal:custom_a)' })
+		expect(deps.variableDependencies.stats().keys).toBe(1)
+
+		pool.stepExpressionUpdate({ stepProgression: 'manual', stepExpression: '' })
+		expect(deps.variableDependencies.stats().keys).toBe(0)
+
+		pool.destroy()
+		expect(deps.variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 	})
 })

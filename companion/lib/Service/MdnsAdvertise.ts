@@ -1,15 +1,21 @@
 import os from 'node:os'
 import { Bonjour } from '@julusian/bonjour-service'
 import { API_VERSION as SATELLITE_API_VERSION } from '@companion-app/satellite-protocol'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { LinkController } from '../Link/Controller.js'
+import { LINK_PROTOCOL_VERSIONS } from '../Link/Protocol/Versions.js'
+import { DIRECT_MDNS_LINK_ID_TXT, DIRECT_MDNS_SERVICE_TYPE } from '../Link/Transports/Direct/Constants.js'
+import { DirectServerBuiltinTransport } from '../Link/Transports/Direct/index.js'
 import type { AppInfo } from '../Registry.js'
 import { DISABLE_IPv6 } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'
 
 /**
  * Class providing mDNS/Bonjour advertisement of Companion's satellite ports,
- * so that the Companion Satellite app can auto-discover this Companion.
+ * so that the Companion Satellite app can auto-discover this Companion, and of the port
+ * accepting direct Link connections, so that other installations can.
  *
  * This is the reverse direction of {@link ServiceBonjourDiscovery}: here Companion
  * advertises itself, mirroring the conventions used by the satellite app's own announcer.
@@ -23,10 +29,15 @@ import { ServiceBase } from './Base.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
+const REPUBLISH_KEYS = new Set<string>(['installName', 'link_direct_enabled', 'link_direct_port'])
+
 export class ServiceMdnsAdvertise extends ServiceBase {
 	readonly #appInfo: AppInfo
+	readonly #link: LinkController
 
 	#bonjour: Bonjour | undefined = undefined
+	/** The Link id advertised, or null when direct Link connections aren't */
+	#advertisedLinkId: string | null = null
 
 	/**
 	 * Debounce timer used to coalesce rapid config changes (e.g. typing the install name)
@@ -34,10 +45,17 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 	 */
 	#restartTimeout: NodeJS.Timeout | undefined = undefined
 
-	constructor(userconfig: DataUserConfig, appInfo: AppInfo) {
+	constructor(userconfig: DataUserConfig, appInfo: AppInfo, link: LinkController) {
 		super(userconfig, 'Service/MdnsAdvertise', 'mdns_announcements_enabled', null)
 
 		this.#appInfo = appInfo
+		this.#link = link
+		// The Link id is announced while the listener works, so announce again when it is regenerated or that changes
+		const republishLink = () => {
+			if (this.#linkIdToAdvertise() !== this.#advertisedLinkId) this.#scheduleRepublish()
+		}
+		link.on('self', republishLink)
+		link.on('transportStates', republishLink)
 
 		this.init()
 	}
@@ -57,12 +75,30 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 
 			// Advertise a separate service per satellite port, so each SRV record points
 			// straight at the port the satellite app should connect to.
-			this.#publish(name, txt, 'companion-satellite-tcp', 16622)
-			this.#publish(name, txt, 'companion-satellite-ws', 16623)
+			this.#publish(name, txt, 'comp-sat-tcp', 16622, 'companion-satellite-tcp')
+			this.#publish(name, txt, 'comp-sat-ws', 16623, 'companion-satellite-ws')
+
+			const linkId = this.#linkIdToAdvertise()
+			this.#advertisedLinkId = linkId
+			if (linkId !== null) {
+				this.#publish(
+					name,
+					{
+						version: this.#appInfo.appVersion,
+						protocolVersions: LINK_PROTOCOL_VERSIONS.join(','),
+						[DIRECT_MDNS_LINK_ID_TXT]: linkId,
+					},
+					DIRECT_MDNS_SERVICE_TYPE,
+					Number(this.userconfig.getKey('link_direct_port')),
+					null
+				)
+			}
 
 			this.currentState = true
 
-			this.logger.info('Advertising Companion satellite ports via mDNS')
+			this.logger.info(
+				`Advertising Companion satellite ports${linkId !== null ? ' and direct Link connections' : ''} via mDNS`
+			)
 		} catch (e) {
 			this.logger.error(`Could not launch: ${stringifyError(e)}`)
 
@@ -72,19 +108,33 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		}
 	}
 
-	#publish(name: string, txt: Record<string, string>, type: string, port: number): void {
-		this.#bonjour?.publish(
-			{
-				name,
-				type,
-				protocol: 'tcp',
-				port,
-				txt,
-				ttl: 150,
-				disableIPv6: DISABLE_IPv6,
-			},
-			{ announceOnInterval: 60 * 1000 }
-		)
+	/** The Link id to advertise, or null while direct connections aren't accepted, eg as the port is in use */
+	#linkIdToAdvertise(): string | null {
+		return this.#link.isTransportConnected(DirectServerBuiltinTransport.id) ? this.#link.id : null
+	}
+
+	/**
+	 * @param legacyType Also announced under this pre-5.2 type, which is longer than RFC 6763 allows, so that older
+	 * satellite apps still find this. TODO: remove after 5.2
+	 */
+	#publish(name: string, txt: Record<string, string>, type: string, port: number, legacyType: string | null): void {
+		const publish = (serviceType: string, allowInvalidType: boolean) =>
+			this.#bonjour?.publish(
+				{
+					name,
+					type: serviceType,
+					protocol: 'tcp',
+					port,
+					txt,
+					ttl: 150,
+					disableIPv6: DISABLE_IPv6,
+					allowInvalidType,
+				},
+				{ announceOnInterval: 60 * 1000 }
+			)
+
+		publish(type, false)
+		if (legacyType !== null) publish(legacyType, true)
 	}
 
 	close(): void {
@@ -95,17 +145,21 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		}
 	}
 
-	override updateUserConfig(key: string, value: boolean | number | string): void {
+	override updateUserConfig(change: UserConfigKeyChange): void {
 		// Let the base class handle enable/disable via the mdns_announcements_enabled key
-		super.updateUserConfig(key, value)
+		super.updateUserConfig(change)
 
-		// The advertised service name is derived from the install name, so republish when it changes
-		if (key === 'installName' && this.currentState) {
-			if (this.#restartTimeout) clearTimeout(this.#restartTimeout)
-			this.#restartTimeout = setTimeout(() => {
-				this.#restartTimeout = undefined
-				this.restartModule()
-			}, 50)
-		}
+		// The advertised services are derived from these, so republish when they change
+		if (REPUBLISH_KEYS.has(change.key)) this.#scheduleRepublish()
+	}
+
+	#scheduleRepublish(): void {
+		if (!this.currentState) return
+
+		if (this.#restartTimeout) clearTimeout(this.#restartTimeout)
+		this.#restartTimeout = setTimeout(() => {
+			this.#restartTimeout = undefined
+			this.restartModule()
+		}, 50)
 	}
 }

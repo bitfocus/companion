@@ -38,6 +38,11 @@ export class SelectTool extends GridToolBase {
 		this.onHover(ctx, location, modifiers)
 	}
 
+	override onFocusMoved(ctx: GridToolContext, location: ControlLocation): void {
+		// Walking the grid with the arrows is choosing a button as surely as clicking it, so the editor follows
+		if (this.opensEditor && ctx.store.selectionCount === 1) ctx.actions.openEditor(location)
+	}
+
 	/**
 	 * What a tap on this tool means in terms of the selection.
 	 *
@@ -78,10 +83,14 @@ export class SelectTool extends GridToolBase {
 		return true
 	}
 
-	override onPageChanged(ctx: GridToolContext): void {
+	override onPageChanged(ctx: GridToolContext, pageNumber: number): void {
 		// A selection belongs to the page it was made on - there is nothing sensible to show for it
 		// once you are looking elsewhere. Transfer tools capture their sources instead, so they are
 		// the ones that survive a page change.
+		// One already on the new page was put there for it, e.g. by page up/down
+		const { focus, selectedLocations } = ctx.store
+		if (focus?.pageNumber === pageNumber && selectedLocations.every((loc) => loc.pageNumber === pageNumber)) return
+
 		ctx.store.clearSelection()
 	}
 }

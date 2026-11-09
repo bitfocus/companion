@@ -2,6 +2,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useId } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import { EditActionsRelease } from '../EditActionsRelease.js'
@@ -41,6 +42,8 @@ vi.mock('~/Controls/EntitiesEditor.js', () => ({
 	},
 }))
 
+const CONTROL_ID = CreateBankControlId('control0')
+
 const actionSets: ActionSetsModel = {
 	down: [],
 	up: [],
@@ -65,7 +68,7 @@ describe('EditActionsRelease', () => {
 
 		render(
 			<EditActionsRelease
-				controlId="control0"
+				controlId={CONTROL_ID}
 				location={{ pageNumber: 1, row: 0, column: 0 }}
 				action_sets={actionSets}
 				stepOptions={{ runWhileHeld: [] }}
@@ -89,7 +92,7 @@ describe('EditActionsRelease', () => {
 			await user.click(within(dialog).getByRole('button', { name: 'Save' }))
 		})
 
-		expect(rename).toHaveBeenCalledWith({ controlId: 'control0', stepId: '0', oldSetId: 1000, newSetId: 2000 })
+		expect(rename).toHaveBeenCalledWith({ controlId: CONTROL_ID, stepId: '0', oldSetId: 1000, newSetId: 2000 })
 		expect(setRunWhileHeld).not.toHaveBeenCalled()
 		expect(setControlEvents).not.toHaveBeenCalled()
 	})
@@ -102,7 +105,7 @@ describe('EditActionsRelease', () => {
 
 		render(
 			<EditActionsRelease
-				controlId="control0"
+				controlId={CONTROL_ID}
 				location={{ pageNumber: 1, row: 0, column: 0 }}
 				action_sets={actionSets}
 				stepOptions={{ runWhileHeld: [], controlEventsDisabledSets: [1000] }}
@@ -125,7 +128,7 @@ describe('EditActionsRelease', () => {
 			await user.click(within(dialog).getByRole('button', { name: 'Save' }))
 		})
 
-		expect(rename).toHaveBeenCalledWith({ controlId: 'control0', stepId: '0', oldSetId: 1000, newSetId: 1500 })
+		expect(rename).toHaveBeenCalledWith({ controlId: CONTROL_ID, stepId: '0', oldSetId: 1000, newSetId: 1500 })
 		expect(setRunWhileHeld).not.toHaveBeenCalled()
 		expect(setControlEvents).not.toHaveBeenCalled()
 	})
@@ -137,7 +140,7 @@ describe('EditActionsRelease', () => {
 
 		render(
 			<EditActionsRelease
-				controlId="control0"
+				controlId={CONTROL_ID}
 				location={{ pageNumber: 1, row: 0, column: 0 }}
 				action_sets={actionSets}
 				stepOptions={{ runWhileHeld: [] }}
@@ -171,7 +174,7 @@ describe('EditActionsRelease', () => {
 
 		render(
 			<EditActionsRelease
-				controlId="control0"
+				controlId={CONTROL_ID}
 				location={{ pageNumber: 1, row: 0, column: 0 }}
 				action_sets={actionSets}
 				stepOptions={{ runWhileHeld: [] }}
@@ -195,10 +198,10 @@ describe('EditActionsRelease', () => {
 			await user.click(within(dialog).getByRole('button', { name: 'Save' }))
 		})
 
-		expect(rename).toHaveBeenCalledWith({ controlId: 'control0', stepId: '0', oldSetId: 1000, newSetId: 1500 })
+		expect(rename).toHaveBeenCalledWith({ controlId: CONTROL_ID, stepId: '0', oldSetId: 1000, newSetId: 1500 })
 		expect(setRunWhileHeld).toHaveBeenCalledTimes(1)
 		expect(setRunWhileHeld).toHaveBeenCalledWith({
-			controlId: 'control0',
+			controlId: CONTROL_ID,
 			stepId: '0',
 			setId: 1500,
 			runWhileHeld: true,

@@ -11,6 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import { isControlIdOfKind } from '@companion-app/shared/ControlId.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -118,7 +119,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 		switch (action.definitionId) {
 			case 'trigger_enabled': {
 				const triggerId = stringifyVariableValue(action.options.trigger_id)
-				if (!triggerId) break
+				if (!triggerId || !isControlIdOfKind(triggerId, 'trigger')) break
 
 				const control = this.#controlsController.getControl(triggerId)
 				if (!control || control.type !== 'trigger' || !control.supportsOptions) return null
@@ -126,7 +127,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				let newState = action.options.enable == 'true'
 				if (action.options.enable == 'toggle') newState = !control.options.enabled
 
-				control.optionsSetField('enabled', newState)
+				control.optionsSetField({ key: 'enabled', value: newState })
 
 				break
 			}
@@ -214,7 +215,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 	executeFeedback(feedback: FeedbackForInternalExecution): boolean | void {
 		if (feedback.definitionId === 'trigger_enabled') {
 			const triggerId = stringifyVariableValue(feedback.options.trigger_id)
-			if (!triggerId) return false
+			if (!triggerId || !isControlIdOfKind(triggerId, 'trigger')) return false
 
 			const control = this.#controlsController.getControl(triggerId)
 			if (!control || control.type !== 'trigger' || !control.supportsOptions) return false

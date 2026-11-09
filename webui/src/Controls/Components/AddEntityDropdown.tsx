@@ -4,7 +4,7 @@ import { ChevronDownIcon } from 'lucide-react'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
-import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import { canOfferEntityInPicker } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -45,7 +45,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			const definition = definitions.connections.get(connectionId)?.get(definitionId)
 			if (!definition) continue
 
-			if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
+			if (!canOfferEntityInPicker(feedbackListType, definition)) continue
 
 			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 			const optionLabel = `${connectionLabel}: ${definition.label}`

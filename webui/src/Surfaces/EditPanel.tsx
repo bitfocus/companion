@@ -1,4 +1,5 @@
 import { faGamepad, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { optionValueAsString, optionValueAsStrings } from '~/Controls/OptionFieldValues.js'
 import './surfaces.css'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -10,6 +11,7 @@ import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
 	SurfaceGroupConfig,
+	SurfaceGroupConfigChange,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
@@ -264,14 +266,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	const setGroupConfigKeyMutation = useMutationExt(trpc.surfaces.groupSetConfigKey.mutationOptions())
 	const setGroupConfigValue = useCallback(
-		(key: string, value: JsonValue) => {
-			console.log('update group', key, value)
+		(change: SurfaceGroupConfigChange) => {
+			console.log('update group', change)
 			if (groupId) {
 				setGroupConfigKeyMutation
 					.mutateAsync({
 						groupId,
-						key,
-						value,
+						change,
 					})
 					.then((error) => {
 						if (error) {
@@ -309,7 +310,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 	)
 
 	const surfaceGroupChoices = useComputed(() => {
-		const choices: DropdownChoice[] = [
+		const choices: DropdownChoice<string>[] = [
 			{ id: 'null', label: 'Standalone (Default)' },
 			...surfaces.store
 				.values()
@@ -382,7 +383,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							<SimpleDropdownInputField
 								id={groupFieldId}
 								value={surfaceInfo.groupId || 'null'}
-								setValue={(value) => setSurfaceGroupId(value as string)}
+								setValue={(value) => setSurfaceGroupId(value)}
 								choices={surfaceGroupChoices}
 							/>
 						</Grid.Col>
@@ -414,7 +415,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								<SwitchInputField
 									id={useLastPageFieldId}
 									value={!!groupConfig.config.use_last_page}
-									setValue={(value) => setGroupConfigValue('use_last_page', !!value)}
+									setValue={(value) => setGroupConfigValue({ key: 'use_last_page', value: !!value })}
 								/>
 							</div>
 						</Grid.Col>
@@ -429,7 +430,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								includeDirection={false}
 								includeStartup={false}
 								value={groupConfig.config.startup_page_id}
-								setValue={(val) => setGroupConfigValue('startup_page_id', val)}
+								setValue={(val) => setGroupConfigValue({ key: 'startup_page_id', value: optionValueAsString(val) })}
 							/>
 						</Grid.Col>
 
@@ -445,7 +446,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 										includeDirection={false}
 										includeStartup={false}
 										value={groupConfig.config.last_page_id}
-										setValue={(val) => setGroupConfigValue('last_page_id', val)}
+										setValue={(val) => setGroupConfigValue({ key: 'last_page_id', value: optionValueAsString(val) })}
 									/>
 								</Grid.Col>
 							</>
@@ -459,7 +460,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								<SwitchInputField
 									id={restrictPagesFieldId}
 									value={!!groupConfig.config.restrict_pages}
-									setValue={(value) => setGroupConfigValue('restrict_pages', !!value)}
+									setValue={(value) => setGroupConfigValue({ key: 'restrict_pages', value: !!value })}
 								/>
 							</div>
 						</Grid.Col>
@@ -467,7 +468,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						{!!groupConfig.config.restrict_pages && (
 							<>
 								<FormLabel htmlFor={allowedPagesFieldId} sm={4} column="sm">
-									Allowed pages:
+									Allowed pages
 								</FormLabel>
 								<Grid.Col sm={8}>
 									<InternalPageIdDropdown
@@ -477,7 +478,9 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 										includeStartup={false}
 										multiple={true}
 										value={groupConfig.config.allowed_page_ids}
-										setValue={(val) => setGroupConfigValue('allowed_page_ids', val)}
+										setValue={(val) =>
+											setGroupConfigValue({ key: 'allowed_page_ids', value: optionValueAsStrings(val) })
+										}
 									/>
 								</Grid.Col>
 							</>
@@ -491,7 +494,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								<SwitchInputField
 									id={neverLockFieldId}
 									value={!!groupConfig.config.never_lock}
-									setValue={(value) => setGroupConfigValue('never_lock', !!value)}
+									setValue={(value) => setGroupConfigValue({ key: 'never_lock', value: !!value })}
 								/>
 							</div>
 						</Grid.Col>

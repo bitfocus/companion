@@ -42,7 +42,7 @@ export const MetricsConfig = observer(function MetricsConfig(props: UserConfigPr
 				<TextInputField
 					id={tokenId}
 					value={props.config.prometheus_token}
-					setValue={(value) => props.setValue('prometheus_token', value)}
+					setValue={(value) => props.setValue({ key: 'prometheus_token', value })}
 				/>
 			</div>
 			<Button

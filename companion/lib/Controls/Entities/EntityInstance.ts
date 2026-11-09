@@ -1,6 +1,8 @@
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -50,7 +52,7 @@ export class ControlEntityInstance {
 	/**
 	 * Id of the control this belongs to
 	 */
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 
 	readonly #data: Omit<SomeEntityModel, 'children'>
 
@@ -134,7 +136,7 @@ export class ControlEntityInstance {
 		return (data as FeedbackEntityModel).isInverted
 	}
 
-	get feedbackValue(): any {
+	get feedbackValue(): FeedbackValue {
 		return this.#cachedFeedbackValue
 	}
 
@@ -193,7 +195,7 @@ export class ControlEntityInstance {
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
 		specialExpressionManager: EntityPoolSpecialExpressionManager,
-		controlId: string,
+		controlId: SomeControlId,
 		data: SomeEntityModel,
 		isCloned: boolean
 	) {
@@ -216,7 +218,7 @@ export class ControlEntityInstance {
 			this.#data.id = nanoid()
 		}
 
-		if (data.connectionId === 'internal') {
+		if (isInternalConnectionId(data.connectionId)) {
 			let children = { ...data.children }
 
 			// Perform the upgrade conversion now.
@@ -275,7 +277,7 @@ export class ControlEntityInstance {
 	}
 
 	getSupportedChildGroupDefinitions(): EntitySupportedChildGroupDefinition[] {
-		if (this.connectionId !== 'internal') return []
+		if (!isInternalConnectionId(this.connectionId)) return []
 
 		const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 			this.#data.type,
@@ -290,11 +292,11 @@ export class ControlEntityInstance {
 	 */
 	cleanup(): void {
 		// Inform relevant module
-		if (this.#data.connectionId === 'internal') {
+		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else {
-			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
-				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e: unknown) => {
+				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
 			})
 		}
 
@@ -321,14 +323,14 @@ export class ControlEntityInstance {
 		) {
 			const thisData = this.#data
 
-			if (thisData.connectionId === 'internal') {
+			if (isInternalConnectionId(thisData.connectionId)) {
 				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
 			} else {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
-				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
-					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e: unknown) => {
+					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
 				})
 			}
 
@@ -474,9 +476,13 @@ export class ControlEntityInstance {
 	/**
 	 * Learn the options for an entity, by asking the connection for the current values
 	 */
-	async learnOptions(): Promise<boolean> {
-		const newOptions = await this.#processManager.connectionEntityLearnOptions(this.asEntityModel(), this.#controlId)
-		if (newOptions) {
+	async learnOptions(signal: AbortSignal): Promise<boolean> {
+		const newOptions = await this.#processManager.connectionEntityLearnOptions(
+			this.asEntityModel(),
+			this.#controlId,
+			signal
+		)
+		if (newOptions && !signal.aborted) {
 			this.setOptions(newOptions)
 
 			return true
@@ -644,7 +650,7 @@ export class ControlEntityInstance {
 	 * Recursively get all the child entities
 	 */
 	getAllChildren(): ControlEntityInstance[] {
-		if (this.connectionId !== 'internal') return []
+		if (!isInternalConnectionId(this.connectionId)) return []
 
 		const entities: ControlEntityInstance[] = []
 
@@ -659,7 +665,7 @@ export class ControlEntityInstance {
 	 * Recursively get all the child entities
 	 */
 	getChildren(groupId: string): ControlEntityList | undefined {
-		if (this.connectionId !== 'internal') return undefined
+		if (!isInternalConnectionId(this.connectionId)) return undefined
 
 		return this.#children.get(groupId)
 	}
@@ -733,7 +739,7 @@ export class ControlEntityInstance {
 	asEntityModel(deep = true): SomeEntityModel {
 		const data: SomeEntityModel = { ...this.#data }
 
-		if (deep && this.connectionId === 'internal') {
+		if (deep && isInternalConnectionId(this.connectionId)) {
 			data.children = {}
 
 			for (const [groupId, childGroup] of this.#children) {
@@ -759,7 +765,7 @@ export class ControlEntityInstance {
 		}
 
 		for (const childGroup of this.#children.values()) {
-			if (childGroup.clearCachedValueForConnectionId(connectionId)) {
+			if (childGroup.clearCachedValueForConnectionId(connectionId).length > 0) {
 				changed = true
 			}
 		}
@@ -771,7 +777,7 @@ export class ControlEntityInstance {
 	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
 	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}.
 	 */
-	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): any {
+	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): FeedbackValue {
 		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const definition = this.getEntityDefinition()
@@ -824,7 +830,7 @@ export class ControlEntityInstance {
 			return false
 
 		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
-		if (context && this.#data.connectionId === 'internal') {
+		if (context && isInternalConnectionId(this.#data.connectionId)) {
 			const value = this.#internalModule.evaluateFeedbackValue(
 				this.asEntityModel(false) as FeedbackEntityModel,
 				this.#controlId,
@@ -967,7 +973,7 @@ export class ControlEntityInstance {
 		return false
 	}
 
-	getUserValue(): any {
+	getUserValue(): JsonValue | undefined {
 		return this.#cachedFeedbackValue
 	}
 
@@ -988,7 +994,7 @@ export class ControlEntityInstance {
 export function isInternalLogicFeedback(entity: ControlEntityInstance): boolean {
 	return (
 		entity.type === EntityModelType.Feedback &&
-		entity.connectionId === 'internal' &&
+		isInternalConnectionId(entity.connectionId) &&
 		entity.definitionId.startsWith('logic_')
 	)
 }

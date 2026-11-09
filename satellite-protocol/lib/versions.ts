@@ -87,8 +87,20 @@ export const SATELLITE_FEATURES = {
 		capsFlag: null,
 		description: 'DEVICE-APPEARANCE describes how to draw the face of the surface',
 	},
+	bitmapCache: {
+		since: '1.16.0',
+		capsFlag: 'BITMAP_CACHE',
+		description:
+			'The client can cache bitmaps (BITMAP-CACHE, BITMAP-COST, BITMAP-EVICT), so that KEY-STATE and SUB-STATE can refer to them by BITMAP_ID',
+	},
+	jsonVariableValues: {
+		since: '1.16.0',
+		capsFlag: null,
+		description:
+			'SET-VARIABLE-VALUE and VARIABLE-VALUE accept ENCODING=json. ADD-DEVICE accepts VARIABLE_ENCODING=json to receive JSON values',
+	},
 	controlEvents: {
-		since: '1.15.0',
+		since: '1.17.0',
 		capsFlag: 'CONTROL_EVENTS',
 		description:
 			'A surface that sets CONTROL_EVENTS on ADD-DEVICE receives CONTROL-EVENT when a press or held group of one of its controls runs actions',

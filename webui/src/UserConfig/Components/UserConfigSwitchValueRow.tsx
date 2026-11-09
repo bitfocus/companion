@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ResetButton, type UserConfigProps } from './Common.js'
 
@@ -27,7 +28,7 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 					<SwitchInputField
 						id={undefined} // Future: set this for better accessibility
 						value={userConfig.config[field] === activeValue}
-						setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
+						setValue={(value) => userConfig.setValue(keyValueChange(field, value ? activeValue : inactiveValue))}
 					/>
 				</div>
 			</td>

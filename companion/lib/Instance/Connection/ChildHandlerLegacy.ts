@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import { isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -66,13 +67,8 @@ import type { CompanionOptionValues as CompanionOptionValuesNew } from '@compani
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
-import { buildActionExecutionOverrides } from '../../Variables/Util.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import {
-	doesModuleExpectLabelUpdates,
-	doesModuleUseNewConfigLayout,
-	doesModuleUseSeparateUpgradeMethod,
-} from './ApiVersions.js'
+import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
 import type {
 	ConnectionChildHandlerApi,
 	ConnectionChildHandlerDependencies,
@@ -110,11 +106,13 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	#hasHttpHandler = false
 
 	hasRecordActionsHandler: boolean = false
-	usesNewConfigLayout: boolean = false
+	usesNewConfigLayout: boolean = true
 
 	#expectsLabelUpdates: boolean = false
 
 	readonly #entityManager: ConnectionEntityManager | null
+
+	readonly sendVariablesChanged: ((changedVariableIds: string[]) => void) | undefined
 
 	#currentUpgradeIndex: number | null = null
 
@@ -185,16 +183,17 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			5000
 		)
 
-		this.usesNewConfigLayout = doesModuleUseNewConfigLayout(apiVersion0)
-
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
 			? new ConnectionEntityManager(
 					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 					this.#deps.controls,
 					this.connectionId,
-					this.#deps.renderClock
+					this.#deps.renderClock,
+					this.#deps.variables.dependencies
 				)
 			: null
+		// With an entity manager, the variable dependency registry tells it about the changes it reads
+		this.sendVariablesChanged = this.#entityManager ? undefined : this.#sendVariablesChanged.bind(this)
 
 		const messageHandler = (msg: any) => {
 			// payload is an EJSON string here (parsed inside receivedMessage); count it before that
@@ -253,7 +252,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		// Save the resulting values
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
-		this.usesNewConfigLayout = this.usesNewConfigLayout && !msg.disableNewConfigLayout
+		this.usesNewConfigLayout = !msg.disableNewConfigLayout
 		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
@@ -352,21 +351,10 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 
 	/**
-	 * Send the list of changed variables to the child process
-	 * @access public - called whenever variables change
+	 * Send the list of changed variables to the child process, for the old flow (without an entity manager)
+	 * which checks them itself for anything to invalidate
 	 */
-	async sendVariablesChanged(
-		changedVariableIdSet: ReadonlySet<string>,
-		changedVariableIds: string[],
-		controlIdFilter: ReadonlySet<string> | null
-	): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
-			return
-		}
-
-		// Old flow means informing the module about any variable changes so that it can check for anything to invalidate
-		if (controlIdFilter) return
+	#sendVariablesChanged(changedVariableIds: string[]): void {
 		this.#ipcWrapper.sendWithNoCb('variablesChanged', {
 			variablesIds: changedVariableIds,
 		})
@@ -403,7 +391,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		return allActions
 	}
 
-	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
+	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
 		if (this.#entityManager) {
 			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 
@@ -423,7 +411,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	/**
 	 * Inform the child instance class about an updated feedback
 	 */
-	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): Promise<void> {
+	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: SomeControlId): Promise<void> {
 		if (feedback.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 		if (feedback.disabled) return
 
@@ -453,9 +441,12 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string
+		controlId: SomeControlId,
+		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
+
+		if (signal.aborted) return
 
 		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
 			entity.type,
@@ -467,21 +458,25 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			switch (entity.type) {
 				case EntityModelType.Action: {
-					const msg = await this.#ipcWrapper.sendWithCb(
-						'learnAction',
-						{
-							action: {
-								id: entity.id,
-								controlId: controlId,
-								actionId: entity.definitionId,
-								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
+					// The old ipc protocol can't cancel a call, so stop waiting for it instead
+					const msg = await rejectOnAbort(
+						this.#ipcWrapper.sendWithCb(
+							'learnAction',
+							{
+								action: {
+									id: entity.id,
+									controlId: controlId,
+									actionId: entity.definitionId,
+									options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
+									upgradeIndex: null,
+									disabled: !!entity.disabled,
+								},
 							},
-						},
-						undefined,
-						learnTimeout
+							undefined,
+							learnTimeout
+						),
+						signal
 					)
 
 					// This will replace any user expressions, if they were able to define any
@@ -490,25 +485,29 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				case EntityModelType.Feedback: {
 					const control = this.#deps.controls.getControl(controlId)
 
-					const msg = await this.#ipcWrapper.sendWithCb(
-						'learnFeedback',
-						{
-							feedback: {
-								id: entity.id,
-								controlId: controlId,
-								feedbackId: entity.definitionId,
-								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
+					// The old ipc protocol can't cancel a call, so stop waiting for it instead
+					const msg = await rejectOnAbort(
+						this.#ipcWrapper.sendWithCb(
+							'learnFeedback',
+							{
+								feedback: {
+									id: entity.id,
+									controlId: controlId,
+									feedbackId: entity.definitionId,
+									options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-								isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
+									isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
 
-								image: getFeedbackImageSizeForControl(control),
+									image: getFeedbackImageSizeForControl(control),
 
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
+									upgradeIndex: null,
+									disabled: !!entity.disabled,
+								},
 							},
-						},
-						undefined,
-						learnTimeout
+							undefined,
+							learnTimeout
+						),
+						signal
 					)
 
 					// This will replace any user expressions, if they were able to define any
@@ -519,6 +518,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					break
 			}
 		} catch (e) {
+			// A cancelled learn is not an error
+			if (signal.aborted) return
+
 			this.logger.warn('Error learning options: ' + stringifyError(e))
 			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}
@@ -561,7 +563,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	/**
 	 * Inform the child instance class about an updated action
 	 */
-	async #actionUpdate(action: ActionEntityModel, controlId: string): Promise<void> {
+	async #actionUpdate(action: ActionEntityModel, controlId: SomeControlId): Promise<void> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 		if (action.disabled) return
 
@@ -598,14 +600,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 				// Note: for actions, this doesn't need to be reactive
-				const parser = this.#deps.controls.createVariablesAndExpressionParser(
-					extras.controlId,
-					buildActionExecutionOverrides(extras),
-					{
-						allowClockSensitive: false,
-					}
-				)
-				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+				const parser = this.#deps.controls.createActionExecutionParser(extras)
+				const parseRes = parser.parseEntityOptions(actionDefinition, action.options, extras.controlId)
 				if (!parseRes.ok) {
 					this.logger.warn(
 						`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -650,12 +646,13 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Tell the child instance class to 'destroy' itself
 	 */
 	async destroy(): Promise<void> {
-		// Cleanup the system once the module is destroyed
+		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
+		this.#entityManager?.destroy()
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
 		} catch (e) {
-			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
+			console.warn(`Destroy for "${this.connectionId}" errored: ${stringifyError(e)}`)
 		}
 
 		// Stop ipc commands being received
@@ -725,8 +722,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					res.set(data.headers)
 					res.send(data.body)
 				})
-				.catch((err) => {
-					if (err.message.endsWith(timeoutMessage)) {
+				.catch((err: unknown) => {
+					if (err instanceof Error && err.message.endsWith(timeoutMessage)) {
 						res.status(504).send(JSON.stringify({ status: 504, message: 'Gateway Timeout' }))
 					} else {
 						res.status(500).send(JSON.stringify({ status: 500, message: 'Internal Server Error' }))
@@ -795,6 +792,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				learnTimeout: rawAction.learnTimeout,
 
 				actionHasResult: false,
+				actionExecutionTimeout: undefined, // not supported from 1.x modules
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -805,6 +803,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,
 				feedbackStyleOverridesUnsupported: false,
+				hiddenFromPicker: false,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}
@@ -843,12 +842,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
 				actionHasResult: undefined,
+				actionExecutionTimeout: undefined, // not supported from 1.x modules
 
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,
 				feedbackStyleOverridesUnsupported: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
+				hiddenFromPicker: false,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}
@@ -868,11 +869,18 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
-			msg.values.map((val) => ({
-				entityId: val.id,
-				controlId: val.controlId,
-				value: val.value,
-			}))
+			// The control ids come back from the module, so are only trusted once checked
+			msg.values.flatMap((val) =>
+				isSomeControlId(val.controlId)
+					? [
+							{
+								entityId: val.id,
+								controlId: val.controlId,
+								value: val.value,
+							},
+						]
+					: []
+			)
 		)
 	}
 
@@ -944,9 +952,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			// This legacy handler only serves pre-2.0 modules, which should not be used as references due to ids not being very stable
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets, false)
 		} catch (e) {
-			this.logger.error(`setPresetDefinitions: ${e}`)
+			this.logger.error(`setPresetDefinitions: ${stringifyError(e)}`)
 
-			throw new Error(`Failed to set Preset Definitions: ${e}`)
+			throw new Error(`Failed to set Preset Definitions: ${stringifyError(e)}`)
 		}
 	}
 
@@ -972,7 +980,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		msg: ParseVariablesInStringMessage
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null)
+			const controlId = msg.controlId && isSomeControlId(msg.controlId) ? msg.controlId : null
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
 			const result = parser.parseVariables(msg.text)
 
 			return {
@@ -980,7 +989,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				variableIds: Array.from(result.variableIds),
 			}
 		} catch (e) {
-			this.logger.error(`Parse variables failed: ${e}`)
+			this.logger.error(`Parse variables failed: ${stringifyError(e)}`)
 
 			throw new Error(`Failed to parse variables in string`)
 		}
@@ -1002,7 +1011,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				msg.uniquenessId ?? undefined
 			)
 		} catch (e) {
-			this.logger.error(`Record action failed: ${e}`)
+			this.logger.error(`Record action failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -1016,7 +1025,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
 		} catch (e) {
-			this.logger.error(`Set custom variable failed: ${e}`)
+			this.logger.error(`Set custom variable failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -1034,7 +1043,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			for (const feedback of Object.values(msg.updatedFeedbacks)) {
 				if (feedback) {
-					const control = this.#deps.controls.getControl(feedback.controlId)
+					const control = isSomeControlId(feedback.controlId)
+						? this.#deps.controls.getControl(feedback.controlId)
+						: undefined
 					const found =
 						control?.supportsEntities &&
 						control.entities.entityReplaceForUpgrade(
@@ -1057,7 +1068,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			for (const action of Object.values(msg.updatedActions)) {
 				if (action) {
-					const control = this.#deps.controls.getControl(action.controlId)
+					const control = isSomeControlId(action.controlId)
+						? this.#deps.controls.getControl(action.controlId)
+						: undefined
 					const found =
 						control?.supportsEntities &&
 						control.entities.entityReplaceForUpgrade(
@@ -1076,7 +1089,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				}
 			}
 		} catch (e) {
-			this.logger.error(`Upgrades failed to save: ${e}`)
+			this.logger.error(`Upgrades failed to save: ${stringifyError(e)}`)
 		}
 	}
 
@@ -1263,4 +1276,21 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
+}
+
+/**
+ * Reject when the signal aborts, without waiting for the promise to settle
+ */
+async function rejectOnAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+	signal.throwIfAborted()
+
+	const aborted = Promise.withResolvers<never>()
+	const onAbort = () => aborted.reject(signal.reason)
+	signal.addEventListener('abort', onAbort, { once: true })
+
+	try {
+		return await Promise.race([promise, aborted.promise])
+	} finally {
+		signal.removeEventListener('abort', onAbort)
+	}
 }

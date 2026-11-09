@@ -31,3 +31,14 @@ export function canAddEntityToFeedbackList(
 			return false
 	}
 }
+
+/**
+ * Whether an entity can be offered in a picker for adding to a list. Some entities, like the placeholder for one
+ * that couldn't be loaded, exist but are never added by the user.
+ */
+export function canOfferEntityInPicker(
+	feedbackListType: FeedbackEntitySubType | null,
+	definition: ClientEntityDefinition
+): boolean {
+	return !definition.hiddenFromPicker && canAddEntityToFeedbackList(feedbackListType, definition)
+}

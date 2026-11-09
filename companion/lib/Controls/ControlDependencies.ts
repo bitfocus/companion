@@ -1,25 +1,29 @@
 import type { EventEmitter } from 'node:events'
+import type { BankControlId, PresetControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
+import type { LinkButtonClient } from '../Link/ButtonClient.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
+import type { VariableDependencyRegistry } from '../Variables/DependencyRegistry.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
 import type { ButtonPressEvents } from './ButtonPressEvents.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
+import type { ReferencedLocationsIndex } from './ReferencedLocationsIndex.js'
 import type { RenderClock } from './RenderClock.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 
@@ -27,15 +31,15 @@ import type { TriggerEvents } from './TriggerEvents.js'
  * A narrow accessor letting one control reach other controls (to press/rotate a target, or read its model).
  */
 export interface ControlsAccessor {
-	getControl(controlId: string): SomeControl<any> | undefined
+	getControl(controlId: SomeControlId): SomeControl | undefined
 	pressControl(
-		controlId: string,
+		controlId: SomeControlId,
 		pressed: boolean,
 		surfaceId: string | undefined,
 		pressEvents: ButtonPressEvents | null,
 		force?: boolean
 	): boolean
-	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean
 }
 
 export interface ControlExternalDependencies {
@@ -45,16 +49,21 @@ export interface ControlExternalDependencies {
 	readonly internalModule: InternalController
 	readonly instance: InstanceController
 	readonly variableValues: VariablesValues
+	/** Where entities and drawing register the variables they read, to be told when those change */
+	readonly variableDependencies: VariableDependencyRegistry
 	readonly userconfig: DataUserConfig
 	readonly graphics: GraphicsController
 
 	readonly actionRunner: ActionRunner
 
 	readonly renderClock: RenderClock
+
+	/** Subscribes link buttons to the remote buttons they show */
+	readonly linkButtons: LinkButtonClient
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
-	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+	readonly dbTable: DataStoreSchemaTableView<typeof SomeControlModelSchema, SomeControlId>
 
 	/** Narrow access to other controls (for controls that forward to or read a target control). */
 	readonly controlsAccessor: ControlsAccessor
@@ -71,16 +80,19 @@ export interface ControlDependencies extends ControlExternalDependencies {
 
 	/** The expression-variable name registry (used only by expression-variable controls). */
 	readonly expressionVariableNamesMap: ExpressionVariableNameMap
+
+	/** Where drawers report the button locations their last draw referenced, so only those get told of a render. */
+	readonly referencedLocations: ReferencedLocationsIndex
 }
 
 export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
-	invalidateControlRender: [controlId: string]
+	invalidateControlRender: [controlId: SomeControlId]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
-	layeredStyleElementChanged: [controlId: string, elementId: string]
+	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
-	presetDrawn: [controlId: string, render: ImageResult]
+	presetDrawn: [controlId: PresetControlId, render: ImageResult]
 
 	/**
 	 * Emitted when a control is added or removed, to notify that the total control count has changed
@@ -90,7 +102,7 @@ export interface ControlCommonEvents {
 	/**
 	 * Emitted when a control is placed at a grid location (create or import)
 	 */
-	controlPlacedAt: [location: ControlLocation, controlId: string]
+	controlPlacedAt: [location: ControlLocation, controlId: BankControlId]
 
 	/**
 	 * Emitted when a control is removed from a grid location (delete)
@@ -99,6 +111,6 @@ export interface ControlCommonEvents {
 }
 
 export type ControlChangeEvents = {
-	triggerChange: [controlId: string, diff: TriggersUpdate]
-	expressionVariableChange: [controlId: string, diff: ExpressionVariableUpdate]
+	triggerChange: [controlId: SomeControlId, diff: TriggersUpdate]
+	expressionVariableChange: [controlId: SomeControlId, diff: ExpressionVariableUpdate]
 }

@@ -1,5 +1,8 @@
 import { nanoid } from 'nanoid'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -56,7 +59,7 @@ export class ActionRunner {
 			throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
 
 		let result: JsonValue | undefined
-		if (action.connectionId === 'internal') {
+		if (isInternalConnectionId(action.connectionId)) {
 			result = await this.#internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
@@ -141,8 +144,8 @@ export class ActionRunner {
 
 			for (const action of actions) {
 				if (extras.abortDelayed.aborted) break
-				await this.#runAction(action, extras).catch((e) => {
-					this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+				await this.#runAction(action, extras).catch((e: unknown) => {
+					this.#logger.silly(`Error executing action for ${action.connectionId}: ${stringifyError(e)}`)
 				})
 			}
 		} else {
@@ -155,8 +158,8 @@ export class ActionRunner {
 
 				if (waitAction) {
 					// Perform the wait action
-					await this.#runAction(waitAction, extras).catch((e) => {
-						this.#logger.silly(`Error executing action for ${waitAction.connectionId}: ${e.message ?? e}`)
+					await this.#runAction(waitAction, extras).catch((e: unknown) => {
+						this.#logger.silly(`Error executing action for ${waitAction.connectionId}: ${stringifyError(e)}`)
 					})
 				}
 
@@ -165,8 +168,8 @@ export class ActionRunner {
 				// Spawn all the actions in parallel
 				for (const action of actions) {
 					ps.push(
-						this.#runAction(action, extras).catch((e) => {
-							this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+						this.#runAction(action, extras).catch((e: unknown) => {
+							this.#logger.silly(`Error executing action for ${action.connectionId}: ${stringifyError(e)}`)
 						})
 					)
 				}
@@ -186,7 +189,7 @@ export class ActionRunner {
 		]
 
 		for (const action of actions) {
-			if (action.connectionId === 'internal' && action.definitionId === 'wait') {
+			if (isInternalConnectionId(action.connectionId) && action.definitionId === 'wait') {
 				groupedActions.push({
 					waitAction: action,
 					actions: [],
@@ -208,7 +211,7 @@ interface GroupedActionEntityModels {
 export class ControlActionRunner {
 	readonly #logger: Logger
 	readonly #actionRunner: ActionRunner
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 	readonly #triggerRedraw: () => void
 
 	readonly #runningChains = new Map<string, AbortController>()
@@ -217,7 +220,7 @@ export class ControlActionRunner {
 		return this.#runningChains.size > 0
 	}
 
-	constructor(actionRunner: ActionRunner, controlId: string, triggerRedraw: () => void) {
+	constructor(actionRunner: ActionRunner, controlId: SomeControlId, triggerRedraw: () => void) {
 		this.#logger = LogController.createLogger(`Control/ActionRunner/${controlId}`)
 		this.#actionRunner = actionRunner
 		this.#controlId = controlId

@@ -28,10 +28,7 @@ export class RestApiService {
 		express: UIExpress,
 		appInfo: Pick<AppInfo, 'appVersion'>
 	) {
-		this.tokenStore = new RestApiTokenStore(
-			LogController.createLogger('Service/RestApi/Tokens'),
-			registry.db.getTableView('api_keys')
-		)
+		this.tokenStore = new RestApiTokenStore(LogController.createLogger('Service/RestApi/Tokens'), registry.db)
 
 		express.restApiRouter = createRestApiRouter(registry, userconfig, this.tokenStore, appInfo)
 		this.#logger.info(`REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)

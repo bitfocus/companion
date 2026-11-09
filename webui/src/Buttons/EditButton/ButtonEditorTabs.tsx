@@ -1,10 +1,12 @@
 import { faChevronLeft, faChevronRight, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import './ButtonEditorTabs.css'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import type { NormalButtonRuntimeProps, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
@@ -16,6 +18,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
+import { LiveStepDot } from './LiveStep.js'
 import type { ButtonEditorMainTabState } from './useButtonEditorMainTab.js'
 
 export function ButtonEditorTabBar({ tabs, activeTab, setActiveTab }: ButtonEditorMainTabState): React.JSX.Element {
@@ -40,11 +43,11 @@ export function ButtonEditorTabBar({ tabs, activeTab, setActiveTab }: ButtonEdit
 }
 
 interface ButtonEditorTabsProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	steps: NormalButtonSteps
 	disabledSetStep: boolean
-	runtimeProps: Record<string, any>
+	runtimeProps: NormalButtonRuntimeProps
 	rotaryActions: boolean
 	localVariablesStore: LocalVariablesStore
 	/** From useButtonEditorMainTab; the tab bar itself is rendered in the edit button summary card */
@@ -187,7 +190,6 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 								service={service}
 								controlId={controlId}
 								location={location}
-								runtimeProps={runtimeProps}
 								rotaryActions={rotaryActions}
 								stepKeys={stepKeys}
 								selectedIndex={selectedIndex}
@@ -207,7 +209,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 })
 
 interface StepPillProps {
-	controlId: string
+	controlId: SomeControlId
 	stepId: string
 	stepIndex: number
 	stepOptions: ActionStepOptions | undefined
@@ -217,10 +219,10 @@ interface StepPillProps {
 }
 
 function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCurrent, onSelect }: StepPillProps) {
-	const name = stepOptions?.name || `Step ${stepIndex + 1}`
+	const name = stepOptions?.name ? `${stepOptions.name} (${stepIndex + 1})` : `Step ${stepIndex + 1}`
 	const renameStepMutation = useMutationExt(trpc.controls.steps.rename.mutationOptions())
 
-	const [isEditing, setIsEditing] = useState(false)
+	const [editingSize, setEditingSize] = useState<{ width: number; height: number } | null>(null)
 
 	const doRename = useCallback(
 		(newName: string) => {
@@ -231,30 +233,23 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 		[renameStepMutation, controlId, stepId]
 	)
 
-	const pillClassName = `flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all select-none ${
-		isSelected
-			? 'bg-selection-bg text-selection-text border border-selection-border'
-			: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
-	}`
+	const liveDot = isCurrent && <LiveStepDot pulse={!isSelected} />
 
-	const liveDot = isCurrent && (
-		<span
-			className={`w-1.5 h-1.5 rounded-full bg-tone-good-fill ${isSelected ? '' : 'animate-pulse'}`}
-			title="Active live step"
-		/>
-	)
-
-	if (isEditing) {
+	if (editingSize) {
 		return (
-			<div className={pillClassName}>
+			<div
+				className={`button button-pill button-sm button-step-rename${isSelected ? ' active' : ''}`}
+				style={editingSize}
+			>
 				{liveDot}
 				<TextInputFieldSimple
 					id={undefined}
 					value={stepOptions?.name ?? ''}
 					setValue={doRename}
-					onBlur={() => setIsEditing(false)}
+					tooltip="Step name"
+					onBlur={() => setEditingSize(null)}
 					onKeyDown={(e) => {
-						if (e.key === 'Enter' || e.key === 'Escape') setIsEditing(false)
+						if (e.key === 'Enter' || e.key === 'Escape') setEditingSize(null)
 					}}
 					autoFocus
 				/>
@@ -263,7 +258,16 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 	}
 
 	return (
-		<Button variant="pill" size="sm" active={isSelected} onClick={onSelect} onDoubleClick={() => setIsEditing(true)}>
+		<Button
+			variant="pill"
+			size="sm"
+			active={isSelected}
+			onClick={onSelect}
+			onDoubleClick={(e) => {
+				const { width, height } = e.currentTarget.getBoundingClientRect()
+				setEditingSize({ width, height })
+			}}
+		>
 			{liveDot}
 			<span>{name}</span>
 		</Button>

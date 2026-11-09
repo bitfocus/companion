@@ -81,8 +81,8 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					config: value.config,
 				})
 				console.log('Saved remote surface config')
-			} catch (err: any) {
-				setSaveError(`Failed to save remote surface config: ${err?.message ?? err?.toString() ?? err}`)
+			} catch (err) {
+				setSaveError(`Failed to save remote surface config: ${err instanceof Error ? err.message : String(err)}`)
 			}
 		},
 	})

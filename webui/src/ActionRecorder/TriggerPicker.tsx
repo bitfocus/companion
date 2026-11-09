@@ -1,6 +1,7 @@
 import { faList } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { Button } from '~/Components/Button'
@@ -10,10 +11,10 @@ import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface TriggerPickerRowProps {
-	id: string
+	id: TriggerControlId
 	trigger: ClientTriggerData
 	saving: boolean
-	selectTrigger: (id: string, mode: 'replace' | 'append') => void
+	selectTrigger: (id: TriggerControlId, mode: 'replace' | 'append') => void
 }
 function TriggerPickerRow({ id, trigger, selectTrigger, saving }: TriggerPickerRowProps) {
 	const replaceActions = useCallback(() => selectTrigger(id, 'replace'), [id, selectTrigger])
@@ -42,7 +43,7 @@ function TriggerPickerRow({ id, trigger, selectTrigger, saving }: TriggerPickerR
 }
 interface TriggerPickerProps {
 	saving: boolean
-	selectControl: (controlId: string, stepId: string, setId: ActionSetId, mode: 'append' | 'replace') => void
+	selectControl: (controlId: TriggerControlId, stepId: string, setId: ActionSetId, mode: 'append' | 'replace') => void
 }
 export const TriggerPicker = observer(function TriggerPicker({ selectControl, saving }: TriggerPickerProps) {
 	const [search, setSearch] = useState('')
@@ -53,7 +54,7 @@ export const TriggerPicker = observer(function TriggerPicker({ selectControl, sa
 	)
 
 	const selectTrigger = useCallback(
-		(controlId: string, mode: 'append' | 'replace') => selectControl(controlId, '', 0, mode),
+		(controlId: TriggerControlId, mode: 'append' | 'replace') => selectControl(controlId, '', 0, mode),
 		[selectControl]
 	)
 

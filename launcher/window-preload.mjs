@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld('api', {
 	},
 	receive: (channel, func) => {
 		// Deliberately strip event as it includes `sender`
-		ipcRenderer.on(channel, (event, ...args) => func(...args))
+		const listener = (event, ...args) => func(...args)
+		ipcRenderer.on(channel, listener)
+		return () => ipcRenderer.removeListener(channel, listener)
 	},
 })

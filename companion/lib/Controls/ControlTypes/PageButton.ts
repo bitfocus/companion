@@ -1,5 +1,13 @@
 import { nanoid } from 'nanoid'
-import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
+import type {
+	LayeredButtonModel,
+	PageDownButtonModel,
+	PageNumberButtonModel,
+	PageUpButtonModel,
+	SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -32,8 +40,8 @@ import { LayeredButtonDrawer } from './Button/LayeredButtonDrawer.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export abstract class ControlButtonPage<TJson>
-	extends ControlBase<TJson>
+export abstract class ControlButtonPage<TJson extends PageUpButtonModel | PageDownButtonModel | PageNumberButtonModel>
+	extends ControlBase<BankControlId, TJson, NoRuntimeProps>
 	implements
 		ControlWithConvert,
 		ControlWithoutActions,
@@ -61,7 +69,7 @@ export abstract class ControlButtonPage<TJson>
 		this.#drawing.invalidate()
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, debugNamespace: string) {
 		super(deps, controlId, debugNamespace)
 
 		const { drawType, elements } = this.getDrawElements()
@@ -118,6 +126,10 @@ export abstract class ControlButtonPage<TJson>
 		// Nothing to do
 	}
 
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
+	}
+
 	abstract convertControl(): SomeButtonModel
 
 	// in ControlButtonPage
@@ -127,7 +139,13 @@ export abstract class ControlButtonPage<TJson>
 	): LayeredButtonModel {
 		return {
 			type: 'button-layered',
-			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			options: {
+				stepProgression: 'auto',
+				stepExpression: '',
+				rotaryActions: false,
+				canModifyStyleInApis: false,
+				notes: '',
+			},
 			style: { layers: structuredClone(elements) },
 			feedbacks: [],
 			steps: {

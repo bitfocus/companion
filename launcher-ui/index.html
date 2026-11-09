@@ -10,9 +10,23 @@
 		<meta http-equiv="Content-Language" content="en" />
 
 		<title>Companion - Advanced Settings</title>
+
+		<!-- Follow the system light/dark theme, applied before anything paints so it never flashes the wrong one -->
+		<script>
+			;(function () {
+				var query = window.matchMedia('(prefers-color-scheme: dark)')
+				function apply() {
+					var theme = query.matches ? 'dark' : 'light'
+					document.documentElement.dataset.theme = theme
+					document.documentElement.style.colorScheme = theme
+				}
+				apply()
+				query.addEventListener('change', apply)
+			})()
+		</script>
 	</head>
 
-	<body class="dark">
+	<body>
 		<noscript>You need to enable JavaScript to run Companion.</noscript>
 		<div id="root"></div>
 		<script type="module" src="/src/index.tsx"></script>

@@ -9,12 +9,18 @@ import type { OutboundSurfaceInfo } from './Surfaces.js'
 import type { TriggerCollection } from './TriggerModel.js'
 import type { UserConfigGridSize } from './UserConfigModel.js'
 
+// The export format as the legacy upgrade steps see it, before the format was described by the schemas in Model/Export.
+// New code uses Model/Export/Latest.js instead
+
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17
+	/** The version of the export format, which the import upgrades from. Each step sets the version it reaches */
+	readonly version: number
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
+	/** Free-text notes written by the user when exporting, shown when importing. Added in v5.0 */
+	readonly notes?: string
 }
 
 export interface ExportFullv6 extends ExportBase<'full'> {

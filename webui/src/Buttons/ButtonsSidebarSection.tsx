@@ -3,7 +3,8 @@ import './ButtonsSidebarSection.css'
 
 interface ButtonsSidebarSectionProps {
 	className: string | undefined
-	title: string
+	/** null when the content draws its own heading row, e.g. to put its controls beside the title */
+	title: string | null
 	/** Controls beside the title, e.g. an add button */
 	actions: React.ReactNode | null
 	children: React.ReactNode
@@ -18,10 +19,14 @@ export function ButtonsSidebarSection({
 }: ButtonsSidebarSectionProps): React.JSX.Element {
 	return (
 		<div className={classNames('buttons-sidebar-section', className)}>
-			<div className={classNames('buttons-sidebar-heading-row', { 'buttons-sidebar-heading-row-actions': !!actions })}>
-				<h5 className="buttons-sidebar-heading">{title}</h5>
-				{actions}
-			</div>
+			{(title !== null || !!actions) && (
+				<div
+					className={classNames('buttons-sidebar-heading-row', { 'buttons-sidebar-heading-row-actions': !!actions })}
+				>
+					{title !== null && <h5 className="buttons-sidebar-heading">{title}</h5>}
+					{actions}
+				</div>
+			)}
 			{children}
 		</div>
 	)

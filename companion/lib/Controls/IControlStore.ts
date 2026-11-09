@@ -1,4 +1,6 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -17,18 +19,18 @@ export interface IControlStore {
 	/**
 	 * Get a single control by id
 	 */
-	getControl(controlId: string): SomeControl<any> | undefined
+	getControl(controlId: SomeControlId): SomeControl | undefined
 
 	/**
 	 * Get a control by id, following button-references through to the control they currently mirror.
 	 * Returns undefined for an unresolved reference or a reference cycle
 	 */
-	getControlFollowingReferences(controlId: string | null): SomeControl<any> | undefined
+	getControlFollowingReferences(controlId: SomeControlId | null): SomeControl | undefined
 
 	/**
 	 * Get all populated controls
 	 */
-	getAllControls(): ReadonlyMap<string, SomeControl<any>>
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl>
 
 	/**
 	 * Remove any tracked state for a connection across all controls
@@ -44,7 +46,7 @@ export interface IControlStore {
 	 * Dispatch a press/release event to a control
 	 */
 	pressControl(
-		controlId: string,
+		controlId: SomeControlId,
 		pressed: boolean,
 		surfaceId: string | undefined,
 		pressEvents: ButtonPressEvents | null,
@@ -54,7 +56,7 @@ export interface IControlStore {
 	/**
 	 * Dispatch a rotate event to a control
 	 */
-	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean
 
 	/**
 	 * Abort all delayed actions, optionally keeping one exception signal alive
@@ -62,10 +64,16 @@ export interface IControlStore {
 	abortAllDelayedActions(exceptSignal: AbortSignal | null): void
 
 	createVariablesAndExpressionParser(
-		controlId: string | null | undefined,
+		controlId: SomeControlId | null | undefined,
 		overrideVariableValues: VariableValues | null,
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser
+
+	/**
+	 * Create a parser for the options of an action being executed, and of an internal action's child feedbacks.
+	 * Actions are sampled once at execution and never re-evaluated, so clock-sensitive expressions are rejected
+	 */
+	createActionExecutionParser(extras: RunActionExtras): VariablesAndExpressionParser
 
 	/**
 	 * Clear any state tracked by controls for a connection (e.g. feedback values)

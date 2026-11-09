@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ButtonGridStore } from '../ButtonGridStore.js'
 import type { GridZoomController } from '../GridZoom.js'
-import { isTypingTarget, useGridKeyboard } from '../useGridKeyboard.js'
+import { useGridKeyboard } from '../useGridKeyboard.js'
 import { at, makeGridActions } from './gridViewTestHelpers.js'
 
 const GRID_SIZE: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
@@ -14,7 +14,7 @@ function setup(options: { gridSize?: UserConfigGridSize | undefined } = {}) {
 	const setPageNumber = vi.fn()
 	const zoom: GridZoomController = { zoomIn: vi.fn(), zoomOut: vi.fn(), zoomReset: vi.fn(), setZoom: vi.fn() }
 
-	const { result } = renderHook(() =>
+	const { result, unmount } = renderHook(() =>
 		useGridKeyboard({
 			store,
 			actions,
@@ -33,7 +33,7 @@ function setup(options: { gridSize?: UserConfigGridSize | undefined } = {}) {
 		return event
 	}
 
-	return { store, actions, setPageNumber, zoom, press }
+	return { store, actions, setPageNumber, zoom, press, unmount }
 }
 
 describe('zooming', () => {
@@ -91,6 +91,27 @@ describe('walking around the grid', () => {
 		expect(store.selectedLocations).toEqual([expected])
 	})
 
+	it('opens the button a plain arrow lands on, so the editor never shows one the outline has left', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('ArrowRight')
+
+		expect(actions.openEditor).toHaveBeenCalledWith(at(1, 2))
+	})
+
+	it.each([
+		['shift', { shiftKey: true }],
+		['ctrl', { ctrlKey: true }],
+	])('leaves the editor where it is when %s is held', (_name, modifiers) => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('ArrowRight', modifiers)
+
+		expect(actions.openEditor).not.toHaveBeenCalled()
+	})
+
 	it('extends the selection when shift is held', () => {
 		const { store, press } = setup()
 		act(() => store.setSelection([at(1, 1)]))
@@ -134,6 +155,68 @@ describe('walking around the grid', () => {
 		press('a', { ctrlKey: true })
 
 		expect(store.selectionCount).toBe(32)
+	})
+})
+
+describe('pressing the focused button with Enter', () => {
+	const releaseEnter = () => act(() => void document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' })))
+
+	it('holds it down until Enter is let go', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keydown' })
+		expect(actions.press).toHaveBeenCalledExactlyOnceWith(at(1, 1), true)
+
+		releaseEnter()
+		expect(actions.press).toHaveBeenLastCalledWith(at(1, 1), false)
+	})
+
+	it('does not press again while the key repeats', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keydown' })
+		press('Enter', { type: 'keydown', repeat: true })
+
+		expect(actions.press).toHaveBeenCalledTimes(1)
+	})
+
+	it('leaves the selection and the editor alone', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keydown' })
+
+		expect(store.selectedLocations).toEqual([at(1, 1)])
+		expect(actions.openEditor).not.toHaveBeenCalled()
+	})
+
+	it('ignores the key-up the editor hands in, which was for whatever the editor was on', () => {
+		const { store, actions, press } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+
+		press('Enter', { type: 'keyup' })
+
+		expect(actions.press).not.toHaveBeenCalled()
+	})
+
+	it('does nothing with nothing focused', () => {
+		const { actions, press } = setup()
+
+		press('Enter', { type: 'keydown' })
+
+		expect(actions.press).not.toHaveBeenCalled()
+	})
+
+	it('lets go when the grid goes away mid-press', () => {
+		const { store, actions, press, unmount } = setup()
+		act(() => store.setSelection([at(1, 1)]))
+		press('Enter', { type: 'keydown' })
+
+		unmount()
+
+		expect(actions.press).toHaveBeenLastCalledWith(at(1, 1), false)
 	})
 })
 
@@ -312,35 +395,6 @@ describe('escape, from anywhere on the page', () => {
 })
 
 describe('where the keys belong to something else', () => {
-	it.each([
-		['a text field', document.createElement('input')],
-		['a text area', document.createElement('textarea')],
-	])('leaves %s alone', (_name, element) => {
-		expect(isTypingTarget(element)).toBe(true)
-	})
-
-	it('leaves anything being edited in place alone', () => {
-		const element = document.createElement('div')
-		element.contentEditable = 'true'
-		// jsdom does not work `isContentEditable` out from the attribute
-		Object.defineProperty(element, 'isContentEditable', { value: true })
-
-		expect(isTypingTarget(element)).toBe(true)
-	})
-
-	it('leaves the expression editor alone, which is neither', () => {
-		const element = document.createElement('div')
-		element.classList.add('native-edit-context')
-
-		expect(isTypingTarget(element)).toBe(true)
-	})
-
-	it('answers for anything else, including nothing at all', () => {
-		expect(isTypingTarget(document.createElement('div'))).toBe(false)
-		expect(isTypingTarget(null)).toBe(false)
-		expect(isTypingTarget(new EventTarget())).toBe(false)
-	})
-
 	it('does nothing when a key arrives from a text field inside the grid panel', () => {
 		const { store, press } = setup()
 		act(() => store.setSelection([at(1, 1)]))

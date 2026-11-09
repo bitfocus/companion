@@ -120,6 +120,13 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 					<InstanceDeprecationAlert panelStore={panelStore} />
 
+					{getModuleVersionInfo(moduleInfo, panelStore.instanceInfo.moduleVersionId)?.isRuntimeOverridden && (
+						<StaticAlert color="warning" className="mb-4">
+							This module version was built for a version of Node.js that is no longer supported, so Companion is
+							running it on a newer one. It may not work correctly; check for a newer version of the module.
+						</StaticAlert>
+					)}
+
 					{/* General Settings */}
 					<EditSectionCard title="General Settings">
 						<InstanceLabelInputField panelStore={panelStore} />

@@ -22,6 +22,7 @@ import {
 	type VariableDefinition,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
@@ -125,8 +126,8 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		setTimeout(() => this.#updateNetworkVariables(), 5000)
 
 		setTimeout(() => {
-			this.#updateHostnameVariablesAtStartup().catch((e) => {
-				this.#logger.error(`Failed to update hostname variables: ${e}`)
+			this.#updateHostnameVariablesAtStartup().catch((e: unknown) => {
+				this.#logger.error(`Failed to update hostname variables: ${stringifyError(e)}`)
 			})
 		}, 5000)
 
@@ -172,8 +173,8 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						this.emit('setVariables', newVariables)
 					}
 				})
-				.catch((e) => {
-					this.#logger.error(`Failed to update hostname variables: ${e}`)
+				.catch((e: unknown) => {
+					this.#logger.error(`Failed to update hostname variables: ${stringifyError(e)}`)
 				})
 		}
 
@@ -199,8 +200,8 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 					this.emit('setVariables', info.values)
 				}
 			})
-			.catch((e) => {
-				this.#logger.error(`Failed to update network and hostname variables: ${e}`)
+			.catch((e: unknown) => {
+				this.#logger.error(`Failed to update network and hostname variables: ${stringifyError(e)}`)
 			})
 			.finally(() => {
 				this.#updateNetworkVariablesRunning = false

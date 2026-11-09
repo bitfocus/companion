@@ -5,6 +5,7 @@ import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { SurfaceHandlerDependencies } from '../../lib/Surface/Types.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 vi.mock('usb', () => ({
 	usb: { addEventListener: vi.fn(), removeEventListener: vi.fn() },
@@ -26,11 +27,9 @@ function createController(usbHotplug: boolean, usbAvailable: boolean) {
 	const deps = mockDeep<SurfaceHandlerDependencies>({
 		fallbackMockImplementation: () => undefined,
 	})
-	deps.userconfig.getKey.mockImplementation((key: string) => {
-		if (key === 'usb_hotplug') return usbHotplug
-		if (key === 'gridSize') return { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
-		return undefined
-	})
+	deps.userconfig.getKey.mockImplementation(
+		mockGetKey({ usb_hotplug: usbHotplug, gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 } }, 'default')
+	)
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
 
 	return new SurfaceController(new TestDatabase() as any, deps, usbAvailable)
@@ -54,7 +53,7 @@ describe('SurfaceController usb hotplug lifecycle', () => {
 		expect(usb.removeEventListener).toHaveBeenCalledWith('connect', listener)
 
 		// Already stopped, so disabling hotplug afterwards has nothing left to remove
-		controller.updateUserConfig('usb_hotplug', false)
+		controller.updateUserConfig({ key: 'usb_hotplug', value: false })
 		expect(usb.removeEventListener).toHaveBeenCalledTimes(1)
 	})
 
@@ -71,11 +70,32 @@ describe('SurfaceController usb hotplug lifecycle', () => {
 		expect(usb.addEventListener).not.toHaveBeenCalled()
 
 		// Toggling the setting must not start it either
-		controller.updateUserConfig('usb_hotplug', false)
-		controller.updateUserConfig('usb_hotplug', true)
+		controller.updateUserConfig({ key: 'usb_hotplug', value: false })
+		controller.updateUserConfig({ key: 'usb_hotplug', value: true })
 		expect(usb.addEventListener).not.toHaveBeenCalled()
 
 		controller.quit()
 		expect(usb.removeEventListener).not.toHaveBeenCalled()
+	})
+})
+
+describe('SurfaceController quit', () => {
+	test('no devices list update runs after quit, as the db is closed', () => {
+		vi.useFakeTimers()
+		try {
+			const controller = createController(false, true)
+			const getDevicesList = vi.spyOn(controller, 'getDevicesList')
+
+			// Pending from before quit
+			controller.triggerUpdateDevicesList()
+			controller.quit()
+			// Triggered by instances shutting down after quit
+			controller.triggerUpdateDevicesList()
+
+			vi.advanceTimersByTime(1000)
+			expect(getDevicesList).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 })

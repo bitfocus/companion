@@ -79,7 +79,7 @@ describe('osc api service over a real udp socket', () => {
 	test('button style can be changed over osc once enabled in the button options', async () => {
 		const controlId = app.createButton({ pageNumber: 1, row: 1, column: 2 })
 		const control = app.registry.controls.getControl(controlId) as ControlButtonLayered
-		control.optionsSetField('canModifyStyleInApis', true)
+		control.optionsSetField({ key: 'canModifyStyleInApis', value: true })
 
 		await sendUntil(encodeOscMessage('/location/1/1/2/style/text', [{ type: 's', value: 'via osc' }]), () => {
 			expect(control.drawing.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: 'via osc' } })

@@ -170,7 +170,7 @@ function AppWrapper({ connected, loadingComplete, loadingProgress, locked, setUn
 	const [topBarPage, setTopBarPage] = useState<TopBarPage | null>(null)
 
 	return (
-		<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg relative">
+		<div className="wrapper flex flex-col min-h-dvh bg-app-frame-bg relative">
 			{connected && loadingComplete && !locked && <TopBar page={topBarPage} />}
 			<div className="body grow">
 				{connected && loadingComplete ? (

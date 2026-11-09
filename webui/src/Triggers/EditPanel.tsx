@@ -1,15 +1,17 @@
 import { faArrowDown, faBolt, faFilter, faPencil, faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useState } from 'react'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import { StaticAlert } from '~/Components/Alert.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
@@ -21,7 +23,7 @@ import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 import { TriggerEventEditor } from './EventEditor.js'
 
 interface EditTriggerPanelProps {
-	controlId: string
+	controlId: TriggerControlId
 }
 
 export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JSX.Element {
@@ -37,13 +39,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
 				<div className="flex-1 min-h-0 flex flex-col overflow-hidden" style={{ display: dataReady ? '' : 'none' }}>
-					{controlConfig.config.type === 'trigger' ? (
-						<TriggerPanelContent config={controlConfig.config} controlId={controlId} />
-					) : (
-						<StaticAlert color="danger">
-							Invalid control type: {controlConfig.config.type}. Expected 'trigger'.
-						</StaticAlert>
-					)}
+					<TriggerPanelContent config={controlConfig.config} controlId={controlId} />
 				</div>
 			) : (
 				''
@@ -54,31 +50,25 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 
 interface TriggerPanelContentProps {
 	config: TriggerModel
-	controlId: string
+	controlId: TriggerControlId
 }
 
 function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): React.ReactNode {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'trigger')
 	const triggerNameInputId = `trigger-name-${controlId}`
 	const [isEditingName, setIsEditingName] = useState(false)
 
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'trigger')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 	const [activeTab, setActiveTab] = useLocalStorage<'behaviour' | 'variables'>('triggerEditor.activeTab', 'behaviour')
 
 	const setName = useCallback(
 		(name: string) => {
-			setOptionsFieldMutation
-				.mutateAsync({
-					controlId,
-					key: 'name',
-					value: name,
-				})
-				.catch((e) => {
-					console.error(`Set name failed: ${e}`)
-				})
+			setOption('name', name).catch((e) => {
+				console.error(`Set name failed: ${stringifyError(e)}`)
+			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
@@ -275,7 +265,13 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 	)
 }
 
-function TestActionsButton({ controlId, triggerName }: { controlId: string; triggerName: string }): React.JSX.Element {
+function TestActionsButton({
+	controlId,
+	triggerName,
+}: {
+	controlId: TriggerControlId
+	triggerName: string
+}): React.JSX.Element {
 	const { notifier } = useContext(RootAppStoreContext)
 	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
 

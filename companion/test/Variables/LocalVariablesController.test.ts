@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 import { createStore, threePages } from '../Page/Helpers.js'
@@ -49,7 +50,7 @@ function createController(controls: Record<string, any> = {}) {
 
 function makeExtras(): RunActionExtras {
 	return {
-		controlId: 'control-self',
+		controlId: CreateBankControlId('control-self'),
 		location: { pageNumber: 1, row: 0, column: 0 },
 	} as any
 }
@@ -64,16 +65,22 @@ describe('LocalVariablesController', () => {
 			expect(controller.localVariableFor(undefined, 'my_var', makeExtras())).toBe(null)
 		})
 
+		test('the location "this" resolves to nothing when there is no calling control', () => {
+			const { controller } = createController()
+
+			expect(controller.localVariableFor('this', 'my_var', { controlId: null, location: undefined })).toBe(null)
+		})
+
 		test('the location "this" resolves to the calling control', () => {
 			const { controller } = createController()
 
 			expect(controller.localVariableFor('this', 'my_var', makeExtras())).toEqual({
-				controlId: 'control-self',
+				controlId: CreateBankControlId('control-self'),
 				name: 'my_var',
 			})
 			// Case and whitespace insensitive
 			expect(controller.localVariableFor('  THIS ', 'my_var', makeExtras())).toEqual({
-				controlId: 'control-self',
+				controlId: CreateBankControlId('control-self'),
 				name: 'my_var',
 			})
 		})
@@ -82,7 +89,7 @@ describe('LocalVariablesController', () => {
 			const { controller } = createController()
 
 			expect(controller.localVariableFor('2/1/2', 'my_var', makeExtras())).toEqual({
-				controlId: 'control-b1',
+				controlId: CreateBankControlId('control-b1'),
 				name: 'my_var',
 			})
 		})
@@ -91,7 +98,7 @@ describe('LocalVariablesController', () => {
 			const { controller } = createController()
 
 			expect(controller.localVariableFor('this', 42, makeExtras())).toEqual({
-				controlId: 'control-self',
+				controlId: CreateBankControlId('control-self'),
 				name: '42',
 			})
 		})
@@ -121,7 +128,7 @@ describe('LocalVariablesController', () => {
 			const { controller } = createController()
 
 			expect(controller.pageVariableFor(2, 'my_var', 1)).toEqual({
-				controlId: 'page:page-b',
+				controlId: CreatePageControlId('page-b'),
 				name: 'my_var',
 			})
 		})
@@ -130,7 +137,7 @@ describe('LocalVariablesController', () => {
 			const { controller } = createController()
 
 			expect(controller.pageVariableFor(0, 'my_var', 1)).toEqual({
-				controlId: 'page:page-a',
+				controlId: CreatePageControlId('page-a'),
 				name: 'my_var',
 			})
 		})
@@ -151,7 +158,7 @@ describe('LocalVariablesController', () => {
 			const { controller } = createController()
 
 			expect(controller.pageVariableFor(3, 42, 1)).toEqual({
-				controlId: 'page:page-c',
+				controlId: CreatePageControlId('page-c'),
 				name: '42',
 			})
 		})
@@ -161,9 +168,9 @@ describe('LocalVariablesController', () => {
 		test('sets the value on the matching entity', () => {
 			const entity = makeVariableEntity('my_var')
 			const control = makeControl([entity])
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'new value')
+			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' }, 'new value')
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
 		})
@@ -171,30 +178,34 @@ describe('LocalVariablesController', () => {
 		test('an unknown control is ignored', () => {
 			const { controller } = createController()
 
-			expect(() => controller.setLocalVariable({ controlId: 'missing', name: 'my_var' }, 'x')).not.toThrow()
+			expect(() =>
+				controller.setLocalVariable({ controlId: CreateBankControlId('missing'), name: 'my_var' }, 'x')
+			).not.toThrow()
 		})
 
 		test('a control without entity support is ignored', () => {
 			const control = { supportsEntities: false }
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			expect(() => controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')).not.toThrow()
+			expect(() =>
+				controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' }, 'x')
+			).not.toThrow()
 		})
 
 		test('an unknown variable name is ignored', () => {
 			const control = makeControl([makeVariableEntity('other_var')])
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')
+			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' }, 'x')
 
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
 
 		test('an entity without a resolved variable name is ignored', () => {
 			const control = makeControl([makeVariableEntity('my_var', { localVariableName: null })])
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')
+			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' }, 'x')
 
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
@@ -203,9 +214,9 @@ describe('LocalVariablesController', () => {
 			const notUserValue = makeVariableEntity('my_var', { definitionId: 'something_else' })
 			const notInternal = makeVariableEntity('my_var', { connectionId: 'conn1' })
 			const control = makeControl([notUserValue, notInternal])
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')
+			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' }, 'x')
 
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
@@ -215,9 +226,9 @@ describe('LocalVariablesController', () => {
 		test('restores the startup value', () => {
 			const entity = makeVariableEntity('my_var', { startupValue: 'startup' })
 			const control = makeControl([entity])
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var' })
+			controller.resetLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' })
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'startup')
 		})
@@ -227,9 +238,9 @@ describe('LocalVariablesController', () => {
 		test('stores the current value as the startup value', () => {
 			const entity = makeVariableEntity('my_var', { feedbackValue: 'current' })
 			const control = makeControl([entity])
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var' })
+			controller.writeLocalVariableStartupValue({ controlId: CreateBankControlId('control-a1'), name: 'my_var' })
 
 			expect(control.entities.entitySetOption).toHaveBeenCalledWith('local-variables', entity.id, 'startup_value', {
 				isExpression: false,
@@ -242,9 +253,9 @@ describe('LocalVariablesController', () => {
 		test('setLocalVariable still sets the value', () => {
 			const entity = makeVariableEntity('my_var')
 			const control = makeControl([entity], false)
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'new value')
+			controller.setLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' }, 'new value')
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
 		})
@@ -252,9 +263,9 @@ describe('LocalVariablesController', () => {
 		test('resetLocalVariable still restores the startup value', () => {
 			const entity = makeVariableEntity('my_var', { startupValue: 'startup' })
 			const control = makeControl([entity], false)
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var' })
+			controller.resetLocalVariable({ controlId: CreateBankControlId('control-a1'), name: 'my_var' })
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'startup')
 		})
@@ -262,9 +273,9 @@ describe('LocalVariablesController', () => {
 		test('writeLocalVariableStartupValue is rejected, as it edits the configuration', () => {
 			const entity = makeVariableEntity('my_var', { feedbackValue: 'current' })
 			const control = makeControl([entity], false)
-			const { controller } = createController({ 'control-a1': control })
+			const { controller } = createController({ [CreateBankControlId('control-a1')]: control })
 
-			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var' })
+			controller.writeLocalVariableStartupValue({ controlId: CreateBankControlId('control-a1'), name: 'my_var' })
 
 			expect(control.entities.entitySetOption).not.toHaveBeenCalled()
 		})

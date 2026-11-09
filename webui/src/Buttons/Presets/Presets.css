@@ -126,4 +126,13 @@
 	.presets-sections-tree .presets-section-row {
 		font-size: 0.75rem;
 	}
+
+	/* A page of another installation, in as many columns as it has, scrolling sideways when wider than the panel */
+	.presets-link-grid {
+		display: grid;
+		overflow-x: auto;
+		gap: 3px;
+		padding: 5px;
+		background-color: var(--color-surface-dark);
+	}
 }

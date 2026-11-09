@@ -1,7 +1,7 @@
 import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { nanoid } from 'nanoid'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { InternalInputFieldTable, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
@@ -9,6 +9,7 @@ import { getInputFeatures } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { Button } from './Button.js'
+import { FormLabel } from './Form.js'
 import { Table } from './Table.js'
 
 function columnDefault(col: SomeCompanionInputField): JsonValue {
@@ -46,6 +47,7 @@ export function TableInputField({
 	isLocatedInGrid,
 }: TableInputFieldProps): React.JSX.Element {
 	const { columns } = definition
+	const baseId = useId()
 	const sortColId = useMemo(() => firstNumberColId(columns), [columns])
 
 	const sortedRows = useMemo(() => {
@@ -72,8 +74,15 @@ export function TableInputField({
 	)
 
 	const updateCell = useCallback(
-		(rowIndex: number, colId: string, cellValue: JsonValue) => {
-			setValue(sortedRowsRef.current.map((row, i) => (i === rowIndex ? { ...row, [colId]: cellValue } : row)))
+		(rowIndex: number, colId: string, cellValue: JsonValue | undefined) => {
+			setValue(
+				sortedRowsRef.current.map((row, i) => {
+					if (i !== rowIndex) return row
+					// A cleared cell has no value, as it would once sent as JSON
+					const { [colId]: _cleared, ...rest } = row
+					return cellValue === undefined ? rest : { ...rest, [colId]: cellValue }
+				})
+			)
 		},
 		[setValue]
 	)
@@ -97,8 +106,12 @@ export function TableInputField({
 							<tr key={(row['_id'] as string | undefined) ?? rowIndex}>
 								{columns.map((col) => (
 									<td key={col.id} className="ps-0">
+										{/* The column header shows the label, this names the input */}
+										<FormLabel htmlFor={`${baseId}-${rowIndex}-${col.id}`} className="sr-only">
+											{col.label}
+										</FormLabel>
 										<OptionsInputControl
-											inputId={undefined}
+											inputId={`${baseId}-${rowIndex}-${col.id}`}
 											allowInternalFields={false}
 											isLocatedInGrid={isLocatedInGrid}
 											entityType={entityType}

@@ -1,10 +1,16 @@
 import debounceFn from 'debounce-fn'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResultError } from '@companion-app/shared/ExpressionResult.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ExpressionOrValue, JsonValue } from '@companion-module/host'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import type {
+	VariableDependency,
+	VariableDependencyListener,
+	VariableDependencyRegistry,
+} from '../../Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import type { RenderClock } from '../RenderClock.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
@@ -71,11 +77,11 @@ function evaluateBoolean(
 
 	const parsed = parser.executeExpression(exprOrVal.value, 'boolean')
 	return parsed.ok
-		? { ok: true, variableIds: parsed.variableIds, clockSensitive: parsed.clockSensitive, value: !!parsed.value }
+		? { ok: true, variableIds: parsed.variableIds, clockSensitive: parsed.clockCycleMs > 0, value: !!parsed.value }
 		: {
 				ok: false,
 				variableIds: parsed.variableIds,
-				clockSensitive: parsed.clockSensitive,
+				clockSensitive: parsed.clockCycleMs > 0,
 				error: parsed.error,
 			}
 }
@@ -116,14 +122,14 @@ function evaluateString(
 		? {
 				ok: true,
 				variableIds: parsed.variableIds,
-				clockSensitive: parsed.clockSensitive,
+				clockSensitive: parsed.clockCycleMs > 0,
 				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				value: String(parsed.value),
 			}
 		: {
 				ok: false,
 				variableIds: parsed.variableIds,
-				clockSensitive: parsed.clockSensitive,
+				clockSensitive: parsed.clockCycleMs > 0,
 				error: parsed.error,
 			}
 }
@@ -213,10 +219,15 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
  * expressions, and invalidates the parsed results and reevaluates them when the
  * variables used within them change.
  */
-export class EntityPoolSpecialExpressionManager {
-	readonly #controlId: string
+export class EntityPoolSpecialExpressionManager implements VariableDependencyListener<null> {
+	readonly #controlId: SomeControlId
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
-	readonly #unsubscribeRenderClock: (() => void) | null
+	readonly #renderClock: RenderClock
+	/**
+	 * Only subscribed while some entity is clock-sensitive: most controls have none, and a tick for each of them
+	 * at 10hz adds up to a noticeable idle load on a slow machine with many buttons.
+	 */
+	#unsubscribeRenderClock: (() => void) | null = null
 	#destroyed = false
 
 	private readonly specialExpressions: {
@@ -227,18 +238,24 @@ export class EntityPoolSpecialExpressionManager {
 			readonly logger: Logger
 		}
 	}
+	/** The entity maps of every special expression, so hot paths can walk them without allocating */
+	readonly #allEntityMaps: ReadonlyArray<Map<string, EntityWrapper>>
+	/** Every variable referenced by the tracked entities, so we are told when one changes */
+	readonly #variables: VariableDependency<null>
 
 	constructor(
-		controlId: string,
+		controlId: SomeControlId,
 		createVariablesAndExpressionParser: CreateVariablesAndExpressionParser,
 		updateFns: {
 			[Expression in SpecialExpression]: UpdateSpecialExpressionValuesFn<Expression>
 		},
-		renderClock: RenderClock
+		renderClock: RenderClock,
+		variableDependencies: VariableDependencyRegistry
 	) {
 		this.#controlId = controlId
+		this.#variables = variableDependencies.create(this, controlId, null)
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
-		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick()) ?? null
+		this.#renderClock = renderClock
 
 		this.specialExpressions = {
 			isInverted: {
@@ -254,6 +271,7 @@ export class EntityPoolSpecialExpressionManager {
 				logger: LogController.createLogger(`Controls/${controlId}/EntityPoolSpecialExpressionManager/storeResult`),
 			},
 		}
+		this.#allEntityMaps = Object.values(this.specialExpressions).map((specialExpression) => specialExpression.entities)
 	}
 
 	readonly #debounceProcessPending = debounceFn(
@@ -309,6 +327,12 @@ export class EntityPoolSpecialExpressionManager {
 					updateFn(updatedValues)
 				}
 			}
+
+			if (!this.#unsubscribeRenderClock && this.#hasClockSensitiveEntity()) {
+				this.#unsubscribeRenderClock = this.#renderClock.subscribe(() => this.onRenderClockTick())
+			}
+
+			this.#updateVariables()
 		},
 		{
 			before: false,
@@ -326,9 +350,27 @@ export class EntityPoolSpecialExpressionManager {
 		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
 		this.#unsubscribeRenderClock?.()
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		this.#unsubscribeRenderClock = null
+		this.#variables.dispose()
+		for (const entities of this.#allEntityMaps) {
 			entities.clear()
 		}
+	}
+
+	/**
+	 * Register the variables referenced by every tracked entity. An entity awaiting re-processing has none; it
+	 * reads the latest values when it is processed, so it doesn't need to hear about changes until then.
+	 */
+	#updateVariables(): void {
+		const allVariableIds = new Set<string>()
+		for (const entities of this.#allEntityMaps) {
+			for (const wrapper of entities.values()) {
+				if (!wrapper.referencedVariableIds) continue
+				for (const id of wrapper.referencedVariableIds) allVariableIds.add(id)
+			}
+		}
+
+		this.#variables.set(allVariableIds)
 	}
 
 	/**
@@ -356,9 +398,13 @@ export class EntityPoolSpecialExpressionManager {
 	 * processing of those special expressions to compute their new values.
 	 */
 	forgetEntity(entityId: string): void {
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			entities.delete(entityId)
 		}
+
+		// Processing ends by registering what the remaining entities read, so this stops tracking what the
+		// forgotten one did. Debounced, so a burst of removals rescans the entities once
+		this.#debounceProcessPending()
 	}
 
 	/**
@@ -369,7 +415,7 @@ export class EntityPoolSpecialExpressionManager {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			for (const wrapper of entities.values()) {
 				if (!wrapper.dependsOnRenderClock) continue
 
@@ -379,18 +425,37 @@ export class EntityPoolSpecialExpressionManager {
 			}
 		}
 
-		if (anyInvalidated) this.#debounceProcessPending()
+		if (anyInvalidated) {
+			this.#debounceProcessPending()
+		} else {
+			// Nothing depends on the clock anymore (eg the entity was removed or changed), so stop ticking.
+			// Processing subscribes again if an entity becomes clock-sensitive
+			this.#unsubscribeRenderClock?.()
+			this.#unsubscribeRenderClock = null
+		}
+	}
+
+	#hasClockSensitiveEntity(): boolean {
+		for (const entities of this.#allEntityMaps) {
+			for (const wrapper of entities.values()) {
+				if (wrapper.dependsOnRenderClock) return true
+			}
+		}
+		return false
 	}
 
 	/**
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		variableIds: ReadonlySet<string>
+	): void {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			for (const wrapper of entities.values()) {
 				// Check if already queued for processing
 				const referencedVariableIds = wrapper.referencedVariableIds

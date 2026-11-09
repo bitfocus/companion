@@ -100,15 +100,19 @@ export class HostFramedTransport {
 
 	#channel: FramedChannel | null = null
 
-	constructor(dataChannel: DataChannelServer, onMessage: FramedMessageHandler) {
+	/**
+	 * @param onDisconnect Called when the connected child's socket goes away. Nothing sent before then can be
+	 * answered any more, so the owner should fail anything still waiting on a reply.
+	 */
+	constructor(dataChannel: DataChannelServer, onMessage: FramedMessageHandler, onDisconnect: () => void) {
 		this.#dataChannel = dataChannel
 
 		this.#onConnect = (socket) => {
 			this.#channel = new FramedChannel(socket, onMessage)
 		}
 		this.#onDisconnect = () => {
-			this.#channel?.destroy()
-			this.#channel = null
+			this.#dropChannel()
+			onDisconnect()
 		}
 
 		dataChannel.on('connect', this.#onConnect)
@@ -131,6 +135,11 @@ export class HostFramedTransport {
 		this.#dataChannel.off('connect', this.#onConnect)
 		this.#dataChannel.off('disconnect', this.#onDisconnect)
 
-		this.#onDisconnect()
+		this.#dropChannel()
+	}
+
+	#dropChannel(): void {
+		this.#channel?.destroy()
+		this.#channel = null
 	}
 }

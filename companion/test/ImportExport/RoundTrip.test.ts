@@ -3,12 +3,17 @@ import Express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateExpressionVariableControlId,
+	CreateTriggerControlId,
+} from '@companion-app/shared/ControlId.js'
+import { EXPORT_VERSION } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
+import type { ClientExportTarget } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
-import { FILE_VERSION } from '../../lib/ImportExport/Constants.js'
 import { ExportController } from '../../lib/ImportExport/Export.js'
 import { parseImportBuffer, type ParseImportResult } from '../../lib/ImportExport/ParseImport.js'
 import { ImportExportThreadMethods } from '../../lib/ImportExport/ThreadMethods.js'
@@ -18,6 +23,7 @@ import type { IPageStore } from '../../lib/Page/Store.js'
 import type { AppInfo } from '../../lib/Registry.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 // These tests exercise the real download → parse pipeline end-to-end: a config is exported (through
 // the actual serialisation used by the download route), then fed back through the real import parser
@@ -95,13 +101,13 @@ function createExportController() {
 		},
 	}
 
-	const pageOne = { id: 'page-1', name: 'Page One', controls: { 0: { 0: 'control-1' } } } as any
+	const pageOne = { id: 'page-1', name: 'Page One', controls: { 0: { 0: CreateBankControlId('control-1') } } } as any
 	pageStore.getAll.mockReturnValue({ 1: pageOne })
 	pageStore.getPageInfo.mockImplementation((pageNumber: number) => (pageNumber === 1 ? pageOne : undefined))
 	pageStore.getPageNumber.mockReturnValue(1)
 
 	controls.getControl.mockImplementation((id: string) => {
-		if (id === 'control-1') return makeControl(buttonJson)
+		if (id === CreateBankControlId('control-1')) return makeControl(buttonJson)
 		return undefined // page control (page:<id>) etc. -> no local variables
 	})
 	controls.getAllTriggers.mockReturnValue([makeTrigger('trig-1', 'My Trigger')])
@@ -144,14 +150,12 @@ function createExportController() {
 		'remote-1': { id: 'remote-1', instanceId: 'si-1', moduleId: 'surface-mod', name: 'Remote' },
 	} as any)
 
-	userconfig.getKey.mockImplementation((key: any) => {
-		if (key === 'gridSize') return DEFAULT_GRID_SIZE
-		if (key === 'default_export_filename') return 'companion-config'
-		return undefined
-	})
+	userconfig.getKey.mockImplementation(
+		mockGetKey({ gridSize: DEFAULT_GRID_SIZE, default_export_filename: 'companion-config' }, 'default')
+	)
 
 	variables.custom.getDefinitions.mockReturnValue({
-		myvar: { description: 'A var', defaultValue: '42', sortOrder: 0, persistCurrentValue: false },
+		myvar: { description: 'A var', defaultValue: '42', sortOrder: 0, persistCurrentValue: false, notes: '' },
 	})
 	variables.custom.exportCollections.mockReturnValue([])
 	variables.values.createVariablesAndExpressionParser.mockReturnValue({
@@ -220,7 +224,7 @@ describe('export/import round-trip', () => {
 		for (const format of ALL_FORMATS) {
 			test(`format=${format} round-trips to an identical object`, async () => {
 				const { controller } = createExportController()
-				const exp = controller.generateCustomExport(null)
+				const exp = controller.generateCustomExport(null, undefined)
 
 				const bytes = await serialiseAsDownload(exp, format)
 				const result = await parseImportBuffer(bytes, parseYaml)
@@ -232,12 +236,12 @@ describe('export/import round-trip', () => {
 
 		test('the exported object actually contains every major section', () => {
 			const { controller } = createExportController()
-			const exp = controller.generateCustomExport(null) as any
+			const exp = controller.generateCustomExport(null, undefined) as any
 
 			// Guard against a future refactor silently emptying the fixture (which would make the
 			// round-trip assertions vacuous).
 			expect(exp.type).toBe('full')
-			expect(exp.version).toBe(FILE_VERSION)
+			expect(exp.version).toBe(EXPORT_VERSION)
 			expect(Object.keys(exp.pages)).toHaveLength(1)
 			expect(exp.pages[1].controls[0][0].type).toBe('button-layered')
 			expect(exp.pages[1].controls[0][0].steps['0'].options.controlEventsDisabledSets).toEqual(['down', 1000])
@@ -255,19 +259,38 @@ describe('export/import round-trip', () => {
 	// ── download endpoints: all three formats parse back to the same object ──────
 
 	describe('every download format parses back to the same object', () => {
-		const endpoints = [
-			{ name: 'full', url: '/int/api/export/full', type: 'full' },
-			{ name: 'trigger list', url: '/int/api/export/triggers/all', type: 'trigger_list' },
-			{ name: 'single page', url: '/int/api/export/page/1', type: 'page' },
+		/** Prepare an export as the UI does, returning the url to download it from */
+		function preparedUrl(controller: ExportController, target: ClientExportTarget, format: ExportFormat): string {
+			const token = controller.prepareDownload({ target, output: { format, filename: '', notes: '' } }, '10.0.0.1')
+			return `/int/api/export/download/${token}`
+		}
+
+		const endpoints: {
+			name: string
+			type: string
+			url: (controller: ExportController, format: ExportFormat) => string
+		}[] = [
+			{ name: 'full', type: 'full', url: (_controller, format) => `/int/api/export/full?format=${format}` },
+			{
+				name: 'trigger list',
+				type: 'trigger_list',
+				url: (controller, format) => preparedUrl(controller, { type: 'triggers', includeSecrets: true }, format),
+			},
+			{
+				name: 'single page',
+				type: 'page',
+				url: (controller, format) =>
+					preparedUrl(controller, { type: 'page', pageNumber: 1, includeSecrets: true }, format),
+			},
 		]
 
 		for (const endpoint of endpoints) {
 			test(`${endpoint.name} export is format-equivalent and parses`, async () => {
-				const { app } = createExportController()
+				const { app, controller } = createExportController()
 
 				const parsed: Record<string, unknown> = {}
 				for (const format of ALL_FORMATS) {
-					const res = await download(app, `${endpoint.url}?format=${format}`)
+					const res = await download(app, endpoint.url(controller, format))
 					expect(res.status).toBe(200)
 
 					const result = await parseImportBuffer(res.body, parseYaml)
@@ -281,7 +304,7 @@ describe('export/import round-trip', () => {
 
 				// ...and it must be a well-formed export of the expected type
 				expect((parsed['json'] as any).type).toBe(endpoint.type)
-				expect((parsed['json'] as any).version).toBe(FILE_VERSION)
+				expect((parsed['json'] as any).version).toBe(EXPORT_VERSION)
 			})
 		}
 	})

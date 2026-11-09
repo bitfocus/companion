@@ -1,5 +1,7 @@
 import * as imageRs from '@julusian/image-rs'
 import { describe, expect, test, vi } from 'vitest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import { getImageResultStats, ImageResult, type ImageResultProcessedStyle } from '../../lib/Graphics/ImageResult.js'
 
 /**
@@ -22,7 +24,7 @@ function createImage(
 	style: ImageResultProcessedStyle | null = null,
 	drawNative = vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3]))
 ) {
-	const image = new ImageResult(undefined, style, drawNative)
+	const image = new ImageResult(undefined, style, 1, 0, drawNative)
 	return { image, drawNative }
 }
 
@@ -53,7 +55,7 @@ describe('ImageResult', () => {
 
 		test('drawElements is stored when provided', () => {
 			const drawElements: never[] = []
-			const image = new ImageResult(undefined, null, vi.fn(), drawElements)
+			const image = new ImageResult(undefined, null, 1, 0, vi.fn(), drawElements)
 			expect(image.drawElements).toBe(drawElements)
 		})
 
@@ -64,8 +66,11 @@ describe('ImageResult', () => {
 		})
 
 		test('referencedLocations is stored when provided', () => {
-			const locations = new Set(['1/0/0', '2/1/3'])
-			const image = new ImageResult(undefined, null, vi.fn(), null, locations)
+			const locations = new Set<ControlLocationString>([
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
+				formatLocation({ pageNumber: 2, row: 1, column: 3 }),
+			])
+			const image = new ImageResult(undefined, null, 1, 0, vi.fn(), null, locations)
 			expect(image.referencedLocations).toBe(locations)
 		})
 
@@ -75,7 +80,7 @@ describe('ImageResult', () => {
 		})
 
 		test('cacheKey is stored when provided', () => {
-			const image = new ImageResult('some-content-key', null, vi.fn())
+			const image = new ImageResult('some-content-key', null, 1, 0, vi.fn())
 			expect(image.cacheKey).toBe('some-content-key')
 		})
 	})

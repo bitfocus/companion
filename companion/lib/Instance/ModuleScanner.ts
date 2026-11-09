@@ -4,6 +4,7 @@ import semver from 'semver'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import {
 	validateManifest as validateManifestOld,
@@ -92,7 +93,7 @@ export class InstanceModuleScanner {
 			}
 		} catch (e) {
 			this.#logger.silly(`Error loading module from ${fullpath}`, e)
-			this.#logger.error(`Error loading module from "${fullpath}": ` + e)
+			this.#logger.error(`Error loading module from "${fullpath}": ${stringifyError(e)}`)
 			return undefined
 		}
 	}

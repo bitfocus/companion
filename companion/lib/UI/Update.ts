@@ -11,13 +11,14 @@
 
 import { EventEmitter } from 'node:events'
 import os from 'node:os'
-import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
 import z from 'zod'
 import type { AppUpdateInfo } from '@companion-app/shared/Model/Common.js'
-import type { paths as CompanionUpdatesApiPaths } from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import { createClient, createConfig, type Client } from '@companion-app/shared/OpenApi/CompanionUpdates/client/index.js'
+import { updatesPost } from '@companion-app/shared/OpenApi/CompanionUpdates/index.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { throwTransportErrors } from '../Resources/OpenApiClient.js'
 import { isRunningUnderLauncher } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from './TRPC.js'
 import { compileUpdatePayload } from './UpdatePayload.js'
@@ -33,7 +34,7 @@ export class UIUpdate {
 	readonly #logger = LogController.createLogger('UI/Update')
 
 	readonly #appInfo: AppInfo
-	readonly #openApiClient: Client<CompanionUpdatesApiPaths>
+	readonly #openApiClient: Client
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
 
@@ -50,12 +51,15 @@ export class UIUpdate {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
 
-		this.#openApiClient = createClient<CompanionUpdatesApiPaths>({
-			baseUrl,
-			headers: {
-				'User-Agent': `Companion ${appInfo.appVersion}`,
-			},
-		})
+		this.#openApiClient = createClient(
+			createConfig({
+				baseUrl,
+				headers: {
+					'User-Agent': `Companion ${appInfo.appVersion}`,
+				},
+			})
+		)
+		this.#openApiClient.interceptors.error.use(throwTransportErrors)
 	}
 
 	startCycle(): void {
@@ -86,7 +90,8 @@ export class UIUpdate {
 	#requestUpdate(): void {
 		pRetry(
 			async () => {
-				const res = await this.#openApiClient.POST('/updates', {
+				const res = await updatesPost({
+					client: this.#openApiClient,
 					body: compileUpdatePayload(this.#appInfo),
 					signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 				})

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -60,6 +61,7 @@ function createDefinition(
 		learnTimeout: undefined,
 		showInvert: false,
 		actionHasResult: false,
+		actionExecutionTimeout: undefined,
 		feedbackAffectedProperties: undefined,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
@@ -186,7 +188,7 @@ describe('VariablesAndExpressionParser', () => {
 				field2: { isExpression: false, value: 'option1' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -207,7 +209,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: 42 },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -229,7 +231,7 @@ describe('VariablesAndExpressionParser', () => {
 				field2: { isExpression: false, value: 'option1' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -255,7 +257,7 @@ describe('VariablesAndExpressionParser', () => {
 				field3: { isExpression: false, value: 'option1' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -284,7 +286,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: '$(test:var1)' }, // Contains variable syntax but shouldn't be parsed
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -304,7 +306,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: -10 }, // below min, should be clamped to 0
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -322,7 +324,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: 200 }, // above max, should be clamped to 100
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -344,7 +346,7 @@ describe('VariablesAndExpressionParser', () => {
 				num1: { isExpression: false, value: 999 }, // above max, should be clamped to 50
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -363,7 +365,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: 200 }, // above max, but clamping is intentionally skipped
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -391,7 +393,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: '1 + $(test:num)' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -423,7 +425,7 @@ describe('VariablesAndExpressionParser', () => {
 				varField: { isExpression: false, value: 'Hello $(test:var1)' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -450,7 +452,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: '100 / 4' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -474,7 +476,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: 'concat($(test:var1), "-suffix")' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -499,7 +501,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: '$(test:num) > 40' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -536,7 +538,7 @@ describe('VariablesAndExpressionParser', () => {
 				boolField: { isExpression: true, value: '$(test:num) == 42' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -571,7 +573,7 @@ describe('VariablesAndExpressionParser', () => {
 				unmonitoredExpr: { isExpression: true, value: 'concat($(test:var2), " unmonitored")' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -604,7 +606,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: '$(test:num) + nope()' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(false)
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
@@ -633,7 +635,7 @@ describe('VariablesAndExpressionParser', () => {
 				goodField: { isExpression: true, value: 'concat($(test:var1), "!")' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(false)
 			// Both the failing field's and the healthy field's variables must be tracked
@@ -669,7 +671,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: 'undefined' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -693,7 +695,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: 'concat($(unknown:var), " test")' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -732,7 +734,7 @@ describe('VariablesAndExpressionParser', () => {
 				varField: { isExpression: false, value: '$(test:var1) parsed' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -763,7 +765,7 @@ describe('VariablesAndExpressionParser', () => {
 				},
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -790,7 +792,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: true, value: '1 + 1' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -816,7 +818,7 @@ describe('VariablesAndExpressionParser', () => {
 				field1: { isExpression: false, value: '1 + 1' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -861,7 +863,7 @@ describe('VariablesAndExpressionParser', () => {
 			it('should handle undefined with different options', () => {
 				const parser = createParser()
 
-				const emptyOk = { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false }
+				const emptyOk = { ok: true, value: undefined, variableIds: new Set(), clockCycleMs: 0 }
 				expect(parser.parseEntityOption(undefined, parseExpressionOnly)).toEqual(emptyOk)
 				expect(parser.parseEntityOption(undefined, parseVariablesOnly)).toEqual(emptyOk)
 				expect(parser.parseEntityOption(undefined, parseNothing)).toEqual(emptyOk)
@@ -1187,7 +1189,7 @@ describe('VariablesAndExpressionParser', () => {
 			// Pass a number where a string is expected
 			const options: ExpressionableOptionsObject = { field1: { isExpression: false, value: 123 } }
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1228,7 +1230,7 @@ describe('VariablesAndExpressionParser', () => {
 				check1: { isExpression: false, value: true },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1251,7 +1253,7 @@ describe('VariablesAndExpressionParser', () => {
 			})
 			const options: ExpressionableOptionsObject = {}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1269,7 +1271,7 @@ describe('VariablesAndExpressionParser', () => {
 				anyField: { isExpression: false, value: 'value' },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1339,6 +1341,22 @@ describe('VariablesAndExpressionParser', () => {
 
 			expect(parser.parseVariables('$(this:row)').text).toBe('$NA')
 			expect(parser.parseVariables('$(this:column)').text).toBe('$NA')
+		})
+
+		it('blockedThisVariables leaves those this: variables unresolved, including in child parsers', () => {
+			const thisValues: VariablesCache = new Map([
+				['this:row', '2'],
+				['this:step', '$(internal:b_step_1_2_3)'],
+			])
+			const parser = newParser(mockUserConfig, null as any, {}, thisValues, null, null, null, {
+				blockedThisVariables: new Set(['this:step']),
+			})
+
+			expect(parser.parseVariables('$(this:row)').text).toBe('2')
+			const blocked = parser.parseVariables('$(this:step)')
+			expect(blocked.text).toBe('$NA')
+			expect(blocked.variableIds).not.toContain('internal:b_step_1_2_3')
+			expect(parser.createChildParser({}).parseVariables('$(this:step)').text).toBe('$NA')
 		})
 	})
 
@@ -1544,6 +1562,7 @@ describe('VariablesAndExpressionParser', () => {
 				learnTimeout: undefined,
 				showInvert: false,
 				actionHasResult: false,
+				actionExecutionTimeout: undefined,
 				feedbackAffectedProperties: undefined,
 				optionsSupportExpressions: true,
 				showButtonPreview: false,
@@ -1564,7 +1583,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('passes through a variable-string value without substitution', () => {
 			const parser = newParser(mockUserConfig, null as any, { test: { foo: 'hello' } }, new Map(), null, null)
-			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprVal('$(test:foo) world') })
+			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprVal('$(test:foo) world') }, null)
 			expect(result.ok).toBe(true)
 			if (result.ok) {
 				expect(result.parsedOptions.value).toBe('$(test:foo) world')
@@ -1574,7 +1593,7 @@ describe('VariablesAndExpressionParser', () => {
 
 		it('passes through an expression string without evaluation', () => {
 			const parser = newParser(mockUserConfig, null as any, { test: { num: 10 } }, new Map(), null, null)
-			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprExpr('$(test:num) + 5') })
+			const result = parser.parseEntityOptions(makeDeferredDefinition(), { value: exprExpr('$(test:num) + 5') }, null)
 			expect(result.ok).toBe(true)
 			if (result.ok) expect(result.parsedOptions.value).toBe('$(test:num) + 5')
 		})
@@ -1597,7 +1616,7 @@ describe('VariablesAndExpressionParser', () => {
 			})
 
 			const parser = newParser(mockUserConfig, null as any, { test: { foo: 'hello' } }, new Map(), null, null)
-			const result = parser.parseEntityOptions(definition, { value: exprVal('$(test:foo) world') })
+			const result = parser.parseEntityOptions(definition, { value: exprVal('$(test:foo) world') }, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1608,41 +1627,43 @@ describe('VariablesAndExpressionParser', () => {
 		})
 	})
 
-	describe('clockSensitive propagation', () => {
-		it('executeExpression reports clockSensitive only when oscillate is used', () => {
+	describe('clock cycle propagation', () => {
+		it('executeExpression reports a clock cycle only when oscillate is used', () => {
 			const parser = createParser()
-			expect(parser.executeExpression('oscillate(1000)', undefined).clockSensitive).toBe(true)
-			expect(parser.executeExpression('1 + 2', undefined).clockSensitive).toBe(false)
+			expect(parser.executeExpression('oscillate(1000)', undefined).clockCycleMs).toBe(1000)
+			expect(parser.executeExpression('1 + 2', undefined).clockCycleMs).toBe(0)
 		})
 
-		it('parseEntityOption passes through clockSensitive from an expression', () => {
+		it('executeExpression reports when several oscillates repeat together', () => {
+			const parser = createParser()
+			expect(parser.executeExpression('oscillate(400) + oscillate(600)', undefined).clockCycleMs).toBe(1200)
+		})
+
+		it('parseEntityOption passes through the clock cycle of an expression', () => {
 			const parser = createParser()
 			const sensitive = parser.parseEntityOption(exprExpr('oscillate(1000)'), {
 				allowExpression: true,
 				parseVariables: false,
 			})
-			expect(sensitive.clockSensitive).toBe(true)
+			expect(sensitive.clockCycleMs).toBe(1000)
 
 			const plain = parser.parseEntityOption(exprExpr('1 + 2'), { allowExpression: true, parseVariables: false })
-			expect(plain.clockSensitive).toBe(false)
+			expect(plain.clockCycleMs).toBe(0)
 		})
 
-		it('parseEntityOption is never clockSensitive on the variable-interpolation or passthrough paths', () => {
+		it('parseEntityOption never has a clock cycle on the variable-interpolation or passthrough paths', () => {
 			const parser = createParser()
 			// A variable string is parsed by parseVariables, which cannot be clock-sensitive
 			expect(
-				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: true })
-					.clockSensitive
-			).toBe(false)
+				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: true }).clockCycleMs
+			).toBe(0)
 			// A passthrough (nothing enabled) value is never clock-sensitive
 			expect(
 				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: false })
-					.clockSensitive
-			).toBe(false)
+					.clockCycleMs
+			).toBe(0)
 			// A missing value is never clock-sensitive
-			expect(parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockSensitive).toBe(
-				false
-			)
+			expect(parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockCycleMs).toBe(0)
 		})
 
 		it('parseEntityOptions ORs clockSensitive across all fields', () => {
@@ -1654,10 +1675,14 @@ describe('VariablesAndExpressionParser', () => {
 				],
 				optionsSupportExpressions: true,
 			})
-			const result = parser.parseEntityOptions(definition, {
-				plain: { isExpression: true, value: '1 + 2' },
-				osc: { isExpression: true, value: 'oscillate(1000)' },
-			})
+			const result = parser.parseEntityOptions(
+				definition,
+				{
+					plain: { isExpression: true, value: '1 + 2' },
+					osc: { isExpression: true, value: 'oscillate(1000)' },
+				},
+				null
+			)
 			expect(result.ok).toBe(true)
 			expect(result.clockSensitive).toBe(true)
 		})
@@ -1671,10 +1696,14 @@ describe('VariablesAndExpressionParser', () => {
 				],
 				optionsSupportExpressions: true,
 			})
-			const result = parser.parseEntityOptions(definition, {
-				a: { isExpression: true, value: '1 + 2' },
-				b: { isExpression: false, value: '$(test:var1)' },
-			})
+			const result = parser.parseEntityOptions(
+				definition,
+				{
+					a: { isExpression: true, value: '1 + 2' },
+					b: { isExpression: false, value: '$(test:var1)' },
+				},
+				null
+			)
 			expect(result.ok).toBe(true)
 			expect(result.clockSensitive).toBe(false)
 		})
@@ -1689,10 +1718,14 @@ describe('VariablesAndExpressionParser', () => {
 				],
 				optionsSupportExpressions: true,
 			})
-			const result = parser.parseEntityOptions(definition, {
-				osc: { isExpression: true, value: 'oscillate(1000)' },
-				num: { isExpression: false, value: 200 },
-			})
+			const result = parser.parseEntityOptions(
+				definition,
+				{
+					osc: { isExpression: true, value: 'oscillate(1000)' },
+					num: { isExpression: false, value: 200 },
+				},
+				null
+			)
 			expect(result.ok).toBe(false)
 			expect(result.clockSensitive).toBe(true)
 		})
@@ -1703,7 +1736,7 @@ describe('VariablesAndExpressionParser', () => {
 			})
 			const result = parser.executeExpression('oscillate(1000)', undefined)
 			expect(result.ok).toBe(false)
-			expect(result.clockSensitive).toBe(false)
+			expect(result.clockCycleMs).toBe(0)
 		})
 
 		it('child parsers inherit the allowClockSensitive setting', () => {
@@ -1751,7 +1784,7 @@ describe('VariablesAndExpressionParser', () => {
 				level: { isExpression: false, value: 999 }, // out of range, but hidden
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
@@ -1769,7 +1802,7 @@ describe('VariablesAndExpressionParser', () => {
 				level: { isExpression: false, value: 999 }, // out of range and now visible
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(false)
 			if (!result.ok) {
@@ -1809,13 +1842,61 @@ describe('VariablesAndExpressionParser', () => {
 				level: { isExpression: false, value: 999 },
 			}
 
-			const result = parser.parseEntityOptions(entityDefinition, options)
+			const result = parser.parseEntityOptions(entityDefinition, options, null)
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
 				// passthrough - the stored value is kept as-is, not replaced with the default
 				expect(result.parsedOptions.level).toBe(999)
 			}
+		})
+	})
+
+	describe('parseEntityOptions with disabled fields', () => {
+		const createDisableableDefinition = () =>
+			createDefinition({
+				optionsSupportExpressions: true,
+				options: [
+					{
+						id: 'level',
+						type: 'number',
+						label: 'Level',
+						min: 0,
+						max: 100,
+						default: 5,
+						defaultForControlType: { trigger: 7 },
+						disabledForControlTypes: ['trigger'],
+					},
+				],
+			})
+
+		it('uses the default for the control instead of parsing a disabled field', () => {
+			const parser = createParser()
+			const options: ExpressionableOptionsObject = {
+				level: { isExpression: true, value: 'invalid +' },
+			}
+
+			const result = parser.parseEntityOptions(createDisableableDefinition(), options, CreateTriggerControlId('abc'))
+
+			expect(result).toEqual({
+				ok: true,
+				parsedOptions: { level: 7 },
+				referencedVariableIds: new Set(),
+				clockSensitive: false,
+			})
+		})
+
+		it('parses the field on other kinds of control', () => {
+			const parser = createParser()
+			const options: ExpressionableOptionsObject = {
+				level: { isExpression: false, value: 50 },
+			}
+
+			const bankResult = parser.parseEntityOptions(createDisableableDefinition(), options, CreateBankControlId('abc'))
+			expect(bankResult.ok && bankResult.parsedOptions.level).toBe(50)
+
+			const noControlResult = parser.parseEntityOptions(createDisableableDefinition(), options, null)
+			expect(noControlResult.ok && noControlResult.parsedOptions.level).toBe(50)
 		})
 	})
 })

@@ -4,13 +4,15 @@ import { nanoid } from 'nanoid'
 import z from 'zod'
 import { ParseExpression, ResolveExpression } from '@companion-app/shared/Expressions.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
-import type {
-	CompanionSurfaceConfigField,
-	OutboundSurfaceInfo,
-	OutboundSurfacesUpdate,
+import {
+	OutboundSurfaceInfoSchema,
+	type CompanionSurfaceConfigField,
+	type OutboundSurfaceInfo,
+	type OutboundSurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ServiceSurfaceDiscovery } from './Discovery.js'
@@ -33,7 +35,7 @@ export class SurfaceOutboundController {
 	/**
 	 * The core database library
 	 */
-	readonly #dbTable: DataStoreTableView<Record<string, OutboundSurfaceInfo>>
+	readonly #dbTable: DataStoreSchemaTableView<typeof OutboundSurfaceInfoSchema, string>
 
 	#storage = new Map<string, OutboundSurfaceInfo>()
 
@@ -54,7 +56,7 @@ export class SurfaceOutboundController {
 	}
 
 	constructor(db: DataDatabase) {
-		this.#dbTable = db.getTableView('surfaces_remote')
+		this.#dbTable = db.getSchemaTableView('surfaces_remote', OutboundSurfaceInfoSchema)
 
 		this.events.setMaxListeners(0)
 
@@ -98,15 +100,7 @@ export class SurfaceOutboundController {
 	init(): void {
 		this.#storage = new Map(Object.entries(this.#dbTable.all()))
 
-		let sortOrderCounter = 0
 		for (const surfaceInfo of this.#storage.values()) {
-			// Fixup old config
-			if (surfaceInfo.collectionId === undefined) surfaceInfo.collectionId = null
-			if (surfaceInfo.sortOrder === undefined) surfaceInfo.sortOrder = sortOrderCounter
-			sortOrderCounter++
-
-			if (surfaceInfo.enabled === undefined) surfaceInfo.enabled = true // Fixup old config
-
 			if (!surfaceInfo.enabled) {
 				this.#logger.info(`Skipping disabled remote surface: ${surfaceInfo.displayName || surfaceInfo.id}`)
 				continue
@@ -115,7 +109,9 @@ export class SurfaceOutboundController {
 			try {
 				this.#startStopConnection(surfaceInfo)
 			} catch (e) {
-				this.#logger.error(`Unable to setup remote surface: ${surfaceInfo.displayName || surfaceInfo.id}: ${e}`)
+				this.#logger.error(
+					`Unable to setup remote surface: ${surfaceInfo.displayName || surfaceInfo.id}: ${stringifyError(e)}`
+				)
 			}
 		}
 	}
@@ -229,7 +225,8 @@ export class SurfaceOutboundController {
 							0,
 							...this.#storage
 								.values()
-								.map((c) => (c?.collectionId ? c.sortOrder : null))
+								// The new surface goes in the root, so sort after the others there
+								.map((c) => (c.collectionId ? null : c.sortOrder))
 								.filter((n) => typeof n === 'number')
 						) || 0
 
@@ -415,17 +412,18 @@ export class SurfaceOutboundController {
 	addOutboundConnection(newInfo: OutboundSurfaceInfo): void {
 		if (this.#storage.has(newInfo.id)) throw new Error(`Outbound surface with ID ${newInfo.id} already exists`)
 
-		this.#storage.set(newInfo.id, newInfo)
-		this.#dbTable.set(newInfo.id, newInfo)
+		// Validate before tracking it, so an invalid surface isn't left half added
+		const info = this.#dbTable.set(newInfo.id, newInfo)
+		this.#storage.set(info.id, info)
 
 		this.events.emit('clientInfo', {
 			type: 'add',
-			itemId: newInfo.id,
+			itemId: info.id,
 
-			info: newInfo,
+			info: info,
 		})
 
-		this.#startStopConnection(newInfo)
+		this.#startStopConnection(info)
 	}
 
 	getAllEnabledConnectionsForInstance(instanceId: string): OutboundSurfaceInfo[] {
@@ -451,7 +449,7 @@ export class SurfaceOutboundController {
 			// Cleanup connection
 			this.#storage.delete(connectionId)
 			this.#dbTable.delete(connectionId)
-			this.#startStopConnection(connectionInfo)
+			this.#startStopConnection({ ...connectionInfo, enabled: false })
 
 			this.events.emit('clientInfo', {
 				type: 'remove',
@@ -461,6 +459,10 @@ export class SurfaceOutboundController {
 	}
 
 	reset(): void {
+		for (const surfaceInfo of this.#storage.values()) {
+			this.#startStopConnection({ ...surfaceInfo, enabled: false })
+		}
+
 		this.events.emit('clientInfo', {
 			type: 'init',
 			items: {},
@@ -518,7 +520,7 @@ export class SurfaceOutboundController {
 
 			return false
 		} catch (e) {
-			this.#logger.warn(`Failed to process remoteConfigMatches expression: ${e}`)
+			this.#logger.warn(`Failed to process remoteConfigMatches expression: ${stringifyError(e)}`)
 			return false
 		}
 	}

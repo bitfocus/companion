@@ -160,9 +160,11 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 
 	const doEnableDisable = useCallback(
 		(enabled: boolean) => {
-			updateRuleFieldMutation.mutateAsync({ ruleId: rule.id, field: 'enabled', value: enabled }).catch((err) => {
-				console.error('Error updating backup rule enabled state:', err)
-			})
+			updateRuleFieldMutation
+				.mutateAsync({ ruleId: rule.id, change: { key: 'enabled', value: enabled } })
+				.catch((err) => {
+					console.error('Error updating backup rule enabled state:', err)
+				})
 		},
 		[updateRuleFieldMutation, rule.id]
 	)

@@ -1,9 +1,12 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
+import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LayeredButtonDrawer } from '../../lib/Controls/ControlTypes/Button/LayeredButtonDrawer.js'
+import { ReferencedLocationsIndex } from '../../lib/Controls/ReferencedLocationsIndex.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 // Control the (heavy) element conversion so we can shape its result and open/close the async draw window.
 const convertMock = vi.hoisted(() => vi.fn())
@@ -11,7 +14,7 @@ vi.mock('../../lib/Graphics/ConvertGraphicsElements.js', () => ({
 	ConvertSomeButtonGraphicsElementForDrawing: (...args: any[]) => convertMock(...args),
 }))
 
-const CONTROL_ID = 'bank:1-0-0'
+const CONTROL_ID = CreateBankControlId('1-0-0')
 const LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
 const OTHER_LOCATION: ControlLocation = { pageNumber: 2, row: 0, column: 0 }
 
@@ -25,7 +28,7 @@ const sleep = async (ms: number): Promise<void> => {
 	await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/** A minimal conversion result; each set defaults to empty and `clockSensitive` to false. */
+/** A minimal conversion result; each set defaults to empty and `clockCycleMs` to 0. */
 function conversionResult(
 	opts: {
 		elements?: any[]
@@ -33,7 +36,7 @@ function conversionResult(
 		usedCompositeElements?: Set<string>
 		referencedLocations?: Set<string>
 		cyclicLocations?: Set<string>
-		clockSensitive?: boolean
+		clockCycleMs?: number
 		hiddenVariables?: Set<string>
 		hiddenCompositeElements?: Set<string>
 		hiddenReferencedLocations?: Set<string>
@@ -51,7 +54,7 @@ function conversionResult(
 			hidden: opts.hiddenReferencedLocations ?? new Set<string>(),
 		},
 		cyclicLocations: opts.cyclicLocations ?? new Set<string>(),
-		clockSensitive: opts.clockSensitive ?? false,
+		clockCycleMs: opts.clockCycleMs ?? 0,
 	}
 }
 
@@ -75,6 +78,7 @@ describe('LayeredButtonDrawer', () => {
 		events = new EventEmitter()
 		deps = {
 			events,
+			variableDependencies: new VariableDependencyRegistry(),
 			pageStore: { getLocationOfControlId: vi.fn(() => currentLocation) },
 			variableValues: { createVariablesAndExpressionParser: vi.fn(() => ({ marker: 'parser' })) },
 			getPageVariableEntities: vi.fn(() => ({ marker: 'page-entities' })),
@@ -84,6 +88,7 @@ describe('LayeredButtonDrawer', () => {
 				getCachedRender: vi.fn(() => undefined),
 			},
 			userconfig: { getKey: vi.fn() },
+			referencedLocations: new ReferencedLocationsIndex(),
 		}
 		host = {
 			getButtonStateProps: () => ({
@@ -119,7 +124,7 @@ describe('LayeredButtonDrawer', () => {
 		})
 
 		it('reports the drawType passed to the constructor', async () => {
-			const pageDrawer = new LayeredButtonDrawer(deps, 'bank:1-0-0', host, 'pageup')
+			const pageDrawer = new LayeredButtonDrawer(deps, CreateBankControlId('1-0-0'), host, 'pageup')
 			convertMock.mockResolvedValueOnce(conversionResult())
 
 			const style = await pageDrawer.getDrawStyle()
@@ -127,12 +132,12 @@ describe('LayeredButtonDrawer', () => {
 			expect(style.drawType).toBe('pageup')
 		})
 
-		it('maps a falsy clockSensitive to undefined and a truthy one through', async () => {
-			convertMock.mockResolvedValueOnce(conversionResult({ clockSensitive: false }))
-			expect((await drawer.getDrawStyle()).clockSensitive).toBeUndefined()
+		it('maps no clock cycle to undefined and passes one through', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ clockCycleMs: 0 }))
+			expect((await drawer.getDrawStyle()).clockCycleMs).toBeUndefined()
 
-			convertMock.mockResolvedValueOnce(conversionResult({ clockSensitive: true }))
-			expect((await drawer.getDrawStyle()).clockSensitive).toBe(true)
+			convertMock.mockResolvedValueOnce(conversionResult({ clockCycleMs: 1000 }))
+			expect((await drawer.getDrawStyle()).clockCycleMs).toBe(1000)
 		})
 
 		it('passes referencedLocations through to the style', async () => {
@@ -141,6 +146,33 @@ describe('LayeredButtonDrawer', () => {
 			const style = await drawer.getDrawStyle()
 
 			expect(style.referencedLocations).toEqual(new Set(['2/0/0']))
+		})
+
+		it('reports drawn and hidden referenced locations to the index, replacing the previous draw', async () => {
+			const index: ReferencedLocationsIndex = deps.referencedLocations
+			convertMock.mockResolvedValueOnce(
+				conversionResult({
+					referencedLocations: new Set(['2/0/0']),
+					hiddenReferencedLocations: new Set(['3/0/0']),
+				})
+			)
+			await drawer.getDrawStyle()
+
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toEqual(
+				new Set([CONTROL_ID])
+			)
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 3, row: 0, column: 0 }))).toEqual(
+				new Set([CONTROL_ID])
+			)
+
+			convertMock.mockResolvedValueOnce(conversionResult({ referencedLocations: new Set(['4/0/0']) }))
+			await drawer.getDrawStyle()
+
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBeUndefined()
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 3, row: 0, column: 0 }))).toBeUndefined()
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 4, row: 0, column: 0 }))).toEqual(
+				new Set([CONTROL_ID])
+			)
 		})
 
 		it('builds the parser and conversion call from the control location', async () => {
@@ -227,9 +259,9 @@ describe('LayeredButtonDrawer', () => {
 		})
 	})
 
-	describe('onVariablesChanged', () => {
+	describe('variable changes', () => {
 		it('does nothing before any draw has happened', async () => {
-			drawer.onVariablesChanged(new Set(['local:x']))
+			deps.variableDependencies.dispatch(new Set(['local:x']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
@@ -241,7 +273,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
 			const changed = new Set(['local:preset_name', 'internal:other'])
-			drawer.onVariablesChanged(changed)
+			deps.variableDependencies.dispatch(changed, new Set([CONTROL_ID]))
 
 			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
@@ -252,7 +284,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['internal:unrelated']))
+			deps.variableDependencies.dispatch(new Set(['internal:unrelated']), new Set([CONTROL_ID]))
 
 			expect(queueSpy).not.toHaveBeenCalled()
 			await sleep(30)
@@ -263,7 +295,7 @@ describe('LayeredButtonDrawer', () => {
 			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set() }))
 			await drawer.getDrawStyle()
 
-			drawer.onVariablesChanged(new Set(['local:anything']))
+			deps.variableDependencies.dispatch(new Set(['local:anything']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
@@ -278,7 +310,7 @@ describe('LayeredButtonDrawer', () => {
 
 			// The variable it depends on changes before #lastDrawVariables is committed. Previously this was
 			// tested against a null/stale #lastDrawVariables and silently dropped.
-			drawer.onVariablesChanged(new Set(['local:preset_name']))
+			deps.variableDependencies.dispatch(new Set(['local:preset_name']), new Set([CONTROL_ID]))
 
 			pending.resolve(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawPromise
@@ -291,7 +323,7 @@ describe('LayeredButtonDrawer', () => {
 			convertMock.mockReturnValueOnce(pending.promise)
 
 			const drawPromise = drawer.getDrawStyle()
-			drawer.onVariablesChanged(new Set(['internal:unrelated']))
+			deps.variableDependencies.dispatch(new Set(['internal:unrelated']), new Set([CONTROL_ID]))
 			pending.resolve(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawPromise
 
@@ -310,7 +342,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['connection:cam']))
+			deps.variableDependencies.dispatch(new Set(['connection:cam']), new Set([CONTROL_ID]))
 
 			// The stale cache entry must be evicted...
 			expect(queueSpy).toHaveBeenCalledWith(new Set(['connection:cam']))
@@ -330,7 +362,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
 			const changed = new Set(['local:this_step', 'connection:cam'])
-			drawer.onVariablesChanged(changed)
+			deps.variableDependencies.dispatch(changed, new Set([CONTROL_ID]))
 
 			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
@@ -342,7 +374,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const drawPromise = drawer.getDrawStyle()
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['connection:cam']))
+			deps.variableDependencies.dispatch(new Set(['connection:cam']), new Set([CONTROL_ID]))
 			pending.resolve(conversionResult({ hiddenVariables: new Set(['connection:cam']) }))
 			await drawPromise
 
@@ -362,10 +394,86 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			invalidateSpy.mockClear()
-			drawer.onVariablesChanged(new Set(['local:preset_name']))
+			deps.variableDependencies.dispatch(new Set(['local:preset_name']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('variable dependency registration', () => {
+		const registry = (): VariableDependencyRegistry => deps.variableDependencies
+
+		it('is told about a change to a drawn variable, and not about others', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['conn:a']) }))
+			await drawer.getDrawStyle()
+
+			registry().dispatch(new Set(['conn:b']), null)
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+
+			registry().dispatch(new Set(['conn:a']), null)
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+		})
+
+		it('only hears about its own local variables', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['local:x']) }))
+			await drawer.getDrawStyle()
+
+			registry().dispatch(new Set(['local:x']), new Set([CreateBankControlId('other')]))
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+
+			registry().dispatch(new Set(['local:x']), new Set([CONTROL_ID]))
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+		})
+
+		it('evicts a hidden variable change without redrawing', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ hiddenVariables: new Set(['conn:hidden']) }))
+			await drawer.getDrawStyle()
+
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
+			registry().dispatch(new Set(['conn:hidden']), null)
+
+			expect(queueSpy).toHaveBeenCalled()
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+
+		it('catches a change mid-draw to a variable the previous draw did not read', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['conn:old']) }))
+			await drawer.getDrawStyle()
+
+			const pending = deferred<ReturnType<typeof conversionResult>>()
+			convertMock.mockReturnValueOnce(pending.promise)
+			const drawPromise = drawer.getDrawStyle()
+
+			// Not registered yet, so only seen because the in-flight draw is armed
+			registry().dispatch(new Set(['conn:new']), null)
+
+			pending.resolve(conversionResult({ usedVariables: new Set(['conn:new']) }))
+			await drawPromise
+
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+			expect(registry().stats().armed).toBe(0)
+		})
+
+		it('stops hearing about every change once the draw completes, even if it failed', async () => {
+			convertMock.mockRejectedValueOnce(new Error('boom'))
+			await expect(drawer.getDrawStyle()).rejects.toThrow('boom')
+
+			expect(registry().stats().armed).toBe(0)
+		})
+
+		it('stops tracking when disposed', async () => {
+			convertMock.mockResolvedValueOnce(
+				conversionResult({ usedVariables: new Set(['conn:a']), hiddenVariables: new Set(['conn:b']) })
+			)
+			await drawer.getDrawStyle()
+			expect(registry().stats().keys).toBe(2)
+
+			drawer.dispose()
+			expect(registry().stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 		})
 	})
 
@@ -507,6 +615,11 @@ describe('LayeredButtonDrawer', () => {
 	})
 
 	describe('loadElements / drawElements / visit', () => {
+		function fieldDefault(type: keyof typeof elementSchemas, fieldId: string): unknown {
+			const field = elementSchemas[type].flatMap((section) => section.fields).find((field) => field.id === fieldId)
+			return field && 'default' in field ? field.default : undefined
+		}
+
 		it('exposes loaded elements and normalises them', () => {
 			const clearSpy = vi.spyOn(cacheOf(drawer), 'clear')
 
@@ -516,6 +629,16 @@ describe('LayeredButtonDrawer', () => {
 			expect(drawer.drawElements).toHaveLength(1)
 			// Canvas gains its defaulted showStatusIcons during normalisation
 			expect((drawer.drawElements[0] as any).showStatusIcons).toBeDefined()
+		})
+
+		it('fills in the missing properties of an existing element with the defaults that keep its drawing', () => {
+			drawer.loadElements([{ id: 'b', type: 'box', x: { isExpression: false, value: 10 } } as any])
+
+			const box = drawer.drawElements[0] as any
+			expect(box.x).toEqual({ isExpression: false, value: 10 })
+			// Not the red a new box is created with
+			expect(box.color).toEqual({ isExpression: false, value: fieldDefault('box', 'color') })
+			expect(box.cornerRadius).toEqual({ isExpression: false, value: 0 })
 		})
 
 		it('normalises nested group children', () => {

@@ -1,6 +1,6 @@
 import { useId } from 'react'
-import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { FormLabel } from '~/Components/Form'
@@ -10,7 +10,7 @@ import { SecretTextInputField } from '~/Components/SecretTextInputField'
 
 interface PasswordStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: JsonValue) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX.Element {
@@ -32,7 +32,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"
 					value={!!config.admin_lockout}
-					setValue={(val) => setValue('admin_lockout', val)}
+					setValue={(value) => setValue({ key: 'admin_lockout', value })}
 				/>
 			</Grid.Col>
 
@@ -45,7 +45,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 						<SecretTextInputField
 							id={passwordFieldId}
 							value={config.admin_password || ''}
-							setValue={(val) => setValue('admin_password', val)}
+							setValue={(value) => setValue({ key: 'admin_password', value })}
 							immediateValue
 						/>
 					</Grid.Col>
@@ -60,7 +60,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 							value={config.admin_timeout}
 							min={0}
 							step={1}
-							setValue={(val) => setValue('admin_timeout', val)}
+							setValue={(value) => setValue({ key: 'admin_timeout', value })}
 							immediateValue
 						/>
 						<span className="text-muted">(minutes, 0 for none)</span>

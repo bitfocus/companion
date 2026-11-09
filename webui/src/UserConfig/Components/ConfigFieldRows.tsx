@@ -1,13 +1,14 @@
 import { observer } from 'mobx-react-lite'
 import { useId } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigKeyOfType, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { FormLabel } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { ResetButton, type UserConfigProps } from './Common.js'
+import { parseUserConfigChange, ResetButton, type UserConfigProps } from './Common.js'
 
 interface ConfigFieldRowProps {
 	label: string
@@ -32,7 +33,7 @@ export function ConfigFieldRow({ label, htmlFor, help, children }: ConfigFieldRo
 interface ConfigSwitchFieldProps {
 	userConfig: UserConfigProps
 	label: string
-	field: keyof UserConfigModel
+	field: UserConfigKeyOfType<boolean>
 	help: React.ReactNode
 }
 
@@ -50,7 +51,7 @@ export const ConfigSwitchField = observer(function ConfigSwitchField({
 			<SwitchInputField
 				id={id}
 				value={!!userConfig.config[field]}
-				setValue={(value) => userConfig.setValue(field, value)}
+				setValue={(value) => userConfig.setValue(keyValueChange(field, value))}
 				disabled={isLocked}
 			/>
 			{!isLocked && <ResetButton userConfig={userConfig} field={field} />}
@@ -61,7 +62,7 @@ export const ConfigSwitchField = observer(function ConfigSwitchField({
 interface ConfigNumberFieldProps {
 	userConfig: UserConfigProps
 	label: string
-	field: keyof UserConfigModel
+	field: UserConfigKeyOfType<number>
 	min: number
 	max: number
 	help: React.ReactNode
@@ -92,7 +93,7 @@ export const ConfigNumberField = observer(function ConfigNumberField({
 						const value = Math.floor(Number(rawValue))
 						if (isNaN(value)) return
 
-						userConfig.setValue(field, Math.min(Math.max(value, min), max))
+						userConfig.setValue(keyValueChange(field, Math.min(Math.max(value, min), max)))
 					}}
 				/>
 			</div>
@@ -104,7 +105,7 @@ export const ConfigNumberField = observer(function ConfigNumberField({
 interface ConfigTextFieldProps {
 	userConfig: UserConfigProps
 	label: string
-	field: keyof UserConfigModel
+	field: UserConfigKeyOfType<string>
 	help: React.ReactNode
 }
 
@@ -123,7 +124,7 @@ export const ConfigTextField = observer(function ConfigTextField({
 				<TextInputField
 					id={id}
 					value={String((userConfig.config[field] as any) ?? '')}
-					setValue={(value) => userConfig.setValue(field, value)}
+					setValue={(value) => userConfig.setValue(keyValueChange(field, value))}
 					disabled={isLocked}
 					tooltip={isLocked ? 'This value is locked by an environment variable' : undefined}
 				/>
@@ -157,7 +158,10 @@ export const ConfigDropdownField = observer(function ConfigDropdownField({
 				<SimpleDropdownInputField
 					id={id}
 					value={String((userConfig.config[field] as any) ?? '')}
-					setValue={(value) => userConfig.setValue(field, value)}
+					setValue={(value) => {
+						const change = parseUserConfigChange(field, value)
+						if (change) userConfig.setValue(change)
+					}}
 					choices={choices}
 					disabled={isLocked}
 				/>

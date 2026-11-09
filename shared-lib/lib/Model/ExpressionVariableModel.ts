@@ -1,25 +1,31 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import z from 'zod'
+import type { ExpressionVariableControlId } from '../ControlId.js'
+import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
-import type { SomeEntityModel } from './EntityModel.js'
+import { SomeEntityModelSchema } from './EntityModel.js'
 
 export type ExpressionVariableCollection = CollectionBase<null>
 
-export interface ExpressionVariableModel {
-	readonly type: 'expression-variable'
-	options: ExpressionVariableOptions
+export const ExpressionVariableOptionsSchema = z.object({
+	variableName: z.string().default(''),
+	description: z.string().default('An expression variable'),
+	sortOrder: z.number().default(0),
+	collectionId: z.string().optional(),
+	notes: z.string().default(''),
+})
 
-	entity: SomeEntityModel | null
+export type ExpressionVariableOptions = z.output<typeof ExpressionVariableOptionsSchema>
 
-	localVariables: SomeEntityModel[]
-}
+export const ExpressionVariableModelSchema = z.object({
+	type: z.literal('expression-variable'),
+	options: ExpressionVariableOptionsSchema.default(() => ExpressionVariableOptionsSchema.parse({})),
 
-export type ExpressionVariableOptions = {
-	variableName: string
-	description: string
-	sortOrder: number
-	collectionId?: string
-	notes?: string
-}
+	entity: SomeEntityModelSchema.nullable().default(null),
+
+	localVariables: z.array(SomeEntityModelSchema).default(() => []),
+})
+
+export type ExpressionVariableModel = z.output<typeof ExpressionVariableModelSchema>
 
 export interface ClientExpressionVariableData extends ExpressionVariableOptions {
 	type: 'expression-variable'
@@ -34,21 +40,21 @@ export type ExpressionVariableUpdate =
 
 export interface ExpressionVariableUpdateInitOp {
 	type: 'init'
-	variables: Record<string, ClientExpressionVariableData>
+	variables: Record<ExpressionVariableControlId, ClientExpressionVariableData>
 }
 export interface ExpressionVariableUpdateRemoveOp {
 	type: 'remove'
-	controlId: string
+	controlId: ExpressionVariableControlId
 }
 export interface ExpressionVariableUpdateUpdateOp {
 	type: 'update'
-	controlId: string
+	controlId: ExpressionVariableControlId
 
-	patch: JsonPatchOperation<ClientExpressionVariableData>[]
+	patch: ObjectPatch<ClientExpressionVariableData>
 }
 export interface ExpressionVariableUpdateAddOp {
 	type: 'add'
-	controlId: string
+	controlId: ExpressionVariableControlId
 
 	info: ClientExpressionVariableData
 }

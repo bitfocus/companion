@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	stringifySocketEntityLocation,
 	type EntityModelType,
@@ -41,6 +42,7 @@ export interface IEntityEditorService {
 		dropIndex: number
 	) => void
 	performLearn: ((entityId: string) => void) | undefined
+	cancelLearn: ((entityId: string) => void) | undefined
 	setEnabled: ((entityId: string, enabled: boolean) => void) | undefined
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
@@ -60,6 +62,7 @@ export interface IEntityEditorActionService {
 	performDuplicate: () => void
 	setConnection: (connectionId: string) => void
 	performLearn: (() => void) | undefined
+	cancelLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
 
@@ -74,7 +77,7 @@ export interface IEntityEditorActionService {
 }
 
 export function useControlEntitiesEditorService(
-	controlId: string,
+	controlId: SomeControlId,
 	listId: SomeSocketEntityLocation,
 	confirmModal: React.RefObject<GenericConfirmModalRef | null>
 ): IEntityEditorService {
@@ -85,6 +88,7 @@ export function useControlEntitiesEditorService(
 	const removeMutation = useMutationExt(trpc.controls.entities.remove.mutationOptions())
 	const duplicateMutation = useMutationExt(trpc.controls.entities.duplicate.mutationOptions())
 	const learnOptionsMutation = useMutationExt(trpc.controls.entities.learnOptions.mutationOptions())
+	const cancelLearnMutation = useMutationExt(trpc.controls.activeLearn.abort.mutationOptions())
 	const setEnabledMutation = useMutationExt(trpc.controls.entities.setEnabled.mutationOptions())
 	const setHeadlineMutation = useMutationExt(trpc.controls.entities.setHeadline.mutationOptions())
 	const setInvertedMutation = useMutationExt(trpc.controls.entities.setInverted.mutationOptions())
@@ -207,6 +211,12 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
+			cancelLearn: (entityId: string) => {
+				cancelLearnMutation.mutateAsync({ id: entityId }).catch((e) => {
+					console.error('Failed to cancel learning control entity values', e)
+				})
+			},
+
 			setEnabled: (entityId: string, enabled: boolean) => {
 				setEnabledMutation
 					.mutateAsync({
@@ -317,6 +327,7 @@ export function useControlEntitiesEditorService(
 			removeMutation,
 			duplicateMutation,
 			learnOptionsMutation,
+			cancelLearnMutation,
 			setEnabledMutation,
 			setHeadlineMutation,
 			setInvertedMutation,
@@ -351,6 +362,7 @@ export function useControlEntityService(
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(entityId) : undefined,
+			cancelLearn: serviceFactory.cancelLearn ? () => serviceFactory.cancelLearn?.(entityId) : undefined,
 			setEnabled: serviceFactory.setEnabled
 				? (enabled: boolean) => serviceFactory.setEnabled?.(entityId, enabled)
 				: undefined,

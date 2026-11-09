@@ -2,6 +2,14 @@ import { action, makeObservable, observable } from 'mobx'
 import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
 import { assertNever } from '~/Resources/util'
 
+function setUserConfigValue<K extends keyof UserConfigModel>(
+	config: UserConfigModel,
+	key: K,
+	value: UserConfigModel[K]
+): void {
+	config[key] = value
+}
+
 export class UserConfigStore {
 	private hasProperties_ = false // properties_ can't be null, so we need a separate flag to check if it's initialized
 	private properties_ = observable.object<UserConfigModel>({} as any)
@@ -32,7 +40,7 @@ export class UserConfigStore {
 				this.properties_ = structuredClone(change.config)
 				break
 			case 'key':
-				;(this.properties_ as any)[change.key] = change.value
+				setUserConfigValue(this.properties_, change.key, change.value)
 				break
 
 			default:

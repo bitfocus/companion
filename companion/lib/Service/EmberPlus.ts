@@ -6,7 +6,7 @@ import { getPath } from 'emberplus-connection/dist/Ember/Lib/util.js'
 import type { EmberValue } from 'emberplus-connection/dist/types/types.js'
 import { formatLocation, oldBankIndexToXY, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigGridSize, UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { pad } from '@companion-app/shared/Util.js'
@@ -68,7 +68,7 @@ function buildPathForVariable(name: string, type: 'internal' | 'custom', variabl
 /**
  * Convert internal color to hex
  */
-function formatColorAsHex(color: any): string {
+function formatColorAsHex(color: number): string {
 	const newColor = parseColorToNumber(color)
 	if (newColor === false) return '#000000'
 	return `#${pad(newColor.toString(16).slice(-6), '0', 6)}`
@@ -848,9 +848,9 @@ export class ServiceEmberPlus extends ServiceBase {
 	/**
 	 * Process an updated userconfig value and enable/disable the module, if necessary.
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
-		super.updateUserConfig(key, value)
-		if (key == 'gridSize') {
+	updateUserConfig(change: UserConfigKeyChange): void {
+		super.updateUserConfig(change)
+		if (change.key === 'gridSize') {
 			this.logger.debug(`Grid Size change restarting server`)
 			this.debounceRestart()
 		}

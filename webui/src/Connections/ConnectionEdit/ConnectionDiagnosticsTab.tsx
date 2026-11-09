@@ -81,6 +81,14 @@ export const ConnectionDiagnosticsTab = observer(function ConnectionDiagnosticsT
 								Legacy
 							</StatusBadge>
 						)}
+						{moduleVersion?.isRuntimeOverridden && (
+							<StatusBadge
+								tone="warning"
+								title="Built for a version of Node.js that is no longer supported, so it is run on a newer one and may not work correctly"
+							>
+								Runtime overridden
+							</StatusBadge>
+						)}
 						<UpdateInstanceToLatestBadge instance={connectionInfo} />
 					</span>
 				</DiagnosticsRow>

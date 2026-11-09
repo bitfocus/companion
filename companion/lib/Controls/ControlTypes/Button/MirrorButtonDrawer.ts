@@ -1,11 +1,12 @@
 import debounceFn from 'debounce-fn'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { makeReferencePlaceholder } from '../../../Graphics/ConvertGraphicsElements.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import LogController, { type Logger } from '../../../Log/Controller.js'
+import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
 
@@ -21,34 +22,36 @@ const emptyStateProps = {
  * The `drawing` for a button-reference control: owns no elements, but mirrors the target button's whole draw
  * style and redraws when the target renders. Reference cycles resolve to a placeholder.
  */
-export class MirrorButtonDrawer implements IButtonDrawer {
+export class MirrorButtonDrawer implements IButtonDrawer, VariableDependencyListener<null> {
 	readonly #logger: Logger
 	readonly #deps: ControlDependencies
-	readonly #controlId: string
+	readonly #controlId: BankControlId
 	readonly #getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
 
 	/** Locations the last draw depended on, so we know which `button_drawn` events must trigger a redraw. */
-	#lastReferencedLocations: ReadonlySet<string> | null = null
+	#lastReferencedLocations: ReadonlySet<ControlLocationString> | null = null
 
 	/** Variables the last location-resolution depended on, so a change to any (e.g. `$(page:x)`) redraws us. */
-	#lastLocationVariables: ReadonlySet<string> | null = null
+	readonly #locationVariables: VariableDependency<null>
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
 	) {
 		this.#logger = LogController.createLogger(`Controls/Button/MirrorDrawer/${controlId}`)
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getTargetLocation = getTargetLocation
+		this.#locationVariables = deps.variableDependencies.create(this, controlId, null)
 	}
 
 	dispose(): void {
 		// Cancel any redraw still queued so it can't fire after the owning control is gone
 		this.invalidate.cancel()
+		this.#locationVariables.dispose()
 	}
 
 	#placeholder(text: string): DrawStyleLayeredButtonModel {
@@ -63,11 +66,10 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
 		const { location: targetLocation, referencedVariableIds } = this.#getTargetLocation()
-		this.#lastLocationVariables = referencedVariableIds.size > 0 ? referencedVariableIds : null
+		this.#locationVariables.set(referencedVariableIds)
 
 		if (!targetLocation) {
-			this.#lastReferencedLocations = null
-			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'))
+			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'), null)
 		}
 
 		const targetLocationStr = formatLocation(targetLocation)
@@ -76,8 +78,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 
 		// Direct self-reference
 		if (myLocationStr === targetLocationStr) {
-			this.#lastReferencedLocations = new Set([targetLocationStr])
-			return this.#storeAndReturn(this.#placeholder('∞'))
+			return this.#storeAndReturn(this.#placeholder('∞'), new Set([targetLocationStr]))
 		}
 
 		const targetControlId = this.#deps.pageStore.getControlIdAt(targetLocation)
@@ -88,27 +89,35 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		// Not rendered yet (or gone): placeholder until the target's next `button_drawn` redraws us. Reading the
 		// cached style (never getDrawStyle) keeps this sync and recursion-free.
 		if (!targetStyle) {
-			this.#lastReferencedLocations = new Set([targetLocationStr])
-			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'))
+			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'), new Set([targetLocationStr]))
 		}
 
 		// Transitive cycle: the target's render references us back
 		if (myLocationStr && targetStyle.referencedLocations?.has(myLocationStr)) {
-			this.#lastReferencedLocations = new Set([targetLocationStr])
-			return this.#storeAndReturn(this.#placeholder('∞'))
+			return this.#storeAndReturn(this.#placeholder('∞'), new Set([targetLocationStr]))
 		}
 
-		const referencedLocations = new Set<string>([targetLocationStr, ...(targetStyle.referencedLocations ?? [])])
-		this.#lastReferencedLocations = referencedLocations
+		const referencedLocations = new Set<ControlLocationString>([
+			targetLocationStr,
+			...(targetStyle.referencedLocations ?? []),
+		])
 
-		return this.#storeAndReturn({
-			...structuredClone(targetStyle),
-			referencedLocations,
-		})
+		return this.#storeAndReturn(
+			{
+				...structuredClone(targetStyle),
+				referencedLocations,
+			},
+			referencedLocations
+		)
 	}
 
-	#storeAndReturn(style: DrawStyleLayeredButtonModel): DrawStyleLayeredButtonModel {
+	#storeAndReturn(
+		style: DrawStyleLayeredButtonModel,
+		referencedLocations: ReadonlySet<ControlLocationString> | null
+	): DrawStyleLayeredButtonModel {
 		this.#lastDrawStyle = style
+		this.#lastReferencedLocations = referencedLocations
+		this.#deps.referencedLocations.setControlReferences(this.#controlId, this.#lastReferencedLocations)
 		return style
 	}
 
@@ -124,9 +133,13 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	// A mirror owns no elements, but its `location` field can reference variables (e.g. `$(page:x)`): when one
 	// of those changes the mirrored target may change, so redraw. The target's own variables are handled by
 	// redrawing off its render (see onButtonDrawn), not here.
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		if (!this.#lastLocationVariables) return
-		if (this.#lastLocationVariables.isDisjointFrom(allChangedVariables)) return
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
+		const locationVariables = this.#locationVariables.variableIds
+		if (!locationVariables) return
+		if (locationVariables.isDisjointFrom(allChangedVariables)) return
 
 		this.invalidate()
 	}

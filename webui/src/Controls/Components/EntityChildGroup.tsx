@@ -4,6 +4,7 @@ import { faCodeBranch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useContext, useMemo } from 'react'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -47,7 +48,7 @@ export const EntityManageChildGroups = observer(function EntityManageChildGroups
 		disabled: childDragIds.length === 0,
 	})
 
-	if (entity.connectionId !== 'internal') return null
+	if (!isInternalConnectionId(entity.connectionId)) return null
 	if (!entityDefinition?.supportsChildGroups || entityDefinition.supportsChildGroups.length === 0) return null
 
 	return (

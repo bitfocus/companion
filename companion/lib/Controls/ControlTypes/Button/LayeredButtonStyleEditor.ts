@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import { getDefaultPinnedProperties } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -38,7 +39,7 @@ export interface LayeredButtonStyleEditorHost extends LayeredButtonDrawerHost {
 export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 	readonly #host: LayeredButtonStyleEditorHost
 
-	constructor(deps: ControlDependencies, controlId: string, host: LayeredButtonStyleEditorHost) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, host: LayeredButtonStyleEditorHost) {
 		super(deps, controlId, host)
 		this.#host = host
 	}
@@ -230,6 +231,8 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		targetElementArray.splice(newIndex, 0, element)
 
 		this.#host.commitChange(true)
+		// Moving into or out of a group changes the element's layout
+		this.#host.emitElementChanged(id)
 
 		return true
 	}

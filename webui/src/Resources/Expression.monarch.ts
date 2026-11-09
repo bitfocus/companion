@@ -70,7 +70,7 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 			{ token: 'identifier', foreground: '9CDCFE' },
 		],
 		colors: {
-			'editor.background': '#121418',
+			'editor.background': '#141414',
 		},
 	})
 }

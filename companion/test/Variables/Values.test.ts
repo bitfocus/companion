@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
+import type { LabeledValue, MetricsRegistry } from '../../lib/Data/Metrics.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
 import { mockUserConfig } from '../utils/MockUserConfig.js'
@@ -201,6 +203,54 @@ describe('VariablesValues', () => {
 			expect(values.getVariableValue('conn', 'a')).toBe(1)
 			expect(values.getVariableValue('conn', 'b')).toBe('two')
 			expect(values.getVariableValue('conn', 'c')).toBe(true)
+		})
+
+		test('counts the values reported and those that changed, per label', () => {
+			const counters = new Map<string, () => LabeledValue[]>()
+			values.registerMetrics({
+				labeledCounter: (name: string, _help: string, _labelNames: string[], getValues: () => LabeledValue[]) =>
+					counters.set(name, getValues),
+			} as unknown as MetricsRegistry)
+			const read = (name: string) =>
+				Object.fromEntries(counters.get(name)!().map(({ labels, value }) => [labels.label, value]))
+
+			values.setVariableValues('conn', [entry('a', 1), entry('b', 2)])
+			values.setVariableValues('conn', [entry('a', 1), entry('b', 3)])
+			values.setVariableValues('other', [entry('x', 'same')])
+			values.setVariableValues('other', [entry('x', 'same')])
+			values.setVariableValues('conn', [])
+
+			expect(read('companion_variable_values_reported_total')).toEqual({ conn: 4, other: 2 })
+			expect(read('companion_variable_values_changed_total')).toEqual({ conn: 3, other: 1 })
+		})
+
+		test('only publishes the counts of labels holding values, and never lets one go down', () => {
+			const counters = new Map<string, () => LabeledValue[]>()
+			values.registerMetrics({
+				labeledCounter: (name: string, _help: string, _labelNames: string[], getValues: () => LabeledValue[]) =>
+					counters.set(name, getValues),
+			} as unknown as MetricsRegistry)
+			const reported = () =>
+				Object.fromEntries(
+					counters.get('companion_variable_values_reported_total')!().map(({ labels, value }) => [labels.label, value])
+				)
+
+			values.setVariableValues('conn', [entry('a', 1), entry('b', 2)])
+			values.setVariableValues('kept', [entry('x', 1)])
+			expect(reported()).toEqual({ conn: 2, kept: 1 })
+
+			// Removed (or restarting): its series is retired
+			values.forgetConnection('id', 'conn')
+			expect(reported()).toEqual({ kept: 1 })
+
+			// Back again, or the label reused by another connection: it carries on from its total
+			values.setVariableValues('conn', [entry('a', 1)])
+			expect(reported()).toEqual({ conn: 3, kept: 1 })
+
+			// Renamed away: the old label is retired, and the new one starts its own count
+			values.connectionLabelRename('conn', 'renamed')
+			values.setVariableValues('renamed', [entry('a', 2)])
+			expect(reported()).toEqual({ renamed: 1, kept: 1 })
 		})
 	})
 
@@ -410,7 +460,7 @@ describe('VariablesValues', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
 
-			values.triggerLocationVariablesChange('ctrl-1')
+			values.triggerLocationVariablesChange(CreateBankControlId('ctrl-1'))
 
 			expect(listener).toHaveBeenCalledOnce()
 		})
@@ -419,15 +469,15 @@ describe('VariablesValues', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
 
-			values.triggerLocationVariablesChange('my-control-id')
+			values.triggerLocationVariablesChange(CreateBankControlId('my-control-id'))
 
-			expect(listener.mock.calls[0][2]).toBe('my-control-id')
+			expect(listener.mock.calls[0][2]).toBe(CreateBankControlId('my-control-id'))
 		})
 
 		test('emitted variable IDs have the $(...) wrapper stripped', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
-			values.triggerLocationVariablesChange('ctrl-1')
+			values.triggerLocationVariablesChange(CreateBankControlId('ctrl-1'))
 
 			const [changedSet] = listener.mock.calls[0] as [ReadonlySet<string>]
 			for (const id of changedSet) {
@@ -439,7 +489,7 @@ describe('VariablesValues', () => {
 		test('emitted set contains all expected this:* variable names', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
-			values.triggerLocationVariablesChange('ctrl-1')
+			values.triggerLocationVariablesChange(CreateBankControlId('ctrl-1'))
 
 			const [changedSet] = listener.mock.calls[0] as [ReadonlySet<string>]
 			const expected = [

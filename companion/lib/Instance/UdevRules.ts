@@ -107,7 +107,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 	/** Trigger a (debounced) regeneration of the udev rules. Safe to call on any platform. */
 	triggerRegenerate = (): void => {
 		if (!this.#isSupported()) return
-		this.#regenerate().catch((e) => {
+		this.#regenerate().catch((e: unknown) => {
 			this.#logger.warn(`Error regenerating udev rules: `, e)
 		})
 	}

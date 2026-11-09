@@ -176,6 +176,95 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('drawing the keyboard focus', () => {
+		const key = (location: ControlLocation) => formatLocationKey(location)
+
+		it('draws nothing while the focus is just the selection', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			expect(store.isCursor(key(at(1, 1)))).toBe(false)
+
+			store.moveFocus(0, 1, GRID_SIZE)
+			expect(store.isCursor(key(at(1, 2)))).toBe(false)
+		})
+
+		it('draws the focus once ctrl walks it off the selection', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+
+			expect(store.isCursor(key(at(1, 3)))).toBe(true)
+			expect(store.isCursor(key(at(1, 1)))).toBe(false)
+		})
+
+		it('keeps drawing it on a cell space has just added', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+			store.toggleFocused()
+
+			expect(store.selectionCount).toBe(2)
+			expect(store.isCursor(key(at(1, 3)))).toBe(true)
+		})
+
+		it('draws the end of a range extended with shift', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.extendFocus(0, 1, GRID_SIZE)
+
+			expect(store.isCursor(key(at(1, 2)))).toBe(true)
+		})
+
+		it('stops drawing it as soon as the pointer is used', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+
+			store.handleTap(at(2, 2), TOGGLE, actions)
+
+			// The ctrl-click moved the focus to a cell it took out of nothing, but a mouse user never asked for a cursor
+			expect(store.selectionCount).toBe(2)
+			expect(store.isCursor(key(at(2, 2)))).toBe(false)
+		})
+
+		it('does not point at wherever select-all left the focus', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+
+			store.selectAllOnPage(1, GRID_SIZE)
+
+			expect(store.isCursor(key(at(3, 7)))).toBe(false)
+		})
+	})
+
+	describe('test pressing', () => {
+		it('runs the button whatever the tool, leaving the selection alone', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTestPress(at(2, 2), true, actions)
+			store.handleTestPress(at(2, 2), false, actions)
+
+			expect(actions.press).toHaveBeenNthCalledWith(1, at(2, 2), true)
+			expect(actions.press).toHaveBeenNthCalledWith(2, at(2, 2), false)
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+	})
+
+	describe('arrowing onto a button', () => {
+		it('opens it in the editor under select, as clicking it would', () => {
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			vi.mocked(actions.openEditor).mockClear()
+
+			store.handleFocusMoved(at(1, 2), actions)
+
+			expect(actions.openEditor).toHaveBeenCalledWith(at(1, 2))
+		})
+
+		it('leaves the editor alone under arrange, where a tap does not open it either', () => {
+			store.setTool('arrange', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleFocusMoved(at(1, 2), actions)
+
+			expect(actions.openEditor).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('a view which is not the whole grid', () => {
 		/**
 		 * Viewing as a surface: it shows the buttons its controls drive, and answers for itself which one is
@@ -441,6 +530,18 @@ describe('ButtonGridStore', () => {
 			store.setViewPage(2, actions)
 
 			expect(store.selectionCount).toBe(0)
+		})
+
+		it('keeps a selection that was already moved to the new page', () => {
+			store.setViewPage(1, actions)
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			// Page up/down moves the selection before the page around the grid catches up
+			store.moveFocusToPage(2)
+			store.setViewPage(2, actions)
+
+			expect(store.selectedLocations).toEqual([at(1, 1, 2)])
+			expect(store.focus).toEqual(at(1, 1, 2))
 		})
 
 		it('keeps it when told again about the page it is already showing', () => {
@@ -1169,7 +1270,9 @@ describe('ButtonGridStore', () => {
 		it('shows the end of a swap that empties, not just the one that fills', () => {
 			// Swapping with an empty cell is how a button is moved into one, and half of that is a cell
 			// becoming empty - which is only visible if the preview draws it
-			actions.isOccupied = vi.fn((location) => formatLocationKey(location) === '1/1/1')
+			actions.isOccupied = vi.fn(
+				(location) => formatLocationKey(location) === formatLocationKey({ pageNumber: 1, row: 1, column: 1 })
+			)
 			store.setTool('swap', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
@@ -1395,7 +1498,9 @@ describe('ButtonGridStore', () => {
 	describe('clicking an empty cell', () => {
 		/** A grid where only 1/1/1 holds a button */
 		const onlyOneButton = () => {
-			actions.isOccupied = vi.fn((location) => formatLocationKey(location) === '1/1/1')
+			actions.isOccupied = vi.fn(
+				(location) => formatLocationKey(location) === formatLocationKey({ pageNumber: 1, row: 1, column: 1 })
+			)
 		}
 
 		it('is ignored by delete, rather than asking about nothing', () => {

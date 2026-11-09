@@ -4,8 +4,11 @@ import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
-import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { getVirtualConnectionIds } from '@companion-app/shared/ConnectionId.js'
+import { CreatePageControlId, ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
@@ -22,6 +25,9 @@ import { GraphicsController } from './Graphics/Controller.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
+import { LinkController } from './Link/Controller.js'
+import { LinkRemoteImageStore } from './Link/RemoteImageStore.js'
+import { LINK_BUILTIN_TRANSPORTS, LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { PageStore } from './Page/Store.js'
@@ -93,6 +99,10 @@ export class Registry {
 	 */
 	readonly cloud: CloudController
 	/**
+	 * Companion Link, for linking Companion installations together
+	 */
+	readonly link: LinkController
+	/**
 	 * The core controls controller
 	 */
 	readonly controls: ControlsController
@@ -144,6 +154,7 @@ export class Registry {
 	readonly metrics: DataMetrics
 
 	readonly #renderClock: RenderClock
+	readonly #serviceApi: ServiceApi
 
 	/**
 	 * The 'data' controller
@@ -223,12 +234,15 @@ export class Registry {
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
 
 		const activeLearningStore = new ActiveLearningStore()
-		const pageStore = new PageStore(this.db.getTableView('pages'))
+		const pageStore = new PageStore(this.db.getSchemaTableView('pages', PageModelSchema))
 
-		this.variables = new VariablesController(this.db, this.userconfig)
+		this.variables = new VariablesController(this.db, this.userconfig, this.metrics)
 		const controlStore = new ControlStore(this.db, this.variables.values, pageStore)
 
 		this.#renderClock = new RenderClock()
+
+		// The images of the remote buttons that link buttons show, kept by Link and drawn by the graphics
+		const linkRemoteImages = new LinkRemoteImageStore()
 
 		this.graphics = new GraphicsController(
 			controlStore,
@@ -238,7 +252,8 @@ export class Registry {
 			this.db,
 			this.#internalApiRouter,
 			this.metrics,
-			this.#renderClock
+			this.#renderClock,
+			linkRemoteImages
 		)
 
 		this.surfaces = new SurfaceController(
@@ -279,6 +294,15 @@ export class Registry {
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
+		this.link = new LinkController(
+			this.#appInfo,
+			this.db,
+			this.userconfig,
+			{ pageStore, controls: controlStore, graphics: this.graphics, remoteImages: linkRemoteImages },
+			LINK_TRANSPORT_DEFINITIONS,
+			LINK_BUILTIN_TRANSPORTS
+		)
+
 		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
@@ -287,10 +311,12 @@ export class Registry {
 			internalModule: this.internalModule,
 			instance: this.instance,
 			variableValues: this.variables.values,
+			variableDependencies: this.variables.dependencies,
 			userconfig: this.userconfig,
 			graphics: this.graphics,
 			actionRunner: actionRunner,
 			renderClock: this.#renderClock,
+			linkButtons: this.link.buttonClient,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -331,7 +357,7 @@ export class Registry {
 			this.variables
 		)
 
-		const serviceApi = new ServiceApi(
+		this.#serviceApi = new ServiceApi(
 			this.#appInfo,
 			pageStore,
 			controlStore,
@@ -345,7 +371,7 @@ export class Registry {
 
 		this.services = new ServiceController(
 			this.#appInfo,
-			serviceApi,
+			this.#serviceApi,
 			this.userconfig,
 			oscSender,
 			this.surfaces,
@@ -389,13 +415,13 @@ export class Registry {
 		this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
 		this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
 
-		this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
+		this.userconfig.on('keyChanged', (change, checkControlsInBounds) => {
 			setImmediate(() => {
 				// give the change a chance to be pushed to the ui first
-				this.graphics.updateUserConfig(key, value)
-				this.services.updateUserConfig(key, value)
-				this.surfaces.updateUserConfig(key, value)
-				this.usageStatistics.updateUserConfig(key, value)
+				this.graphics.updateUserConfig(change)
+				this.services.updateUserConfig(change)
+				this.surfaces.updateUserConfig(change)
+				this.usageStatistics.updateUserConfig(change)
 			})
 
 			if (checkControlsInBounds) {
@@ -435,6 +461,7 @@ export class Registry {
 		this.graphics.on('button_drawn', (location, render) => {
 			this.controls.onButtonDrawn(location, render)
 			this.services.onButtonDrawn(location, render)
+			this.link.onButtonDrawn(location, render)
 		})
 	}
 
@@ -454,7 +481,7 @@ export class Registry {
 
 		// Include the page control itself, so a page variable referencing a sibling as `$(page:x)` in its
 		// own expression re-evaluates
-		const targetControlIds = new Set(this.page.store.getAllControlIdsOnPage(pageNumber))
+		const targetControlIds = new Set<SomeControlId>(this.page.store.getAllControlIdsOnPage(pageNumber))
 		targetControlIds.add(CreatePageControlId(pageId))
 
 		this.#dispatchVariablesChanged(pageChangedSet, targetControlIds)
@@ -464,14 +491,14 @@ export class Registry {
 	 * Fan a variable change out to every consumer that scopes by control. `controlIdFilter` is null for a
 	 * global change, or the set of controls it applies to.
 	 */
-	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
-		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
+	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
+		this.variables.dependencies.dispatch(changedSet, controlIdFilter)
 		this.controls.onVariablesChanged(changedSet, controlIdFilter)
-		this.instance.processManager.onVariablesChanged(changedSet, controlIdFilter)
 		this.preview.onVariablesChanged(changedSet, controlIdFilter)
 
-		// Surfaces only care about global changes, not control-scoped (local/page) variables
+		// Surfaces and modules only care about global changes, not control-scoped (local/page) variables
 		if (controlIdFilter === null) {
+			this.instance.processManager.onVariablesChanged(changedSet)
 			this.surfaces.onVariablesChanged(changedSet)
 		}
 	}
@@ -496,7 +523,7 @@ export class Registry {
 			this.page.ensurePageControlsExist()
 
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
-			knownConnectionIds.add('internal')
+			for (const id of getVirtualConnectionIds()) knownConnectionIds.add(id)
 			this.controls.verifyConnectionIds(knownConnectionIds)
 
 			this.variables.custom.init()
@@ -513,56 +540,63 @@ export class Registry {
 			})
 			this.rebindHttp(bindIp, bindPort)
 
+			// Everything is ready to serve buttons, so start linking with other installations
+			this.link.start()
+
 			// Startup has completed, run triggers
 			this.controls.triggerEvents.emit('startup')
 
 			if (process.env.COMPANION_IPC_PARENT) {
-				process.on('disconnect', () => process.exit())
-
-				process.on('message', (msg: any): void => {
-					try {
-						if (msg.messageType === 'http-rebind') {
-							this.rebindHttp(msg.ip, Number(msg.port))
-						} else if (msg.messageType === 'exit') {
-							this.exit(false, false)
-						} else if (msg.messageType === 'scan-usb') {
-							this.surfaces.triggerRefreshDevices().catch(() => {
-								showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
-							})
-						} else if (msg.messageType === 'power-status') {
-							this.instance.powerStatusChange(msg.status)
-						} else if (msg.messageType === 'lock-screen') {
-							this.controls.triggerEvents.emit('locked', !!msg.status)
-						}
-					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${e}`)
-					}
-				})
+				process.on('disconnect', this.#onIpcDisconnect)
+				process.on('message', this.#onIpcMessage)
 			}
 
 			if (process.env.COMPANION_IPC_PARENT || process.env.COMPANION_DEV_MODULES) {
-				process.on('message', (msg: any): void => {
-					try {
-						if (msg.messageType === 'reload-extra-module') {
-							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
-								this.#logger.warn(`Failed to reload module: ${e}`)
-							})
-						}
-					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${e}`)
-					}
-				})
+				process.on('message', this.#onDevModuleMessage)
 			}
 		} catch (e) {
 			// We aren't ready, but we need exit to work
 			this.#isReady = true
 
-			this.#logger.error(`Failed to start companion: ${e}`)
+			this.#logger.error(`Failed to start companion: ${stringifyError(e)}`)
 			this.#logger.debug(e)
-			this.#logger.debug((e as Error)?.stack)
 			this.exit(true, false)
 		} finally {
 			this.#isReady = true
+		}
+	}
+
+	#onIpcDisconnect = (): void => process.exit()
+
+	#onIpcMessage = (msg: any): void => {
+		try {
+			if (msg.messageType === 'http-rebind') {
+				this.rebindHttp(msg.ip, Number(msg.port))
+			} else if (msg.messageType === 'exit') {
+				this.exit(false, false)
+			} else if (msg.messageType === 'scan-usb') {
+				this.surfaces.triggerRefreshDevices().catch(() => {
+					showErrorMessage('USB Scan Error', 'Failed to scan for USB devices.')
+				})
+			} else if (msg.messageType === 'power-status') {
+				this.instance.powerStatusChange(msg.status)
+			} else if (msg.messageType === 'lock-screen') {
+				this.controls.triggerEvents.emit('locked', !!msg.status)
+			}
+		} catch (e) {
+			this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
+		}
+	}
+
+	#onDevModuleMessage = (msg: any): void => {
+		try {
+			if (msg.messageType === 'reload-extra-module') {
+				this.instance.modules.reloadExtraModule(msg.fullpath).catch((e: unknown) => {
+					this.#logger.warn(`Failed to reload module: ${stringifyError(e)}`)
+				})
+			}
+		} catch (e) {
+			this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
 		}
 	}
 
@@ -571,6 +605,10 @@ export class Registry {
 	 * databases. This does not terminate the process; `exit` wraps this for the running app
 	 */
 	async close(): Promise<void> {
+		process.off('disconnect', this.#onIpcDisconnect)
+		process.off('message', this.#onIpcMessage)
+		process.off('message', this.#onDevModuleMessage)
+
 		this.internalModule.destroy()
 		this.#renderClock.destroy()
 		this.controls.triggerEvents.destroy()
@@ -579,14 +617,20 @@ export class Registry {
 		this.cloud.stop()
 		this.usageStatistics.stop()
 
-		this.ui.close()
-
-		// Before closing the db, so that the surfaces can record when they were last seen
+		// Before closing the db, so that the surfaces can record when they were last seen. Before stopping link, so that
+		// what they stop showing is let go of while it is running
 		try {
 			this.surfaces.quit()
 		} catch (_e) {
 			//do nothing
 		}
+
+		// Say goodbye to linked installations before the database closes
+		await this.link.stop().catch((e: unknown) => {
+			this.#logger.warn(`Failed to stop link: ${stringifyError(e)}`)
+		})
+
+		this.ui.close()
 
 		// Save the db to disk
 		this.db.close()

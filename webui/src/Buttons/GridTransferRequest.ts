@@ -54,3 +54,9 @@ export function planGridTransferRequest(
 
 	return { outcome: 'ready', pairs: carrying }
 }
+
+/** Where a button carried by a transfer ended up, so whatever was showing it can follow, the way the selection does */
+export function locationAfterTransfer(location: ControlLocation, pairs: GridTransferPair[]): ControlLocation {
+	const key = formatLocation(location)
+	return pairs.find((pair) => formatLocation(pair.fromLocation) === key)?.toLocation ?? location
+}

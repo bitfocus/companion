@@ -3,11 +3,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { FormLabel } from '~/Components/Form.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import './EditPanel.css'
-import { useCallback, useContext, useId, useMemo, useRef } from 'react'
+import { useCallback, useContext, useId, useMemo, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
-import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
+import { INVALID_LABEL_MESSAGE, isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -15,7 +18,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import { StaticAlert } from '~/Components/Alert'
+import { StaticAlert } from '~/Components/Alert.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
@@ -40,13 +43,13 @@ import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useControlConfig } from '~/Hooks/useControlConfig'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { LoadingBar, LoadingRetryOrError } from '~/Resources/Loading'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { useControlEntitiesEditorService, useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { VariableReferenceRow } from '../VariableReferenceRow.js'
 
 interface EditExpressionVariablePanelProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 }
 
 export function EditExpressionVariablePanel({ controlId }: EditExpressionVariablePanelProps): React.JSX.Element {
@@ -59,10 +62,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const dataReady = !loadError && !!controlConfig
 
-	const localVariablesStore = useLocalVariablesStore(
-		controlId,
-		controlConfig?.config?.type === 'expression-variable' ? controlConfig.config.localVariables : null
-	)
+	const localVariablesStore = useLocalVariablesStore(controlId, controlConfig?.config.localVariables ?? null)
 
 	return (
 		<div className="edit-panel">
@@ -71,44 +71,36 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
 				<div className={classNames({ hidden: !dataReady })}>
-					{controlConfig.config.type === 'expression-variable' ? (
-						<>
+					<MyErrorBoundary>
+						<ExpressionVariableConfig options={controlConfig.config.options} controlId={controlId} />
+					</MyErrorBoundary>
+
+					<EditSectionCard title="Value">
+						{/* The entity editor's styles are scoped to these classes, so they wrap just the editor */}
+						<div className="edit-button-panel flex-form expression-variable-value">
 							<MyErrorBoundary>
-								<ExpressionVariableConfig options={controlConfig.config.options} controlId={controlId} />
+								<ExpressionVariableEntityEditor
+									controlId={controlId}
+									entity={controlConfig.config.entity}
+									localVariablesStore={localVariablesStore}
+								/>
 							</MyErrorBoundary>
+						</div>
+					</EditSectionCard>
 
-							<EditSectionCard title="Value">
-								{/* The entity editor's styles are scoped to these classes, so they wrap just the editor */}
-								<div className="edit-button-panel flex-form expression-variable-value">
-									<MyErrorBoundary>
-										<ExpressionVariableEntityEditor
-											controlId={controlId}
-											entity={controlConfig.config.entity}
-											localVariablesStore={localVariablesStore}
-										/>
-									</MyErrorBoundary>
-								</div>
-							</EditSectionCard>
-
-							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
-								// The entity list draws its own heading (with help), so this is a bare section rather than a card
-								<section className="edit-section">
-									<div className="edit-button-panel flex-form">
-										<MyErrorBoundary>
-											<ExpressionVariableLocalVariablesEditor
-												controlId={controlId}
-												localVariables={controlConfig.config.localVariables}
-												localVariablesStore={localVariablesStore}
-											/>
-										</MyErrorBoundary>
-									</div>
-								</section>
-							)}
-						</>
-					) : (
-						<StaticAlert color="danger">
-							Invalid control type: {controlConfig.config.type}. Expected 'expression-variable'.
-						</StaticAlert>
+					{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
+						// The entity list draws its own heading (with help), so this is a bare section rather than a card
+						<section className="edit-section">
+							<div className="edit-button-panel flex-form">
+								<MyErrorBoundary>
+									<ExpressionVariableLocalVariablesEditor
+										controlId={controlId}
+										localVariables={controlConfig.config.localVariables}
+										localVariablesStore={localVariablesStore}
+									/>
+								</MyErrorBoundary>
+							</div>
+						</section>
 					)}
 				</div>
 			) : (
@@ -119,35 +111,38 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 }
 
 interface ExpressionVariableConfigProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	options: ExpressionVariableOptions
 }
 
 function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConfigProps) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'expression-variable')
 
 	const setValueInner = useCallback(
-		(key: keyof ExpressionVariableOptions, value: any) => {
-			console.log('set', controlId, key, value)
-			setOptionsFieldMutation
-				.mutateAsync({
-					controlId,
-					key,
-					value,
-				})
-				.catch((e) => {
-					console.error(`Set field failed: ${e}`)
-				})
+		<K extends keyof ExpressionVariableOptions>(key: K, value: ExpressionVariableOptions[K]) => {
+			setOption(key, value).catch((e) => {
+				console.error(`Set field failed: ${stringifyError(e)}`)
+			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 
-	const setName = useCallback((val: string) => setValueInner('variableName', val), [setValueInner])
+	// An invalid name would be refused, so it is only shown, until the field is left and shows the saved name again
+	const [nameInvalid, setNameInvalid] = useState(false)
+	const setName = useCallback(
+		(val: string) => {
+			const valid = val === '' || isLabelValid(val)
+			setNameInvalid(!valid)
+			if (valid) setValueInner('variableName', val)
+		},
+		[setValueInner]
+	)
+	const clearNameInvalid = useCallback(() => setNameInvalid(false), [])
 	const setDescription = useCallback((val: string) => setValueInner('description', val), [setValueInner])
 
 	const nameFieldId = useId()
 	const descriptionFieldId = useId()
-	const setNotes = useControlNotesSetter(controlId)
+	const setNotes = useControlNotesSetter(controlId, 'expression-variable')
 	const notesState = useNotesEditor(controlId, options.notes, setNotes)
 
 	return (
@@ -169,7 +164,13 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 						setValue={setName}
 						value={options.variableName}
 						checkValid={isLabelValid}
+						onBlur={clearNameInvalid}
 					/>
+					{nameInvalid && (
+						<StaticAlert color="warning" className="edit-field-help text-xs">
+							{INVALID_LABEL_MESSAGE}
+						</StaticAlert>
+					)}
 				</div>
 				<div className="edit-field-row">
 					<FormLabel htmlFor={descriptionFieldId}>Description</FormLabel>
@@ -183,7 +184,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 }
 
 interface ExpressionVariableEntityEditorProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	entity: SomeEntityModel | null
 	localVariablesStore: LocalVariablesStore
 }
@@ -246,7 +247,7 @@ const ExpressionVariableAddRootEntity = observer(function ExpressionVariableAddR
 })
 
 interface ExpressionVariableSoleEntityEditorProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	entity: SomeEntityModel
 }
 
@@ -292,7 +293,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 })
 
 interface ExpressionVariableLocalVariablesEditorProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	localVariables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
 }

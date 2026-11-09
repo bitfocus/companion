@@ -1,7 +1,9 @@
 import { EventEmitter } from 'node:events'
 import { vi, type Mock } from 'vitest'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
+import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { TriggerEvents } from '../../../lib/Controls/TriggerEvents.js'
+import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import { mockUserConfig } from '../../utils/MockUserConfig.js'
 
 /**
@@ -70,6 +72,9 @@ export function createMockControlDependencies(): MockControlDependencies {
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+		variableDependencies: new VariableDependencyRegistry(),
+		linkButtons: null as any,
+		referencedLocations: new ReferencedLocationsIndex(),
 		controlsAccessor: {
 			getControl: vi.fn(() => undefined),
 			pressControl: vi.fn(() => false),

@@ -1,12 +1,17 @@
-import type { JsonValue } from 'type-fest'
-import type {
-	ButtonReferenceButtonModel,
-	LayeredButtonModel,
-	SomeButtonModel,
+import type z from 'zod'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
+import {
+	ButtonReferenceButtonOptionsSchema,
+	LayeredButtonOptionsSchema,
+	type ButtonReferenceButtonModel,
+	type LayeredButtonModel,
+	type SomeButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { exprVal, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -28,6 +33,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import { ControlButtonLayered } from './Layered.js'
 import { MirrorButtonDrawer } from './MirrorButtonDrawer.js'
 
@@ -47,14 +53,14 @@ import { MirrorButtonDrawer } from './MirrorButtonDrawer.js'
  * this program.
  */
 export class ControlButtonReference
-	extends ControlBase<ButtonReferenceButtonModel>
+	extends ControlBase<BankControlId, ButtonReferenceButtonModel, NoRuntimeProps>
 	implements
 		ControlWithoutLayeredStyle,
 		ControlWithoutEntities,
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<ButtonReferenceButtonModel['options']>,
 		ControlWithoutPushed,
 		ControlWithConvert
 {
@@ -69,6 +75,8 @@ export class ControlButtonReference
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
+	readonly optionsSchema: z.ZodType<ButtonReferenceButtonModel['options']> = ButtonReferenceButtonOptionsSchema
+
 	options: ButtonReferenceButtonModel['options']
 
 	readonly #drawing: MirrorButtonDrawer
@@ -82,13 +90,13 @@ export class ControlButtonReference
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		storage: ButtonReferenceButtonModel | null,
 		isImport: boolean
 	) {
 		super(deps, controlId, 'Controls/Button/Reference')
 
-		this.options = { location: exprVal('') }
+		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new MirrorButtonDrawer(deps, controlId, () => this.#resolveTargetLocation())
 
@@ -139,7 +147,7 @@ export class ControlButtonReference
 		return { location: ParseLocationString(raw, myLocation ?? undefined), referencedVariableIds }
 	}
 
-	override getReferenceTargetControlId(): string | null {
+	override getReferenceTargetControlId(): BankControlId | null {
 		const { location } = this.#resolveTargetLocation()
 		return (location ? this.deps.pageStore.getControlIdAt(location) : null) ?? null
 	}
@@ -181,22 +189,23 @@ export class ControlButtonReference
 	/**
 	 * Update an option field. Only `location` (the mirrored target) and `notes` are editable.
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		if (key === 'notes') {
-			if (typeof value !== 'string') return false
-			this.options.notes = value
-			this.commitChange(false)
-			return true
-		}
+	optionsSetField(change: KeyValueChange<ButtonReferenceButtonModel['options']>): boolean {
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-		if (key === 'location') {
-			if (!isExpressionOrValue(value)) return false
-			this.options.location = value
-			this.commitChange(true)
-			return true
-		}
+		this.options = options
 
-		return false
+		switch (change.key) {
+			case 'notes':
+				this.commitChange(false)
+				break
+			case 'location':
+				this.commitChange(true)
+				break
+			default:
+				assertNever(change)
+		}
+		return true
 	}
 
 	/**
@@ -207,12 +216,12 @@ export class ControlButtonReference
 		const targetControlId = this.getReferenceTargetControlId()
 		const target = targetControlId ? this.deps.controlsAccessor.getControl(targetControlId) : undefined
 		if (target) {
-			return structuredClone(target.toJSON(true)) as SomeButtonModel
+			return structuredClone(target.toJSON()) as SomeButtonModel
 		}
 
 		const blank: LayeredButtonModel = {
 			type: 'button-layered',
-			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			options: LayeredButtonOptionsSchema.parse({}),
 			style: { layers: structuredClone(ControlButtonLayered.DefaultElements) },
 			feedbacks: [],
 			steps: {
@@ -256,6 +265,10 @@ export class ControlButtonReference
 
 	triggerLocationHasChanged(): void {
 		this.#drawing.invalidate()
+	}
+
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
 	}
 
 	toJSON(clone = true): ButtonReferenceButtonModel {

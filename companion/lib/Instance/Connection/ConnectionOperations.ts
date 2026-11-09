@@ -1,5 +1,9 @@
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import {
+	InstanceVersionUpdatePolicy,
+	ModuleInstanceType,
+	type InstanceConfig,
+} from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -39,8 +43,8 @@ export interface SetConnectionConfigInput {
 	connectionId: string
 	label?: string | null
 	enabled?: boolean | null
-	config?: Record<string, unknown> | null
-	secrets?: Record<string, unknown> | null
+	config?: InstanceConfig['config'] | null
+	secrets?: InstanceConfig['secrets'] | null
 	updatePolicy?: InstanceVersionUpdatePolicy | null
 	patchConfig?: boolean
 	patchSecrets?: boolean

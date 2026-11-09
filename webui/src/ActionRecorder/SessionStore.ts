@@ -1,11 +1,11 @@
 import { action, observable, runInAction } from 'mobx'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	RecordSessionInfo,
 	RecordSessionListInfo,
 	RecordSessionUpdate,
 } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { assertNever } from '~/Resources/util'
-import { applyJsonPatchInPlace } from '~/Stores/ApplyDiffToMap'
 
 export class ActionRecorderSessionStore {
 	#sessions = observable.map<string, RecordSessionListInfo>()
@@ -41,7 +41,7 @@ export class ActionRecorderSessionStore {
 					console.warn('Received patch for session, but no session is selected')
 					return
 				}
-				applyJsonPatchInPlace(existingSession, update.patch)
+				applyObjectPatch(existingSession, update.patch)
 				break
 			}
 			case 'remove':

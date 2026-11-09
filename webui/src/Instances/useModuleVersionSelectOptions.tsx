@@ -15,7 +15,7 @@ export function useModuleVersionSelectOptions(
 ): {
 	loaded: boolean
 	hasIncompatibleNewerVersion: boolean
-	choices: DropdownChoice[]
+	choices: DropdownChoice<string>[]
 } {
 	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const upgradeToVersions = useModuleUpgradeToVersions(moduleType, moduleId)
@@ -29,7 +29,7 @@ export function useModuleVersionSelectOptions(
 		!!latestIncompatibleStableVersion && latestIncompatibleStableVersion.id !== latestStableVersion?.id
 
 	return useComputed(() => {
-		const choices: DropdownChoice[] = []
+		const choices: DropdownChoice<string>[] = []
 
 		if (installedInfo) {
 			for (const version of installedInfo.installedVersions) {
@@ -54,7 +54,7 @@ export function useModuleVersionSelectOptions(
 		if (installedInfo?.devVersion) choices.unshift({ id: 'dev', label: 'Dev version' })
 		if (installedInfo?.builtinVersion) choices.unshift({ id: 'builtin', label: 'Builtin version' })
 
-		const replacementChoices: DropdownChoice[] = []
+		const replacementChoices: DropdownChoice<string>[] = []
 		// Push the potential replacements first
 		for (const upgradeTo of upgradeToVersions) {
 			if (upgradeTo.versionId) {

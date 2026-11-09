@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { Fragment, useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	colorFieldExpressionHint,
@@ -31,7 +32,7 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 import { useElementSchemaSections } from './useElementSchema.js'
 
 interface ElementPropertiesEditorProps {
-	controlId: string
+	controlId: SomeControlId
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden

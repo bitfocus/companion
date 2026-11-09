@@ -19,14 +19,16 @@ class ResizeObserverStub {
 }
 window.ResizeObserver = ResizeObserverStub
 
-// @tanstack/react-virtual uses offsetHeight to calculate scroll range; jsdom always returns 0.
-// Without a non-zero value the virtualizer renders no items.
-Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-	configurable: true,
-	get() {
-		return 400
-	},
-})
+// @tanstack/react-virtual measures the scroll element with clientHeight and items with offsetHeight;
+// jsdom always returns 0. Without a non-zero value the virtualizer renders no items.
+for (const prop of ['offsetHeight', 'clientHeight']) {
+	Object.defineProperty(HTMLElement.prototype, prop, {
+		configurable: true,
+		get() {
+			return 400
+		},
+	})
+}
 
 // base-ui wraps open/close in requestAnimationFrame (a macrotask). jsdom's RAF is never
 // flushed by React's act(), so popups never open. Use queueMicrotask instead — microtasks
@@ -41,6 +43,13 @@ window.cancelAnimationFrame = () => {}
 // jsdom's getContext already returns null (canvas-drawing code paths guard for this), but it also logs
 // a noisy "Not implemented" error on every call. Stub it to return null directly — same behaviour, no noise.
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
+
+// jsdom never loads images, and has no HTMLImageElement.decode. Never resolve it, as an image would never load
+HTMLImageElement.prototype.decode = async () => new Promise<void>(() => {})
+
+// TanStack Router's scroll restoration calls window.scrollTo on navigation, which jsdom doesn't implement and
+// reports as a "Not implemented" error each time. There is nothing to scroll in jsdom, so make it a no-op.
+window.scrollTo = () => {}
 
 // jsdom's CSS parser (rrweb-cssom) is far stricter than a browser and rejects some modern CSS in our
 // stylesheets (color-mix(), :has(), @layer, …). It skips the offending sheet and carries on, but

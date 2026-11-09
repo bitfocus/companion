@@ -16,6 +16,7 @@ import {
 	type LineStyle,
 	type TextLayoutCache,
 } from '@companion-app/shared/Graphics/ImageBase.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 import { uint8ArrayToBuffer } from '../Resources/Util.js'
 
@@ -136,9 +137,14 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	protected loadPixelBuffer(data: Uint8Array, width: number, height: number): CanvasImage | Canvas | null {
 		let imageData: ImageData
 		try {
-			imageData = new ImageData(new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength), width, height)
-		} catch (error: any) {
-			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
+			// ImageData rejects a view of a SharedArrayBuffer (as the decoded image cache uses), so copy those
+			const pixels =
+				data.buffer instanceof SharedArrayBuffer
+					? new Uint8ClampedArray(data)
+					: new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength)
+			imageData = new ImageData(pixels, width, height)
+		} catch (error) {
+			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ${stringifyError(error)}`)
 			return null
 		}
 

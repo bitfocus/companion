@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { zodSomeControlId, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import {
@@ -16,9 +17,11 @@ import {
 	type PreviewRenderSize,
 } from '@companion-app/shared/Model/Preview.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { DisplayedLocationsSet } from '../Graphics/DisplayedLocations.js'
 import { PREVIEW_RENDER_SIZE, type ImageResult } from '../Graphics/ImageResult.js'
 import { ParseLocationString } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
@@ -92,7 +95,7 @@ export class PreviewGraphics {
 	 */
 	readonly #watchedLocationSizes = new Map<string, Map<string, WatchedSize>>()
 
-	readonly #updateButtonQueue: ImageWriteQueue<string, [ControlLocation, string | null, ImageResult]>
+	readonly #updateButtonQueue: ImageWriteQueue<string, [ControlLocation, BankControlId | null, ImageResult]>
 	readonly #recheckQueue: ImageWriteQueue<string, [string, ControlLocation]>
 
 	constructor(
@@ -108,7 +111,7 @@ export class PreviewGraphics {
 
 		this.#updateButtonQueue = new ImageWriteQueue(
 			this.#logger,
-			async (locationId: string, location: ControlLocation, controlId: string | null, render: ImageResult) => {
+			async (locationId: string, location: ControlLocation, controlId: BankControlId | null, render: ImageResult) => {
 				if (controlId && this.#renderEvents.listenerCount(`controlId:${controlId}`) > 0) {
 					this.#renderEvents.emit(
 						`controlId:${controlId}`,
@@ -176,6 +179,7 @@ export class PreviewGraphics {
 					const subId = getLocationSizeSubId(locationId, size)
 
 					const releaseSize = self.#watchLocationSize(locationId, size)
+					const releaseDisplayed = self.#graphicsController.displayedLocations.acquire(location, size)
 					try {
 						const changes = toIterable(self.#renderEvents, `location:${subId}`, signal)
 
@@ -192,6 +196,7 @@ export class PreviewGraphics {
 							yield image
 						}
 					} finally {
+						releaseDisplayed()
 						releaseSize()
 					}
 				}),
@@ -199,7 +204,7 @@ export class PreviewGraphics {
 			controlId: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						controlId: zodSomeControlId,
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
@@ -209,13 +214,25 @@ export class PreviewGraphics {
 
 					// Send the preview image shortly after
 					const location = self.#pageStore.getLocationOfControlId(controlId)
-					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
-					yield originalImg
-						? await originalImg.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+					const releaseDisplayed = location
+						? self.#graphicsController.displayedLocations.acquire(location, {
+								width: PREVIEW_RENDER_SIZE,
+								height: PREVIEW_RENDER_SIZE,
+							})
 						: null
+					try {
+						const originalImg = location
+							? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
+							: null
+						yield originalImg
+							? await originalImg.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+							: null
 
-					for await (const [image] of changes) {
-						yield image
+						for await (const [image] of changes) {
+							yield image
+						}
+					} finally {
+						releaseDisplayed?.()
 					}
 				}),
 
@@ -265,7 +282,7 @@ export class PreviewGraphics {
 			reference: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						controlId: zodSomeControlId,
 						options: ExpressionableOptionsObjectSchema,
 					})
 				)
@@ -292,13 +309,16 @@ export class PreviewGraphics {
 							: null
 
 						// Track the subscription, to allow it to be invalidated
-						self.#buttonReferencePreviews.set(id, {
+						const session: PreviewSession = {
 							id,
 							controlId,
 							options,
 							resolvedLocation: resolvedLocation,
 							referencedVariableIds: locationValue.variableIds,
-						})
+							displayed: new DisplayedLocationsSet(self.#graphicsController.displayedLocations),
+						}
+						self.#buttonReferencePreviews.set(id, session)
+						showReferencePreview(session)
 
 						// Emit the initial image
 						yield resolvedLocation
@@ -312,6 +332,7 @@ export class PreviewGraphics {
 						}
 					} finally {
 						// Cleanup the session on termination
+						self.#buttonReferencePreviews.get(id)?.displayed.clear()
 						self.#buttonReferencePreviews.delete(id)
 					}
 				}),
@@ -361,7 +382,7 @@ export class PreviewGraphics {
 		this.#updateButtonQueue.queue(getLocationSubId(location), location, controlId, render)
 	}
 
-	onControlIdsLocationChanged(controlIds: string[]): void {
+	onControlIdsLocationChanged(controlIds: SomeControlId[]): void {
 		const controlIdsSet = new Set(controlIds)
 
 		// Lookup any sessions
@@ -373,7 +394,7 @@ export class PreviewGraphics {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.size) continue
@@ -406,6 +427,7 @@ export class PreviewGraphics {
 
 			previewSession.referencedVariableIds = locationValue.variableIds
 			previewSession.resolvedLocation = resolvedLocation
+			showReferencePreview(previewSession)
 
 			if (!resolvedLocation) {
 				// Now has an invalid location
@@ -424,7 +446,9 @@ export class PreviewGraphics {
 
 			this.#recheckQueue.queue(previewSession.id, previewSession.id, resolvedLocation)
 		} catch (e) {
-			this.#logger.error(`Error while rechecking preview session for control ${previewSession.controlId}: ${e}`)
+			this.#logger.error(
+				`Error while rechecking preview session for control ${previewSession.controlId}: ${stringifyError(e)}`
+			)
 		}
 	}
 }
@@ -436,8 +460,16 @@ interface WatchedSize {
 
 interface PreviewSession {
 	readonly id: string
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	options: ExpressionableOptionsObject
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: ReadonlySet<string>
+	/** The location it shows, at the size it is drawn at */
+	readonly displayed: DisplayedLocationsSet
+}
+
+/** Note that the location a reference preview shows is shown, at the size it is drawn at */
+function showReferencePreview(session: PreviewSession): void {
+	const size = { width: PREVIEW_RENDER_SIZE, height: PREVIEW_RENDER_SIZE }
+	session.displayed.replace(session.resolvedLocation ? [{ location: session.resolvedLocation, size }] : [])
 }

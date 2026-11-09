@@ -1,6 +1,7 @@
 import { initTRPC } from '@trpc/server'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientSurfaceButtonSizesItem,
 	ClientSurfaceLayoutItem,
@@ -22,6 +23,7 @@ import { mangleReferenceSurfaceId } from '../../lib/Surface/ReferenceSurfaceId.j
 import type { SurfaceHandlerDependencies } from '../../lib/Surface/Types.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 const t = initTRPC.context<TrpcContext>().create()
@@ -53,12 +55,15 @@ const neoLayout: SurfaceSchemaLayoutDefinition = {
 function makeStoredConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 	return {
 		config: { brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null },
+		enabled: true,
 		groupConfig: {
 			name: '',
 			last_page_id: '1',
 			startup_page_id: '1',
 			use_last_page: true,
 			never_lock: false,
+			restrict_pages: false,
+			allowed_page_ids: [],
 		},
 		groupId: null,
 		type: 'Stream Deck Neo',
@@ -78,11 +83,11 @@ function createController() {
 		fallbackMockImplementation: () => undefined,
 	})
 	// The controller reads these while opening a surface
-	deps.userconfig.getKey.mockImplementation((key: string) => {
-		if (key === 'gridSize') return { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
-		return undefined
-	})
+	deps.userconfig.getKey.mockImplementation(
+		mockGetKey({ gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 } }, 'default')
+	)
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
+	deps.graphics.displayedLocations.acquire.mockReturnValue(() => undefined)
 
 	const controller = new SurfaceController(db as any, deps, true)
 
@@ -106,6 +111,7 @@ function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): Sate
 		configFields: undefined,
 		canChangePage: undefined,
 		bitmapFormat: 'rgb',
+		variableEncoding: 'string',
 		...overrides,
 	}
 }
@@ -458,7 +464,11 @@ describe('SurfaceController control event routing', () => {
 		const location = { pageNumber: 1, row: 1, column: 0 }
 
 		controller.sendDeviceControlEvent('test:deck', location, 'press')
-		controller.sendDeviceControlEvent(mangleReferenceSurfaceId('test:deck', 'bank:1-0-0'), location, 'hold')
+		controller.sendDeviceControlEvent(
+			mangleReferenceSurfaceId('test:deck', CreateBankControlId('1-0-0')),
+			location,
+			'hold'
+		)
 		expect(controlEventCalls(ipc)).toEqual([
 			{ surfaceId: 'test:deck', connectionId: 'open-1', controlId: '1/0', event: 'press' },
 			{ surfaceId: 'test:deck', connectionId: 'open-1', controlId: '1/0', event: 'hold' },

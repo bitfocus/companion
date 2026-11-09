@@ -5,7 +5,6 @@ import {
 	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
@@ -21,6 +20,10 @@ import {
 import type { InternalController } from '../../lib/Internal/Controller.js'
 import type { Logger } from '../../lib/Log/Controller.js'
 import { VisitorReferencesUpdater } from '../../lib/Resources/Visitors/ReferencesUpdater.js'
+
+// Partial controls, to check how the fixups handle what is missing
+type LooseControl = any
+type LooseTrigger = any
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
@@ -217,7 +220,7 @@ describe('fixupTriggerControl', () => {
 		internalModule = mockInternalModule()
 	})
 
-	function makeTrigger(overrides: Partial<ExportTriggerContentv6> = {}): ExportTriggerContentv6 {
+	function makeTrigger(overrides: Partial<LooseTrigger> = {}): LooseTrigger {
 		return {
 			type: 'trigger',
 			options: { name: 'My Trigger', enabled: true, sortOrder: 0 },
@@ -348,7 +351,7 @@ describe('fixupExpressionVariableControl', () => {
 	function makeExpressionVariable(overrides: Partial<ExpressionVariableModel> = {}): ExpressionVariableModel {
 		return {
 			type: 'expression-variable',
-			options: { variableName: 'myVar', description: '', sortOrder: 0 },
+			options: { variableName: 'myVar', description: '', sortOrder: 0, notes: '' },
 			entity: null,
 			localVariables: [],
 			...overrides,
@@ -483,7 +486,7 @@ describe('fixupLayeredButtonControl', () => {
 		return new VisitorReferencesUpdater(internalModule, labelRemap, idRemap, undefined)
 	}
 
-	function makeButton(overrides: Partial<ExportControlv6> = {}): ExportControlv6 {
+	function makeButton(overrides: Partial<LooseControl> = {}): LooseControl {
 		return {
 			type: 'button-layered',
 			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
@@ -629,12 +632,34 @@ describe('fixupLayeredButtonControl', () => {
 
 		expect((result.style.layers[0] as any).children[0].text.value).toBe('$(NewLabel:x)')
 	})
+
+	test('remaps connectionId on composite draw elements, including nested in groups', () => {
+		const control = makeButton({
+			style: {
+				layers: [
+					{ id: 'c1', type: 'composite', name: 'comp', connectionId: 'conn-old', elementId: 'meter' },
+					{
+						id: 'g1',
+						type: 'group',
+						name: 'grp',
+						children: [{ id: 'c2', type: 'composite', name: 'comp', connectionId: 'conn-old', elementId: 'meter' }],
+					},
+				],
+			},
+		})
+
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+
+		expect((result.style.layers[0] as any).connectionId).toBe('conn-new')
+		expect((result.style.layers[0] as any).elementId).toBe('meter')
+		expect((result.style.layers[1] as any).children[0].connectionId).toBe('conn-new')
+	})
 })
 
 describe('fixupPresetReferenceControl', () => {
 	const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
 
-	function makeReferenceExport(overrides: Record<string, any> = {}): ExportControlv6 {
+	function makeReferenceExport(overrides: Record<string, any> = {}): LooseControl {
 		return {
 			type: 'preset-reference',
 			options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
@@ -690,7 +715,7 @@ describe('fixupButtonReferenceControl', () => {
 		return new VisitorReferencesUpdater(internalModule, labelRemap, {}, undefined)
 	}
 
-	function makeExport(options: any): ExportControlv6 {
+	function makeExport(options: any): LooseControl {
 		return { type: 'button-reference', options }
 	}
 

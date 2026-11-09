@@ -1,13 +1,16 @@
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type {
-	ButtonModelBase,
-	ButtonReferenceButtonModel,
-	LayeredButtonModel,
-	PresetReferenceButtonModel,
+import {
+	parseLinkButtonOptions,
+	type ButtonModelBase,
+	type ButtonReferenceButtonModel,
+	type LayeredButtonModel,
+	type LinkButtonModel,
+	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -22,7 +25,7 @@ export type InstanceAppliedRemappings = Record<
 
 export function fixupTriggerControl(
 	internalModule: InternalController,
-	control: ExportTriggerContentv6,
+	control: ExportTriggerContent,
 	instanceIdMap: InstanceAppliedRemappings,
 	outboundSurfaceIdRemap: Record<string, string> | undefined
 ): TriggerModel {
@@ -145,7 +148,7 @@ export function fixupPageVariables(
 
 export function fixupLayeredButtonControl(
 	logger: Logger,
-	control: ExportControlv6,
+	control: LayeredButtonModel,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
 ): LayeredButtonModel {
@@ -163,7 +166,7 @@ export function fixupLayeredButtonControl(
 
 export function fixupPresetReferenceControl(
 	logger: Logger,
-	control: ExportControlv6,
+	control: PresetReferenceButtonModel,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
 ): PresetReferenceButtonModel {
@@ -191,7 +194,7 @@ export function fixupPresetReferenceControl(
 }
 
 export function fixupButtonReferenceControl(
-	control: ExportControlv6,
+	control: ButtonReferenceButtonModel,
 	referencesUpdater: VisitorReferencesUpdater
 ): ButtonReferenceButtonModel {
 	const options = structuredClone(control.options) ?? {}
@@ -209,9 +212,26 @@ export function fixupButtonReferenceControl(
 	}
 }
 
+export function fixupLinkButtonControl(
+	control: LinkButtonModel,
+	referencesUpdater: VisitorReferencesUpdater
+): LinkButtonModel {
+	// Anything not valid is replaced by its default, rather than refusing the whole button
+	const { options } = parseLinkButtonOptions(structuredClone(control.options))
+
+	// The peer is identified by its Link id, which is global so needs no remapping. Connection labels used in the
+	// location are remapped like for a button-reference
+	referencesUpdater.visitExpressionOrValue(options.location, true)
+
+	return {
+		type: 'link-button',
+		options,
+	}
+}
+
 function fixupButtonControlBase(
 	logger: Logger,
-	control: ExportControlv6,
+	control: ButtonModelBase,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
 ): ButtonModelBase {
@@ -277,7 +297,7 @@ export function fixupEntitiesRecursive(
 		if (!instanceInfo) continue
 
 		let newChildren: Record<string, SomeEntityModel[]> | undefined
-		if (entity.connectionId === 'internal' && entity.children) {
+		if (isInternalConnectionId(entity.connectionId) && entity.children) {
 			newChildren = {}
 			for (const [group, childEntities] of Object.entries(entity.children)) {
 				if (!childEntities) continue

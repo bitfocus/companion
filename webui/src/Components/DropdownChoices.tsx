@@ -7,16 +7,16 @@ export interface GroupBase<Option> {
 	readonly label?: string
 }
 
-export interface DropdownChoiceGroup {
+export interface DropdownChoiceGroup<TId extends DropdownChoiceId = DropdownChoiceId> {
 	label: string
-	options: DropdownChoice[]
+	options: DropdownChoice<TId>[]
 }
 
-export type DropdownChoicesOrGroups =
-	| DropdownChoice[]
-	| DropdownChoiceGroup[]
-	| Array<DropdownChoice | DropdownChoiceGroup>
-	| Record<string, DropdownChoice>
+export type DropdownChoicesOrGroups<TId extends DropdownChoiceId = DropdownChoiceId> =
+	| DropdownChoice<TId>[]
+	| DropdownChoiceGroup<TId>[]
+	| Array<DropdownChoice<TId> | DropdownChoiceGroup<TId>>
+	| Record<string, DropdownChoice<TId>>
 
 export interface DropdownChoiceInt {
 	value: DropdownChoiceId

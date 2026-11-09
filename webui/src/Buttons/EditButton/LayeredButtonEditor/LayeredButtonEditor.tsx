@@ -1,13 +1,14 @@
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { Group, Panel, Separator } from 'react-resizable-panels'
-import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { useMemo, useRef, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { LayeredButtonModel, NormalButtonRuntimeProps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { ResizeHandle } from '~/Components/ResizeHandle.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
+import { useSplitResize } from '~/Hooks/useSplitResize.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { ButtonEditorTabs } from '../ButtonEditorTabs.js'
@@ -27,13 +28,13 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	activeMainTab,
 }: {
 	config: LayeredButtonModel
-	controlId: string
-	runtimeProps: Record<string, any> | false
+	controlId: SomeControlId
+	runtimeProps: NormalButtonRuntimeProps
 	location: ControlLocation
 	activeMainTab: string
 }) {
-	const configRef = useRef<SomeButtonModel>(config || undefined)
-	configRef.current = config || undefined // update the ref every render
+	const configRef = useRef<LayeredButtonModel>(config)
+	configRef.current = config // update the ref every render
 
 	const [styleStore] = useState(() => {
 		console.log('new store')
@@ -52,89 +53,92 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 	return (
 		<div className="grow flex flex-col min-h-0">
-			{runtimeProps && (
-				<MyErrorBoundary>
-					<ButtonEditorTabs
-						location={location}
-						controlId={controlId}
-						steps={config.steps || {}}
-						runtimeProps={runtimeProps}
-						rotaryActions={config?.options?.rotaryActions}
-						activeMainTab={activeMainTab}
-						localVariablesStore={localVariablesStore}
-						disabledSetStep={config?.options?.stepProgression === 'expression'}
-					>
-						{(currentTab) => {
-							if (currentTab === 'style') {
-								return (
-									<div className="button-editor-tab-content h-full">
-										{/* Wrap the entity-category, for :first-child to work */}
-										<MyErrorBoundary>
-											<LayeredButtonEditorStyle
+			<MyErrorBoundary>
+				<ButtonEditorTabs
+					location={location}
+					controlId={controlId}
+					steps={config.steps || {}}
+					runtimeProps={runtimeProps}
+					rotaryActions={config?.options?.rotaryActions}
+					activeMainTab={activeMainTab}
+					localVariablesStore={localVariablesStore}
+					disabledSetStep={config?.options?.stepProgression === 'expression'}
+				>
+					{(currentTab) => {
+						if (currentTab === 'style') {
+							return (
+								<div className="button-editor-tab-content h-full">
+									{/* Wrap the entity-category, for :first-child to work */}
+									<MyErrorBoundary>
+										<LayeredButtonEditorStyle
+											controlId={controlId}
+											location={location}
+											styleStore={styleStore}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
+
+						if (currentTab === 'feedbacks') {
+							return (
+								<div className="button-editor-tab-content">
+									<MyErrorBoundary>
+										<LayeredStyleElementsProvider styleStore={styleStore}>
+											<FeedbackOverridesTab
 												controlId={controlId}
 												location={location}
-												styleStore={styleStore}
+												feedbacks={config.feedbacks}
 												localVariablesStore={localVariablesStore}
 											/>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
+										</LayeredStyleElementsProvider>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
 
-							if (currentTab === 'feedbacks') {
-								return (
-									<div className="button-editor-tab-content">
-										<MyErrorBoundary>
-											<LayeredStyleElementsProvider styleStore={styleStore}>
-												<FeedbackOverridesTab
-													controlId={controlId}
-													location={location}
-													feedbacks={config.feedbacks}
-													localVariablesStore={localVariablesStore}
-												/>
-											</LayeredStyleElementsProvider>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
+						if (currentTab === 'variables') {
+							return (
+								<div className="button-editor-tab-content">
+									<MyErrorBoundary>
+										<LocalVariablesEditor
+											controlId={controlId}
+											location={location}
+											variables={config.localVariables}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
 
-							if (currentTab === 'variables') {
-								return (
-									<div className="button-editor-tab-content">
-										<MyErrorBoundary>
-											<LocalVariablesEditor
-												controlId={controlId}
-												location={location}
-												variables={config.localVariables}
-												localVariablesStore={localVariablesStore}
-											/>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
+						if (currentTab === 'options') {
+							return (
+								<div className="button-editor-tab-content">
+									{/* Wrap the entity-category, for :first-child to work */}
+									<MyErrorBoundary>
+										<ControlOptionsEditor
+											options={config.options}
+											configRef={configRef}
+											controlId={controlId}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
 
-							if (currentTab === 'options') {
-								return (
-									<div className="button-editor-tab-content">
-										{/* Wrap the entity-category, for :first-child to work */}
-										<MyErrorBoundary>
-											<ControlOptionsEditor options={config.options} configRef={configRef} controlId={controlId} />
-										</MyErrorBoundary>
-									</div>
-								)
-							}
-
-							return null
-						}}
-					</ButtonEditorTabs>
-				</MyErrorBoundary>
-			)}
+						return null
+					}}
+				</ButtonEditorTabs>
+			</MyErrorBoundary>
 		</div>
 	)
 })
 
 interface LayeredButtonEditorStyleProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	styleStore: LayeredStyleStore
 	// previewImage: string | null
@@ -148,36 +152,27 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
 	const isPinnedViewSelected = styleStore.isPinnedViewSelected
-	const savedPanelLayout = useMemo(() => {
-		try {
-			return JSON.parse(localStorage.getItem('layeredEditor.panelSizes') ?? '') ?? undefined
-		} catch {
-			return undefined
-		}
-	}, [])
-	const savePanelLayout = useCallback(
-		// Note: This can't use useLocalStorage because it fires during the mount of the Group causing a react error
-		(layout: Record<string, number>) => safeSetLocalStorage('layeredEditor.panelSizes', JSON.stringify(layout)),
-		[]
-	)
+	const { rootRef, rootStyle, handleProps } = useSplitResize({
+		orientation: 'vertical',
+		enabled: true,
+		storageKey: 'split-panels-height:layered-editor',
+		panelSelectors: ['.button-layer-top', '.button-layer-options'],
+		minFirstPx: 200,
+		minSecondPx: 250,
+		defaultFirstPercent: 45,
+	})
 
 	return (
-		<Group
-			orientation="vertical"
-			className="button-layer-style-editor h-full"
-			defaultLayout={savedPanelLayout}
-			onLayoutChanged={savePanelLayout}
-		>
-			<Panel id="top" className="button-layer-top" defaultSize="30vh" minSize="200px">
+		<div ref={rootRef} className="button-layer-style-editor h-full" style={rootStyle}>
+			<div className="button-layer-top">
 				<div className="button-layer-preview">
 					<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
 				</div>
 				<div className="button-layer-elementlist">
 					<ElementsList styleStore={styleStore} controlId={controlId} />
 				</div>
-			</Panel>
-			<Separator className="button-layer-resize-handle" />
-			<Panel id="bottom" className="button-layer-options" minSize="250px">
+			</div>
+			<div className="button-layer-options">
 				{isPinnedViewSelected ? (
 					<PinnedPropertiesEditor
 						controlId={controlId}
@@ -197,7 +192,8 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						Select an element from the list above to edit its properties
 					</NonIdealState>
 				)}
-			</Panel>
-		</Group>
+			</div>
+			<ResizeHandle {...handleProps} />
+		</div>
 	)
 })

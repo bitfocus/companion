@@ -1,12 +1,14 @@
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getDefaultPinnedProperties,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
-import type {
-	LayeredButtonModel,
-	LayeredButtonOptions,
-	NormalButtonRuntimeProps,
+import {
+	LayeredButtonOptionsSchema,
+	type LayeredButtonModel,
+	type LayeredButtonOptions,
+	type NormalButtonRuntimeProps,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -16,6 +18,7 @@ import {
 	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
 } from '@companion-app/shared/Model/StyleModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -131,15 +134,15 @@ export class ControlButtonLayered
 		return this.entities
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, storage: LayeredButtonModel | null, isImport: boolean) {
-		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true)
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		storage: LayeredButtonModel | null,
+		isImport: boolean
+	) {
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true, LayeredButtonOptionsSchema)
 
-		this.options = {
-			...structuredClone(ButtonControlBase.DefaultOptions),
-			rotaryActions: false,
-			canModifyStyleInApis: false,
-			notes: '',
-		}
+		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new LayeredButtonStyleEditor(deps, controlId, {
 			getButtonStateProps: () => this.getDrawStyleButtonStateProps(),
@@ -247,6 +250,10 @@ export class ControlButtonLayered
 		return this.drawing.getElementById(id)
 	}
 
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[] {
+		return this.drawing.drawElements
+	}
+
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
 		return this.drawing.selectedElementIds()
 	}
@@ -293,10 +300,10 @@ export class ControlButtonLayered
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
-		const changed = super.optionsSetField(key, value)
+	optionsSetField(change: KeyValueChange<LayeredButtonOptions>): boolean {
+		const changed = super.optionsSetField(change)
 
-		if (key === 'stepProgression' || key === 'stepExpression') {
+		if (change.key === 'stepProgression' || change.key === 'stepExpression') {
 			this.entities.stepExpressionUpdate(this.options)
 		}
 
@@ -307,8 +314,8 @@ export class ControlButtonLayered
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 */
-	override toJSON(clone = true): LayeredButtonModel {
-		const obj: LayeredButtonModel = {
+	override toJSON(): LayeredButtonModel {
+		return {
 			type: this.type,
 			style: { layers: [...this.drawing.drawElements] },
 			options: this.options,
@@ -316,8 +323,6 @@ export class ControlButtonLayered
 			steps: this.entities.asNormalButtonSteps(),
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
-
-		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

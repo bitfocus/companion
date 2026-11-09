@@ -3,7 +3,12 @@ import os from 'node:os'
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { SomeModuleManifest } from '@companion-app/shared/Model/ModuleManifest.js'
-import { getNodeJsPermissionArguments } from '../../lib/Instance/NodePath.js'
+import nodeVersions from '../../../assets/nodejs-versions.json' with { type: 'json' }
+import {
+	getNodeJsPermissionArguments,
+	isNodeJsRuntimeOverridden,
+	resolveNodeJsRuntime,
+} from '../../lib/Instance/NodePath.js'
 
 type Permissions = Record<string, boolean>
 
@@ -298,5 +303,24 @@ describe('getNodeJsPermissionArguments', () => {
 
 			expect(args).not.toContain('--allow-fs-write=*')
 		})
+	})
+})
+
+describe('runtime aliases', () => {
+	test('node18 is run on node22', () => {
+		expect(isNodeJsRuntimeOverridden('node18')).toBe(true)
+		expect(resolveNodeJsRuntime('node18')).toBe('node22')
+	})
+
+	test('shipped runtimes are not overridden', () => {
+		for (const runtimeType of Object.keys(nodeVersions)) {
+			expect(isNodeJsRuntimeOverridden(runtimeType)).toBe(false)
+			expect(resolveNodeJsRuntime(runtimeType)).toBe(runtimeType)
+		}
+	})
+
+	test('unknown runtimes are passed through', () => {
+		expect(isNodeJsRuntimeOverridden('node99')).toBe(false)
+		expect(resolveNodeJsRuntime('node99')).toBe('node99')
 	})
 })

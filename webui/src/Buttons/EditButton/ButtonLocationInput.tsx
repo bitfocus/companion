@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
@@ -8,7 +9,7 @@ import { EntityListActionContext, useLocalVariablesStore } from '~/Controls/Loca
 
 interface ButtonLocationInputProps {
 	inputId: string
-	controlId: string
+	controlId: SomeControlId
 	value: ExpressionOrValue<string>
 	setValue: (value: ExpressionOrValue<string>) => void
 }

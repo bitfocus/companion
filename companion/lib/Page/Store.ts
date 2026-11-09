@@ -1,15 +1,16 @@
 import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
-import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
+import { oldBankIndexToXY, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { PageModel, PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
+import LogController from '../Log/Controller.js'
 
 interface PageStoreEvents {
 	pagecount: [count: number]
 	pageindexchange: [pageIds: Set<string>]
 
-	controlLocationChanged: [controlId: string, location: ControlLocation | undefined]
+	controlLocationChanged: [controlId: BankControlId, location: ControlLocation | undefined]
 	pageDataChanged: [pageNumber: number, pageInfo: PageModel | undefined]
 }
 
@@ -26,7 +27,7 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	/**
 	 * Get all ControlIds on the specified page
 	 */
-	getAllControlIdsOnPage(pageNumber: number): string[]
+	getAllControlIdsOnPage(pageNumber: number): BankControlId[]
 
 	/**
 	 * Get all populated locations on the specified page
@@ -62,17 +63,17 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	/**
 	 * Get the location of a controlId
 	 */
-	getLocationOfControlId(controlId: string): ControlLocation | undefined
+	getLocationOfControlId(controlId: SomeControlId): ControlLocation | undefined
 
 	/**
 	 * Get the controlId at a specific location
 	 */
-	getControlIdAt(location: ControlLocation): string | null
+	getControlIdAt(location: ControlLocation): BankControlId | null
 
 	/**
 	 * Get the controlId at a specific location using old bank index
 	 */
-	getControlIdAtOldBankIndex(pageNumber: number, bank: number): string | null
+	getControlIdAtOldBankIndex(pageNumber: number, bank: number): BankControlId | null
 
 	/**
 	 * Get the total number of pages
@@ -109,7 +110,7 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	// /**
 	//  * Set the controlId at a specific location
 	//  */
-	// setControlIdAt(location: ControlLocation, controlId: string | null): boolean
+	// setControlIdAt(location: ControlLocation, controlId: BankControlId | null): boolean
 }
 
 /**
@@ -126,12 +127,14 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
  * this program.
  */
 export class PageStore extends EventEmitter<PageStoreEvents> implements IPageStore {
-	readonly #dbTable: DataStoreTableView<Record<string, PageModel>>
+	readonly #logger = LogController.createLogger('Page/Store')
+
+	readonly #dbTable: DataStoreSchemaTableView<typeof PageModelSchema, string>
 
 	/**
 	 * Cache the location of each control
 	 */
-	readonly #locationCache = new Map<string, ControlLocation>()
+	readonly #locationCache = new Map<SomeControlId, ControlLocation>()
 
 	/**
 	 * Pages data
@@ -155,7 +158,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 		return this.#createdDefaultPage
 	}
 
-	constructor(dbTable: DataStoreTableView<Record<string, PageModel>>) {
+	constructor(dbTable: DataStoreSchemaTableView<typeof PageModelSchema, string>) {
 		super()
 		this.setMaxListeners(0)
 
@@ -184,7 +187,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Get all ControlIds on the specified page
 	 */
-	getAllControlIdsOnPage(pageNumber: number): string[] {
+	getAllControlIdsOnPage(pageNumber: number): BankControlId[] {
 		const page = this.getPageInfo(pageNumber)
 		if (page) {
 			return Object.values(page.controls)
@@ -265,14 +268,14 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Get the location of a controlId
 	 */
-	getLocationOfControlId(controlId: string): ControlLocation | undefined {
+	getLocationOfControlId(controlId: SomeControlId): ControlLocation | undefined {
 		return this.#locationCache.get(controlId)
 	}
 
 	/**
 	 * Get the controlId at a specific location
 	 */
-	getControlIdAt(location: ControlLocation): string | null {
+	getControlIdAt(location: ControlLocation): BankControlId | null {
 		const page = this.getPageInfo(location.pageNumber)
 		if (page) {
 			return page.controls[location.row]?.[location.column]
@@ -284,7 +287,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Get the controlId at a specific location using old bank index
 	 */
-	getControlIdAtOldBankIndex(pageNumber: number, bank: number): string | null {
+	getControlIdAtOldBankIndex(pageNumber: number, bank: number): BankControlId | null {
 		const xy = oldBankIndexToXY(bank)
 		if (xy) {
 			return this.getControlIdAt({
@@ -362,7 +365,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Set the controlId at a specific location
 	 */
-	setControlIdAt(location: ControlLocation, controlId: string | null): boolean {
+	setControlIdAt(location: ControlLocation, controlId: BankControlId | null): boolean {
 		const page = this.getPageInfo(location.pageNumber)
 		if (page) {
 			if (!page.controls[location.row]) page.controls[location.row] = {}
@@ -555,41 +558,59 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 		// Track the ids as they get loaded, to ensure we dont accidentally have a duplicate id
 		const loadedPageIds = new Set<string>()
 
-		// Load existing data
-		for (let i = 1; ; i++) {
-			const pageInfo = rawPageData[i]
-			if (!pageInfo) break
+		const pageNumbers = Object.keys(rawPageData)
+			.filter((key) => /^[1-9]\d*$/.test(key))
+			.map(Number)
+			.sort((a, b) => a - b)
 
-			// Ensure each page has an id defined
-			if (!pageInfo.id || loadedPageIds.has(pageInfo.id)) {
-				pageInfo.id = nanoid()
+		let blankPageCount = 0
+		for (const pageNumber of pageNumbers) {
+			// A gap is left by a page that failed to load. Fill it with blank pages, so that the pages after it keep
+			// their numbers, unless that would add more blank pages than real ones, when the row is more likely a mistake
+			const gap = pageNumber - this.#pageIds.length - 1
+			if (gap > 0) {
+				const realPageCount = this.#pageIds.length - blankPageCount
+				if (blankPageCount + gap > realPageCount + 1) {
+					this.#logger.warn(`Not loading page ${pageNumber} and later, as there are too many missing pages before it`)
+					break
+				}
 
-				// Save the changes
-				this.#dbTable.set(`${i}`, pageInfo)
+				for (let i = 0; i < gap; i++) {
+					const blankPageNumber = this.#pageIds.length + 1
+					this.#logger.warn(`Page ${blankPageNumber} is missing, replacing it with a blank page`)
+					this.#addLoadedPage(this.#createBlankPage(), blankPageNumber, true)
+				}
+				blankPageCount += gap
 			}
 
+			const pageInfo = rawPageData[pageNumber]
+
+			// Ensure each page has an id defined
+			const needsId = !pageInfo.id || loadedPageIds.has(pageInfo.id)
+			if (needsId) pageInfo.id = nanoid()
+
 			loadedPageIds.add(pageInfo.id)
-			this.#pagesById[pageInfo.id] = pageInfo
-			this.#pageIds.push(pageInfo.id)
+			this.#addLoadedPage(pageInfo, pageNumber, needsId)
 		}
 
 		// Default values
 		if (this.#pageIds.length === 0) {
-			const newPageInfo: PageModel = {
-				id: nanoid(),
-				name: 'PAGE',
-				controls: {},
-			}
-
-			// Create a single page
-			this.#pagesById[newPageInfo.id] = newPageInfo
-			this.#pageIds = [newPageInfo.id]
-
-			this.#dbTable.set('1', newPageInfo)
+			this.#addLoadedPage(this.#createBlankPage(), 1, true)
 			this.#createdDefaultPage = true
 		}
 
 		// Setup #locationCache
 		this._rebuildLocationCache()
+	}
+
+	#createBlankPage(): PageModel {
+		return { id: nanoid(), name: 'PAGE', controls: {} }
+	}
+
+	#addLoadedPage(pageInfo: PageModel, pageNumber: number, save: boolean): void {
+		this.#pagesById[pageInfo.id] = pageInfo
+		this.#pageIds.push(pageInfo.id)
+
+		if (save) this.#dbTable.set(`${pageNumber}`, pageInfo)
 	}
 }

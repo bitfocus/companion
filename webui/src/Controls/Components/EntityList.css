@@ -31,6 +31,17 @@
 	}
 }
 
+/* Compact square-ish controls beside an entity list's title, wherever the list is hosted */
+.entity-editor-heading-actions .button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 1.75rem;
+	height: 1.75rem;
+	padding: 0.25rem;
+	border-radius: 0.375rem;
+}
+
 .entity-list {
 	background-color: transparent;
 	padding: 0;

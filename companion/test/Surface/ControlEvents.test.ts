@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
@@ -42,11 +43,12 @@ function makeHandler(connectionId: string | null) {
 	vi.spyOn(panel, 'draw').mockImplementation(() => {})
 	const surfaces = mockDeep<SurfaceController>()
 	const deps = mockDeep<SurfaceHandlerDependencies>()
-	deps.userconfig.getKey.mockImplementation((key: string) => (key === 'pin' ? '1234' : undefined))
+	deps.userconfig.getKey.mockImplementation(((key: string) => (key === 'pin' ? '1234' : undefined)) as any)
+	deps.graphics.displayedLocations.acquire.mockReturnValue(() => undefined)
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
 	deps.pageStore.getPageNumber.mockReturnValue(1)
 	deps.pageStore.getPageCount.mockReturnValue(2)
-	deps.pageStore.getControlIdAt.mockReturnValue('control1')
+	deps.pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('control1'))
 	const config = createOrSanitizeSurfaceHandlerConfig('test', panel, undefined, {
 		minColumn: 0,
 		maxColumn: 7,

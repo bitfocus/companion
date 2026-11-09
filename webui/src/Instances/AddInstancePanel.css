@@ -1,8 +1,28 @@
-.add-module-row {
-	padding-inline: 1rem 0.75rem;
-}
+/* Fills a modal body that does not scroll itself, so the filters stay put while only the list scrolls */
+.add-instance-panel {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
 
-.add-module-status {
-	max-width: 45%;
-	white-space: nowrap;
+	.add-instance-filters {
+		flex-shrink: 0;
+		padding: 0.25rem 0.25rem 0;
+		margin-bottom: 0.75rem;
+	}
+
+	.add-instance-scroll {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow-y: auto;
+	}
+
+	.add-module-row {
+		padding-inline: 1rem 0.75rem;
+	}
+
+	.add-module-status {
+		max-width: 45%;
+		white-space: nowrap;
+	}
 }

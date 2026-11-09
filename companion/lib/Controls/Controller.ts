@@ -8,12 +8,17 @@ import {
 	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
+	formatLocation,
 	ParseControlId,
+	type BankControlId,
+	type ExpressionVariableControlId,
 	type ParsedControlIdType,
+	type SomeControlId,
+	type TriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -27,6 +32,7 @@ import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import { yieldToEventLoop } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import { NO_CONNECTION_LABELS } from '../Variables/Values.js'
@@ -62,7 +68,9 @@ import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
-import { validateBankControlId, validateExpressionVariableControlId, validateTriggerControlId } from './Util.js'
+
+/** How many controls to delete between yields to the event loop, when deleting them all */
+const DELETE_CONTROLS_BATCH_SIZE = 50
 
 /**
  * The class that manages the controls
@@ -135,6 +143,7 @@ export class ControlsController {
 			triggerEvents: this.#store.triggerEvents,
 			expressionVariableNamesMap: this.#expressionVariableNamesMap,
 			controlsAccessor: this.#store,
+			referencedLocations: this.#store.referencedLocations,
 		})
 
 		this.#triggerCollections = new TriggerCollections(
@@ -183,16 +192,16 @@ export class ControlsController {
 		return this.#store.triggerEvents
 	}
 
-	getControl(controlId: string): SomeControl<any> | undefined {
+	getControl(controlId: SomeControlId): SomeControl | undefined {
 		return this.#store.getControl(controlId)
 	}
 
-	getAllControls(): ReadonlyMap<string, SomeControl<any>> {
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl> {
 		return this.#store.getAllControls()
 	}
 
 	pressControl(
-		controlId: string,
+		controlId: SomeControlId,
 		pressed: boolean,
 		surfaceId: string | undefined,
 		pressEvents: ButtonPressEvents | null,
@@ -201,7 +210,7 @@ export class ControlsController {
 		return this.#store.pressControl(controlId, pressed, surfaceId, pressEvents, force)
 	}
 
-	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean {
 		return this.#store.rotateControl(controlId, delta, surfaceId)
 	}
 
@@ -269,23 +278,27 @@ export class ControlsController {
 			watchControl: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						controlId: zodStoredControlId,
 					})
 				)
-				.subscription(async function* ({ input, signal }) {
+				.subscription(async function* ({ input, signal }): AsyncGenerator<UIControlUpdate> {
 					const control = self.getControl(input.controlId)
 					if (!control) throw new Error(`Control ${input.controlId} not found`)
 
 					const changes = toIterable(control.updateEvents, 'update', signal)
 
+					const config = control.toJSON()
+					// The input only accepts the ids of stored controls, so this is never a preset
+					if (config.type === 'preset:button') throw new Error(`Control ${input.controlId} is a preset`)
 					yield {
 						type: 'init',
-						config: control.toJSON(false),
-						runtime: control.toRuntimeJSON(),
-					} satisfies UIControlUpdate
+						// Each control class sends the runtime props of its own type
+						control: { type: config.type, config, runtime: control.toRuntimeJSON() } as UIControlState,
+					}
 
 					for await (const [change] of changes) {
-						yield change
+						// Not a preset (checked above), so the patches are of a SomeControlModel
+						yield change as UIControlUpdate
 					}
 				}),
 		})
@@ -392,12 +405,11 @@ export class ControlsController {
 	/**
 	 * Import a control
 	 */
-	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): string | null {
-		if (forceControlId && !validateBankControlId(forceControlId)) {
-			// Control id is not valid!
-			return null
-		}
-
+	importControl(
+		location: ControlLocation,
+		definition: SomeButtonModel,
+		forceControlId?: BankControlId
+	): BankControlId | null {
 		// Delete old control at the coordinate
 		const oldControlId = this.#deps.pageStore.getControlIdAt(location)
 		if (oldControlId) {
@@ -410,6 +422,8 @@ export class ControlsController {
 			this.#store.controls.set(newControlId, newControl)
 
 			this.#controlEvents.emit('controlPlacedAt', location, newControlId)
+			// It was made before it was placed, so anything relative to its location must be resolved again
+			newControl.triggerLocationHasChanged()
 
 			// Ensure it is stored to the db
 			newControl.commitChange(true)
@@ -423,12 +437,7 @@ export class ControlsController {
 	/**
 	 * Import a trigger
 	 */
-	importTrigger(controlId: string, definition: TriggerModel): boolean {
-		if (!validateTriggerControlId(controlId)) {
-			// Control id is not valid!
-			return false
-		}
-
+	importTrigger(controlId: TriggerControlId, definition: TriggerModel): boolean {
 		if (this.#store.controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
 
 		const newControl = this.#factory.createClassForControl(controlId, 'trigger', definition, true)
@@ -455,14 +464,9 @@ export class ControlsController {
 	 * Import an expression variable
 	 */
 	importExpressionVariable(
-		controlId: string,
+		controlId: ExpressionVariableControlId,
 		definition: ExpressionVariableModel
 	): ControlExpressionVariable | undefined {
-		if (!validateExpressionVariableControlId(controlId)) {
-			// Control id is not valid!
-			return undefined
-		}
-
 		if (this.#store.controls.has(controlId)) throw new Error(`ExpressionVariable ${controlId} already exists`)
 
 		const newControl = this.#factory.createClassForControl(controlId, 'expression-variable', definition, true)
@@ -487,8 +491,8 @@ export class ControlsController {
 	 */
 	init(): void {
 		// Init all the control classes
-		const config = this.#store.dbTable.all()
-		for (const [controlId, controlObj] of Object.entries(config)) {
+		// The table moves aside any control whose id is invalid, or doesn't suit its type
+		for (const [controlId, controlObj] of this.#store.dbTable.entries()) {
 			if (controlObj && controlObj.type) {
 				const inst = this.#factory.createClassForControl(controlId, 'all', controlObj, false)
 				if (inst) {
@@ -512,27 +516,22 @@ export class ControlsController {
 	}
 
 	/**
-	 * Propagate variable changes to the controls and triggers. `controlIdFilter` is null for a global
-	 * change, or the set of controls the change is scoped to.
+	 * Propagate variable changes to the triggers. `controlIdFilter` is null for a global change, or the set of
+	 * controls the change is scoped to. The controls' entities and drawing are told about the changes they care
+	 * about by the variable dependency registry.
 	 */
-	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(
+		allChangedVariablesSet: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null
+	): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
-
-		if (allChangedVariablesSet.size > 0) {
-			for (const control of this.#store.controls.values()) {
-				if (controlIdFilter && !controlIdFilter.has(control.controlId)) continue
-
-				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
-				control.drawing?.onVariablesChanged(allChangedVariablesSet)
-			}
-		}
 	}
 
 	/**
 	 * A control moved to a different page, so its `$(page:x)` references now resolve against a different
 	 * page control - re-evaluate its page-variable feedbacks. No-op if the page is unchanged.
 	 */
-	notifyControlMovedPage(controlId: string, fromPageNumber: number, toPageNumber: number): void {
+	notifyControlMovedPage(controlId: BankControlId, fromPageNumber: number, toPageNumber: number): void {
 		const fromPageId = this.#deps.pageStore.getPageId(fromPageNumber)
 		const toPageId = this.#deps.pageStore.getPageId(toPageNumber)
 		if (!fromPageId || !toPageId || fromPageId === toPageId) return
@@ -567,15 +566,20 @@ export class ControlsController {
 	 * @param render - the resulting render
 	 */
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
-		for (const control of this.#store.controls.values()) {
-			control.drawing?.onButtonDrawn(location, render)
+		// Only the controls whose last draw referenced this location can be affected
+		const controlIds = this.#store.referencedLocations.getControlsReferencing(formatLocation(location))
+		if (!controlIds) return
+
+		// Copy, as a drawer may report new references (and so modify the set) while being notified
+		for (const controlId of [...controlIds]) {
+			this.#store.controls.get(controlId)?.drawing?.onButtonDrawn(location, render)
 		}
 	}
 
 	/**
 	 * Delete a control
 	 */
-	deleteControl(controlId: string): void {
+	deleteControl(controlId: SomeControlId): void {
 		const control = this.getControl(controlId)
 		if (control) {
 			control.destroy()
@@ -601,12 +605,19 @@ export class ControlsController {
 	/**
 	 * Delete every control whose id is of the given type (see {@link ParseControlId})
 	 *
-	 * This parses the ids to ensure it is exhaustive and not relying on specific implementations of each type
+	 * This parses the ids to ensure it is exhaustive and not relying on specific implementations of each type.
+	 * It yields to the event loop as it goes, as deleting thousands of controls takes long enough to stall it
 	 */
-	deleteAllControlsOfType(type: ParsedControlIdType['type']): void {
+	async deleteAllControlsOfType(type: ParsedControlIdType['type']): Promise<void> {
+		let deleted = 0
+
 		for (const controlId of this.#store.controls.keys()) {
 			if (ParseControlId(controlId)?.type === type) {
 				this.deleteControl(controlId)
+
+				// Yield every now and then to avoid blocking the event loop
+				deleted++
+				if (deleted % DELETE_CONTROLS_BATCH_SIZE === 0) await yieldToEventLoop()
 			}
 		}
 	}
@@ -635,7 +646,7 @@ export class ControlsController {
 	 * @returns controlId
 	 * @access public
 	 */
-	createButtonControl(location: ControlLocation, newType: string): string | null {
+	createButtonControl(location: ControlLocation, newType: string): BankControlId | null {
 		if (!this.#deps.pageStore.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
@@ -766,7 +777,7 @@ export class ControlsController {
 	}
 
 	createVariablesAndExpressionParser(
-		controlId: string | null | undefined,
+		controlId: SomeControlId | null | undefined,
 		overrideVariableValues?: VariableValues | null,
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {

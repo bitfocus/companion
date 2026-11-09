@@ -1,12 +1,13 @@
 import { observer } from 'mobx-react-lite'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigKeyOfType } from '@companion-app/shared/Model/UserConfigModel.js'
+import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { ResetButton, type UserConfigProps } from './Common.js'
 
 interface UserConfigNumberInputRowProps {
 	userConfig: UserConfigProps
 	label: string | React.ReactNode
-	field: keyof UserConfigModel
+	field: UserConfigKeyOfType<number>
 	min?: number
 	max?: number
 	step?: number
@@ -36,7 +37,7 @@ export const UserConfigNumberInputRow = observer(function UserConfigNumberInputR
 						if (max !== undefined) value = Math.min(value, max)
 						if (min !== undefined) value = Math.max(value, min)
 
-						userConfig.setValue(field, value)
+						userConfig.setValue(keyValueChange(field, value))
 					}}
 				/>
 			</td>

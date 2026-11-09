@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
@@ -19,7 +20,7 @@ describe('local variable actions', () => {
 	})
 
 	/** Add a local variable through trpc, as the webui does */
-	async function addLocalVariable(controlId: string, name: string): Promise<string> {
+	async function addLocalVariable(controlId: SomeControlId, name: string): Promise<string> {
 		const entityId = await app.trpc().controls.entities.add({
 			controlId,
 			entityLocation: 'local-variables',
@@ -40,7 +41,7 @@ describe('local variable actions', () => {
 
 	/** Add a `local_variable_set_value` action through trpc, leaving its location at the default */
 	async function addSetValueAction(
-		controlId: string,
+		controlId: SomeControlId,
 		entityLocation: SomeSocketEntityLocation,
 		name: string,
 		value: string
@@ -63,7 +64,7 @@ describe('local variable actions', () => {
 		return entityId!
 	}
 
-	function getLocation(controlId: string, entityId: string) {
+	function getLocation(controlId: SomeControlId, entityId: string) {
 		const control = app.registry.controls.getControl(controlId)
 		if (!control?.supportsEntities) throw new Error(`Control "${controlId}" has no entities`)
 		return control.entities.findEntityById(entityId)?.rawOptions.location

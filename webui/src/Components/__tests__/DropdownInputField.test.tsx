@@ -77,6 +77,16 @@ function queryListbox() {
 // ---------------------------------------------------------------------------
 
 describe('Rendering (static)', () => {
+	it('is named by a label pointing at its htmlName', () => {
+		render(
+			<MenuPortalContext.Provider value={document.body}>
+				<label htmlFor="fruit-field">Fruit</label>
+				<DropdownInputField choices={CHOICES} htmlName="fruit-field" value="apple" setValue={vi.fn()} />
+			</MenuPortalContext.Provider>
+		)
+		expect(screen.getByLabelText('Fruit')).toBe(screen.getByRole('combobox'))
+	})
+
 	it('shows the label of the current value in the input', () => {
 		const { input } = renderField({ initialValue: 'banana' })
 		expect(input).toHaveValue('Banana')
@@ -543,7 +553,7 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 		const user = userEvent.setup()
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<DropdownInputField
+				<DropdownInputField<DropdownChoiceId>
 					choices={NUMERIC_CHOICES}
 					allowCustom={true}
 					disableEditingCustom={false}
@@ -583,7 +593,7 @@ describe('Type preservation on focus/blur (editing mode)', () => {
 		const user = userEvent.setup()
 		render(
 			<MenuPortalContext.Provider value={document.body}>
-				<DropdownInputField
+				<DropdownInputField<DropdownChoiceId>
 					choices={NUMERIC_CHOICES}
 					allowCustom={true}
 					disableEditingCustom={false}

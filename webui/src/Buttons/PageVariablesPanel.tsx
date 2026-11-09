@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
-import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, type PageControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -22,25 +22,36 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 	const { pages } = useContext(RootAppStoreContext)
 
 	const pageInfo = pages.get(pageNumber)
-	const controlId = pageInfo ? CreatePageControlId(pageInfo.id) : null
+	if (!pageInfo) {
+		return (
+			<ButtonsSidebarSection className={undefined} title="Page Variables" actions={null}>
+				<LoadingRetryOrError dataReady={false} design="pulse" />
+			</ButtonsSidebarSection>
+		)
+	}
 
+	return <PageVariablesEditor controlId={CreatePageControlId(pageInfo.id)} />
+})
+
+const PageVariablesEditor = observer(function PageVariablesEditor({ controlId }: { controlId: PageControlId }) {
 	const { controlConfig, error, reloadConfig } = useControlConfig(controlId)
 
-	const config = controlConfig?.config
-	const localVariables = config?.type === 'page' ? config.localVariables : null
+	const localVariables = controlConfig?.config.localVariables ?? null
 
-	const localVariablesStore = useLocalVariablesStore(controlId ?? '', localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, localVariables)
 
-	const dataReady = !error && !!config && config.type === 'page'
+	const dataReady = !error && !!controlConfig
 
 	return (
-		<ButtonsSidebarSection className={undefined} title="Page Variables" actions={null}>
+		// Once loaded, the editor draws the title so its expand/collapse controls sit beside it
+		<ButtonsSidebarSection className={undefined} title={dataReady ? null : 'Page Variables'} actions={null}>
 			<LoadingRetryOrError dataReady={dataReady} error={error} doRetry={reloadConfig} design="pulse" />
-			{dataReady && controlId && (
+			{dataReady && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
-						className="mt-0"
-						heading={null}
+						// Cancels the heading row's top margin, so the title sits where the other sections' titles do
+						className="-mt-2"
+						heading={<h5 className="buttons-sidebar-heading">Page Variables</h5>}
 						controlId={controlId}
 						location={undefined}
 						variables={localVariables ?? []}

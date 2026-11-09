@@ -1,7 +1,4 @@
-import { Feedback } from '@dnd-kit/dom'
 import { useDraggable } from '@dnd-kit/react'
-import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
@@ -17,12 +14,8 @@ import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever, useComputed } from '~/Resources/util'
-import type { PresetDragItem, PresetPlacementMode } from './PresetDragItem'
-
-// Presets drag a clone (the original stays put in the pool) with no drop animation so a
-// released preset doesn't fly back. Configured per-draggable so it doesn't affect the default
-// sortable feedback (placeholder + settle animation) used everywhere else.
-const PRESET_FEEDBACK_PLUGINS = [Feedback.configure({ feedback: 'clone', dropAnimation: null })]
+import { PRESET_FEEDBACK_PLUGINS, type PresetDragItem, type PresetPlacementMode } from './PresetDragItem'
+import { PresetSectionHeader } from './PresetSectionHeader.js'
 
 interface PresetSectionCollapseProps {
 	section: UIPresetSection
@@ -72,23 +65,12 @@ export const PresetSectionCollapse = observer(function PresetButtonsCollapse({
 
 	return (
 		<>
-			<div
-				className="collapsible-tree-group-row presets-section-row"
-				role="button"
-				tabIndex={0}
-				aria-expanded={!isCollapsed}
-				onClick={toggleCollapsed}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault()
-						toggleCollapsed()
-					}
-				}}
-			>
-				<FontAwesomeIcon icon={!isCollapsed ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
-				{section.name}
-				{!!section.description && <div className="presets-section-description">{section.description}</div>}
-			</div>
+			<PresetSectionHeader
+				name={section.name}
+				description={section.description ?? null}
+				isCollapsed={isCollapsed}
+				toggleCollapsed={toggleCollapsed}
+			/>
 			{!isCollapsed && <div className="presets-section-content">{groupComponents}</div>}
 		</>
 	)
@@ -210,6 +192,7 @@ function PresetIconPreview({
 	placementMode,
 }: Readonly<PresetIconPreviewProps>) {
 	const dragData: PresetDragItem = {
+		kind: 'connection',
 		connectionId,
 		presetId,
 		variableValues: variableValues,

@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { PageStore } from '../../lib/Page/Store.js'
 import { createStore, FakePageTableView, makePage, threePages } from './Helpers.js'
 
@@ -32,16 +33,100 @@ describe('PageStore', () => {
 			expect(store.createdDefaultPage).toBe(false)
 		})
 
-		test('loading stops at a gap in the page numbers', () => {
+		test('a gap in the page numbers is filled with a blank page, so later pages keep their numbers', () => {
 			const db = new FakePageTableView()
 			db.data['1'] = makePage('page-a', 'First')
 			db.data['2'] = makePage('page-b', 'Second')
-			db.data['4'] = makePage('page-d', 'Orphan')
+			db.data['4'] = makePage('page-d', 'Fourth', { 0: { 0: CreateBankControlId('control-d1') } })
 
-			const store = new PageStore(db.asTableView())
+			const store = new PageStore(db.asSchemaTableView())
 
-			expect(store.getPageCount()).toBe(2)
+			expect(store.getPageCount()).toBe(4)
+			expect(store.getPageName(3)).toBe('PAGE')
+			expect(store.getPageInfo(3)?.controls).toEqual({})
+			expect(store.getPageId(4)).toBe('page-d')
+			expect(store.getControlIdAt({ pageNumber: 4, row: 0, column: 0 })).toBe(CreateBankControlId('control-d1'))
+
+			// The blank page is saved
+			expect(db.data['3']).toEqual(store.getPageInfo(3))
+		})
+
+		test('a page that fails to load is replaced with a blank page', () => {
+			const db = new FakePageTableView()
+			db.data['1'] = makePage('page-a', 'First')
+			db.data['2'] = 'not a page' as any
+			db.data['3'] = makePage('page-c', 'Third')
+
+			const store = new PageStore(db.asSchemaTableView())
+
+			expect(store.getPageCount()).toBe(3)
+			expect(store.getPageName(2)).toBe('PAGE')
+			expect(store.getPageId(3)).toBe('page-c')
+		})
+
+		test('a page far beyond the others is not loaded', () => {
+			const db = new FakePageTableView()
+			db.data['1'] = makePage('page-a', 'First')
+			db.data['2'] = makePage('page-b', 'Second')
+			db.data['99'] = makePage('page-far', 'Far away')
+
+			const store = new PageStore(db.asSchemaTableView())
+
 			expect(store.getPageIds()).toEqual(['page-a', 'page-b'])
+			expect(db.data['3']).toBeUndefined()
+		})
+
+		test('rows that are not a page number are ignored', () => {
+			const db = new FakePageTableView()
+			db.data['1'] = makePage('page-a', 'First')
+			db.data['0'] = makePage('page-zero', 'Zero')
+			db.data['01'] = makePage('page-padded', 'Padded')
+			db.data['abc'] = makePage('page-abc', 'Abc')
+
+			const store = new PageStore(db.asSchemaTableView())
+
+			expect(store.getPageIds()).toEqual(['page-a'])
+		})
+
+		test('a page keeps its valid grid entries, and the pages after it still load', () => {
+			const { store } = createStore([
+				{
+					id: 'page-a',
+					name: 'First',
+					controls: {
+						0: {
+							0: CreateBankControlId('kept'),
+							1: 5,
+							2: 'not-a-bank-id',
+							3: CreateTriggerControlId('not-on-the-grid'),
+							abc: 'bad column',
+						},
+						abc: { 0: 'bad row' },
+						1.5: { 0: 'fractional row' },
+						2: 'not a row',
+						'-1': { '-2': CreateBankControlId('negative') },
+					},
+				} as any,
+				makePage('page-b', 'Second', { 0: { 0: CreateBankControlId('control-b1') } }),
+			])
+
+			expect(store.getPageInfo(1)?.controls).toEqual({
+				0: { 0: CreateBankControlId('kept') },
+				'-1': { '-2': CreateBankControlId('negative') },
+			})
+			expect(store.getPageIds()).toEqual(['page-a', 'page-b'])
+			expect(store.getControlIdAt({ pageNumber: 2, row: 0, column: 0 })).toBe(CreateBankControlId('control-b1'))
+		})
+
+		test('a page with an invalid name or id still loads', () => {
+			const { store } = createStore([
+				{ id: 5, name: { text: 'x' }, controls: { 0: { 0: CreateBankControlId('kept') } } } as any,
+			])
+
+			expect(store.getPageName(1)).toBe('')
+			expect(store.getPageIds()[0]).toEqual(expect.any(String))
+			expect(store.getPageIds()[0]).not.toBe('')
+			expect(store.getControlIdAt({ pageNumber: 1, row: 0, column: 0 })).toBe(CreateBankControlId('kept'))
 		})
 
 		test('assigns an id to pages missing one, and persists it', () => {
@@ -64,9 +149,17 @@ describe('PageStore', () => {
 		test('builds the location cache from loaded pages', () => {
 			const { store } = createStore(threePages())
 
-			expect(store.getLocationOfControlId('control-a1')).toEqual({ pageNumber: 1, row: 0, column: 0 })
-			expect(store.getLocationOfControlId('control-b1')).toEqual({ pageNumber: 2, row: 1, column: 2 })
-			expect(store.getLocationOfControlId('unknown')).toBe(undefined)
+			expect(store.getLocationOfControlId(CreateBankControlId('control-a1'))).toEqual({
+				pageNumber: 1,
+				row: 0,
+				column: 0,
+			})
+			expect(store.getLocationOfControlId(CreateBankControlId('control-b1'))).toEqual({
+				pageNumber: 2,
+				row: 1,
+				column: 2,
+			})
+			expect(store.getLocationOfControlId(CreateBankControlId('unknown'))).toBe(undefined)
 		})
 	})
 
@@ -108,11 +201,14 @@ describe('PageStore', () => {
 		test('control lookups on a page', () => {
 			const { store } = createStore(threePages())
 
-			expect(store.getControlIdAt({ pageNumber: 2, row: 1, column: 2 })).toBe('control-b1')
+			expect(store.getControlIdAt({ pageNumber: 2, row: 1, column: 2 })).toBe(CreateBankControlId('control-b1'))
 			expect(store.getControlIdAt({ pageNumber: 2, row: 0, column: 0 })).toBe(undefined)
 			expect(store.getControlIdAt({ pageNumber: 9, row: 0, column: 0 })).toBe(null)
 
-			expect(store.getAllControlIdsOnPage(2).sort()).toEqual(['control-b1', 'control-b2'])
+			expect(store.getAllControlIdsOnPage(2).sort()).toEqual([
+				CreateBankControlId('control-b1'),
+				CreateBankControlId('control-b2'),
+			])
 			expect(store.getAllControlIdsOnPage(9)).toEqual([])
 
 			expect(store.getAllPopulatedLocationsOnPage(2)).toEqual([
@@ -123,10 +219,15 @@ describe('PageStore', () => {
 		})
 
 		test('getControlIdAtOldBankIndex maps banks to an 8-wide grid', () => {
-			const { store } = createStore([makePage('page-a', 'First', { 0: { 0: 'top-left' }, 1: { 1: 'second-row' } })])
+			const { store } = createStore([
+				makePage('page-a', 'First', {
+					0: { 0: CreateBankControlId('top-left') },
+					1: { 1: CreateBankControlId('second-row') },
+				}),
+			])
 
-			expect(store.getControlIdAtOldBankIndex(1, 1)).toBe('top-left')
-			expect(store.getControlIdAtOldBankIndex(1, 10)).toBe('second-row')
+			expect(store.getControlIdAtOldBankIndex(1, 1)).toBe(CreateBankControlId('top-left'))
+			expect(store.getControlIdAtOldBankIndex(1, 10)).toBe(CreateBankControlId('second-row'))
 			expect(store.getControlIdAtOldBankIndex(1, 33)).toBe(null)
 			expect(store.getControlIdAtOldBankIndex(1, 0)).toBe(null)
 		})
@@ -151,14 +252,14 @@ describe('PageStore', () => {
 			store.on('pageDataChanged', dataListener)
 
 			const location = { pageNumber: 1, row: 2, column: 3 }
-			expect(store.setControlIdAt(location, 'control-new')).toBe(true)
+			expect(store.setControlIdAt(location, CreateBankControlId('control-new'))).toBe(true)
 
-			expect(store.getControlIdAt(location)).toBe('control-new')
-			expect(store.getLocationOfControlId('control-new')).toEqual(location)
-			expect(db.data['1'].controls[2][3]).toBe('control-new')
+			expect(store.getControlIdAt(location)).toBe(CreateBankControlId('control-new'))
+			expect(store.getLocationOfControlId(CreateBankControlId('control-new'))).toEqual(location)
+			expect(db.data['1'].controls[2][3]).toBe(CreateBankControlId('control-new'))
 
 			expect(locationListener).toHaveBeenCalledTimes(1)
-			expect(locationListener).toHaveBeenCalledWith('control-new', location)
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-new'), location)
 			expect(dataListener).toHaveBeenCalledWith(1, store.getPageInfo(1))
 		})
 
@@ -168,12 +269,12 @@ describe('PageStore', () => {
 			store.on('controlLocationChanged', locationListener)
 
 			const location = { pageNumber: 1, row: 0, column: 0 }
-			expect(store.setControlIdAt(location, 'control-replacement')).toBe(true)
+			expect(store.setControlIdAt(location, CreateBankControlId('control-replacement'))).toBe(true)
 
-			expect(store.getControlIdAt(location)).toBe('control-replacement')
-			expect(store.getLocationOfControlId('control-a1')).toBe(undefined)
-			expect(locationListener).toHaveBeenNthCalledWith(1, 'control-a1', undefined)
-			expect(locationListener).toHaveBeenNthCalledWith(2, 'control-replacement', location)
+			expect(store.getControlIdAt(location)).toBe(CreateBankControlId('control-replacement'))
+			expect(store.getLocationOfControlId(CreateBankControlId('control-a1'))).toBe(undefined)
+			expect(locationListener).toHaveBeenNthCalledWith(1, CreateBankControlId('control-a1'), undefined)
+			expect(locationListener).toHaveBeenNthCalledWith(2, CreateBankControlId('control-replacement'), location)
 		})
 
 		test('clearing a location with null', () => {
@@ -183,14 +284,14 @@ describe('PageStore', () => {
 			expect(store.setControlIdAt(location, null)).toBe(true)
 
 			expect(store.getControlIdAt(location)).toBe(undefined)
-			expect(store.getLocationOfControlId('control-a1')).toBe(undefined)
+			expect(store.getLocationOfControlId(CreateBankControlId('control-a1'))).toBe(undefined)
 			expect(db.data['1'].controls[0]?.[0]).toBe(undefined)
 		})
 
 		test('an invalid page is rejected', () => {
 			const { store } = createStore(threePages())
 
-			expect(store.setControlIdAt({ pageNumber: 9, row: 0, column: 0 }, 'control-new')).toBe(false)
+			expect(store.setControlIdAt({ pageNumber: 9, row: 0, column: 0 }, CreateBankControlId('control-new'))).toBe(false)
 		})
 	})
 
@@ -261,11 +362,19 @@ describe('PageStore', () => {
 			store._removePage('page-b')
 
 			// The cache is intentionally left stale, the caller must rebuild it
-			expect(store.getLocationOfControlId('control-c1')).toEqual({ pageNumber: 3, row: 0, column: 0 })
+			expect(store.getLocationOfControlId(CreateBankControlId('control-c1'))).toEqual({
+				pageNumber: 3,
+				row: 0,
+				column: 0,
+			})
 
 			store._rebuildLocationCache()
-			expect(store.getLocationOfControlId('control-c1')).toEqual({ pageNumber: 2, row: 0, column: 0 })
-			expect(store.getLocationOfControlId('control-b1')).toBe(undefined)
+			expect(store.getLocationOfControlId(CreateBankControlId('control-c1'))).toEqual({
+				pageNumber: 2,
+				row: 0,
+				column: 0,
+			})
+			expect(store.getLocationOfControlId(CreateBankControlId('control-b1'))).toBe(undefined)
 		})
 	})
 
@@ -293,14 +402,14 @@ describe('PageStore', () => {
 			store.on('controlLocationChanged', locationListener)
 
 			const removed = store._resetPageControls(2)
-			expect(removed.sort()).toEqual(['control-b1', 'control-b2'])
+			expect(removed.sort()).toEqual([CreateBankControlId('control-b1'), CreateBankControlId('control-b2')])
 
 			expect(store.getAllControlIdsOnPage(2)).toEqual([])
-			expect(store.getLocationOfControlId('control-b1')).toBe(undefined)
+			expect(store.getLocationOfControlId(CreateBankControlId('control-b1'))).toBe(undefined)
 			expect(db.data['2'].controls).toEqual({})
 
-			expect(locationListener).toHaveBeenCalledWith('control-b1', undefined)
-			expect(locationListener).toHaveBeenCalledWith('control-b2', undefined)
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-b1'), undefined)
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-b2'), undefined)
 		})
 
 		test('an invalid page returns an empty list', () => {
@@ -354,10 +463,26 @@ describe('PageStore', () => {
 			store._rebuildLocationCache()
 
 			expect(locationListener).toHaveBeenCalledTimes(4)
-			expect(locationListener).toHaveBeenCalledWith('control-a1', { pageNumber: 1, row: 0, column: 0 })
-			expect(locationListener).toHaveBeenCalledWith('control-b1', { pageNumber: 2, row: 1, column: 2 })
-			expect(locationListener).toHaveBeenCalledWith('control-b2', { pageNumber: 2, row: 1, column: 3 })
-			expect(locationListener).toHaveBeenCalledWith('control-c1', { pageNumber: 3, row: 0, column: 0 })
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-a1'), {
+				pageNumber: 1,
+				row: 0,
+				column: 0,
+			})
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-b1'), {
+				pageNumber: 2,
+				row: 1,
+				column: 2,
+			})
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-b2'), {
+				pageNumber: 2,
+				row: 1,
+				column: 3,
+			})
+			expect(locationListener).toHaveBeenCalledWith(CreateBankControlId('control-c1'), {
+				pageNumber: 3,
+				row: 0,
+				column: 0,
+			})
 		})
 	})
 })

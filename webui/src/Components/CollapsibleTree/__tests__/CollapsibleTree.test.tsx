@@ -16,6 +16,7 @@ import {
 interface Leaf {
 	key: string
 	label: string
+	disabled?: boolean
 }
 type Meta = { label: string }
 type Node = CollapsibleTreeNode<Leaf, Meta>
@@ -372,6 +373,17 @@ describe('CollapsibleTree', () => {
 			await user.click(screen.getByText('loose-leaf'))
 			expect(onLeafClick).toHaveBeenCalledWith(expect.objectContaining({ key: 'pinned' }))
 			expect(onLeafClick).toHaveBeenCalledWith(expect.objectContaining({ key: 'loose-leaf' }))
+		})
+
+		it('does not fire onLeafClick for a disabled leaf, which is not focusable', async () => {
+			const onLeafClick = vi.fn()
+			const user = userEvent.setup()
+			renderTree({ ungroupedLeaves: [{ ...leaf('gone'), disabled: true }], onLeafClick })
+			const leafRow = screen.getByText('gone').closest('.collapsible-tree-leaf-row') as HTMLElement
+			await user.click(leafRow)
+			expect(onLeafClick).not.toHaveBeenCalled()
+			expect(leafRow).toHaveAttribute('aria-disabled', 'true')
+			expect(leafRow).not.toHaveAttribute('tabindex')
 		})
 
 		it('leaf rows are not interactive when onLeafClick is omitted', () => {

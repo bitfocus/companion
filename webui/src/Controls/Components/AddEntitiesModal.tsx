@@ -1,6 +1,5 @@
 import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { go as fuzzySearch } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
@@ -19,6 +18,7 @@ import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
 import { type EntityLeafItem } from '~/Stores/EntityDefinitionsStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { fuzzySearchByKeys } from '~/util/fuzzy.js'
 import './AddEntitiesModal.css'
 
 const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
@@ -221,10 +221,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	const searchResults = useComputed(() => {
 		if (!filter) return []
 
-		return fuzzySearch(filter, allEntityResults, {
-			key: 'searchText',
-			threshold: 0.5,
-		}).map((match) => match.obj)
+		return fuzzySearchByKeys(allEntityResults, filter, ['searchText'], 0.5, 0)
 	}, [filter, allEntityResults])
 
 	useEffect(() => {

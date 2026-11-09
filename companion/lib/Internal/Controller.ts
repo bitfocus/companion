@@ -10,6 +10,8 @@
  */
 
 import type EventEmitter from 'node:events'
+import { INTERNAL_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -42,15 +44,21 @@ import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type {
+	VariableDependency,
+	VariableDependencyListener,
+	VariableDependencyRegistry,
+} from '../Variables/DependencyRegistry.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
-import { buildActionExecutionOverrides } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { InternalControls } from './Controls.js'
 import { InternalCustomVariables } from './CustomVariables.js'
+import { InternalDebug } from './Debug.js'
 import { InternalInstance } from './Instance.js'
+import { InternalInvalidEntity } from './InvalidEntity.js'
 import { InternalPage } from './Page.js'
 import { InternalSurface } from './Surface.js'
 import { InternalSystem } from './System.js'
@@ -79,13 +87,16 @@ interface FeedbackDependencyTracking {
 }
 
 interface FeedbackEntityState extends FeedbackDependencyTracking {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation | undefined
 
 	entityModel: FeedbackEntityModel
+
+	/** The variables referenced by the last evaluation, created when it first references any */
+	variables: VariableDependency<FeedbackEntityState> | null
 }
 
-export class InternalController {
+export class InternalController implements VariableDependencyListener<FeedbackEntityState> {
 	readonly #logger = LogController.createLogger('Internal/Controller')
 
 	readonly #controlsStore: IControlStore
@@ -94,6 +105,7 @@ export class InternalController {
 	readonly #variablesController: VariablesController
 
 	readonly #feedbacks = new Map<string, FeedbackEntityState>()
+	readonly #variableDependencies: VariableDependencyRegistry
 
 	readonly #unsubscribeRenderClock: () => void
 
@@ -113,6 +125,7 @@ export class InternalController {
 		this.#pageStore = pageStore
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
+		this.#variableDependencies = variablesController.dependencies
 
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.#onRenderClockTick())
 
@@ -123,6 +136,11 @@ export class InternalController {
 
 	destroy(): void {
 		this.#unsubscribeRenderClock()
+
+		for (const feedback of this.#feedbacks.values()) {
+			feedback.variables?.dispose()
+		}
+		this.#feedbacks.clear()
 	}
 
 	init(
@@ -153,7 +171,9 @@ export class InternalController {
 			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
-			new InternalVariables(localVariablesController)
+			new InternalVariables(localVariablesController),
+			new InternalInvalidEntity(),
+			new InternalDebug()
 		)
 
 		// Listen for events from the fragments
@@ -181,7 +201,7 @@ export class InternalController {
 		for (const control of allControls.values()) {
 			if (!control.supportsEntities) continue
 
-			control.entities.resubscribeEntities(undefined, 'internal')
+			control.entities.resubscribeEntities(undefined, INTERNAL_CONNECTION_ID)
 		}
 
 		// Make all variables values
@@ -198,7 +218,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated entity if any changes were made
 	 */
-	entityUpgrade(entity: SomeEntityModel, controlId: string): SomeEntityModel | undefined {
+	entityUpgrade(entity: SomeEntityModel, controlId: SomeControlId): SomeEntityModel | undefined {
 		switch (entity.type) {
 			case EntityModelType.Feedback: {
 				return this.#feedbackUpgrade(entity, controlId)
@@ -218,7 +238,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated action if any changes were made
 	 */
-	#actionUpgrade(action: ActionEntityModel, controlId: string): ActionEntityModel | undefined {
+	#actionUpgrade(action: ActionEntityModel, controlId: SomeControlId): ActionEntityModel | undefined {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
@@ -243,7 +263,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated feedback if any changes were made
 	 */
-	#feedbackUpgrade(feedback: FeedbackEntityModel, controlId: string): FeedbackEntityModel | undefined {
+	#feedbackUpgrade(feedback: FeedbackEntityModel, controlId: SomeControlId): FeedbackEntityModel | undefined {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
@@ -265,7 +285,7 @@ export class InternalController {
 		return undefined
 	}
 
-	entityUpdate(entity: SomeEntityModel, controlId: string): void {
+	entityUpdate(entity: SomeEntityModel, controlId: SomeControlId): void {
 		if (entity.type === EntityModelType.Feedback) {
 			this.#feedbackUpdate(entity, controlId)
 		}
@@ -274,10 +294,10 @@ export class InternalController {
 	/**
 	 * A feedback has changed, and state should be updated
 	 */
-	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): void {
+	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: SomeControlId): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (feedback.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
 		if (feedback.disabled) return
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
@@ -289,10 +309,13 @@ export class InternalController {
 			clockSensitive: false,
 
 			entityModel: structuredClone(feedback),
+
+			variables: null,
 		}
+		this.#feedbacks.get(feedback.id)?.variables?.dispose()
 		this.#feedbacks.set(feedback.id, feedbackState)
 
-		this.#controlsStore.updateFeedbackValues('internal', [
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, [
 			{
 				entityId: feedback.id,
 				controlId: controlId,
@@ -311,11 +334,11 @@ export class InternalController {
 	 */
 	evaluateFeedbackValue(
 		entityModel: FeedbackEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		parser: VariablesAndExpressionParser
 	): FeedbackValue {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-		if (entityModel.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (!isInternalConnectionId(entityModel.connectionId)) throw new Error(`Feedback is not for internal instance`)
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
@@ -327,10 +350,11 @@ export class InternalController {
 	entityDelete(entity: SomeEntityModel): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (entity.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (!isInternalConnectionId(entity.connectionId)) throw new Error(`Feedback is not for internal instance`)
 
 		if (entity.type !== EntityModelType.Feedback) return
 
+		this.#feedbacks.get(entity.id)?.variables?.dispose()
 		this.#feedbacks.delete(entity.id)
 
 		for (const fragment of this.#fragments) {
@@ -351,13 +375,21 @@ export class InternalController {
 	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
 		const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
 
-		return this.#computeFeedbackValue(
+		const value = this.#computeFeedbackValue(
 			feedbackState.entityModel,
 			feedbackState.controlId,
 			feedbackState.location,
 			parser,
 			feedbackState
 		)
+
+		// Register what was read, now that the evaluation has finished adding to the set
+		if (!feedbackState.variables && feedbackState.referencedVariables) {
+			feedbackState.variables = this.#variableDependencies.create(this, feedbackState.controlId, feedbackState)
+		}
+		feedbackState.variables?.set(feedbackState.referencedVariables)
+
+		return value
 	}
 
 	/**
@@ -371,7 +403,7 @@ export class InternalController {
 	 */
 	#computeFeedbackValue(
 		entityModel: FeedbackEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		location: ControlLocation | undefined,
 		parser: VariablesAndExpressionParser,
 		tracking: FeedbackDependencyTracking | null
@@ -379,7 +411,7 @@ export class InternalController {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,
-				'internal', // This is the internal instance code
+				INTERNAL_CONNECTION_ID,
 				entityModel.definitionId
 			)
 			if (!entityDefinition) {
@@ -395,7 +427,7 @@ export class InternalController {
 			// Parse the options if enabled
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
+				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
 
 				// Always track the dependencies, for accurate re-evaluation when something changes
 				if (tracking) {
@@ -476,7 +508,7 @@ export class InternalController {
 		const simpleInternalActions: ActionForVisitor[] = []
 
 		for (const entity of rawEntities) {
-			if (entity.connectionId !== 'internal') continue
+			if (!isInternalConnectionId(entity.connectionId)) continue
 
 			switch (entity.type) {
 				case EntityModelType.Feedback:
@@ -499,7 +531,7 @@ export class InternalController {
 			}
 		}
 		for (const entity of entities) {
-			if (entity.connectionId !== 'internal') continue
+			if (!isInternalConnectionId(entity.connectionId)) continue
 
 			switch (entity.type) {
 				case EntityModelType.Feedback:
@@ -541,31 +573,24 @@ export class InternalController {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Action,
-				'internal',
+				INTERNAL_CONNECTION_ID,
 				action.definitionId
 			)
 			if (!entityDefinition) return
 
-			const overrideVariableValues = buildActionExecutionOverrides(extras)
-			// Actions are sampled once at execution and never re-evaluated, so clock-sensitive
-			// expressions (e.g. oscillate()) would be misleading - reject them, matching module actions.
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
-				allowClockSensitive: false,
-			})
+			const parser = this.#controlsStore.createActionExecutionParser(extras)
 
 			// Context for lazily evaluating this action's child feedbacks. A parser snapshots local/page
 			// variable values at construction, so we build a fresh one per call rather than reusing the
 			// action's `parser`: logic_while re-checks its condition each iteration and must see values that
 			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
-				parser: this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
-					allowClockSensitive: false,
-				}),
+				parser: this.#controlsStore.createActionExecutionParser(extras),
 			})
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions)
+				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
 				if (!parseRes.ok) {
 					this.#logger.warn(
 						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -653,7 +678,7 @@ export class InternalController {
 			}
 		}
 
-		this.#controlsStore.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 	/**
 	 * Recheck all feedbacks of specified id
@@ -674,7 +699,7 @@ export class InternalController {
 			}
 		}
 
-		this.#controlsStore.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -692,6 +717,7 @@ export class InternalController {
 						learnTimeout: action.learnTimeout,
 
 						actionHasResult: !!action.actionHasResult,
+						actionExecutionTimeout: undefined, // Not applicable for internal actions
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
@@ -703,6 +729,7 @@ export class InternalController {
 						feedbackAffectedProperties: undefined,
 						feedbackDisableStyleOverrides: false,
 						feedbackStyleOverridesUnsupported: false,
+						hiddenFromPicker: action.hiddenFromPicker ?? false,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -712,7 +739,7 @@ export class InternalController {
 			}
 		}
 
-		this.#instanceDefinitions.setActionDefinitions('internal', actions)
+		this.#instanceDefinitions.setActionDefinitions(INTERNAL_CONNECTION_ID, actions)
 	}
 	#regenerateFeedbacks(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -731,6 +758,7 @@ export class InternalController {
 						learnTimeout: feedback.learnTimeout,
 
 						actionHasResult: undefined,
+						actionExecutionTimeout: undefined,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,
@@ -738,6 +766,7 @@ export class InternalController {
 						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
 						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
 						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
+						hiddenFromPicker: feedback.hiddenFromPicker ?? false,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 
@@ -748,7 +777,7 @@ export class InternalController {
 			}
 		}
 
-		this.#instanceDefinitions.setFeedbackDefinitions('internal', feedbacks)
+		this.#instanceDefinitions.setFeedbackDefinitions(INTERNAL_CONNECTION_ID, feedbacks)
 	}
 	#regenerateVariables(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -782,32 +811,43 @@ export class InternalController {
 			})
 		}
 
-		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues('internal', newValues)
+		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
-	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	/**
+	 * Re-evaluate the feedbacks referencing some changed variables, immediately and without notifying anything
+	 * else. The normal variable change dispatch reaches these feedbacks itself; this is for changes which
+	 * conditions must see before that happens (eg local variables, during an action run).
+	 * @param changedVariablesSet The variables that changed
+	 * @param controlIdFilter null for a global change, or the controls the change is scoped to
+	 */
+	onVariablesChanged(
+		changedVariablesSet: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null
+	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
+		this.#variableDependencies.dispatchTo(this, changedVariablesSet, controlIdFilter)
+	}
+
+	onVariableDependenciesChanged(
+		hits: ReadonlyArray<VariableDependency<FeedbackEntityState>>,
+		changed: ReadonlySet<string>
+	): void {
 		const newValues: NewFeedbackValue[] = []
 
-		// Lookup feedbacks
-		for (const [id, feedback] of this.#feedbacks) {
-			if (!feedback.referencedVariables || !feedback.referencedVariables.size) continue
-
-			// If the change is scoped to specific control(s), only update feedbacks for those
-			if (controlIdFilter && !controlIdFilter.has(feedback.controlId)) continue
-
+		for (const { data: feedback } of hits) {
 			// Check a referenced variable was changed
-			if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
+			if (!feedback.referencedVariables || feedback.referencedVariables.isDisjointFrom(changed)) continue
 
 			newValues.push({
-				entityId: id,
+				entityId: feedback.entityModel.id,
 				controlId: feedback.controlId,
 				value: this.#feedbackGetValue(feedback),
 			})
 		}
 
-		this.#controlsStore.updateFeedbackValues('internal', newValues)
+		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
 	/**

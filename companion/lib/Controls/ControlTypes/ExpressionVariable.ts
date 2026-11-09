@@ -1,14 +1,17 @@
 import debounceFn from 'debounce-fn'
-import jsonPatch from 'fast-json-patch'
-import type { JsonValue } from 'type-fest'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import type z from 'zod'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ClientExpressionVariableData,
-	ExpressionVariableModel,
-	ExpressionVariableOptions,
+import {
+	ExpressionVariableOptionsSchema,
+	type ClientExpressionVariableData,
+	type ExpressionVariableModel,
+	type ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../ControlBase.js'
@@ -25,6 +28,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../IControlFragments.js'
+import { parseOptionsField } from '../OptionsField.js'
 
 /**
  * Class for an expression variable.
@@ -39,14 +43,14 @@ import type {
  * this program.
  */
 export class ControlExpressionVariable
-	extends ControlBase<ExpressionVariableModel>
+	extends ControlBase<ExpressionVariableControlId, ExpressionVariableModel, NoRuntimeProps>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithEntities,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<ExpressionVariableOptions>,
 		ControlWithoutPushed
 {
 	readonly type = 'expression-variable'
@@ -60,17 +64,9 @@ export class ControlExpressionVariable
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
-	readonly #expressionVariableNameMap: ExpressionVariableNameMap
+	readonly optionsSchema: z.ZodType<ExpressionVariableOptions> = ExpressionVariableOptionsSchema
 
-	/**
-	 * The defaults options for a trigger
-	 */
-	static DefaultOptions: ExpressionVariableOptions = {
-		variableName: '',
-		description: 'An expression variable',
-		sortOrder: 0,
-		notes: '',
-	}
+	readonly #expressionVariableNameMap: ExpressionVariableNameMap
 
 	/**
 	 * The last sent expression-variable json object
@@ -92,7 +88,7 @@ export class ControlExpressionVariable
 	 */
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: ExpressionVariableControlId,
 		storage: ExpressionVariableModel | null,
 		isImport: boolean
 	) {
@@ -109,10 +105,11 @@ export class ControlExpressionVariable
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
+			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
-		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)
+		this.options = this.optionsSchema.parse({})
 
 		if (!storage) {
 			// New control
@@ -190,6 +187,10 @@ export class ControlExpressionVariable
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
+	}
+
 	toJSON(clone = true): ExpressionVariableModel {
 		const obj: ExpressionVariableModel = {
 			type: this.type,
@@ -235,27 +236,23 @@ export class ControlExpressionVariable
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
-		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
+	optionsSetField(change: KeyValueChange<ExpressionVariableOptions>, forceSet?: boolean): boolean {
+		if (!forceSet && (change.key === 'sortOrder' || change.key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
-		// Handle expression variable name changes
-		if (key === 'variableName') {
-			// Make sure the new name is valid
-			if (value != '' && (typeof value !== 'string' || !isLabelValid(value))) {
-				// throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
-				return false
-			}
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-			const oldVariableName = this.options.variableName
-			this.options[key] = value
+		const oldVariableName = this.options.variableName
+		const newVariableName = options.variableName
+		// Make sure the new name is valid
+		if (change.key === 'variableName' && newVariableName !== '' && !isLabelValid(newVariableName)) return false
 
+		this.options = options
+
+		if (change.key === 'variableName') {
 			// Update the names map through the dependency
-			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, value)
-		} else {
-			// @ts-expect-error mismatch in types
-			this.options[key] = value
+			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, newVariableName)
 		}
 
 		this.commitChange()
@@ -281,7 +278,7 @@ export class ControlExpressionVariable
 
 		if (this.deps.changeEvents.listenerCount('expressionVariableChange') > 0) {
 			if (this.#lastSentDefinitionJson) {
-				const patch = jsonPatch.compare(this.#lastSentDefinitionJson || {}, newJson || {})
+				const patch = diffObject(this.#lastSentDefinitionJson || {}, newJson || {})
 				if (patch.length > 0) {
 					this.deps.changeEvents.emit('expressionVariableChange', this.controlId, {
 						type: 'update',

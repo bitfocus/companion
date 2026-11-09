@@ -1,4 +1,5 @@
 import type { OscReceivedMessage } from 'osc'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import { ServiceOscApi } from './OscApi.js'
 import { ServiceOscBase } from './OscBase.js'
@@ -39,8 +40,8 @@ export class ServiceOscListener extends ServiceOscBase {
 	 * Process an incoming message from a client
 	 */
 	protected override processIncoming(message: OscReceivedMessage): void {
-		this.#api.router.processMessage(message.address, message).catch((error) => {
-			this.logger.warn(`OSC Error: ${error}`)
+		this.#api.router.processMessage(message.address, message).catch((error: unknown) => {
+			this.logger.warn(`OSC Error: ${stringifyError(error)}`)
 		})
 	}
 }

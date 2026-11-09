@@ -1,0 +1,13 @@
+.button-step-rename {
+	min-width: 12rem;
+}
+
+.button-step-rename .text-input-field {
+	min-width: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	font-size: inherit;
+	font-weight: inherit;
+	line-height: inherit;
+}

@@ -1,5 +1,6 @@
 import type { EventEmitter } from 'node:events'
 import type { SetOptional } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
@@ -14,7 +15,7 @@ import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/Refe
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 export interface FeedbackForInternalExecution {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation | undefined
 
 	id: string
@@ -24,7 +25,7 @@ export interface FeedbackForInternalExecution {
 }
 
 export interface ActionForInternalExecution {
-	// controlId: string
+	// controlId: SomeControlId
 	// location: ControlLocation | undefined
 
 	id: string
@@ -109,7 +110,7 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	 * Perform an upgrade for an action
 	 * @returns Updated action if any changes were made
 	 */
-	actionUpgrade?: (action: ActionEntityModel, controlId: string) => ActionEntityModel | void
+	actionUpgrade?: (action: ActionEntityModel, controlId: SomeControlId) => ActionEntityModel | void
 
 	getFeedbackDefinitions?: () => Record<string, InternalFeedbackDefinition>
 
@@ -121,7 +122,7 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 		parser: VariablesAndExpressionParser
 	) => CompanionFeedbackButtonStyleResult | boolean | ExecuteFeedbackResultWithReferences | void
 
-	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: string) => FeedbackEntityModel | void
+	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: SomeControlId) => FeedbackEntityModel | void
 
 	forgetFeedback?: (feedback: FeedbackEntityModel) => void
 
@@ -148,6 +149,7 @@ export type InternalActionDefinition = SetOptional<
 		| 'feedbackStyle'
 		| 'hasLifecycleFunctions'
 		| 'feedbackAffectedProperties'
+		| 'actionExecutionTimeout'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -161,7 +163,11 @@ export type InternalActionDefinition = SetOptional<
 export type InternalFeedbackDefinition = SetOptional<
 	Omit<
 		ClientEntityDefinition,
-		'entityType' | 'hasLifecycleFunctions' | 'optionsToMonitorForInvalidations' | 'actionHasResult'
+		| 'entityType'
+		| 'hasLifecycleFunctions'
+		| 'optionsToMonitorForInvalidations'
+		| 'actionHasResult'
+		| 'actionExecutionTimeout'
 	>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

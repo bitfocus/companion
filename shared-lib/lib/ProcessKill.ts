@@ -1,4 +1,5 @@
 import { exec, spawn } from 'node:child_process'
+import { stringifyError } from './Stringify.js'
 
 async function getChildPids(pid: number): Promise<number[]> {
 	return new Promise((resolve, reject) => {
@@ -83,7 +84,7 @@ export function kill(pid: number, sig = 'SIGTERM'): void {
 
 	if (process.platform === 'win32') {
 		exec(`taskkill /pid ${pid} /T /F`, (err) => {
-			if (err) console.warn(`taskkill failed for PID ${pid}:`, err.message)
+			if (err) console.warn(`taskkill failed for PID ${pid}: ${stringifyError(err)}`)
 		})
 		return
 	}

@@ -31,6 +31,10 @@ export class ButtonGridStore {
 
 	/** Where the keyboard is, which is not always the whole of what is selected */
 	#focus: ControlLocation | null = null
+	/** Whether the focus is drawn: only once the keyboard has moved it, so clicking never adds a second outline */
+	#cursorShown = false
+	/** The cell the focus is drawn on, worked out once per change rather than by every cell */
+	#cursorKey: string | null = null
 
 	/** Which page the grid is showing, so being told again about the same one changes nothing */
 	#viewPage: number | null = null
@@ -70,6 +74,12 @@ export class ButtonGridStore {
 		this.#transferSourceKeys = new Set(
 			[...this.#activeTool.getSourceLocations(), ...(this.#clipboard?.locations ?? [])].map(formatLocation)
 		)
+
+		// A focus that is the whole selection is already outlined, so only draw one that has gone its own way
+		const focus = this.#focus
+		const focusIsSelection =
+			!!focus && this.#selectionLocations.length === 1 && this.#selectionKeys.has(formatLocation(focus))
+		this.#cursorKey = this.#cursorShown && focus && !focusIsSelection ? formatLocation(focus) : null
 
 		for (const listener of this.#listeners) listener()
 	}
@@ -124,6 +134,19 @@ export class ButtonGridStore {
 
 	isSelected(locationKey: string): boolean {
 		return this.#selectionKeys.has(locationKey)
+	}
+
+	/** Whether the keyboard focus is drawn on this cell */
+	isCursor(locationKey: string): boolean {
+		return this.#cursorKey === locationKey
+	}
+
+	/** The pointer has taken over from the keyboard, so stop drawing where the keyboard was */
+	#hideCursor(): void {
+		if (!this.#cursorShown) return
+
+		this.#cursorShown = false
+		this.#notify()
 	}
 
 	/** Whether the active tool has picked this button up and is waiting to place it */
@@ -213,6 +236,7 @@ export class ButtonGridStore {
 	setSelection(locations: readonly ControlLocation[]): void {
 		// Set the focus, then let #applySelection notify
 		this.#focus = locations[locations.length - 1] ?? null
+		this.#cursorShown = false
 		this.#rangeAnchor = this.#focus
 		this.#applySelection([...locations])
 	}
@@ -221,6 +245,7 @@ export class ButtonGridStore {
 		if (this.#selectionLocations.length === 0 && !this.#focus) return
 
 		this.#focus = null
+		this.#cursorShown = false
 		this.#rangeAnchor = null
 		this.#applySelection([])
 	}
@@ -290,6 +315,7 @@ export class ButtonGridStore {
 	}
 
 	handleTap(location: ControlLocation, modifiers: GridButtonModifiers, actions: GridToolActions): void {
+		this.#hideCursor()
 		this.#activeTool.onTap(this.#context(actions), location, modifiers)
 	}
 
@@ -310,7 +336,21 @@ export class ButtonGridStore {
 		additive: boolean,
 		actions: GridToolActions
 	): void {
+		this.#hideCursor()
 		this.#activeTool.onMarquee(this.#context(actions), locations, anchor, additive)
+	}
+
+	/** A plain arrow moved the focus, and with it the selection, so the tool can follow as a tap would */
+	handleFocusMoved(location: ControlLocation, actions: GridToolActions): void {
+		this.#activeTool.onFocusMoved(this.#context(actions), location)
+	}
+
+	/**
+	 * Run a button for real whatever the tool, for testing it in between edits without switching to the press
+	 * tool. Leaves the selection and the editor alone, as it is a quick try rather than a choice of button.
+	 */
+	handleTestPress(location: ControlLocation, isDown: boolean, actions: GridToolActions): void {
+		actions.press(location, isDown)
 	}
 
 	handlePress(location: ControlLocation, isDown: boolean, actions: GridToolActions): void {
@@ -459,6 +499,7 @@ export class ButtonGridStore {
 		if (!next) return null
 
 		this.#focus = next
+		this.#cursorShown = true
 		this.#rangeAnchor = next
 		this.#applySelection([next])
 
@@ -471,6 +512,7 @@ export class ButtonGridStore {
 		if (!next || !this.#rangeAnchor) return null
 
 		this.#focus = next
+		this.#cursorShown = true
 		this.#applySelection(this.#inViewOnly(locationsInRectangle(this.#rangeAnchor, next)))
 
 		return next
@@ -482,6 +524,7 @@ export class ButtonGridStore {
 		if (!next) return null
 
 		this.#focus = next
+		this.#cursorShown = true
 		this.#notify()
 
 		return next
@@ -492,6 +535,7 @@ export class ButtonGridStore {
 		const focus = this.#focus
 		if (!focus) return
 
+		this.#cursorShown = true
 		this.selectWithModifiers(focus, { range: false, toggle: true })
 		// selectWithModifiers moves the anchor to the toggled cell, but the focus should not jump
 		this.#focus = focus
@@ -508,6 +552,8 @@ export class ButtonGridStore {
 				)
 
 		this.#focus = selected[selected.length - 1] ?? null
+		// Where the focus lands is incidental to selecting everything, so it is not worth pointing out
+		this.#cursorShown = false
 		this.#rangeAnchor = selected[0] ?? null
 		this.#applySelection([...selected])
 	}

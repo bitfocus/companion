@@ -1,0 +1,1235 @@
+openapi: 3.0.0
+info:
+  description: This is the public API for the Bitfocus developer platform, and module api.
+  version: 0.1.0
+  title: Bitfocus Developer and Module API
+paths:
+  /v1/modules/package:
+    put:
+      tags:
+        - Internal
+      summary: Internal package publish
+      description: This endpoint is used by the module build system to submit a built module package for publishing. It is not intended for public use.
+      operationId: putModulePackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitBuiltModuleInfo"
+      responses:
+        "200":
+          description: successful operation
+        "400":
+          description: failed operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/website/connections:
+    get:
+      tags:
+        - Website API
+      summary: Get a list of all published connections
+      description: Get a list of all published connections
+      operationId: getWebsiteConnections
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WebsiteConnectionInfo"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: When the connections list was last updated
+                required:
+                  - connections
+                  - updatedAt
+
+  /v1/website/connections/featured:
+    get:
+      tags:
+        - Website API
+      summary: Get a list of featured connections
+      description: Get a list of featured connections
+      operationId: getWebsiteFeaturedConnections
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WebsiteFeaturedConnectionInfo"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: When the featured connections list was last updated
+                required:
+                  - connections
+                  - updatedAt
+
+  /v1/companion/modules/{moduleType}:
+    get:
+      tags:
+        - Companion Modules API
+      summary: Get a list of all published modules
+      description: Get a list of all published modules
+      operationId: getCompanionModules
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["connection", "surface"]
+          required: true
+          description: Type of module to get
+        - in: query
+          name: module-api-version
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: Limit versions included in results to those compatible with the given API version
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CompanionModuleInfo"
+                required:
+                  - modules
+
+  /v1/companion/modules/{moduleType}/{moduleName}:
+    get:
+      tags:
+        - Companion Modules API
+      summary: Get published versions of a module
+      description: Get published versions of a module
+      operationId: getCompanionModuleVersions
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["connection", "surface"]
+          required: true
+          description: Type of module to get
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+          required: true
+          description: Name of module to get
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/CompanionModuleVersionInfo"
+                required:
+                  - versions
+        "404":
+          description: Module not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/buttons/modules/{moduleType}:
+    get:
+      tags:
+        - Buttons Modules API
+      summary: Get a list of all published modules
+      description: Get a list of all published modules
+      operationId: getButtonsModules
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["connection"]
+          required: true
+          description: Type of module to get
+        - in: query
+          name: module-api-version
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: Limit versions included in results to those compatible with the given API version
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ButtonsModuleInfo"
+                required:
+                  - modules
+
+  /v1/buttons/modules/{moduleType}/{moduleName}:
+    get:
+      tags:
+        - Buttons Modules API
+      summary: Get published versions of a module
+      description: Get published versions of a module
+      operationId: getButtonsModuleVersions
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["connection"]
+          required: true
+          description: Type of module to get
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+          required: true
+          description: Name of module to get
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ButtonsModuleVersionInfo"
+                required:
+                  - versions
+        "404":
+          description: Module not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/public/modules/{moduleType}:
+    get:
+      tags:
+        - Public API
+      summary: Get a list of all modules
+      description: Get a list of all modules of a given type, with basic info for listing
+      operationId: getPublicModules
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["companion-connection", "companion-surface"]
+          required: true
+          description: Type of module to get
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicModuleListInfo"
+                required:
+                  - modules
+
+  /v1/public/modules/{moduleType}/{moduleName}:
+    get:
+      tags:
+        - Public API
+      summary: Get detailed info about a module
+      description: Get detailed information about a specific module, including tags, successor/predecessor info, images, etc.
+      operationId: getPublicModuleDetails
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["companion-connection", "companion-surface"]
+          required: true
+          description: Type of module to get
+        - in: path
+          name: moduleName
+          schema:
+            type: string
+          required: true
+          description: Name of module to get
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicModuleDetailsInfo"
+        "404":
+          description: Module not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/public/modules/{moduleType}/{moduleName}/versions:
+    get:
+      tags:
+        - Public API
+      summary: Get versions of a module
+      description: Get all versions of a specific module, including published and unpublished
+      operationId: getPublicModuleVersions
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["companion-connection", "companion-surface"]
+          required: true
+          description: Type of module to get
+        - in: path
+          name: moduleName
+          schema:
+            type: string
+          required: true
+          description: Name of module to get
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicModuleVersionInfo"
+                required:
+                  - versions
+        "404":
+          description: Module not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/modules/{moduleType}/{moduleId}/releases:
+    get:
+      tags:
+        - Public API
+      summary: Get published releases of a module
+      description: Get the published releases of a module, newest first. Optionally limited to a single minor version line.
+      operationId: getModuleReleases
+      parameters:
+        - in: path
+          name: moduleType
+          schema:
+            type: string
+            enum: ["module", "connection", "surface"]
+          required: true
+          description: Type of module. `module` and `connection` are equivalent
+        - in: path
+          name: moduleId
+          schema:
+            type: string
+          required: true
+          description: Manifest id of the module (repository name without the `companion-module-` prefix)
+        - in: query
+          name: minor
+          schema:
+            type: string
+            pattern: "^\\d+\\.\\d+$"
+          required: false
+          description: Only return releases in this `{major}.{minor}` line, eg `2.3`
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  releases:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ModuleReleaseInfo"
+                required:
+                  - releases
+        "400":
+          description: Invalid minor filter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Module not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/public/stats:
+    get:
+      tags:
+        - Public API
+      summary: Get portal-wide statistics
+      description: Get aggregate counts across the portal (modules, published versions, developers) for display on the homepage
+      operationId: getPublicStats
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicPortalStats"
+
+  /v1/modules-pending-review:
+    get:
+      tags:
+        - Public API
+      summary: Get a list of module versions pending review
+      description: Get a list of all module versions that are currently pending review, across all module types
+      operationId: getModulesPendingReview
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PendingModuleVersionInfo"
+                required:
+                  - versions
+
+  /v1/team/modules-pending-review:
+    get:
+      tags:
+        - Authenticated API
+      summary: Get module versions pending review with reviewer info
+      description: >
+        Returns a list of all module versions currently pending review,
+        including the assigned reviewer's GitHub username and assignment time.
+        Requires module team permissions.
+      operationId: getTeamModulesPendingReview
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TeamPendingModuleVersionInfo"
+                required:
+                  - versions
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: forbidden - requires module team permissions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/user/modules:
+    get:
+      tags:
+        - Authenticated API
+      summary: Get the authenticated user's modules
+      description: Returns a list of modules the authenticated user is a maintainer of, including pending versions and latest published version info.
+      operationId: getUserModules
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  modules:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserModuleInfo"
+                required:
+                  - modules
+        "401":
+          description: unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: User API key (bfd_ prefix)
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SubmitBuiltModuleInfo:
+      type: object
+      properties:
+        moduleType:
+          type: string
+          enum: ["companion-connection", "companion-surface"]
+          description: The type of module being submitted
+        moduleName:
+          type: string
+          description: Name of the module
+        logUrl:
+          type: string
+          description: Url of build logs
+        pkgDirUrl:
+          type: string
+          description: Url of built package and assets
+        pkgName:
+          type: string
+          description: Filename of built package
+        pkgSha:
+          type: string
+          description: SHA256 hash of the package
+        manifestJson:
+          type: string
+          description: JSON string of the module manifest
+      required:
+        - moduleType
+        - moduleName
+        - pkgDirUrl
+        - pkgName
+        - pkgSha
+        - helpDirUrl
+        - manifestJson
+
+    ModuleLicenseCategory:
+      type: string
+      enum: ["MIT", "PERMISSIVE", "COPYLEFT", "UNKNOWN"]
+      description: >-
+        Coarse classification of the SPDX licence declared in the module manifest, for consumers that
+        can only redistribute modules under certain licences. `MIT` is the only category without
+        redistribution constraints; `PERMISSIVE` covers other permissive licences (Apache-2.0, BSD,
+        ISC and similar), `COPYLEFT` covers the GPL/AGPL/LGPL/MPL/EPL/CDDL families, and `UNKNOWN`
+        means the licence string could not be matched to a known identifier.
+
+    CompanionModuleInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of the module
+        type:
+          type: string
+          description: The type of module
+        name:
+          type: string
+          description: Name of the module
+        shortname:
+          type: string
+          description: Short name of the module
+        manufacturer:
+          type: string
+          description: Manufacturer of the device controller by the module
+        products:
+          type: array
+          items:
+            type: string
+          description: List of products supported by the module
+        keywords:
+          type: array
+          items:
+            type: string
+          description: List of keywords for the module
+        storeUrl:
+          type: string
+          description: Url to the module store page
+        githubUrl:
+          type: string
+          description: Url to the module source code
+        latestHelpUrl:
+          type: string
+          description: Url to the module help markdown. This may reference other assets in the same folder
+        latestVersionNumber:
+          type: string
+          description: The latest version number of the module
+        prereleaseHelpUrl:
+          type: string
+          description: Url to the module help markdown. This may reference other assets in the same folder
+        prereleaseVersionNumber:
+          type: string
+          description: The latest prerelease version number of the module
+        legacyIds:
+          type: array
+          items:
+            type: string
+          description: Old module ids that this module replaces
+        deprecationReason:
+          type: string
+          description: Reason for deprecation (if deprecated)
+        license:
+          type: string
+          nullable: true
+          description: SPDX licence identifier declared by the latest package of this module
+        licenseCategory:
+          $ref: "#/components/schemas/ModuleLicenseCategory"
+      required:
+        - id
+        - type
+        - name
+        - shortname
+        - manufacturer
+        - products
+        - keywords
+        - storeUrl
+        - license
+        - licenseCategory
+
+    CompanionModuleVersionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Version number
+        isPrerelease:
+          type: boolean
+          description: Whether this version is a prerelease
+        isLegacy:
+          type: boolean
+          description: Whether this version is a legacy version (auto-translated to the modern module api)
+        releasedAt:
+          type: number
+          description: Unix timestamp when the version was published
+        tarUrl:
+          type: string
+          description: Url to the module tarball
+        tarSha:
+          type: string
+          description: SHA256 checksum of the tarball
+        apiVersion:
+          type: string
+          description: API version of the module
+        deprecationReason:
+          type: string
+          description: Reason for deprecation (if deprecated)
+        helpUrl:
+          type: string
+          description: Url to the module help markdown. This may reference other assets in the same folder
+        license:
+          type: string
+          nullable: true
+          description: SPDX licence identifier declared by this version's package
+        licenseCategory:
+          $ref: "#/components/schemas/ModuleLicenseCategory"
+      required:
+        - id
+        - isPrerelease
+        - isLegacy
+        - releasedAt
+        - apiVersion
+        - license
+        - licenseCategory
+
+    ButtonsModuleInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of the module
+        type:
+          type: string
+          description: The type of module
+        name:
+          type: string
+          description: Name of the module
+        shortname:
+          type: string
+          description: Short name of the module
+        manufacturer:
+          type: string
+          description: Manufacturer of the device controller by the module
+        products:
+          type: array
+          items:
+            type: string
+          description: List of products supported by the module
+        keywords:
+          type: array
+          items:
+            type: string
+          description: List of keywords for the module
+        storeUrl:
+          type: string
+          description: Url to the module store page
+        githubUrl:
+          type: string
+          description: Url to the module source code
+        latestHelpUrl:
+          type: string
+          description: Url to the module help markdown. This may reference other assets in the same folder
+        latestVersionNumber:
+          type: string
+          description: The latest version number of the module
+        legacyIds:
+          type: array
+          items:
+            type: string
+          description: Old module ids that this module replaces
+        deprecationReason:
+          type: string
+          description: Reason for deprecation (if deprecated)
+      required:
+        - id
+        - type
+        - name
+        - shortname
+        - manufacturer
+        - products
+        - keywords
+        - storeUrl
+
+    ButtonsModuleVersionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Version number
+        isPrerelease:
+          type: boolean
+          description: Whether this version is a prerelease
+        releasedAt:
+          type: number
+          description: Unix timestamp when the version was published
+        tarUrl:
+          type: string
+          description: Url to the module tarball
+        tarSha:
+          type: string
+          description: SHA256 checksum of the tarball
+        apiVersion:
+          type: string
+          description: API version of the module
+        deprecationReason:
+          type: string
+          description: Reason for deprecation (if deprecated)
+        helpUrl:
+          type: string
+          description: Url to the module help markdown. This may reference other assets in the same folder
+      required:
+        - id
+        - isPrerelease
+        - releasedAt
+        - apiVersion
+
+    WebsiteConnectionInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Id of the module
+        latestVersion:
+          type: string
+          description: Version number
+        packageUpdatedAt:
+          type: string
+          format: date-time
+          description: When the latest module package was published
+        name:
+          type: string
+          description: Name of the module
+        manufacturer:
+          type: string
+          description: Manufacturer of the device controller by the module
+        products:
+          type: array
+          items:
+            type: string
+          description: List of products supported by the module
+        keywords:
+          type: array
+          items:
+            type: string
+          description: List of keywords for the module
+        authors:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              email:
+                type: string
+            required:
+              - name
+          description: List of authors of the module
+        helpUrl:
+          type: string
+          description: Url to the module help markdown. This may reference other assets in the same folder
+        blurb:
+          type: string
+          nullable: true
+          description: Blurb for the connection
+        blulb:
+          type: string
+          nullable: true
+          deprecated: true
+          description: "Deprecated: Use blurb instead"
+        companyLogo:
+          type: string
+          nullable: true
+          description: Url to the company logo
+        companyWebsite:
+          type: string
+          nullable: true
+          description: Url to the company website
+        connectionType:
+          type: string
+          enum: ["COMMUNITY", "VENDOR", "VERIFIED", "PRO", "ELITE"]
+          description: The type of connection
+        isFeatured:
+          type: boolean
+          description: Whether the connection is featured
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              type:
+                type: string
+                enum: ["PRODUCT"]
+                deprecated: true
+                description: "Deprecated: All images are now of type PRODUCT"
+            required:
+              - url
+        trainingVideos:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+              title:
+                type: string
+                nullable: true
+            required:
+              - url
+        categories:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+            required:
+              - id
+              - name
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the connection was last updated (latest of module info changes and latest version publish date)
+      required:
+        - id
+        - latestVersion
+        - packageUpdatedAt
+        - name
+        - manufacturer
+        - products
+        - keywords
+        - authors
+        - connectionType
+        - isFeatured
+        - images
+        - trainingVideos
+        - categories
+        - updatedAt
+
+    WebsiteFeaturedConnectionInfo:
+      allOf:
+        - $ref: "#/components/schemas/WebsiteConnectionInfo"
+        - type: object
+          properties:
+            featuredOrder:
+              type: integer
+              description: The order in which the connection is featured
+            featuredAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: When the connection was featured
+            featuredExpiry:
+              type: string
+              format: date-time
+              nullable: true
+              description: When the connection feature expires
+          required:
+            - featuredOrder
+
+    PendingModuleVersionInfo:
+      type: object
+      properties:
+        moduleName:
+          type: string
+          description: Name of the module
+        moduleType:
+          type: string
+          description: Type of the module (e.g. companion-connection, companion-surface)
+        gitTag:
+          type: string
+          description: Git tag of the pending version
+        createdAt:
+          type: number
+          description: Unix timestamp (milliseconds) when the version was submitted
+      required:
+        - moduleName
+        - moduleType
+        - gitTag
+        - createdAt
+
+    TagInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the tag
+        name:
+          type: string
+          description: Display name of the tag
+        icon:
+          type: string
+          nullable: true
+          description: URL to the tag icon image
+      required:
+        - id
+        - name
+
+    PublicModuleListInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the module
+        type:
+          type: string
+          description: The type of module (e.g. companion-connection, companion-surface)
+        deprecated:
+          type: boolean
+          description: Whether the module is deprecated
+        maintainerNeeded:
+          type: boolean
+          description: Whether the module has nobody maintaining it, and is looking for someone to take it on
+        lastPublish:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when the module was last published
+        lastMaintainerPublish:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when the module was last published, ignoring maintenance releases made by the Module Team (eg security fixes applied across all modules). This better reflects when the module was last actively maintained
+        license:
+          type: string
+          nullable: true
+          description: SPDX licence identifier declared by the latest package of this module
+        licenseCategory:
+          $ref: "#/components/schemas/ModuleLicenseCategory"
+      required:
+        - name
+        - type
+        - deprecated
+        - maintainerNeeded
+        - license
+        - licenseCategory
+
+    PublicPortalStats:
+      type: object
+      properties:
+        connections:
+          type: number
+          description: Number of active (non-deprecated) connection modules with a published version
+        surfaces:
+          type: number
+          description: Number of active (non-deprecated) surface modules with a published version
+        publishedVersions:
+          type: number
+          description: Number of approved (published) module versions
+      required:
+        - connections
+        - surfaces
+        - publishedVersions
+
+    PublicModuleDetailsInfo:
+      type: object
+      properties:
+        deprecationReason:
+          type: string
+          nullable: true
+          description: Reason for deprecation (if deprecated)
+        successorName:
+          type: string
+          nullable: true
+          description: Name of the successor module (if module was renamed/replaced)
+        maintainerNeeded:
+          type: boolean
+          description: Whether the module has nobody maintaining it, and is looking for someone to take it on
+        assignedTags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagInfo"
+          description: Tags assigned to this module
+        predecessors:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: number
+                description: Id of the predecessor module
+              name:
+                type: string
+                description: Name of the predecessor module
+              type:
+                type: string
+                description: Type of the predecessor module
+              deprecationReason:
+                type: string
+                nullable: true
+                description: Reason for deprecation of the predecessor
+            required:
+              - id
+              - name
+              - type
+              - deprecationReason
+        license:
+          type: string
+          nullable: true
+          description: SPDX licence identifier declared by the latest package of this module
+        licenseCategory:
+          $ref: "#/components/schemas/ModuleLicenseCategory"
+      required:
+        - assignedTags
+        - predecessors
+        - maintainerNeeded
+        - license
+        - licenseCategory
+
+    PublicModuleVersionInfo:
+      type: object
+      properties:
+        id:
+          type: number
+          description: Internal version id
+        gitTag:
+          type: string
+          description: Git tag of the version
+        isPrerelease:
+          type: boolean
+          description: Whether this version is a prerelease
+        isMaintenanceRelease:
+          type: boolean
+          description: Whether this version is a maintenance release made by the Module Team (eg a security fix applied across all modules), rather than by the module maintainers
+        status:
+          type: string
+          description: Current status of the version
+        published:
+          type: boolean
+          description: Whether this version has been published (has a package)
+        packageUrl:
+          type: string
+          nullable: true
+          description: URL to the published package tarball
+        helpUrl:
+          type: string
+          nullable: true
+          description: URL to the HELP.md file for this version
+        buildLogUrl:
+          type: string
+          nullable: true
+          description: URL to the build log
+        deprecationReason:
+          type: string
+          nullable: true
+          description: Reason for deprecation (if deprecated)
+        createdAt:
+          type: string
+          format: date-time
+          description: When the version was created
+        assignedTags:
+          type: array
+          items:
+            $ref: "#/components/schemas/TagInfo"
+          description: Tags assigned to this version
+        license:
+          type: string
+          nullable: true
+          description: SPDX licence identifier declared by this version's package, if it has one
+        licenseCategory:
+          $ref: "#/components/schemas/ModuleLicenseCategory"
+        moduleApiVersion:
+          type: string
+          nullable: true
+          description: The module API version this version's package was built against. Null until the version is published
+      required:
+        - id
+        - gitTag
+        - isPrerelease
+        - isMaintenanceRelease
+        - status
+        - published
+        - createdAt
+        - assignedTags
+        - license
+        - licenseCategory
+
+    ModuleReleaseInfo:
+      type: object
+      properties:
+        version:
+          type: string
+          description: Version of the release
+        apiVersion:
+          type: string
+          description: The module API version the package was built against (manifest `runtime.apiVersion`)
+        runtimeType:
+          type: string
+          description: The runtime the package targets (manifest `runtime.type`), eg `node22`. `unknown` if it could not be read
+        isPrerelease:
+          type: boolean
+          description: Whether this release is a prerelease
+        releasedAt:
+          type: string
+          format: date-time
+          description: When the release was published
+      required:
+        - version
+        - apiVersion
+        - runtimeType
+        - isPrerelease
+        - releasedAt
+
+    TeamPendingModuleVersionInfo:
+      allOf:
+        - $ref: "#/components/schemas/PendingModuleVersionInfo"
+        - type: object
+          properties:
+            assignedReviewer:
+              type: object
+              nullable: true
+              description: The assigned reviewer, if any
+              properties:
+                githubUsername:
+                  type: string
+                  nullable: true
+                  description: GitHub username of the assigned reviewer
+                assignedAt:
+                  type: number
+                  description: Unix timestamp (milliseconds) when the reviewer was assigned
+              required:
+                - githubUsername
+                - assignedAt
+
+    UserModuleInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the module
+        type:
+          type: string
+          description: Type of the module (e.g. companion-connection, companion-surface)
+        latestPublished:
+          type: object
+          nullable: true
+          properties:
+            version:
+              type: string
+              description: Version string of the latest published package
+            createdAt:
+              type: string
+              format: date-time
+              description: When the latest package was published
+          required:
+            - version
+            - createdAt
+        pendingVersions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: Internal version id
+              gitTag:
+                type: string
+                description: Git tag of the pending version
+              createdAt:
+                type: string
+                format: date-time
+                description: When the version was submitted
+            required:
+              - gitTag
+              - createdAt
+      required:
+        - name
+        - type
+        - pendingVersions

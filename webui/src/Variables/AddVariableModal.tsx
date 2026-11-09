@@ -43,8 +43,8 @@ export const AddVariableModal = forwardRef<AddVariableModalRef, AddVariableModal
 				}
 
 				setShow(false)
-			} catch (err: any) {
-				setSaveError(`Failed to create variable: ${err?.message ?? err?.toString() ?? err}`)
+			} catch (err) {
+				setSaveError(`Failed to create variable: ${err instanceof Error ? err.message : String(err)}`)
 			}
 		},
 	})

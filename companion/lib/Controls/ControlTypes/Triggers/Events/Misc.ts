@@ -1,4 +1,4 @@
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, type TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import LogController, { type Logger } from '../../../../Log/Controller.js'
@@ -81,7 +81,7 @@ export class TriggersEventMisc {
 
 	constructor(
 		eventBus: TriggerEvents,
-		controlId: string,
+		controlId: TriggerControlId,
 		executeActions: (nowTime: number, source: TriggerExecutionSource) => void
 	) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Misc/${controlId}`)

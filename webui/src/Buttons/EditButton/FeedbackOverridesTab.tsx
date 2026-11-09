@@ -1,4 +1,5 @@
 import React from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -9,7 +10,7 @@ import { ControlEntitiesEditor } from '../../Controls/EntitiesEditor.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 
 interface FeedbackOverridesTabProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation | undefined
 	feedbacks: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore

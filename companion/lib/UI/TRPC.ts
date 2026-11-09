@@ -6,7 +6,7 @@ import type * as trpcExpress from '@trpc/server/adapters/express'
 import type * as trpcWs from '@trpc/server/adapters/ws'
 import { nanoid } from 'nanoid'
 import proxyaddr from 'proxy-addr'
-import type { ExportFullv6, ExportPageModelv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportFull, ExportPageModel } from '@companion-app/shared/Model/Export/Latest.js'
 import LogController from '../Log/Controller.js'
 import type { Registry } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
@@ -23,7 +23,7 @@ export interface TrpcContext {
 	isLocalClient: () => boolean
 
 	pendingImport?: {
-		object: ExportFullv6 | ExportPageModelv6
+		object: ExportFull | ExportPageModel
 		timeout: null
 	}
 }
@@ -205,6 +205,7 @@ export function createTrpcRouter(registry: Registry) {
 		userConfig: registry.userconfig.createTrpcRouter(),
 		instances: registry.instance.createTrpcRouter(),
 		cloud: registry.cloud.createTrpcRouter(),
+		link: registry.link.createTrpcRouter(),
 		usageStatistics: registry.usageStatistics.createTrpcRouter(),
 
 		preview: registry.preview.createTrpcRouter(),

@@ -1,7 +1,6 @@
-import { DatabaseSync } from 'node:sqlite'
 import express from 'express'
 import type { ApiTokenScope } from '../../../../shared-lib/lib/Model/ApiKeys.js'
-import { DataStoreTableView } from '../../../lib/Data/StoreBase.js'
+import { DataDatabase } from '../../../lib/Data/Database.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import LogController, { type Logger } from '../../../lib/Log/Controller.js'
 import type { Registry } from '../../../lib/Registry.js'
@@ -23,13 +22,13 @@ type FakeRestApiResource = { createRestApiRouter: (logger: Logger) => express.Ro
  * default here once, rather than editing every resource's test file.
  */
 export function createTestRestApiResources(
-	overrides: Partial<Record<'instance' | 'surfaces', FakeRestApiResource>>
+	overrides: Partial<Record<'instance' | 'surfaces' | 'imageLibrary', FakeRestApiResource>>
 ): Registry {
 	const emptyResource: FakeRestApiResource = { createRestApiRouter: () => express.Router() }
 	return {
-		instance: emptyResource,
-		surfaces: emptyResource,
-		...overrides,
+		instance: overrides.instance ?? emptyResource,
+		surfaces: overrides.surfaces ?? emptyResource,
+		graphics: { imageLibrary: overrides.imageLibrary ?? emptyResource },
 	} as unknown as Registry
 }
 
@@ -43,12 +42,7 @@ export function createTestTokenStore(): {
 	mint: (scopes: ApiTokenScope[]) => string
 } {
 	const logger = LogController.createLogger('test/api-keys')
-	const db = new DatabaseSync(':memory:')
-	const table = new DataStoreTableView<any>(logger, db, 'api_keys', {
-		onDirty: () => {},
-		onOperation: () => {},
-	})
-	const store = new RestApiTokenStore(logger, table)
+	const store = new RestApiTokenStore(logger, new DataDatabase(':memory:', () => {}))
 
 	let counter = 0
 	return {

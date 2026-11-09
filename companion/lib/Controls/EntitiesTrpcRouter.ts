@@ -13,6 +13,7 @@ import {
 	JsonValueSchema,
 } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
@@ -30,14 +31,14 @@ const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
  * Narrows the pool union on its `isEditable` discriminant - on a read-only control (e.g. a preset reference)
  * the pool is the read-only type and genuinely lacks the mutators, so this is where the edits are gated.
  */
-function getEditableEntities(control: SomeControl<any>): EditableEntityListPool {
+function getEditableEntities(control: SomeControl): EditableEntityListPool {
 	if (control.supportsEntities && control.entities.isEditable) return control.entities
 	throw new Error(`Control "${control.controlId}" does not support editing entities`)
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createEntitiesTrpcRouter(
-	controlsMap: Map<string, SomeControl<any>>,
+	controlsMap: Map<string, SomeControl>,
 	instanceDefinitions: InstanceDefinitions,
 	activeLearningStore: ActiveLearningStore
 ) {
@@ -93,9 +94,9 @@ export function createEntitiesTrpcRouter(
 				if (!control) return false
 
 				const editable = getEditableEntities(control)
-				await activeLearningStore.runLearnRequest(entityId, async () => {
-					await editable.entityLearn(entityLocation, entityId).catch((e) => {
-						logger.error(`Learn failed: ${e}`)
+				await activeLearningStore.runLearnRequest(entityId, async (signal) => {
+					await editable.entityLearn(entityLocation, entityId, signal).catch((e: unknown) => {
+						logger.error(`Learn failed: ${stringifyError(e)}`)
 						throw e
 					})
 				})

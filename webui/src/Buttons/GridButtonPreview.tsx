@@ -1,9 +1,10 @@
 import classnames from 'classnames'
-import { memo, useCallback, useEffect, useEffectEvent, useRef } from 'react'
+import { memo, useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SurfaceControlKind } from '@companion-app/shared/SurfaceLayout.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
 import type { GridPendingChange } from './GridGeometry.js'
+import { isTestPressGesture } from './gridModifiers.js'
 import {
 	continueRotaryDrag,
 	ROTARY_HOLD_MS,
@@ -45,6 +46,8 @@ export interface GridButtonPreviewProps {
 	 */
 	pressMode: boolean
 	onPress: (location: ControlLocation, isDown: boolean) => void
+	/** A press made outside press mode with ctrl+shift (see `isTestPressGesture`), which runs the button whatever the tool */
+	onTestPress: (location: ControlLocation, isDown: boolean) => void
 	/**
 	 * For a control which turns (a knob, a jog, a shuttle): in press mode a drag round it turns it, by a signed number
 	 * of steps - positive is rightward. Each move sends however far it went as one turn, so a fast spin is a bigger
@@ -56,6 +59,8 @@ export interface GridButtonPreviewProps {
 	onContextMenu: (location: ControlLocation, x: number, y: number) => void
 
 	selected: boolean
+	/** Where the keyboard focus is, when it has moved away from simply being the selection */
+	cursor: boolean
 	copySource: boolean
 	/** What a modifier-click here would do to this button, while the modifier is held */
 	pendingChange: GridPendingChange | null
@@ -97,10 +102,12 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	placeholder,
 	pressMode,
 	onPress,
+	onTestPress,
 	onRotate,
 	onTap,
 	onContextMenu,
 	selected,
+	cursor,
 	copySource,
 	pendingChange,
 	contextMenuOpen,
@@ -125,10 +132,15 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 		centre: Point | null
 		/** The drag turning it, once the pointer has moved off where it went down */
 		rotation: RotaryDrag | null
+		/** Pressing the button for real outside press mode, so the release is a release rather than a tap */
+		testPress: boolean
 	} | null>(null)
 	// Where an outstanding press went down, so the release goes there even if the location changes mid-press
-	// (e.g. a page change while a surface view keeps this cell mounted)
-	const pressedLocationRef = useRef<ControlLocation | null>(null)
+	// (e.g. a page change while a surface view keeps this cell mounted), and whether it was a test press
+	const pressedRef = useRef<{ location: ControlLocation; test: boolean } | null>(null)
+
+	// Shown while the keys for a test press are held over the button, so the shortcut can be discovered
+	const [wouldTestPress, setWouldTestPress] = useState(false)
 	// The push of a control which turns, waiting to see whether it is held or dragged
 	const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -138,27 +150,31 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 		holdTimerRef.current = null
 	}, [])
 
-	const pressDown = useCallback(() => {
-		pressedLocationRef.current = location
-		onPress(location, true)
-	}, [onPress, location])
+	const pressDown = useCallback(
+		(test: boolean) => {
+			pressedRef.current = { location, test }
+			if (test) onTestPress(location, true)
+			else onPress(location, true)
+		},
+		[onPress, onTestPress, location]
+	)
 
 	const releaseIfPressed = useCallback(() => {
 		cancelHold()
-		const pressedLocation = pressedLocationRef.current
-		if (!pressedLocation) return
-		pressedLocationRef.current = null
-		onPress(pressedLocation, false)
-	}, [cancelHold, onPress])
+		const pressed = pressedRef.current
+		if (!pressed) return
+		pressedRef.current = null
+		if (pressed.test) onTestPress(pressed.location, false)
+		else onPress(pressed.location, false)
+	}, [cancelHold, onPress, onTestPress])
 
 	// The pointer events match every press with a release in the normal cases, but two escape them:
-	// press mode being turned off mid-press, and this cell unmounting while the finger is still down
+	// press mode being toggled mid-press, and this cell unmounting while the button is still down
 	// (the grid virtualises cells, so one can vanish under a held press). Both arrive here as cleanup,
 	// so the control is never left stuck down. An effect event, as a re-render mid-press recreates the callback,
 	// which must not count as either.
 	const releaseOnExit = useEffectEvent(releaseIfPressed)
 	useEffect(() => {
-		if (!pressMode) return
 		return () => releaseOnExit()
 	}, [pressMode])
 
@@ -169,6 +185,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 
 			const turns = pressMode && !!onRotate
 			const box = turns ? e.currentTarget.getBoundingClientRect() : null
+			const testPress = !pressMode && e.button === 0 && isTestPressGesture(e)
 
 			gestureRef.current = {
 				pointerId: e.pointerId,
@@ -177,6 +194,15 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				moved: false,
 				centre: box && { x: box.left + box.width / 2, y: box.top + box.height / 2 },
 				rotation: null,
+				testPress,
+			}
+
+			if (testPress) {
+				// The grid would otherwise start dragging out a box from here
+				e.stopPropagation()
+				e.currentTarget.setPointerCapture?.(e.pointerId)
+				pressDown(true)
+				return
 			}
 
 			if (pressMode) {
@@ -188,10 +214,10 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 					cancelHold()
 					holdTimerRef.current = setTimeout(() => {
 						holdTimerRef.current = null
-						pressDown()
+						pressDown(false)
 					}, ROTARY_HOLD_MS)
 				} else {
-					pressDown()
+					pressDown(false)
 				}
 			}
 		},
@@ -200,6 +226,8 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 
 	const handlePointerMove = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
+			if (e.pointerType !== 'touch') setWouldTestPress(!pressMode && isTestPressGesture(e))
+
 			const gesture = gestureRef.current
 			if (!gesture || gesture.pointerId !== e.pointerId) return
 
@@ -224,8 +252,10 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			gesture.rotation = drag
 			if (steps !== 0) onRotate(location, steps)
 		},
-		[cancelHold, onRotate, location]
+		[pressMode, cancelHold, onRotate, location]
 	)
+
+	const handlePointerLeave = useCallback(() => setWouldTestPress(false), [])
 
 	const handlePointerUp = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
@@ -241,6 +271,11 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 					return
 				}
 
+				releaseIfPressed()
+				return
+			}
+
+			if (gesture?.testPress) {
 				releaseIfPressed()
 				return
 			}
@@ -289,12 +324,17 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	return (
 		<div
 			ref={setRefs}
+			// The grid panel takes the keys, so a cell is not a tab stop. Set here, dnd-kit leaves it alone
+			// rather than making a draggable cell one.
+			tabIndex={-1}
 			// `grid-button` marks this as the grid's own cell rather than any other ButtonPreview, so a
 			// rule can apply to it and not to the preset pool or the emulator
 			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', `control-kind-${kind}`, {
 				// Let the browser scroll the grid, except in press mode where a scroll must not steal the press
 				'grid-pannable': !pressMode,
 				selected,
+				'grid-cursor': cursor,
+				'pending-press': wouldTestPress && !pressMode,
 				'copy-source': copySource,
 				'pending-add': pendingChange === 'add',
 				'pending-remove': pendingChange === 'remove',
@@ -307,6 +347,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			style={style}
 			onPointerDown={handlePointerDown}
 			onPointerMove={handlePointerMove}
+			onPointerLeave={handlePointerLeave}
 			onPointerUp={handlePointerUp}
 			onPointerCancel={handlePointerCancel}
 			onContextMenu={handleContextMenu}

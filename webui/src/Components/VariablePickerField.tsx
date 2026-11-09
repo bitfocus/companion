@@ -173,6 +173,8 @@ export const VariablePickerField = observer(function VariablePickerField({
 						onFocus={onInputFocus}
 						onBlur={onInputBlur}
 						onPaste={onPaste}
+						// Both, so that a label for it names and focuses the input
+						id={htmlName}
 						name={htmlName}
 					/>
 					<Combobox.Trigger className="dropdown-field-trigger" ref={triggerRef}>

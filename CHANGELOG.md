@@ -1,5 +1,45 @@
 # Bitfocus Companion
 
+## Companion v5.1.2 - Release Notes
+
+<!-- DRAFT -->
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- allow modules using api 1.15
+
+### 🐞 BUG FIXES
+
+- show which connection a composite element comes from #4539
+- don't drop the UI connection while the backend is briefly busy
+- notify dependents when a connection's cleared state resets local variables
+- Mobile Web UI & emulator sometimes cut off at bottom (#4574)
+- show the native date/time picker button in chromium
+- wait for a button image to decode before showing it
+- only override the startup value of user value local variables
+- drop style overrides of feedbacks when their connection stops
+- hide style overrides of a feedback with no definition
+- improve performance and minimise risk of drops during imports
+- optimise button drawing
+
+## Companion v5.1.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- offer page variables in step progression expression #4545
+- default local variable location to `this` on triggers #4526
+- block isVisibleExpression from referencing expression type fields
+- Support isVisibleExpression on composite element options #4531
+- emulator buttons blanking on first press when not 4x8 #4527
+- add fallback font to make missing glyphs consistent #4519
+- add NotoSansTamil font #4519
+- detect when usb is not available and don't enable hotplug
+- highlight missing composite elements in the layer list #4514
+- resolve through references for bank_pushed feedback
+- resolve through references for internal step actions and feedbacks
+- RecentlyUsedIdsStore wrong storage key
+- skip extra history entry when visiting /buttons
+
 ## Companion v5.1.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS

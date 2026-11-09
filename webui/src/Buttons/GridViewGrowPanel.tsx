@@ -21,7 +21,10 @@ export function GridViewGrowPanel({ displayName, neededBounds }: GridViewGrowPan
 				<strong>{displayName}</strong> has a button here, but your grid does not reach it, so there is nothing to
 				configure yet.
 			</p>
-			<Button color="primary" onClick={() => setConfigKeyMutation.mutate({ key: 'gridSize', value: neededBounds })}>
+			<Button
+				color="primary"
+				onClick={() => setConfigKeyMutation.mutate({ change: { key: 'gridSize', value: neededBounds } })}
+			>
 				<FontAwesomeIcon icon={faExpand} /> Grow grid to fit
 			</Button>
 		</NonIdealState>

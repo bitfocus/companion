@@ -9,6 +9,7 @@ import { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { SurfaceHandlerDependencies } from '../../lib/Surface/Types.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 const t = initTRPC.context<TrpcContext>().create()
@@ -42,10 +43,9 @@ function ipcModel(id: string, name: string): IpcSurfaceModel {
 function createController() {
 	const db = new TestDatabase()
 	const deps = mockDeep<SurfaceHandlerDependencies>({ fallbackMockImplementation: () => undefined })
-	deps.userconfig.getKey.mockImplementation((key: string) => {
-		if (key === 'gridSize') return { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
-		return undefined
-	})
+	deps.userconfig.getKey.mockImplementation(
+		mockGetKey({ gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 } }, 'default')
+	)
 
 	return { controller: new SurfaceController(db as any, deps, true), db }
 }

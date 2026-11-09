@@ -1,5 +1,7 @@
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { TriggerEvents } from '../../../../Controls/TriggerEvents.js'
 import LogController, { type Logger } from '../../../../Log/Controller.js'
 import { TriggerExecutionSource } from '../TriggerExecutionSource.js'
@@ -53,7 +55,7 @@ export class TriggersEventVariables {
 	/**
 	 * The control id of the parent trigger
 	 */
-	readonly #controlId: string
+	readonly #controlId: TriggerControlId
 
 	/**
 	 * Execute the actions of the parent trigger
@@ -97,7 +99,7 @@ export class TriggersEventVariables {
 
 	constructor(
 		eventBus: TriggerEvents,
-		controlId: string,
+		controlId: TriggerControlId,
 		executeActions: (nowTime: number, source: TriggerExecutionSource) => void,
 		setRateLimited: (limited: boolean) => void
 	) {
@@ -204,8 +206,8 @@ export class TriggersEventVariables {
 
 		try {
 			this.#executeActions(now, TriggerExecutionSource.Other)
-		} catch (e: any) {
-			this.#logger.warn(`Execute actions failed: ${e?.toString?.() ?? e?.message ?? e}`)
+		} catch (e) {
+			this.#logger.warn(`Execute actions failed: ${stringifyError(e)}`)
 		}
 	}
 

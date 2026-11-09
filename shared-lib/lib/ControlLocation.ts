@@ -36,6 +36,11 @@ export type ThisLocationVariable =
 	| 'this:button_status'
 
 /**
+ * The `this:*` variables a button's step progression expression may not reference, as it defines them
+ */
+export const StepExpressionBlockedVariables: ReadonlySet<string> = new Set<ThisLocationVariable>(['this:step'])
+
+/**
  * The builtin variables that are available for page variables
  */
 export type ThisPageVariable = 'this:page' | 'this:page_name'

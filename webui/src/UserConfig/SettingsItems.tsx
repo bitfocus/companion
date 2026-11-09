@@ -4,7 +4,8 @@ import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigKeyOfType, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { keyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { StatusBadge } from '~/Components/StatusBadge.js'
@@ -25,7 +26,7 @@ export interface SettingsItemDefinition {
 	 * The user config key that switches it on and off; `'always-on'` for one that is always running and can't be
 	 * switched off; or `null` for one that isn't something to switch on or off at all
 	 */
-	enabledField: keyof UserConfigModel | 'always-on' | null
+	enabledField: UserConfigKeyOfType<boolean> | 'always-on' | null
 	/** What it is for, as the summary at the top of its panel */
 	description: string
 	/** A one-line summary of how it is set up, for the list row */
@@ -135,7 +136,7 @@ const SettingsItemsListRow = observer(function SettingsItemsListRow({
 					<SwitchInputField
 						id={undefined}
 						value={!!isEnabled}
-						setValue={(value) => userConfig.setValue(enabledField, value)}
+						setValue={(value) => userConfig.setValue(keyValueChange(enabledField, value))}
 						disabled={userConfig.readonlyKeys.has(enabledField)}
 						tooltip={isEnabled ? `Disable ${item.name}` : `Enable ${item.name}`}
 					/>

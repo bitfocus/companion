@@ -1,11 +1,13 @@
 import EventEmitter from 'node:events'
 import { initTRPC } from '@trpc/server'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { DEFAULT_PREVIEW_RENDER_SIZE, type PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import type { ControlCommonEvents } from '../../lib/Controls/ControlDependencies.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import { PreviewGraphics } from '../../lib/Preview/Graphics.js'
@@ -38,10 +40,12 @@ describe('PreviewGraphics location subscription', () => {
 	function createPreview() {
 		render = makeRender('initial')
 
-		graphics = new EventEmitter() as GraphicsController & EventEmitter
+		graphics = Object.assign(new EventEmitter(), {
+			displayedLocations: new DisplayedLocations(),
+		}) as unknown as GraphicsController & EventEmitter
 		graphics.getCachedRenderOrGeneratePlaceholder = vi.fn(() => render)
 
-		const pageStore = { getControlIdAt: vi.fn(() => 'control-1') } as unknown as IPageStore
+		const pageStore = { getControlIdAt: vi.fn(() => CreateBankControlId('control-1')) } as unknown as IPageStore
 		const controls = {} as ControlsController
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
 
@@ -116,7 +120,10 @@ describe('PreviewGraphics location subscription', () => {
 
 		await square.next()
 		await strip.next()
+		// Counted as shown at each size while watched, so that what is drawn elsewhere (a Link button) is for it
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([DEFAULT_PREVIEW_RENDER_SIZE, STRIP_SIZE])
 		await strip.cleanup()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([DEFAULT_PREVIEW_RENDER_SIZE])
 
 		const redraw = makeRender('redraw')
 		graphics.emit('button_drawn', location, redraw)
@@ -133,5 +140,62 @@ describe('PreviewGraphics location subscription', () => {
 		expect(drawnSizes).not.toContain('480x240')
 
 		await square.cleanup()
+	})
+})
+
+describe('PreviewGraphics controlId subscription', () => {
+	test('counts the location of the control as shown, at the size it is drawn at, until it ends', async () => {
+		const graphics = Object.assign(new EventEmitter(), {
+			displayedLocations: new DisplayedLocations(),
+			getCachedRenderOrGeneratePlaceholder: vi.fn(() => makeRender('ctrl')),
+		}) as unknown as GraphicsController & EventEmitter
+		const pageStore = { getLocationOfControlId: vi.fn(() => location) } as unknown as IPageStore
+		const preview = new PreviewGraphics(
+			graphics,
+			pageStore,
+			{} as ControlsController,
+			new EventEmitter<ControlCommonEvents>()
+		)
+
+		const caller = t.createCallerFactory(preview.createTrpcRouter())(testCtx)
+		const sub = new SubscriptionTester(
+			(await caller.controlId({ controlId: CreateBankControlId('control-1') })) as AsyncIterable<string | null>
+		)
+		await sub.next()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 288 }])
+
+		await sub.cleanup()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([])
+	})
+})
+
+describe('PreviewGraphics reference subscription', () => {
+	test('counts the location it shows as shown, at the size it is drawn at, until it ends', async () => {
+		const graphics = Object.assign(new EventEmitter(), {
+			displayedLocations: new DisplayedLocations(),
+			getCachedRenderOrGeneratePlaceholder: vi.fn(() => makeRender('ref')),
+		}) as unknown as GraphicsController & EventEmitter
+		const pageStore = {
+			getLocationOfControlId: vi.fn(() => ({ pageNumber: 2, row: 0, column: 0 })),
+		} as unknown as IPageStore
+		const controls = {
+			createVariablesAndExpressionParser: vi.fn(() => ({
+				parseEntityOption: (option: { value: string }) => ({ ok: true, value: option.value, variableIds: new Set() }),
+			})),
+		} as unknown as ControlsController
+		const preview = new PreviewGraphics(graphics, pageStore, controls, new EventEmitter<ControlCommonEvents>())
+
+		const caller = t.createCallerFactory(preview.createTrpcRouter())(testCtx)
+		const sub = new SubscriptionTester(
+			(await caller.reference({
+				controlId: CreateBankControlId('control-1'),
+				options: { location: { value: '1/2/3', isExpression: false } },
+			})) as AsyncIterable<string | null>
+		)
+		await sub.next()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 288 }])
+
+		await sub.cleanup()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([])
 	})
 })

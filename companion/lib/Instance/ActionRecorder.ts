@@ -1,7 +1,8 @@
 import { EventEmitter } from 'node:events'
-import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
@@ -13,6 +14,7 @@ import type {
 import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ExpressionOrJsonValueSchema, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import LogController from '../Log/Controller.js'
@@ -265,7 +267,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					.input(
 						z.object({
 							sessionId: z.string(),
-							controlId: z.string(),
+							controlId: zodSomeControlId,
 							stepId: z.string(),
 							setId: z.union([z.enum(['down', 'up', 'rotate_left', 'rotate_right']), z.number()]),
 							mode: z.enum(['replace', 'append']),
@@ -297,10 +299,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 				if (this.#updateEvents.listenerCount(eventName) > 0) {
 					if (this.#lastSentSessionInfoJsons[sessionId] && newSessionBlob) {
-						const patch = jsonPatch.compare<RecordSessionInfo>(
-							this.#lastSentSessionInfoJsons[sessionId],
-							newSessionBlob
-						)
+						const patch = diffObject<RecordSessionInfo>(this.#lastSentSessionInfoJsons[sessionId], newSessionBlob)
 						if (patch.length > 0) {
 							this.#updateEvents.emit(eventName, {
 								type: 'patch',
@@ -481,7 +480,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	/**
 	 * Save the recorded actions to a control
 	 */
-	saveToControlId(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
+	saveToControlId(controlId: SomeControlId, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
 		const control = this.#controlStore.getControl(controlId)
@@ -545,8 +544,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const connection = this.#instanceController.processManager.getConnectionChild(connectionId)
 			if (connection) {
 				ps.push(
-					connection.startStopRecordingActions(true).catch((e) => {
-						this.#logger.warn(`Failed to start recording for "${connectionId}": ${e}`)
+					connection.startStopRecordingActions(true).catch((e: unknown) => {
+						this.#logger.warn(`Failed to start recording for "${connectionId}": ${stringifyError(e)}`)
 					})
 				)
 			}
@@ -558,8 +557,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				const connection = this.#instanceController.processManager.getConnectionChild(connectionId)
 				if (connection) {
 					ps.push(
-						connection.startStopRecordingActions(false).catch((e) => {
-							this.#logger.warn(`Failed to stop recording for "${connectionId}": ${e}`)
+						connection.startStopRecordingActions(false).catch((e: unknown) => {
+							this.#logger.warn(`Failed to stop recording for "${connectionId}": ${stringifyError(e)}`)
 						})
 					)
 				}
@@ -569,8 +568,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		this.#currentlyRecordingConnectionIds = targetRecordingConnectionIds
 
 		// Wait for them all to be synced
-		Promise.all(ps).catch((e) => {
-			this.#logger.error(`Failed to syncRecording: ${e}`)
+		Promise.all(ps).catch((e: unknown) => {
+			this.#logger.error(`Failed to syncRecording: ${stringifyError(e)}`)
 		})
 	}
 }

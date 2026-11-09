@@ -11,6 +11,7 @@ import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
 import type { ImageLibraryStore } from './ImageLibraryStore.js'
 import type { InstanceStatusesStore } from './InstanceStatusesStore.js'
+import type { LinkStore } from './LinkStore.js'
 import type { ModuleInfoStore } from './ModuleInfoStore.js'
 import type { PagesStore } from './PagesStore.js'
 import type { SurfaceInstancesStore } from './SurfaceInstancesStore.js'
@@ -49,6 +50,8 @@ export interface RootAppStore {
 	readonly userConfig: UserConfigStore
 
 	readonly imageLibrary: ImageLibraryStore
+
+	readonly link: LinkStore
 
 	/** The current or most-recent import/reset task, driven by a single subscription (see useImportTaskStatusSubscription) */
 	readonly importTaskStatus: IObservableValue<ImportExportTask | null>

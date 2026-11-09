@@ -70,7 +70,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 
 			setShow(false)
 
-			setConfigKeyMutation.mutate({ key: 'gridSize', value: newGridSize })
+			setConfigKeyMutation.mutate({ change: { key: 'gridSize', value: newGridSize } })
 		},
 		[newGridSize, setConfigKeyMutation]
 	)

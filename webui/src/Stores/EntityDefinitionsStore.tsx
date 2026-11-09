@@ -1,7 +1,7 @@
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { action, observable, type ObservableMap } from 'mobx'
 import { computedFn } from 'mobx-utils'
-import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
+import { canOfferEntityInPicker } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type {
 	ClientEntityDefinition,
@@ -101,7 +101,7 @@ export class EntityDefinitionsForTypeStore {
 
 			const options: AddEntityOption[] = []
 			for (const [definitionId, definition] of entityDefs.entries()) {
-				if (!canAddEntityToFeedbackList(feedbackListType, definition)) continue
+				if (!canOfferEntityInPicker(feedbackListType, definition)) continue
 
 				const optionLabel = `${label}: ${definition.label}`
 				options.push({
@@ -125,7 +125,7 @@ export class EntityDefinitionsForTypeStore {
 		const options: AddEntityOption[] = []
 		for (const [definitionId, definition] of internalDefs.entries()) {
 			if (
-				!canAddEntityToFeedbackList(feedbackListType, definition) ||
+				!canOfferEntityInPicker(feedbackListType, definition) ||
 				definition.feedbackType !== FeedbackEntitySubType.Value
 			)
 				continue
@@ -151,7 +151,7 @@ export class EntityDefinitionsForTypeStore {
 			const leaves: EntityLeafItem[] = []
 			for (const [id, info] of items.entries()) {
 				if (!info || !info.label) continue
-				if (!canAddEntityToFeedbackList(feedbackListType, info)) continue
+				if (!canOfferEntityInPicker(feedbackListType, info)) continue
 
 				leaves.push({
 					key: `${connectionId}:${id}`,

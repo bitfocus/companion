@@ -150,10 +150,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		// Framed message transport over the child's data channel socket - one JSON.stringify per message and an
 		// exact wire byte count for metrics, no object-mode double-encode. Created before the IpcWrapper (its
 		// onMessage uses #ipcWrapper lazily; no message arrives until the child connects, after this constructor).
-		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
-			this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
-			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
-		})
+		const transport = new HostFramedTransport(
+			dataChannel,
+			(msg, bytes) => {
+				this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
+				this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+			},
+			() => this.#rejectPendingIpc()
+		)
 
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
@@ -211,16 +215,16 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 						},
 					],
 				})
-				.catch((e) => {
-					this.logger.warn(`Error setting up remote connection: ${e.message}`)
+				.catch((e: unknown) => {
+					this.logger.warn(`Error setting up remote connection: ${stringifyError(e)}`)
 				})
 		} else {
 			this.#ipcWrapper
 				.sendWithCb('stopRemoteConnections', {
 					connectionIds: [connectionInfo.id],
 				})
-				.catch((e) => {
-					this.logger.warn(`Error tearing down remote connection: ${e.message}`)
+				.catch((e: unknown) => {
+					this.logger.warn(`Error tearing down remote connection: ${stringifyError(e)}`)
 				})
 		}
 	}
@@ -256,7 +260,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 							}) satisfies RemoteSurfaceConnectionInfo
 					),
 				})
-				.catch((e) => {
+				.catch((e: unknown) => {
 					this.logger.warn(`Error setting up initial remote connections: ${stringifyError(e)}`)
 				})
 		}
@@ -280,7 +284,17 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		this.cleanup()
 	}
 
+	/**
+	 * The child has gone away (or been replaced), so nothing sent to it can be answered any more. Fail those
+	 * calls now, rather than leaving each to run out its own timeout.
+	 */
+	#rejectPendingIpc(): void {
+		this.#ipcWrapper.rejectAllPending(new Error('Module process is no longer running'))
+	}
+
 	cleanup(): void {
+		this.#rejectPendingIpc()
+
 		this.#deps.invalidateClientJson(this.instanceId)
 		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, this.moduleId, null)
 		this.#deps.surfaceController.outbound.events.off(`startStop:${this.instanceId}`, this.#startStopConnections)
@@ -320,9 +334,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 						scannedDeviceInfo: device,
 					})
 				}
-			} catch (e: unknown) {
-				const message = e instanceof Error ? e.message : String(e)
-				this.logger.warn(`Error performing scanDevices: ${message}`)
+			} catch (e) {
+				this.logger.warn(`Error performing scanDevices: ${stringifyError(e)}`)
 			}
 		}
 
@@ -356,9 +369,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 							hidDevice: device,
 						})
 					}
-				} catch (e: unknown) {
-					const message = e instanceof Error ? e.message : String(e)
-					this.logger.warn(`Error performing checkHidDevices: ${message}`)
+				} catch (e) {
+					this.logger.warn(`Error performing checkHidDevices: ${stringifyError(e)}`)
 				}
 			}
 		}
@@ -432,8 +444,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 					surfaceId: info.surfaceId,
 					initialConfig,
 				})
-				.catch((e) => {
-					this.logger.warn(`Error marking surface as ready: ${e.message}`)
+				.catch((e: unknown) => {
+					this.logger.warn(`Error marking surface as ready: ${stringifyError(e)}`)
 				})
 
 			const panel = new SurfacePluginPanel(
@@ -455,8 +467,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 						surfaceId,
 						newConfig: createSurfaceConfigPayload(sanitizedInfo.configFields, newConfig || {}),
 					})
-					.catch((e) => {
-						this.logger.warn(`Failed forwarding surface config to child for ${surfaceId}: ${e}`)
+					.catch((e: unknown) => {
+						this.logger.warn(`Failed forwarding surface config to child for ${surfaceId}: ${stringifyError(e)}`)
 					})
 			}
 
@@ -467,7 +479,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			this.logger.info(`Surface panel ready: ${info.surfaceId}`)
 		} catch (e) {
 			// TODO - tell the child, as something has gone wrong
-			this.logger.warn(`Error opening surface panel: ${e}`)
+			this.logger.warn(`Error opening surface panel: ${stringifyError(e)}`)
 		}
 	}
 
@@ -518,8 +530,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		return { shouldOpen: true, resolvedSurfaceId }
 	}
 	async #handleNotifyOpenedDiscoveredDevice(msg: NotifyOpenedDeviceMessage): Promise<void> {
-		this.#setupSurfacePanel(msg.info).catch((e) => {
-			this.logger.warn(`Error opening discovered surface panel: ${e}`)
+		this.#setupSurfacePanel(msg.info).catch((e: unknown) => {
+			this.logger.warn(`Error opening discovered surface panel: ${stringifyError(e)}`)
 		})
 	}
 	async #handleForgetDiscoveredSurfaces(msg: ForgetDiscoveredSurfacesMessage): Promise<void> {
@@ -532,14 +544,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		try {
 			this.#deps.surfaceController.outbound.discovery.instanceConnectionsFound(this.instanceId, msg.connectionInfos)
 		} catch (e) {
-			this.logger.warn(`Error handling notifyConnectionsFound: ${e}`)
+			this.logger.warn(`Error handling notifyConnectionsFound: ${stringifyError(e)}`)
 		}
 	}
 	async #handleNotifyConnectionsForgotten(msg: NotifyConnectionsForgottenMessage): Promise<void> {
 		try {
 			this.#deps.surfaceController.outbound.discovery.instanceConnectionsForgotten(this.instanceId, msg.connectionIds)
 		} catch (e) {
-			this.logger.warn(`Error handling notifyConnectionsForgotten: ${e}`)
+			this.logger.warn(`Error handling notifyConnectionsForgotten: ${stringifyError(e)}`)
 		}
 	}
 
@@ -554,7 +566,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		}
 
 		// Send everything to the 'debug' page
-		this.#deps.debugLogLine(this.instanceId, msg.time, msg.source || '/', msg.level, stringifyLogValue(msg.message))
+		this.#deps.debugLogLine(this.instanceId, msg.time, msg.source || '', msg.level, stringifyLogValue(msg.message))
 	}
 
 	async #handleInputPress(msg: InputPressMessage): Promise<void> {

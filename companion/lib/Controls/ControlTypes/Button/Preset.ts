@@ -1,10 +1,11 @@
 import type { JsonValue } from 'type-fest'
-import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	ButtonStatus,
-	LayeredButtonOptions,
-	NormalButtonRuntimeProps,
-	PresetButtonModel,
+import { CreatePresetControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
+import {
+	LayeredButtonOptionsSchema,
+	type ButtonStatus,
+	type LayeredButtonOptions,
+	type NormalButtonRuntimeProps,
+	type PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -26,7 +27,6 @@ import type {
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
-import { ButtonControlBase } from './Base.js'
 import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
 /**
@@ -42,7 +42,7 @@ import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * this program.
  */
 export class ControlButtonPreset
-	extends ControlBase<PresetButtonModel>
+	extends ControlBase<PresetControlId, PresetButtonModel, NormalButtonRuntimeProps>
 	implements
 		ControlWithLayeredStyle,
 		ControlWithoutActions,
@@ -125,18 +125,14 @@ export class ControlButtonPreset
 				variableValues: deps.variableValues,
 				pageStore: deps.pageStore,
 				renderClock: deps.renderClock,
+				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			false
 		)
 
-		this.options = {
-			...structuredClone(ButtonControlBase.DefaultOptions),
-			rotaryActions: false,
-			stepProgression: 'auto',
-			canModifyStyleInApis: false,
-		}
+		this.options = LayeredButtonOptionsSchema.parse({})
 
 		this.#drawing = new LayeredButtonDrawer(deps, controlId, {
 			getButtonStateProps: () => ({
@@ -189,7 +185,7 @@ export class ControlButtonPreset
 		}
 	}
 
-	#updateLastRender = (controlId: string, render: ImageResult): void => {
+	#updateLastRender = (controlId: PresetControlId, render: ImageResult): void => {
 		if (controlId !== this.controlId) return
 		this.#lastRender = render
 	}
@@ -350,6 +346,11 @@ export class ControlButtonPreset
 		return undefined
 	}
 
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[] {
+		// Streaming elements is not supported
+		return []
+	}
+
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
 		return {
 			[ButtonGraphicsElementUsage.Automatic]: undefined,
@@ -365,8 +366,8 @@ export class ControlButtonPreset
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
-	override toJSON(clone = true): PresetButtonModel {
-		const obj: PresetButtonModel = {
+	override toJSON(): PresetButtonModel {
+		return {
 			type: this.type,
 			style: {
 				layers: [...this.#drawing.drawElements],
@@ -377,8 +378,6 @@ export class ControlButtonPreset
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 			checksum: this.#lastPresetChecksum ?? undefined,
 		}
-
-		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

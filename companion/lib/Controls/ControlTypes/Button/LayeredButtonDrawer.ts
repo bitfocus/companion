@@ -1,11 +1,13 @@
 import debounceFn from 'debounce-fn'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { formatLocation, type BankControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	SomeButtonGraphicsElementSchema,
+	type SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsShowStatusIcons,
 	type DrawStyleButtonStateProps,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
@@ -19,10 +21,10 @@ import { ElementConversionCache } from '../../../Graphics/ElementConversionCache
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import LogController, { type Logger } from '../../../Log/Controller.js'
+import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
-import { CreateElementOfType } from './LayerDefaults.js'
 
 /** Anything that can visit the draw elements (e.g. the reference collector/updater visitors). */
 export interface DrawElementsVisitor {
@@ -113,10 +115,10 @@ class DrawDependency<T> {
  *
  * The `protected` element/cache/deps members are the surface that subclass exposes its editing operations on.
  */
-export class LayeredButtonDrawer implements IButtonDrawer {
+export class LayeredButtonDrawer implements IButtonDrawer, VariableDependencyListener<null> {
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
-	protected readonly controlId: string
+	protected readonly controlId: BankControlId | PresetControlId
 	readonly #host: LayeredButtonDrawerHost
 
 	protected drawElementsList: SomeButtonGraphicsElement[] = []
@@ -132,9 +134,17 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		this.elementConversionCache.queueInvalidateCompositeType(changed)
 	)
 	/** Location strings (e.g. '1/0/0') of buttons referenced via reference elements in the last draw. */
-	readonly #referencedLocations = new DrawDependency<string>((changed) => {
+	readonly #referencedLocations = new DrawDependency<ControlLocationString>((changed) => {
 		for (const location of changed) this.elementConversionCache.queueInvalidateReferencedLocation(location)
 	})
+
+	/**
+	 * The variables the last draw read, registered so we are told when one changes: those of drawn elements, and
+	 * those of preserved-but-hidden elements (kept apart to avoid building a union on every draw). The drawn one is
+	 * armed while a draw is in flight, so we hear about every change until we know what the draw read.
+	 */
+	readonly #drawnVariableDependency: VariableDependency<null>
+	readonly #hiddenVariableDependency: VariableDependency<null>
 
 	/**
 	 * Variable changes seen while a draw is in flight. `getDrawStyle` is async, so a change can land after
@@ -152,7 +162,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId | PresetControlId,
 		host: LayeredButtonDrawerHost,
 		drawType: DrawStyleLayeredButtonModel['drawType'] = 'button'
 	) {
@@ -161,12 +171,16 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		this.controlId = controlId
 		this.#host = host
 		this.#drawType = drawType
+		this.#drawnVariableDependency = deps.variableDependencies.create(this, controlId, null)
+		this.#hiddenVariableDependency = deps.variableDependencies.create(this, controlId, null)
 	}
 
 	dispose(): void {
 		// Cancel any redraw still queued so it can't fire after the owning control is gone
 		this.invalidate.cancel()
 		this.elementConversionCache.clear()
+		this.#drawnVariableDependency.dispose()
+		this.#hiddenVariableDependency.dispose()
 	}
 
 	/**
@@ -236,24 +250,16 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 	 * so that nested layers stay consistent with top-level ones.
 	 */
 	#normalizeLoadedElement(element: SomeButtonGraphicsElement): void {
-		if (element.type !== 'canvas') {
-			try {
-				const defaults = CreateElementOfType(element.type)
-				for (const key of Object.keys(defaults)) {
-					if (key === 'id' || key === 'type' || key === 'name') continue
-					if (!(key in element)) {
-						;(element as any)[key] = (defaults as any)[key]
-					}
-				}
-			} catch (_e) {
-				// Ignore
+		// Fill in the properties added since the element was saved, with the defaults that keep it drawing as it did.
+		// Not the values a new element is created with, which can differ to show off what the element can do
+		const parsed = SomeButtonGraphicsElementSchema.safeParse(element)
+		if (parsed.success) {
+			for (const [key, value] of Object.entries(parsed.data)) {
+				if (!(key in element)) (element as Record<string, unknown>)[key] = value
 			}
 		}
+
 		switch (element.type) {
-			case 'canvas':
-				if (!element.showStatusIcons)
-					element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
-				break
 			case 'image':
 				if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
 					element.fillMode.value = 'fit'
@@ -300,6 +306,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		// so a single accumulator is safe.
 		const changedDuringDraw = new Set<string>()
 		this.#variablesChangedDuringDraw = changedDuringDraw
+		this.#drawnVariableDependency.arm()
 		try {
 			const injectedVariableValues: VariableValues = {}
 			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
@@ -316,7 +323,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 			const feedbackOverrides =
 				this.#host.entities?.getFeedbackStyleOverrides(this.resolveDefaultNoTopBar()) ?? emptyFeedbackOverrides
 
-			const { elements, variables, compositeElements, referencedLocations, cyclicLocations, clockSensitive } =
+			const { elements, variables, compositeElements, referencedLocations, cyclicLocations, clockCycleMs } =
 				await ConvertSomeButtonGraphicsElementForDrawing(
 					this.deps.instance.definitions,
 					parser,
@@ -329,8 +336,15 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 					(location) => this.deps.graphics.getCachedRender(location) ?? null
 				)
 			this.#variables.commit(variables)
+			this.#drawnVariableDependency.set(variables.drawn)
+			this.#hiddenVariableDependency.set(variables.hidden)
 			this.#compositeElements.commit(compositeElements)
 			this.#referencedLocations.commit(referencedLocations)
+			// Both kinds, as a change to a hidden reference still has to evict its stale cache entry
+			this.deps.referencedLocations.setControlReferences(
+				this.controlId,
+				referencedLocations.drawn.union(referencedLocations.hidden)
+			)
 			this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
 
 			// Re-check any variable changes that landed mid-draw against the now-committed sets: evict their
@@ -342,7 +356,8 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 				elements,
 				referencedLocations: referencedLocations.drawn,
-				clockSensitive: clockSensitive || undefined,
+				clockCycleMs: clockCycleMs || undefined,
+				link_status: undefined,
 
 				style: 'button-layered',
 				drawType: this.#drawType,
@@ -352,11 +367,16 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 			return result
 		} finally {
 			this.#variablesChangedDuringDraw = null
+			// In case the draw failed before setting the variables
+			this.#drawnVariableDependency.disarm()
 		}
 	}
 
 	/** Propagate a variable change: invalidate affected cached elements and redraw if relevant. */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
 		// Record changes during an in-flight draw so getDrawStyle re-checks them (see #variablesChangedDuringDraw).
 		if (this.#variablesChangedDuringDraw) {
 			for (const variable of allChangedVariables) this.#variablesChangedDuringDraw.add(variable)
@@ -401,7 +421,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 	/** Another located control finished rendering; if we reference it, invalidate and redraw. */
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		const locStr = formatLocation(location)
-		const changed: ReadonlySet<string> = new Set([locStr])
+		const changed: ReadonlySet<ControlLocationString> = new Set([locStr])
 
 		// Suppress ping-pong for an established cycle before anything else: if we're already drawing ∞ for
 		// this location AND the re-rendered target still references us back, no visible output would change.

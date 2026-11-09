@@ -1,5 +1,6 @@
 import { useId } from 'react'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { FormLabel } from '~/Components/Form'
 import { Grid } from '~/Components/Grid'
@@ -7,7 +8,7 @@ import { NumberInputField } from '~/Components/NumberInputField'
 
 interface ServicesStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX.Element {
@@ -32,7 +33,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="TCP Raw Socket"
 					value={!!config.tcp_enabled}
-					setValue={(val) => setValue('tcp_enabled', val)}
+					setValue={(value) => setValue({ key: 'tcp_enabled', value })}
 				/>
 			</Grid.Col>
 			{config.tcp_enabled && (
@@ -44,7 +45,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 						<NumberInputField
 							id={tcpListenPortId}
 							value={config.tcp_listen_port}
-							setValue={(value) => setValue('tcp_listen_port', value)}
+							setValue={(value) => setValue({ key: 'tcp_listen_port', value })}
 							immediateValue
 						/>
 					</Grid.Col>
@@ -56,7 +57,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="UDP Raw Socket"
 					value={!!config.udp_enabled}
-					setValue={(val) => setValue('udp_enabled', val)}
+					setValue={(value) => setValue({ key: 'udp_enabled', value })}
 				/>
 			</Grid.Col>
 			{config.udp_enabled && (
@@ -68,7 +69,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 						<NumberInputField
 							id={udpListenPortId}
 							value={config.udp_listen_port}
-							setValue={(value) => setValue('udp_listen_port', value)}
+							setValue={(value) => setValue({ key: 'udp_listen_port', value })}
 							immediateValue
 						/>
 					</Grid.Col>
@@ -80,7 +81,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="Open Sound Control (OSC)"
 					value={!!config.osc_enabled}
-					setValue={(val) => setValue('osc_enabled', val)}
+					setValue={(value) => setValue({ key: 'osc_enabled', value })}
 				/>
 			</Grid.Col>
 			{config.osc_enabled && (
@@ -92,7 +93,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 						<NumberInputField
 							id={oscListenPortId}
 							value={config.osc_listen_port}
-							setValue={(value) => setValue('osc_listen_port', value)}
+							setValue={(value) => setValue({ key: 'osc_listen_port', value })}
 							immediateValue
 						/>
 					</Grid.Col>
@@ -104,14 +105,14 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="RossTalk"
 					value={!!config.rosstalk_enabled}
-					setValue={(val) => setValue('rosstalk_enabled', val)}
+					setValue={(value) => setValue({ key: 'rosstalk_enabled', value })}
 				/>
 			</Grid.Col>
 			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Ember+"
 					value={!!config.emberplus_enabled}
-					setValue={(val) => setValue('emberplus_enabled', val)}
+					setValue={(value) => setValue({ key: 'emberplus_enabled', value })}
 				/>
 			</Grid.Col>
 
@@ -119,7 +120,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="Artnet"
 					value={!!config.artnet_enabled}
-					setValue={(val) => setValue('artnet_enabled', val)}
+					setValue={(value) => setValue({ key: 'artnet_enabled', value })}
 				/>
 			</Grid.Col>
 			{config.artnet_enabled && (
@@ -131,7 +132,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 						<NumberInputField
 							id={artnetUniveriseId}
 							value={config.artnet_universe}
-							setValue={(value) => setValue('artnet_universe', value)}
+							setValue={(value) => setValue({ key: 'artnet_universe', value })}
 							min={0}
 							max={20055}
 							immediateValue
@@ -146,7 +147,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 						<NumberInputField
 							id={artnetChannelId}
 							value={config.artnet_channel}
-							setValue={(value) => setValue('artnet_channel', value)}
+							setValue={(value) => setValue({ key: 'artnet_channel', value })}
 							min={1}
 							max={509}
 							immediateValue

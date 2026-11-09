@@ -1,5 +1,6 @@
 import { useCallback, useId, useState } from 'react'
-import type { UserConfigGridSize, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { FormLabel } from '~/Components/Form'
 import { Grid } from '~/Components/Grid'
 import { NumberInputField } from '~/Components/NumberInputField'
@@ -7,7 +8,7 @@ import { NumberInputField } from '~/Components/NumberInputField'
 interface GridStepProps {
 	rows: number
 	columns: number
-	setValue: (key: keyof UserConfigModel, value: any) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.Element {
@@ -17,30 +18,34 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 	const setMaxColumn = useCallback(
 		(newValue: number) => {
 			if (isNaN(newValue)) return
-			const grid: UserConfigGridSize = {
-				minRow: 0,
-				maxRow: totalRows - 1,
-				minColumn: 0,
-				maxColumn: newValue - 1,
-			}
 
 			setTotalColumns(newValue)
-			setValue('gridSize', grid)
+			setValue({
+				key: 'gridSize',
+				value: {
+					minRow: 0,
+					maxRow: totalRows - 1,
+					minColumn: 0,
+					maxColumn: newValue - 1,
+				},
+			})
 		},
 		[setValue, totalRows]
 	)
 	const setMaxRow = useCallback(
 		(newValue: number) => {
 			if (isNaN(newValue)) return
-			const grid: UserConfigGridSize = {
-				minRow: 0,
-				maxRow: newValue - 1,
-				minColumn: 0,
-				maxColumn: totalColumns - 1,
-			}
 
 			setTotalRows(newValue)
-			setValue('gridSize', grid)
+			setValue({
+				key: 'gridSize',
+				value: {
+					minRow: 0,
+					maxRow: newValue - 1,
+					minColumn: 0,
+					maxColumn: totalColumns - 1,
+				},
+			})
 		},
 		[setValue, totalColumns]
 	)

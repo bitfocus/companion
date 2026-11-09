@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { actionModel, createTriggerPool, feedbackModel, feedbackValues } from './EntityListPoolTestHelpers.js'
 
@@ -153,7 +154,9 @@ describe('ControlEntityListPoolTrigger', () => {
 			pool.entityAdd('feedbacks', null, feedback)
 			reportChange.mockClear()
 
-			pool.updateIsInvertedValues(new Map([[feedback.id, { entityId: feedback.id, controlId: '', value: true }]]))
+			pool.updateIsInvertedValues(
+				new Map([[feedback.id, { entityId: feedback.id, controlId: CreateBankControlId('test'), value: true }]])
+			)
 
 			expect(reportChange).toHaveBeenCalledWith({ redraw: true, noSave: true })
 		})
@@ -163,7 +166,9 @@ describe('ControlEntityListPoolTrigger', () => {
 			pool.entityAdd('feedbacks', null, feedbackModel())
 			reportChange.mockClear()
 
-			pool.updateIsInvertedValues(new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: '', value: true }]]))
+			pool.updateIsInvertedValues(
+				new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: CreateBankControlId('test'), value: true }]])
+			)
 
 			expect(reportChange).not.toHaveBeenCalled()
 		})
@@ -177,7 +182,9 @@ describe('ControlEntityListPoolTrigger', () => {
 			reportChange.mockClear()
 
 			expect(() =>
-				pool.updateStoreResultValues(new Map([[action.id, { entityId: action.id, controlId: '', value: undefined }]]))
+				pool.updateStoreResultValues(
+					new Map([[action.id, { entityId: action.id, controlId: CreateBankControlId('test'), value: undefined }]])
+				)
 			).not.toThrow()
 			expect(reportChange).not.toHaveBeenCalled()
 		})

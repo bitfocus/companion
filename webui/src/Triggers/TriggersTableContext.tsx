@@ -1,9 +1,11 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo, type RefObject } from 'react'
+import type { ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface TriggersTableContextType {
 	deleteModalRef: RefObject<GenericConfirmModalRef | null>
+	exportModalRef: RefObject<ConfirmExportModalRef | null>
 	selectTrigger: (triggerId: string | null) => void
 	selectedTriggerId: string | null
 }
@@ -20,6 +22,7 @@ type TriggersTableContextProviderProps = TriggersTableContextType
 
 export function TriggersTableContextProvider({
 	deleteModalRef,
+	exportModalRef,
 	selectTrigger,
 	selectedTriggerId,
 	children,
@@ -27,10 +30,11 @@ export function TriggersTableContextProvider({
 	const value = useMemo<TriggersTableContextType>(() => {
 		return {
 			deleteModalRef,
+			exportModalRef,
 			selectTrigger,
 			selectedTriggerId,
 		}
-	}, [deleteModalRef, selectTrigger, selectedTriggerId])
+	}, [deleteModalRef, exportModalRef, selectTrigger, selectedTriggerId])
 
 	return <TriggersTableContext.Provider value={value}>{children}</TriggersTableContext.Provider>
 }

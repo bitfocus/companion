@@ -1,6 +1,7 @@
 // @ts-check
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, dialog, shell } from 'electron'
+import { BrowserWindow, shell } from 'electron'
+import { loadLauncherUiPage } from './launcher-ui.js'
 
 /** @type {BrowserWindow | null} */
 let settingsWindow = null
@@ -18,38 +19,30 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 		return
 	}
 
-	// const dark = nativeTheme.shouldUseDarkColors
-
-	settingsWindow = new BrowserWindow({
+	const thisWindow = (settingsWindow = new BrowserWindow({
+		// A child of the launcher, so it stays above it (on macOS it also moves with it). Not modal, as then the window
+		// decoration disappears on mac
 		parent: parentWindow ?? undefined,
-		// modal: true, // Can't use modal, as then window decoration disappears on mac
-		width: 1280,
-		height: 720,
-		minWidth: 640,
+		// The section list beside a single column of settings cards
+		width: 920,
+		height: 760,
+		minWidth: 680,
 		minHeight: 480,
-		show: true,
+		// Shown once the page has loaded, so it opens already painted in the system theme
+		show: false,
 		autoHideMenuBar: true,
 		minimizable: false,
-		backgroundColor: '#000000',
-		// backgroundColor: dark ? '#000000' : '#ffffff', // Color while loading
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: true,
 			preload: fileURLToPath(new URL('./settings-preload.mjs', import.meta.url)),
 		},
-	})
+	}))
 
-	if (app.isPackaged) {
-		settingsWindow.loadURL(`file://${process.resourcesPath}/settings-ui/index.html`).catch((err) => {
-			console.error('Failed to load settings.html:', err)
-			dialog.showErrorBox('Error', 'Failed to load settings window.')
-		})
-	} else {
-		settingsWindow.loadURL('http://localhost:5177/').catch((err) => {
-			console.error('Failed to load settings.html:', err)
-			dialog.showErrorBox('Error', 'Failed to load settings window.')
-		})
-	}
+	// Never rejects: a failed load has already been reported, and the window is still shown
+	void loadLauncherUiPage(thisWindow, 'index.html').then(() => {
+		if (!thisWindow.isDestroyed()) thisWindow.show()
+	})
 
 	settingsWindow.webContents.setWindowOpenHandler(({ url }) => {
 		// config.fileProtocol is my custom file protocol

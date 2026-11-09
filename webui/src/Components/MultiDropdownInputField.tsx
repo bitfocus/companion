@@ -180,7 +180,14 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 							</button>
 						</span>
 					))}
-					<Combobox.Input className="dropdown-field-input" name={htmlName} onBlur={onBlur} aria-invalid={isInvalid} />
+					<Combobox.Input
+						className="dropdown-field-input"
+						// Both, so that a label for it names and focuses the input
+						id={htmlName}
+						name={htmlName}
+						onBlur={onBlur}
+						aria-invalid={isInvalid}
+					/>
 					<Combobox.Trigger className="dropdown-field-trigger">
 						<ChevronDownIcon className="dropdown-field-icon" />
 					</Combobox.Trigger>

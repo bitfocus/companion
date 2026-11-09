@@ -219,7 +219,7 @@ export class InstanceInstalledModulesManager {
 					this.#configStore.commitChanges(changedInstanceIds, true)
 				}
 			})
-			.catch((e) => {
+			.catch((e: unknown) => {
 				this.#logger.error(`Failed to install module "${moduleId}" v${versionId ?? 'latest'}`, e)
 			})
 			.finally(() => {
@@ -276,7 +276,7 @@ export class InstanceInstalledModulesManager {
 						return 'Failed to decompress data'
 					}
 
-					const manifestJson = await extractManifestFromTar(decompressedData).catch((e) => {
+					const manifestJson = await extractManifestFromTar(decompressedData).catch((e: unknown) => {
 						this.#logger.error(`Failed to extract manifest from module`, e)
 					})
 					if (!manifestJson) {
@@ -412,7 +412,7 @@ export class InstanceInstalledModulesManager {
 			return 'Failed to decompress data'
 		}
 
-		const manifestJson = await extractManifestFromTar(decompressedData).catch((e) => {
+		const manifestJson = await extractManifestFromTar(decompressedData).catch((e: unknown) => {
 			this.#logger.error(`Failed to extract manifest from module`, e)
 		})
 		if (!manifestJson) {
@@ -516,7 +516,7 @@ export class InstanceInstalledModulesManager {
 				.catch(() => null)
 		} catch (e) {
 			this.#logger.error(`Error uninstalling module`, e)
-			return `Internal error uninstalling module: ${(e as Error).message}`
+			return `Internal error uninstalling module: ${stringifyError(e, true)}`
 		}
 
 		return null

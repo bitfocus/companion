@@ -1,4 +1,5 @@
 import type express from 'express'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ActionEntityModel, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
@@ -74,21 +75,22 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	sendAllFeedbackInstances(): Promise<void>
 
 	/**
-	 * Send the list of changed variables to the child process
-	 * @access public - called whenever variables change
+	 * Send the list of changed global variables to the child process. Only defined for modules which check
+	 * them themselves; the others are told what they read by the variable dependency registry
+	 * @access public - called whenever global variables change
 	 */
-	sendVariablesChanged(
-		changedVariableIdSet: ReadonlySet<string>,
-		changedVariableIds: string[],
-		controlIdFilter: ReadonlySet<string> | null
-	): Promise<void>
+	readonly sendVariablesChanged?: (changedVariableIds: string[]) => void
 
-	entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void>
+	entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void>
 
 	/**
 	 *
 	 */
-	entityLearnValues(entity: SomeEntityModel, controlId: string): Promise<ExpressionableOptionsObject | undefined | void>
+	entityLearnValues(
+		entity: SomeEntityModel,
+		controlId: SomeControlId,
+		signal: AbortSignal
+	): Promise<ExpressionableOptionsObject | undefined | void>
 
 	/**
 	 * Inform the child instance class about an entity that has been deleted
@@ -112,7 +114,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 }
 
 export interface RunActionExtras {
-	controlId: string
+	controlId: SomeControlId
 	surfaceId: string | undefined
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal

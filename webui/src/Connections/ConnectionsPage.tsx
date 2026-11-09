@@ -70,7 +70,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 							<Modal.Header closeButton>
 								<Modal.Title>Add Connection</Modal.Title>
 							</Modal.Header>
-							<Modal.Body>
+							<Modal.Body className="flex flex-col overflow-hidden">
 								<MyErrorBoundary>
 									<AddConnectionsPanel />
 								</MyErrorBoundary>

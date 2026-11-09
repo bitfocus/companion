@@ -13,11 +13,13 @@ import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import {
 	BANNED_PROPS,
+	encodeSatelliteVariableValue,
 	type SatelliteBitmapFormat,
 	type SatelliteControlStylePreset,
 	type SatelliteMessageArgs,
 	type SatelliteSurfaceAppearance,
 	type SatelliteSurfaceLayout,
+	type SatelliteVariableEncoding,
 } from '@companion-app/satellite-protocol'
 import type {
 	CompanionSurfaceConfigField,
@@ -25,7 +27,7 @@ import type {
 	SurfaceAppearanceDefinition,
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { SurfaceControlEvent } from '@companion-surface/base'
@@ -34,7 +36,7 @@ import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import type { SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
+import { sendSatelliteStyleMessage } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
@@ -68,6 +70,8 @@ export interface SatelliteDeviceInfo {
 	/** The bitmap encoding (rgb/png/webp) this surface negotiated for button images */
 	bitmapFormat: SatelliteBitmapFormat
 
+	/** The encoding (string/json) this surface asked to receive output variable values in */
+	variableEncoding: SatelliteVariableEncoding
 	/** Whether the client asked for CONTROL-EVENT messages */
 	supportsControlEvents?: boolean
 }
@@ -207,6 +211,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #controlDefinitions: ReadonlyMap<string, ResolvedControlDefinition[]>
 	readonly #supportsLockedState: boolean
 	readonly #bitmapFormat: SatelliteBitmapFormat
+	readonly #variableEncoding: SatelliteVariableEncoding
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
 	readonly #outputVariables: Record<string, SatelliteOutputVariableInfo> = {}
@@ -242,6 +247,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 		this.#bitmapFormat = deviceInfo.bitmapFormat
+		this.#variableEncoding = deviceInfo.variableEncoding
 
 		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
@@ -391,17 +397,16 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
 		}
 
-		const styleArgs = await buildSatelliteStyleArgs(
+		await sendSatelliteStyleMessage(
+			this.socket,
+			'KEY-STATE',
+			this.deviceId,
+			params,
 			drawItem.defaultRender,
 			controlDefinition.style,
 			this.#config.rotation,
 			this.#bitmapFormat
 		)
-		Object.assign(params, styleArgs)
-
-		if (!this.socket) return
-
-		this.socket.sendMessage('KEY-STATE', null, this.deviceId, params)
 	}
 
 	/**
@@ -536,10 +541,12 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 					outputVariable.lastValue = expressionResult
 
 					if (this.socket !== undefined) {
-						const base64Value = Buffer.from(stringifyVariableValue(expressionResult) ?? '').toString('base64')
+						const encodedValue = encodeSatelliteVariableValue(expressionResult, this.#variableEncoding)
 						this.socket.sendMessage('VARIABLE-VALUE', null, this.deviceId, {
 							VARIABLE: name,
-							VALUE: base64Value,
+							VALUE: Buffer.from(encodedValue).toString('base64'),
+							// Only sent when opted in, as older clients don't know the param
+							...(this.#variableEncoding === 'json' ? { ENCODING: 'json' } : {}),
 						})
 					} else {
 						this.#logger.debug('trying to emit to nonexistent socket: ', this.deviceId)

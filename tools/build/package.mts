@@ -6,6 +6,7 @@ import { fetchBuiltinSurfaceModules } from '../fetch_builtin_modules.mts'
 import { fetchNodejs } from '../fetch_nodejs.mts'
 import { generateLegalArtifacts } from '../licenses/generate.mts'
 import { generateVersionString } from '../lib.mts'
+import { DMG_APP_POSITION, DMG_APPLICATIONS_POSITION, DMG_ICON_SIZE } from '../dmg_layout.mts'
 import { determinePlatformInfo } from './util.mts'
 
 $.verbose = true
@@ -92,6 +93,13 @@ await fs.remove('dist/node_modules/usb/libusb')
 await fs.remove('dist/node_modules/usb/node_modules/node-addon-api')
 await fs.remove('dist/node_modules/node-addon-api')
 
+// Prebuilds for the Bare runtime (eg sodium-native), never loaded by node
+const bareFiles = await glob('dist/node_modules/**/prebuilds/**/*.bare', { onlyFiles: true })
+console.log(`Removing ${bareFiles.length} .bare prebuilds`)
+for (const file of bareFiles) {
+	await fs.remove(file)
+}
+
 // Now that dist/node_modules is installed and pruned, the shipped set is known. This writes dist/LICENSE and
 // dist/NOTICE, and fails the build on anything Companion cannot distribute, before electron-builder copies dist in.
 await generateLegalArtifacts('dist')
@@ -140,14 +148,25 @@ if (process.env.ELECTRON !== '0') {
 			appId: 'test-companion.bitfocus.no',
 			dmg: {
 				artifactName: 'companion-mac-${arch}.dmg',
+				writeUpdateInfo: false, // The blockmap is only for electron-updater, which we don't use
+				// background.png / background@2x.png are picked up from buildResources and set the window size; see
+				// build_installer_art.mts
+				iconSize: DMG_ICON_SIZE,
+				contents: [
+					{ ...DMG_APP_POSITION, type: 'file' },
+					{ ...DMG_APPLICATIONS_POSITION, type: 'link', path: '/Applications' },
+				],
 			},
 			mac: {
 				target: 'dmg',
+				minimumSystemVersion: '13.5',
 				category: 'no.bitfocus.companion',
 				extendInfo: {
 					LSUIElement: 1,
 					NSAppleEventsUsageDescription: 'Companion uses AppleEvents to control local applications.',
 					NSLocalNetworkUsageDescription: 'Companion uses local network to communicate with devices.',
+					NSMicrophoneUsageDescription:
+						'Companion modules use audio inputs for level metering and audio-triggered actions.',
 				},
 				hardenedRuntime: true,
 				gatekeeperAssess: false,
@@ -163,8 +182,10 @@ if (process.env.ELECTRON !== '0') {
 					signingHashAlgorithms: ['sha256'],
 
 					sign: async function sign(config, packager) {
-						// Do not sign if no certificate is provided.
-						if (!config.cscInfo) {
+						// The bitfocus/actions setup-windows-codesign step provides the signing script.
+						// Without it this is an unsigned build.
+						const script = process.env.BF_CODESIGN_SCRIPT
+						if (!script) {
 							return
 						}
 
@@ -176,12 +197,19 @@ if (process.env.ELECTRON !== '0') {
 							return
 						}
 
-						if (!process.env.BF_CODECERT_KEY) throw new Error('BF_CODECERT_KEY variable is not set')
-
 						const vm = await packager.vm.value
 						await vm.exec(
-							'powershell.exe',
-							['c:\\actions-runner-bitfocus\\sign.ps1', targetPath, `-Description`, 'Bitfocus Companion'],
+							'pwsh',
+							[
+								'-NoProfile',
+								'-ExecutionPolicy',
+								'Bypass',
+								'-File',
+								script,
+								targetPath,
+								'-Description',
+								'Bitfocus Companion',
+							],
 							{
 								timeout: 10 * 60 * 1000,
 								env: process.env,
@@ -244,6 +272,7 @@ if (process.env.ELECTRON !== '0') {
 			),
 			config: options,
 			projectDir: 'launcher',
+			publish: 'never',
 		})
 	} finally {
 		// undo the changes made

@@ -7,6 +7,22 @@ export function makeLabelSafe(label: string): string {
 	return label.trim().replace(/[^\w-]/gi, '_')
 }
 
+/** Why a name is refused, for one failing isLabelValid or isCustomVariableValid */
+export const INVALID_LABEL_MESSAGE = 'Name must be alphanumeric and can contain underscores and dashes'
+
+/** Reserved words, which can't be used as a label */
+const RESERVED_LABELS: ReadonlySet<string> = new Set([
+	'internal',
+	'this',
+	'local',
+	'companion',
+	'image',
+	'custom',
+	'expression',
+	'page',
+	'options',
+])
+
 /**
  * Check if a label is valid
  * @param label Label to check
@@ -14,18 +30,7 @@ export function makeLabelSafe(label: string): string {
 export function isLabelValid(label: string): boolean {
 	if (!label || typeof label !== 'string') return false
 
-	// Check a few reserved words
-	if (
-		label.toLowerCase() === 'internal' ||
-		label.toLowerCase() === 'this' ||
-		label.toLowerCase() === 'local' ||
-		label.toLowerCase() === 'companion' ||
-		label.toLowerCase() === 'image' ||
-		label.toLowerCase() === 'custom' ||
-		label.toLowerCase() === 'expression' ||
-		label.toLowerCase() === 'page'
-	)
-		return false
+	if (RESERVED_LABELS.has(label.toLowerCase())) return false
 
 	const safeLabel = makeLabelSafe(label)
 	return safeLabel === label

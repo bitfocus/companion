@@ -1,4 +1,9 @@
-import { SATELLITE_BITMAP_FORMATS, type SatelliteBitmapFormat } from './constants.js'
+import {
+	SATELLITE_BITMAP_FORMATS,
+	SATELLITE_VARIABLE_ENCODINGS,
+	type SatelliteBitmapFormat,
+	type SatelliteVariableEncoding,
+} from './constants.js'
 
 /**
  * Keys that could pollute the prototype chain if parsed params were ever copied onto a normal object
@@ -73,6 +78,42 @@ export function parseSatelliteBitmapFormat(value: string | boolean | undefined):
 		return value as SatelliteBitmapFormat
 	}
 	return 'rgb'
+}
+
+/**
+ * Validate a variable value encoding (ENCODING on SET-VARIABLE-VALUE/VARIABLE-VALUE, or VARIABLE_ENCODING on ADD-DEVICE).
+ * Absent means `string`, as before the encoding existed.
+ * @returns the encoding, or null if it is not one the protocol defines
+ */
+export function parseSatelliteVariableEncoding(value: string | true | undefined): SatelliteVariableEncoding | null {
+	if (value === undefined) return 'string'
+	if (typeof value === 'string' && SATELLITE_VARIABLE_ENCODINGS.includes(value as SatelliteVariableEncoding)) {
+		return value as SatelliteVariableEncoding
+	}
+	return null
+}
+
+/**
+ * Encode a variable value as the text to be base64 encoded into VALUE.
+ * With the `string` encoding, a non-string value is sent as its text (objects as JSON) and undefined as an empty string.
+ * With the `json` encoding, undefined is sent as null, as JSON can't describe it.
+ */
+export function encodeSatelliteVariableValue(value: unknown, encoding: SatelliteVariableEncoding): string {
+	if (encoding === 'json') return JSON.stringify(value) ?? 'null'
+
+	if (typeof value === 'string') return value
+	if (value === undefined) return ''
+	if (typeof value === 'number' || typeof value === 'boolean') return value.toString()
+	return JSON.stringify(value) ?? ''
+}
+
+/**
+ * Decode a variable value from the base64 decoded text of VALUE.
+ * Throws if the `json` encoding is used and the text is not valid JSON.
+ */
+export function decodeSatelliteVariableValue(text: string, encoding: SatelliteVariableEncoding): unknown {
+	if (encoding === 'json') return JSON.parse(text)
+	return text
 }
 
 /**

@@ -1,26 +1,32 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { CollectionBase } from './Collections.js'
-import type { SomeEntityModel } from './EntityModel.js'
-import type { EventInstance } from './EventModel.js'
+import z from 'zod'
+import type { TriggerControlId } from '../ControlId.js'
+import type { ObjectPatch } from '../Diff.js'
+import type { CollectionBase, EnabledCollectionData } from './Collections.js'
+import { SomeEntityModelSchema } from './EntityModel.js'
+import { EventInstanceSchema } from './EventModel.js'
 
-export interface TriggerModel {
-	readonly type: 'trigger'
-	options: TriggerOptions
+export const TriggerOptionsSchema = z.object({
+	name: z.string().default('New Trigger'),
+	enabled: z.boolean().default(false),
+	sortOrder: z.number().default(0),
+	collectionId: z.string().optional(),
+	notes: z.string().default(''),
+})
 
-	actions: SomeEntityModel[]
-	condition: SomeEntityModel[]
-	events: EventInstance[]
+export type TriggerOptions = z.output<typeof TriggerOptionsSchema>
 
-	localVariables: SomeEntityModel[]
-}
+export const TriggerModelSchema = z.object({
+	type: z.literal('trigger'),
+	options: TriggerOptionsSchema.default(() => TriggerOptionsSchema.parse({})),
 
-export type TriggerOptions = {
-	name: string
-	enabled: boolean
-	sortOrder: number
-	collectionId?: string
-	notes?: string
-}
+	actions: z.array(SomeEntityModelSchema).default(() => []),
+	condition: z.array(SomeEntityModelSchema).default(() => []),
+	events: z.array(EventInstanceSchema).default(() => []),
+
+	localVariables: z.array(SomeEntityModelSchema).default(() => []),
+})
+
+export type TriggerModel = z.output<typeof TriggerModelSchema>
 
 export interface ClientTriggerData extends TriggerOptions {
 	type: 'trigger'
@@ -39,28 +45,26 @@ export type TriggersUpdate =
 
 export interface TriggersUpdateInitOp {
 	type: 'init'
-	triggers: Record<string, ClientTriggerData>
+	triggers: Record<TriggerControlId, ClientTriggerData>
 }
 
 export interface TriggersUpdateRemoveOp {
 	type: 'remove'
-	controlId: string
+	controlId: TriggerControlId
 }
 export interface TriggersUpdateAddOp {
 	type: 'add'
-	controlId: string
+	controlId: TriggerControlId
 
 	info: ClientTriggerData
 }
 export interface TriggersUpdateUpdateOp {
 	type: 'update'
-	controlId: string
+	controlId: TriggerControlId
 
-	patch: JsonPatchOperation<ClientTriggerData>[]
+	patch: ObjectPatch<ClientTriggerData>
 }
 
-export interface TriggerCollectionData {
-	enabled: boolean
-}
+export type TriggerCollectionData = EnabledCollectionData
 
 export type TriggerCollection = CollectionBase<TriggerCollectionData>

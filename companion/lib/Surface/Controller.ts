@@ -15,29 +15,33 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type express from 'express'
 import isEqual from 'fast-deep-equal'
-import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'
 import pDebounce from 'p-debounce'
-import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
 import z from 'zod'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
-import type {
-	ClientDevicesListItem,
-	ClientSurfaceButtonSizesItem,
-	ClientSurfaceItem,
-	ClientSurfaceLayoutItem,
-	ClientSurfaceModelItem,
-	OutboundSurfaceInfo,
-	SurfaceConfig,
-	SurfaceGroupConfig,
-	SurfaceModelsUpdate,
-	SurfacePanelConfig,
-	SurfacesUpdate,
+import {
+	SurfaceConfigSchema,
+	SurfaceGroupConfigChangeSchema,
+	SurfaceGroupConfigStoredSchema,
+	type ClientDevicesListItem,
+	type ClientSurfaceButtonSizesItem,
+	type ClientSurfaceItem,
+	type ClientSurfaceLayoutItem,
+	type ClientSurfaceModelItem,
+	type OutboundSurfaceInfo,
+	type SurfaceConfig,
+	type SurfaceGroupConfig,
+	type SurfaceGroupConfigStored,
+	type SurfaceModelsUpdate,
+	type SurfacePanelConfig,
+	type SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -45,7 +49,7 @@ import type { Complete } from '@companion-module/base'
 import type { SurfaceControlEvent } from '@companion-surface/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import {
 	DiscoveredSurfaceRegistry,
@@ -56,7 +60,7 @@ import type { CheckDeviceInfo, IpcSurfaceModel } from '../Instance/Surface/IpcTy
 import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
-import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
+import { SurfaceGroup, validateGroupConfigChange } from './Group.js'
 import { SurfaceHandler } from './Handler.js'
 import { HotplugRescan } from './HotplugRescan.js'
 import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
@@ -108,8 +112,8 @@ export interface SurfaceControllerEvents {
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
-	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
-	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
+	readonly #dbTableSurfaces: DataStoreSchemaTableView<typeof SurfaceConfigSchema, string>
+	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigStoredSchema, string>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
@@ -170,13 +174,18 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#runningUsbHotplug: boolean = false
 
 	/**
+	 * Set once quit has been called, after which the db may be closed
+	 */
+	#hasQuit: boolean = false
+
+	/**
 	 * Whether this machine has usb available. When it doesn't, hotplug is never started
 	 */
 	readonly #usbAvailable: boolean
 
 	readonly #hotplugRescan = new HotplugRescan(() => {
-		this.triggerRefreshDevices().catch((e) => {
-			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
+		this.triggerRefreshDevices().catch((e: unknown) => {
+			this.#logger.warn(`Hotplug device refresh failed: ${stringifyError(e)}`)
 		})
 	})
 
@@ -221,8 +230,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#usbAvailable = usbAvailable
 
-		this.#dbTableSurfaces = db.getTableView('surfaces')
-		this.#dbTableGroups = db.getTableView('surface_groups')
+		this.#dbTableSurfaces = db.getSchemaTableView('surfaces', SurfaceConfigSchema)
+		this.#dbTableGroups = db.getSchemaTableView('surface_groups', SurfaceGroupConfigStoredSchema)
 		this.#handlerDependencies = handlerDependencies
 
 		this.#updateEvents.setMaxListeners(0)
@@ -285,7 +294,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				usb.addEventListener('connect', this.triggerRefreshDevicesEvent)
 			} catch (e) {
-				this.#logger.error(`Failed to enable usb hotplug: ${e}`)
+				this.#logger.error(`Failed to enable usb hotplug: ${stringifyError(e)}`)
 			}
 			this.#runningUsbHotplug = true
 		}
@@ -305,7 +314,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param key - the saved key
 	 * @param value - the saved value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
+	updateUserConfig({ key, value }: UserConfigKeyChange): void {
 		if (key === 'usb_hotplug') {
 			try {
 				if (!value && this.#runningUsbHotplug) {
@@ -319,7 +328,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					this.#runningUsbHotplug = true
 				}
 			} catch (e) {
-				this.#logger.warn(`Failed to enable/disable usb hotplug: ${e}`)
+				this.#logger.warn(`Failed to enable/disable usb hotplug: ${stringifyError(e)}`)
 			}
 		} else if (key === 'pin_enable' || key === 'pin_timeout') {
 			this.#startStopLockoutTimer()
@@ -818,23 +827,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				.input(
 					z.object({
 						groupId: z.string(),
-						key: z.string(),
-						value: JsonValueSchema.optional(),
+						change: SurfaceGroupConfigChangeSchema,
 					})
 				)
 				.mutation(async ({ input }) => {
 					const group = this.#surfaceGroups.get(input.groupId)
 					if (group) {
-						return group.setGroupConfigValue(input.key, input.value)
+						return group.setGroupConfigValue(input.change)
 					}
 
 					// Perhaps this is an auto-group for an offline surface?
 					const surfaceConfig = this.#dbTableSurfaces.get(input.groupId)
 					if (surfaceConfig && !this.#surfaceHandlers.has(input.groupId)) {
 						try {
-							const newValue = validateGroupConfigValue(this.#handlerDependencies.pageStore, input.key, input.value)
+							validateGroupConfigChange(this.#handlerDependencies.pageStore, input.change)
 
-							;(surfaceConfig.groupConfig as any)[input.key] = newValue
+							Object.assign(surfaceConfig.groupConfig, { [input.change.key]: input.change.value })
 
 							this.#dbTableSurfaces.set(input.groupId, surfaceConfig)
 							this.#updateEvents.emit(`groupConfig:${input.groupId}`, surfaceConfig.groupConfig)
@@ -996,7 +1004,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							// Directly open the surface using the cached handler
 							this.#logger.debug(`Enabling surface ${input.surfaceId}, opening directly via cached handler`)
 							openerInfo.opener.openDiscoveredSurface(openerInfo.surface, input.surfaceId).catch((e: unknown) => {
-								this.#logger.warn(`Error opening enabled surface ${input.surfaceId}: ${e}`)
+								this.#logger.warn(`Error opening enabled surface ${input.surfaceId}: ${stringifyError(e)}`)
 								// If direct open failed, fall back to a full refresh
 								this.triggerRefreshDevices().catch(() => {
 									this.#logger.warn('Device refresh after enable failed')
@@ -1386,6 +1394,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	})
 
 	#updateDevicesList(): void {
+		if (this.#hasQuit) return
+
 		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
@@ -1415,7 +1425,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						info,
 					})
 				} else {
-					const patch = jsonPatch.compare(lastInfo, info)
+					const patch = diffObject(lastInfo, info)
 					if (patch.length > 0) {
 						changes.push({
 							type: 'update',
@@ -1573,8 +1583,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							handler
 								.scanForSurfaces(sanitisedDevices)
 								.then((surfaces) => ({ instanceId, handler, surfaces }))
-								.catch((e) => {
-									this.#logger.warn(`Error during HID scan: ${e}`)
+								.catch((e: unknown) => {
+									this.#logger.warn(`Error during HID scan: ${stringifyError(e)}`)
 									return { instanceId, handler, surfaces: [] }
 								})
 						)
@@ -1627,8 +1637,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						}
 
 						// Open the surface with the resolved ID
-						handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
-							this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${e}`)
+						handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e: unknown) => {
+							this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${stringifyError(e)}`)
 						})
 					}
 				}),
@@ -1638,7 +1648,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			return undefined
 		} catch (e) {
-			this.#logger.silly('USB: scan failed ' + e)
+			this.#logger.silly('USB: scan failed ' + stringifyError(e))
 			return 'Scan failed'
 		}
 	}
@@ -1713,7 +1723,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return this.#dbTableSurfaces.all()
 	}
 
-	exportAllGroups(): Record<number, SurfaceGroupConfig> {
+	exportAllGroups(): Record<number, SurfaceGroupConfigStored> {
 		return this.#dbTableGroups.all()
 	}
 
@@ -1746,7 +1756,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			group.setName(surfaceGroup.name ?? '')
 			for (const [key, value] of Object.entries(surfaceGroup)) {
 				if (key === 'name') continue
-				group.setGroupConfigValue(key, value as JsonValue)
+				// An imported value is set only when it is valid for a setting that can be set
+				const change = SurfaceGroupConfigChangeSchema.safeParse({ key, value })
+				if (change.success) group.setGroupConfigValue(change.data)
 			}
 			group.clearPageHistory()
 		}
@@ -1779,13 +1791,21 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					group.setName(surfaceConfig.groupConfig?.name ?? '')
 					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
 						if (key === 'name') continue
-						group.setGroupConfigValue(key, value as JsonValue)
+						// An imported value is set only when it is valid for a setting that can be set
+						const change = SurfaceGroupConfigChangeSchema.safeParse({ key, value })
+						if (change.success) group.setGroupConfigValue(change.data)
 					}
 					group.clearPageHistory()
 				}
 			} else {
 				// Device is not loaded
-				this.setDeviceConfig(surfaceId, surfaceConfig)
+				try {
+					this.setDeviceConfig(surfaceId, surfaceConfig)
+				} catch (e) {
+					// Skip it, rather than abandon the rest
+					this.#logger.warn(`Skipping invalid surface "${surfaceId}": ${stringifyError(e)}`)
+					continue
+				}
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined)
@@ -1793,7 +1813,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					if (surfaceConfig.groupConfig) {
 						// need the following to put the emulator on the "current" page, to match its export state
 						const group = this.#surfaceGroups.get(surfaceId)
-						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+						group?.setGroupConfigValue({ key: 'last_page_id', value: surfaceConfig.groupConfig.last_page_id })
 						group?.clearPageHistory()
 					}
 				}
@@ -1993,7 +2013,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				usb.removeEventListener('connect', this.triggerRefreshDevicesEvent)
 			} catch (e) {
-				this.#logger.warn(`Failed to disable usb hotplug: ${e}`)
+				this.#logger.warn(`Failed to disable usb hotplug: ${stringifyError(e)}`)
 			}
 			this.#runningUsbHotplug = false
 		}
@@ -2012,7 +2032,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#outboundController.quit()
 
 		this.#surfaceHandlers.clear()
-		this.triggerUpdateDevicesList()
+
+		// The db is closed straight after this, so don't emit any further updates
+		this.#hasQuit = true
+		this.triggerUpdateDevicesList.cancel()
 	}
 
 	/**

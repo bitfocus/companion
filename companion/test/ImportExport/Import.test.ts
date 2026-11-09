@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportTriggerContentv6,
-} from '@companion-app/shared/Model/ExportModel.js'
+import { CreateBankControlId, CreateTriggerControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { ExportInstances, ExportPageContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ClientImportOrResetSelection, ImportOrResetType } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -16,6 +12,7 @@ import type { InternalController } from '../../lib/Internal/Controller.js'
 import type { PageController } from '../../lib/Page/Controller.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 // These tests drive the real ImportController against mocked leaf controllers, but keep the genuine
 // fixup logic (ImportFixup + VisitorReferencesUpdater) in the loop. The focus is orchestration:
@@ -30,7 +27,7 @@ const mockOptions = {
 
 const DEFAULT_GRID_SIZE = { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
 
-function pageControls(controls: ExportPageContentv6['controls']): ExportPageContentv6 {
+function pageControls(controls: ExportPageContent['controls']): ExportPageContent {
 	return { name: 'Imported Page', controls, gridSize: DEFAULT_GRID_SIZE }
 }
 
@@ -47,10 +44,7 @@ function createImportController() {
 	// ── Baseline stubs shared by most paths ──
 	internalModule.visitReferences.mockReturnValue(undefined)
 
-	userconfig.getKey.mockImplementation((key: any) => {
-		if (key === 'gridSize') return { ...DEFAULT_GRID_SIZE }
-		return undefined
-	})
+	userconfig.getKey.mockImplementation(mockGetKey({ gridSize: { ...DEFAULT_GRID_SIZE } }, 'default'))
 	userconfig.setKey.mockReturnValue(undefined)
 
 	controls.deleteControl.mockReturnValue(undefined)
@@ -105,7 +99,7 @@ function createImportController() {
 	return { controller, controls, graphics, instance, internalModule, page, surfaces, userconfig, variables }
 }
 
-const oneConnection: ExportInstancesv6 = {
+const oneConnection: ExportInstances = {
 	'old-conn': { label: 'my-connection', moduleId: 'demo-module', sortOrder: 0 },
 } as any
 
@@ -114,7 +108,7 @@ const oneConnection: ExportInstancesv6 = {
 describe('importSinglePage', () => {
 	test('creates new connections, resets the target page and imports its controls', async () => {
 		const { controller, controls, graphics, instance, page } = createImportController()
-		page.resetPage.mockReturnValue(['discarded-control'])
+		page.resetPage.mockReturnValue([CreateBankControlId('discarded-control')])
 
 		const pageInfo = pageControls({ 0: { 0: { type: 'pagenum' } }, 1: { 2: { type: 'pageup' } } })
 
@@ -130,7 +124,7 @@ describe('importSinglePage', () => {
 
 		// The old page was reset and its discarded controls deleted
 		expect(page.resetPage).toHaveBeenCalledWith(3)
-		expect(controls.deleteControl).toHaveBeenCalledWith('discarded-control')
+		expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('discarded-control'))
 		expect(graphics.clearAllForPage).toHaveBeenCalledWith(3)
 		expect(page.setPageName).toHaveBeenCalledWith(3, 'Imported Page')
 
@@ -183,7 +177,7 @@ describe('importSinglePage', () => {
 
 // ── importTriggers ──────────────────────────────────────────────────────────
 
-const oneTrigger: Record<string, ExportTriggerContentv6> = {
+const oneTrigger: Record<string, any> = {
 	t1: { type: 'trigger', options: { name: 'Trigger One' } },
 }
 
@@ -222,28 +216,30 @@ describe('importTriggers', () => {
 
 		const importedId = controls.importTrigger.mock.calls[0][0]
 		expect(importedId).not.toBe(CreateTriggerControlId('t1'))
-		expect(importedId.startsWith('trigger:')).toBe(true)
+		expect(importedId.startsWith(CreateTriggerControlId(''))).toBe(true)
 	})
 
 	test('replaceExisting deletes existing trigger controls first', () => {
 		const { controller, controls } = createImportController()
 		controls.getAllControls.mockReturnValue(
-			new Map<string, any>([
-				['trigger:existing', { type: 'trigger' }],
-				['bank:keep', { type: 'button' }],
+			new Map<SomeControlId, any>([
+				[CreateTriggerControlId('existing'), { type: 'trigger' }],
+				[CreateBankControlId('keep'), { type: 'button' }],
 			])
 		)
 
 		controller.importTriggers(undefined, {}, oneTrigger, ['t1'], true)
 
 		// Only the existing trigger is deleted, not the button
-		expect(controls.deleteControl).toHaveBeenCalledWith('trigger:existing')
-		expect(controls.deleteControl).not.toHaveBeenCalledWith('bank:keep')
+		expect(controls.deleteControl).toHaveBeenCalledWith(CreateTriggerControlId('existing'))
+		expect(controls.deleteControl).not.toHaveBeenCalledWith(CreateBankControlId('keep'))
 	})
 
 	test('replaceExisting=false leaves existing controls untouched', () => {
 		const { controller, controls } = createImportController()
-		controls.getAllControls.mockReturnValue(new Map<string, any>([['trigger:existing', { type: 'trigger' }]]))
+		controls.getAllControls.mockReturnValue(
+			new Map<SomeControlId, any>([[CreateTriggerControlId('existing'), { type: 'trigger' }]])
+		)
 
 		controller.importTriggers(undefined, {}, oneTrigger, ['t1'], false)
 
@@ -344,6 +340,45 @@ describe('importFull config gating', () => {
 		expect(instance.connectionCollections.replaceCollections).toHaveBeenCalledWith([], true)
 		// existing connection reused, so nothing new created
 		expect(instance.addConnectionWithLabel).not.toHaveBeenCalled()
+	})
+
+	test('an invalid remote surface does not stop the rest being imported', async () => {
+		const { controller, surfaces } = createImportController()
+		surfaces.outbound.reset.mockReturnValue(undefined)
+		surfaces.outbound.addOutboundConnection.mockImplementation((info) => {
+			if (info.displayName === 'Bad') throw new Error('Invalid value')
+		})
+
+		const remote = (id: string, displayName: string) => ({
+			id,
+			type: 'plugin',
+			enabled: true,
+			displayName,
+			moduleId: 'mod',
+			instanceId: 'inst',
+			config: {},
+			collectionId: null,
+			sortOrder: 0,
+		})
+		const data = baseData()
+		data.surfacesRemote = { bad: remote('bad', 'Bad'), good: remote('good', 'Good') }
+
+		await controller.importFull(
+			data,
+			fullConfig({
+				buttons: 'unchanged',
+				triggers: 'unchanged',
+				customVariables: 'unchanged',
+				expressionVariables: 'unchanged',
+				imageLibrary: 'unchanged',
+				surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'reset-and-import' },
+			})
+		)
+
+		expect(surfaces.outbound.addOutboundConnection).toHaveBeenCalledTimes(2)
+		expect(surfaces.outbound.addOutboundConnection).toHaveBeenLastCalledWith(
+			expect.objectContaining({ displayName: 'Good' })
+		)
 	})
 
 	test('inserts pages when the import references a page beyond the current count', async () => {

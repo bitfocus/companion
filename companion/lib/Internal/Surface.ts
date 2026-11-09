@@ -11,6 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { FeedbackEntitySubType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import {
@@ -520,7 +521,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		}
 	}
 
-	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+	actionUpgrade(action: ActionEntityModel, _controlId: SomeControlId): ActionEntityModel | void {
 		if (
 			action.definitionId === 'set_page' &&
 			action.options.page &&

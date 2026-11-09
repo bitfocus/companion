@@ -90,4 +90,9 @@ describe('getSatelliteFeatures', () => {
 	test('a caps flag is ignored when the api version predates the feature', () => {
 		expect(getSatelliteFeatures('1.13.0', { ROTARY_AMOUNT: '1' }).rotaryAmount).toBe(false)
 	})
+
+	test('json variable values need 1.16.0', () => {
+		expect(getSatelliteFeatures('1.15.0', null).jsonVariableValues).toBe(false)
+		expect(getSatelliteFeatures('1.16.0', null).jsonVariableValues).toBe(true)
+	})
 })

@@ -7,6 +7,10 @@ import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/Styl
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
+/**
+ * Create a new element of a type. Its values can differ from the defaults of the element's properties, which are
+ * for existing elements that don't have a property, to show off what the element can do.
+ */
 export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): SomeButtonGraphicsElement {
 	switch (type) {
 		case 'canvas':

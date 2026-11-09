@@ -6,11 +6,16 @@ import {
 	CreatePresetControlId,
 	CreateTriggerControlId,
 	formatLocation,
+	getControlIdKind,
+	isControlIdOfKind,
 	isLocationOnGrid,
+	isSomeControlId,
 	oldBankIndexToXY,
 	ParseControlId,
 	validateActionSetId,
 	xyToOldBankIndex,
+	zodControlIds,
+	zodSomeControlId,
 } from '../ControlId.js'
 
 // ── formatLocation ────────────────────────────────────────────────────────────
@@ -223,6 +228,75 @@ describe('ParseControlId', () => {
 
 	test('returns undefined for an empty string', () => {
 		expect(ParseControlId('')).toBeUndefined()
+	})
+})
+
+// ── control id kinds ──────────────────────────────────────────────────────────
+
+describe('getControlIdKind', () => {
+	test('returns the kind of each kind of id', () => {
+		expect(getControlIdKind(CreateBankControlId('a'))).toBe('bank')
+		expect(getControlIdKind(CreateTriggerControlId('a'))).toBe('trigger')
+		expect(getControlIdKind(CreateExpressionVariableControlId('a'))).toBe('expression-variable')
+		expect(getControlIdKind(CreatePageControlId('a'))).toBe('page')
+		expect(getControlIdKind(CreatePresetControlId('conn', 'p', 'hash'))).toBe('preset')
+	})
+
+	test('returns undefined for something that is not a control id', () => {
+		expect(getControlIdKind('')).toBeUndefined()
+		expect(getControlIdKind('bank')).toBeUndefined()
+		expect(getControlIdKind('unknown:xyz')).toBeUndefined()
+		expect(getControlIdKind(':xyz')).toBeUndefined()
+		// Not fooled by inherited properties
+		expect(getControlIdKind('constructor:xyz')).toBeUndefined()
+		expect(getControlIdKind('__proto__:xyz')).toBeUndefined()
+	})
+
+	test('a preset id must have its connection, preset and variables hash', () => {
+		expect(getControlIdKind('preset:conn:p:hash')).toBe('preset')
+		expect(getControlIdKind('preset:conn:p:x:hash')).toBe('preset')
+		expect(getControlIdKind('preset:conn:p')).toBeUndefined()
+		expect(getControlIdKind('preset:conn')).toBeUndefined()
+		expect(isControlIdOfKind('preset:conn', 'preset')).toBe(false)
+		expect(zodControlIds.preset.safeParse('preset:conn:p').success).toBe(false)
+		expect(ParseControlId('preset:conn:p')).toBeUndefined()
+	})
+})
+
+describe('isSomeControlId', () => {
+	test('accepts any kind, and rejects anything else', () => {
+		expect(isSomeControlId('bank:a')).toBe(true)
+		expect(isSomeControlId('expression-variable:a')).toBe(true)
+		expect(isSomeControlId('a')).toBe(false)
+		expect(isSomeControlId('bankx:a')).toBe(false)
+	})
+})
+
+describe('isControlIdOfKind', () => {
+	test('accepts only the given kind', () => {
+		expect(isControlIdOfKind('trigger:a', 'trigger')).toBe(true)
+		expect(isControlIdOfKind('bank:a', 'trigger')).toBe(false)
+		expect(isControlIdOfKind('trigger', 'trigger')).toBe(false)
+		expect(isControlIdOfKind('triggerx:a', 'trigger')).toBe(false)
+	})
+})
+
+describe('zodSomeControlId', () => {
+	test('accepts any kind, and rejects anything else', () => {
+		expect(zodSomeControlId.safeParse('bank:a').success).toBe(true)
+		expect(zodSomeControlId.safeParse('preset:conn:p:hash').success).toBe(true)
+		expect(zodSomeControlId.safeParse('unknown:a').success).toBe(false)
+		expect(zodSomeControlId.safeParse('bank').success).toBe(false)
+		expect(zodSomeControlId.safeParse(5).success).toBe(false)
+	})
+})
+
+describe('zodControlIds', () => {
+	test('accepts only the given kind', () => {
+		const schema = zodControlIds['expression-variable']
+		expect(schema.safeParse('expression-variable:a').success).toBe(true)
+		expect(schema.safeParse('trigger:a').success).toBe(false)
+		expect(schema.safeParse('expression-variable').success).toBe(false)
 	})
 })
 

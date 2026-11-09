@@ -1,11 +1,11 @@
-import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { useUsbAvailable } from '~/Hooks/useUsbAvailable'
 
 interface SurfacesStepProps {
 	config: Partial<UserConfigModel>
-	setValue: (key: keyof UserConfigModel, value: JsonValue) => void
+	setValue: (change: KeyValueChange<UserConfigModel>) => void
 }
 
 export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX.Element {
@@ -22,7 +22,7 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="Watch for newly connected USB devices"
 					value={usbAvailable && !!config.usb_hotplug}
-					setValue={(val) => setValue('usb_hotplug', val)}
+					setValue={(value) => setValue({ key: 'usb_hotplug', value })}
 					disabled={!usbAvailable}
 				/>
 				{!usbAvailable && <p className="text-xs text-muted ms-6 mb-0">USB is not available on this machine</p>}
@@ -31,7 +31,7 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 				<CheckboxInputFieldWithLabel
 					label="Auto-enable newly discovered surfaces"
 					value={!!config.auto_enable_discovered_surfaces}
-					setValue={(val) => setValue('auto_enable_discovered_surfaces', val)}
+					setValue={(value) => setValue({ key: 'auto_enable_discovered_surfaces', value })}
 				/>
 			</div>
 

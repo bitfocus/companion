@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
@@ -162,7 +163,11 @@ describe('button action-set surface cue preferences', () => {
 	})
 
 	test('keeps preference editing unavailable on read-only pools', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'readonly' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('readonly') }).deps,
+			vi.fn(),
+			true
+		)
 
 		expect(pool.isActionSetControlEventsEnabled('0', 'down')).toBe(true)
 		// @ts-expect-error actionSetControlEvents is only on the editable pool

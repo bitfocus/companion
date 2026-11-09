@@ -1,10 +1,12 @@
-import type { JsonValue } from 'type-fest'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type FeedbackValue,
 	type ResolvedFeedbackStyleOverride,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
@@ -12,8 +14,10 @@ import {
 import { exprExpr } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariableDependency, VariableDependencyListener } from '../../Variables/DependencyRegistry.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -32,7 +36,6 @@ interface CurrentStepFromExpression {
 	expression: string
 
 	lastStepId: string
-	lastVariables: ReadonlySet<string>
 }
 interface CurrentStepFromId {
 	type: 'id'
@@ -52,7 +55,10 @@ export interface ControlEntityListActionStep {
  * extend it as siblings, each setting `isEditable`. (Sibling, not parent/child, so each can pin the literal
  * discriminant without an override conflict.)
  */
-export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase {
+export abstract class ButtonEntityListPoolBase
+	extends ControlEntityListPoolBase
+	implements VariableDependencyListener<null>
+{
 	/**
 	 * The defaults options for a step
 	 */
@@ -74,6 +80,9 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	 */
 	protected currentStep: CurrentStepFromExpression | CurrentStepFromId = { type: 'id', id: '0' }
 
+	/** The variables the step expression last read, when the current step comes from an expression */
+	readonly #stepVariables: VariableDependency<null>
+
 	#hasRotaryActions = false
 
 	get currentStepId(): string {
@@ -94,6 +103,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		this.#pageStore = props.pageStore
 		this.#getPageVariableEntities = props.getPageVariableEntities
 		this.sendRuntimePropsChange = sendRuntimePropsChange
+		this.#stepVariables = props.variableDependencies.create(this, props.controlId, null)
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
@@ -106,7 +116,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 		this.currentStep = { type: 'id', id: '0' }
 
-		this.steps.set('0', this.getNewStepValue(null, null))
+		this.steps.set('0', this.getNewStepValue(null, null, false))
 	}
 
 	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean): void {
@@ -117,10 +127,16 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		this.steps.clear()
 
 		for (const [id, stepObj] of Object.entries(storage.steps ?? {})) {
-			this.steps.set(id, this.getNewStepValue(stepObj.action_sets, stepObj.options))
+			this.steps.set(id, this.getNewStepValue(stepObj.action_sets, stepObj.options, isImport))
 		}
 
 		this.currentStep = { type: 'id', id: this.getStepIds()[0] } // TODO - other modes?
+		this.#stepVariables.set(null)
+	}
+
+	override destroy(): void {
+		super.destroy()
+		this.#stepVariables.dispose()
 	}
 
 	/**
@@ -193,6 +209,10 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		return undefined
 	}
 
+	protected getLocalVariablesList(): ControlEntityList {
+		return this.#localVariables
+	}
+
 	protected getAllEntityLists(): ControlEntityList[] {
 		const entityLists: ControlEntityList[] = [this.#feedbacks, this.#localVariables]
 
@@ -242,7 +262,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			if (!overrides || overrides.length === 0) return
 
 			// Special case to flatten the 'conditionalise existing feedbacks'
-			if (feedback.connectionId === 'internal' && feedback.definitionId === 'logic_conditionalise_advanced') {
+			if (isInternalConnectionId(feedback.connectionId) && feedback.definitionId === 'logic_conditionalise_advanced') {
 				// Check if the condition (all 'children' boolean feedbacks) is true
 				if (!feedback.getBooleanFeedbackValue(null)) return
 
@@ -278,7 +298,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 				case FeedbackEntitySubType.Advanced: {
 					// For advanced feedbacks, split out the value from the feedback and inject it into the map
 					const style = feedback.feedbackValue
-					if (!style || typeof style !== 'object') break
+					if (!isFeedbackStyle(style)) break
 
 					const parsedStyle = ParseLegacyStyle(style, defaultNoTopBar)
 					for (const override of overrides) {
@@ -299,7 +319,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					// The override is an expression transform of the feedback value, bound to `$(this:value)` and
 					// evaluated at draw time (undefined result = no override). Always coerce to an expression: an
 					// override from an untrusted source (module preset, imported config) could be a plain value.
-					const thisContext = { value: feedback.feedbackValue as JsonValue | undefined }
+					const thisContext = { value: feedback.feedbackValue }
 					for (const override of overrides) {
 						pushOverride(override.elementId, override.elementProperty, {
 							value: exprExpr(stringifyVariableValue(override.override.value) ?? ''),
@@ -370,32 +390,30 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		return list
 	}
 
+	/**
+	 * @param isCloned - give the actions fresh ids, as for an import or a duplicated step
+	 */
 	protected getNewStepValue(
 		existingActions: ActionSetsModel | null,
-		existingOptions: ActionStepOptions | null
+		existingOptions: ActionStepOptions | null,
+		isCloned: boolean
 	): ControlEntityListActionStep {
-		const downList = this.createActionEntityList(existingActions?.down || [], false, !!existingActions)
-		const upList = this.createActionEntityList(existingActions?.up || [], false, !!existingActions)
+		const downList = this.createActionEntityList(existingActions?.down || [], false, isCloned)
+		const upList = this.createActionEntityList(existingActions?.up || [], false, isCloned)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], false, !!existingActions))
-			sets.set(
-				'rotate_right',
-				this.createActionEntityList(existingActions?.rotate_right || [], false, !!existingActions)
-			)
+			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], false, isCloned))
+			sets.set('rotate_right', this.createActionEntityList(existingActions?.rotate_right || [], false, isCloned))
 		}
 
 		for (const setId in existingActions || {}) {
 			const setIdNumber = validateActionSetId(setId as ActionSetId)
 			if (typeof setIdNumber === 'number') {
-				sets.set(
-					setIdNumber,
-					this.createActionEntityList(existingActions?.[setIdNumber] || [], false, !!existingActions)
-				)
+				sets.set(setIdNumber, this.createActionEntityList(existingActions?.[setIdNumber] || [], false, isCloned))
 			}
 		}
 
@@ -458,12 +476,14 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
-		super.onVariablesChanged(changedVariables)
-
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		changedVariables: ReadonlySet<string>
+	): void {
 		if (this.currentStep.type !== 'expression') return
 
-		if (this.currentStep.lastVariables.isDisjointFrom(changedVariables)) return
+		const stepVariables = this.#stepVariables.variableIds
+		if (!stepVariables || stepVariables.isDisjointFrom(changedVariables)) return
 
 		if (this.stepCheckExpression(true)) {
 			// Something changed, so redraw
@@ -483,7 +503,10 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 		const stepIds = this.getStepIds()
 
-		const parser = this.createVariablesAndExpressionParser(null)
+		// The expression defines the step, so it must not depend on it
+		const parser = this.createVariablesAndExpressionParser(null, {
+			blockedThisVariables: StepExpressionBlockedVariables,
+		})
 
 		const latestValue = parser.executeExpression(this.currentStep.expression, 'number')
 		if (latestValue.ok) {
@@ -497,7 +520,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 			// Update the state
 			this.currentStep.lastStepId = newStepId
-			this.currentStep.lastVariables = latestValue.variableIds
+			this.#stepVariables.set(latestValue.variableIds)
 		} else {
 			// Lets always go to the first step, to ensure we have a sane and predictable value
 
@@ -510,7 +533,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 			// Update the state
 			this.currentStep.lastStepId = firstStepId
-			this.currentStep.lastVariables = latestValue.variableIds
+			this.#stepVariables.set(latestValue.variableIds)
 		}
 
 		// Inform clients of the change
@@ -531,7 +554,6 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					type: 'expression',
 					expression: options.stepExpression || '',
 					lastStepId: this.getStepIds()[0],
-					lastVariables: new Set(),
 				}
 			} else {
 				this.currentStep.expression = options.stepExpression || ''
@@ -542,6 +564,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			if (this.currentStep.type === 'expression') {
 				// Stick to whatever is currently selected
 				this.currentStep = { type: 'id', id: this.currentStepId }
+				this.#stepVariables.set(null)
 			}
 		}
 	}
@@ -777,3 +800,8 @@ export type ButtonEntityPoolConstructor<TPool extends SomeButtonEntityPool> = ne
 	sendRuntimePropsChange: () => void,
 	isLayeredButton: boolean
 ) => TPool
+
+/** An advanced feedback's value is the style the module gave, which can only be checked to be an object */
+function isFeedbackStyle(value: FeedbackValue): value is CompanionFeedbackButtonStyleResult {
+	return !!value && typeof value === 'object' && !Array.isArray(value)
+}

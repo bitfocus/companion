@@ -12,8 +12,8 @@
 import EventEmitter from 'node:events'
 import path from 'node:path'
 import type express from 'express'
-import jsonPatch from 'fast-json-patch'
 import z from 'zod'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	ClientModuleInfo,
@@ -27,6 +27,7 @@ import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { InstanceController } from './Controller.js'
+import { resolveHelpAssetPath } from './HelpAsset.js'
 import { InstanceModuleInfo } from './ModuleInfo.js'
 import { InstanceModuleScanner } from './ModuleScanner.js'
 import type { ModuleStoreService } from './ModuleStore.js'
@@ -338,7 +339,7 @@ export class InstanceModules {
 				id: changedModuleIdFull,
 			})
 		} else if (oldModuleJson) {
-			const patch = jsonPatch.compare(oldModuleJson, newModuleJson)
+			const patch = diffObject(oldModuleJson, newModuleJson)
 			if (patch.length > 0) {
 				this.#events.emit('modulesUpdate', {
 					type: 'update',
@@ -526,21 +527,28 @@ export class InstanceModules {
 		const moduleType = req.params.moduleType as ModuleInstanceType
 		const moduleId = req.params.moduleId.replace(/\.\.+/g, '')
 		const versionId = req.params.versionId
-		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '')
+		const file = req.params.path?.join('/')?.replace(/\.\.+/g, '') ?? ''
 
 		const moduleInfo = this.#getModuleMapForType(moduleType).get(moduleId)?.getVersion(versionId)
-		if (moduleInfo && moduleInfo.helpPath && moduleInfo.basePath) {
-			const basePath = path.join(moduleInfo.basePath, 'companion')
-			if (file.match(/\.(jpe?g|gif|png|pdf|companionconfig|md)$/)) {
-				// Send the file, then stop
-				res.sendFile(file, {
-					root: basePath, // This is needed to prevent path traversal, and because this could be inside a dotfile
-				})
-				return
-			}
+		if (!moduleInfo || !moduleInfo.helpPath || !moduleInfo.basePath) {
+			// Try next handler
+			next()
+			return
 		}
 
-		// Try next handler
-		next()
+		resolveHelpAssetPath(path.join(moduleInfo.basePath, 'companion'), file)
+			.then((asset) => {
+				if (!asset) {
+					// Try next handler
+					next()
+					return
+				}
+
+				// Send the file, then stop
+				res.sendFile(asset.relativePath, {
+					root: asset.root, // This is needed to prevent path traversal, and because this could be inside a dotfile
+				})
+			})
+			.catch((e) => next(e))
 	}
 }

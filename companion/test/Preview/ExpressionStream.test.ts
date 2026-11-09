@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import { describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId, CreatePageControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -95,7 +96,7 @@ describe('customVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + 1',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
@@ -113,7 +114,7 @@ describe('customVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
@@ -135,7 +136,7 @@ describe('customVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) * 2',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
@@ -160,7 +161,7 @@ describe('customVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
@@ -189,13 +190,13 @@ describe('localVariable context resolution', () => {
 	it('injects this:current and target:* from the local variable context', async () => {
 		const context = { 'this:current': 5, 'target:counter': 5 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreateBankControlId('ctrl1'), name: 'counter' }, () => context)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + $(target:counter)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
@@ -208,13 +209,13 @@ describe('localVariable context resolution', () => {
 	it('re-evaluates when the target control changes (isTargetControlChange)', async () => {
 		let context: VariableValues = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreateBankControlId('ctrl1'), name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + 1',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
@@ -224,8 +225,8 @@ describe('localVariable context resolution', () => {
 
 		// Update context (simulates local variable changing on ctrl1)
 		context = { 'this:current': 9, 'target:counter': 9 }
-		// The resolved target controlId is 'ctrl1' (set during first resolution)
-		stream.onVariablesChanged(new Set(['local:counter']), new Set(['ctrl1']))
+		// The resolved target controlId is CreateBankControlId('ctrl1') (set during first resolution)
+		stream.onVariablesChanged(new Set(['local:counter']), new Set([CreateBankControlId('ctrl1')]))
 
 		await sub.expectValue({ ok: true, value: 10 }) // 9 + 1
 		await sub.cleanup()
@@ -234,13 +235,13 @@ describe('localVariable context resolution', () => {
 	it('does NOT re-evaluate when a different control changes', async () => {
 		const context = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreateBankControlId('ctrl1'), name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + 1',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
@@ -254,7 +255,10 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// Change from a different control — must not trigger re-evaluation
-		stream.onVariablesChanged(new Set(['local:counter']), new Set(['different-ctrl']))
+		stream.onVariablesChanged(
+			new Set(['local:counter']),
+			new Set<SomeControlId>([CreateBankControlId('different-ctrl')])
+		)
 
 		// No re-evaluation expected — the parser factory was not invoked again
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
@@ -280,7 +284,7 @@ describe('localVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
@@ -290,9 +294,9 @@ describe('localVariable context resolution', () => {
 		await sub.expectValue({ ok: true, value: undefined })
 
 		// A control is now created at the target location (a controlIdsMoved event arrives)
-		localVariable = { controlId: 'ctrl-target', name: 'counter' }
+		localVariable = { controlId: CreateBankControlId('ctrl-target'), name: 'counter' }
 		context = { 'this:current': 5, 'target:counter': 5 }
-		stream.onControlIdsLocationChanged(['ctrl-target'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('ctrl-target')])
 
 		// Resolution is retried and the expression re-evaluates with the freshly resolved context
 		await sub.expectValue({ ok: true, value: 5 })
@@ -304,7 +308,10 @@ describe('localVariable context resolution', () => {
 		// deleted target stayed pinned to its old control — a replacement control appearing at the
 		// location would be ignored and the preview would stay stale.
 		// (localVariableFor returning null models the control at the location being removed.)
-		let localVariable: { controlId: string; name: string } | null = { controlId: 'ctrl-a', name: 'counter' }
+		let localVariable: { controlId: string; name: string } | null = {
+			controlId: CreateBankControlId('ctrl-a'),
+			name: 'counter',
+		}
 		let context: VariableValues | null = { 'this:current': 1, 'target:counter': 1 }
 		const cc = makeControlsControllerMock(() => ({}))
 		const lv = {
@@ -316,7 +323,7 @@ describe('localVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('counter') },
 			})
@@ -327,14 +334,14 @@ describe('localVariable context resolution', () => {
 		// Target control deleted — resolution now fails, which must clear the stored target controlId
 		localVariable = null
 		context = null
-		stream.onControlIdsLocationChanged(['ctrl-a'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('ctrl-a')])
 		await sub.expectValue({ ok: true, value: undefined })
 
 		// A DIFFERENT control appears at the location. Without clearing resolvedTargetControlId,
 		// the session would stay pinned to ctrl-a and never pick up ctrl-b.
-		localVariable = { controlId: 'ctrl-b', name: 'counter' }
+		localVariable = { controlId: CreateBankControlId('ctrl-b'), name: 'counter' }
 		context = { 'this:current': 9, 'target:counter': 9 }
-		stream.onControlIdsLocationChanged(['ctrl-b'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('ctrl-b')])
 		await sub.expectValue({ ok: true, value: 9 })
 
 		await sub.cleanup()
@@ -355,13 +362,13 @@ describe('localVariable context resolution', () => {
 		} as unknown as ControlsController
 
 		const context = { 'this:current': 7, 'target:counter': 7 }
-		const lv = makeLocalVariablesMock({ controlId: 'ctrl1', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreateBankControlId('ctrl1'), name: 'counter' }, () => context)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: {
 					type: 'localVariable',
@@ -390,7 +397,7 @@ describe('localVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('') },
 			})
@@ -405,7 +412,7 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// A local-variable change on an unrelated control must not trigger a resolution retry
-		stream.onVariablesChanged(new Set(['local:whatever']), new Set(['other-ctrl']))
+		stream.onVariablesChanged(new Set(['local:whatever']), new Set<SomeControlId>([CreateBankControlId('other-ctrl')]))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -424,7 +431,7 @@ describe('localVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('counter') },
 			})
@@ -437,14 +444,14 @@ describe('localVariable context resolution', () => {
 
 		// A grid change elsewhere triggers a resolution retry (the session is unresolved), which
 		// fails again with an identical result — re-evaluated, but no duplicate pushed to the client
-		stream.onControlIdsLocationChanged(['some-other-ctrl'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('some-other-ctrl')])
 		expect(lvSpy.mock.calls.length).toBeGreaterThan(callsBefore)
 
 		// A control now exists at the target location — the NEXT value the client receives is the
 		// resolved one, proving the failed retry above did not emit a duplicate `undefined`
-		localVariable = { controlId: 'ctrl-target', name: 'counter' }
+		localVariable = { controlId: CreateBankControlId('ctrl-target'), name: 'counter' }
 		context = { 'this:current': 5, 'target:counter': 5 }
-		stream.onControlIdsLocationChanged(['ctrl-target'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('ctrl-target')])
 		await sub.expectValue({ ok: true, value: 5 })
 
 		await sub.cleanup()
@@ -460,7 +467,7 @@ describe('localVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('counter') },
 			})
@@ -471,7 +478,7 @@ describe('localVariable context resolution', () => {
 		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
 		const callsBefore = parserFactory.mock.calls.length
 
-		stream.onVariablesChanged(new Set(['local:whatever']), new Set(['other-ctrl']))
+		stream.onVariablesChanged(new Set(['local:whatever']), new Set<SomeControlId>([CreateBankControlId('other-ctrl')]))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -480,13 +487,13 @@ describe('localVariable context resolution', () => {
 	it('does not re-evaluate a session pinned to an unaffected control on grid changes', async () => {
 		const context = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'ctrl-a', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreateBankControlId('ctrl-a'), name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('1/2/3'), nameValue: exprVal('counter') },
 			})
@@ -498,7 +505,7 @@ describe('localVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// A grid change not involving ctrl-a (or the session's own ctrl1) is irrelevant
-		stream.onControlIdsLocationChanged(['ctrl-elsewhere'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('ctrl-elsewhere')])
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -512,7 +519,7 @@ describe('localVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'localVariable', locationValue: exprVal('this'), nameValue: exprVal('missing') },
 			})
@@ -532,13 +539,13 @@ describe('pageVariable context resolution', () => {
 	it('injects this:current and target:* from the page variable context', async () => {
 		const context = { 'this:current': 5, 'target:counter': 5 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreatePageControlId('page-b'), name: 'counter' }, () => context)
 		const { caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + $(target:counter)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'pageVariable', pageValue: exprVal('2'), nameValue: exprVal('counter') },
 			})
@@ -554,21 +561,21 @@ describe('pageVariable context resolution', () => {
 		// page 0 is the picker's "This page" — for a grid control it comes from its location.
 		const cc = makeControlsControllerMock(() => ({}))
 		const context = { 'this:current': 7, 'target:counter': 7 }
-		const lv = makeLocalVariablesMock({ controlId: 'page:page-c', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreatePageControlId('page-c'), name: 'counter' }, () => context)
 		const pageStore = makePageStoreMock({ pageNumber: 3, row: 0, column: 0 })
 		const { caller } = createStream(cc, lv, pageStore)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'pageVariable', pageValue: exprVal('0'), nameValue: exprVal('counter') },
 			})
 		)
 
 		await sub.expectValue({ ok: true, value: 7 })
-		expect(pageStore.getLocationOfControlId).toHaveBeenCalledWith('ctrl1')
+		expect(pageStore.getLocationOfControlId).toHaveBeenCalledWith(CreateBankControlId('ctrl1'))
 		expect(lv.pageVariableFor).toHaveBeenCalledWith('0', 'counter', 3)
 		await sub.cleanup()
 	})
@@ -577,7 +584,7 @@ describe('pageVariable context resolution', () => {
 		// A page control has no grid location, so its page comes from its id via getPageNumber.
 		const cc = makeControlsControllerMock(() => ({}))
 		const context = { 'this:current': 4, 'target:counter': 4 }
-		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreatePageControlId('page-b'), name: 'counter' }, () => context)
 		const pageStore = {
 			getLocationOfControlId: vi.fn().mockReturnValue(undefined),
 			getPageNumber: vi.fn().mockReturnValue(2),
@@ -587,7 +594,7 @@ describe('pageVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'page:page-b',
+				controlId: CreatePageControlId('page-b'),
 				isVariableString: false,
 				contextResolution: { type: 'pageVariable', pageValue: exprVal('0'), nameValue: exprVal('counter') },
 			})
@@ -603,13 +610,13 @@ describe('pageVariable context resolution', () => {
 	it('re-evaluates when the target page control changes (isTargetControlChange)', async () => {
 		let context: VariableValues = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreatePageControlId('page-b'), name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + 1',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'pageVariable', pageValue: exprVal('2'), nameValue: exprVal('counter') },
 			})
@@ -619,7 +626,7 @@ describe('pageVariable context resolution', () => {
 
 		// The page's variable changed — the change is scoped to the resolved page control
 		context = { 'this:current': 9, 'target:counter': 9 }
-		stream.onVariablesChanged(new Set(['page:counter']), new Set(['page:page-b']))
+		stream.onVariablesChanged(new Set([CreatePageControlId('counter')]), new Set([CreatePageControlId('page-b')]))
 
 		await sub.expectValue({ ok: true, value: 10 }) // 9 + 1
 		await sub.cleanup()
@@ -628,13 +635,13 @@ describe('pageVariable context resolution', () => {
 	it('does NOT re-evaluate when a different control changes', async () => {
 		const context = { 'this:current': 3, 'target:counter': 3 }
 		const cc = makeControlsControllerMock(() => ({}))
-		const lv = makeLocalVariablesMock({ controlId: 'page:page-b', name: 'counter' }, () => context)
+		const lv = makeLocalVariablesMock({ controlId: CreatePageControlId('page-b'), name: 'counter' }, () => context)
 		const { stream, caller } = createStream(cc, lv)
 
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current) + 1',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'pageVariable', pageValue: exprVal('2'), nameValue: exprVal('counter') },
 			})
@@ -646,7 +653,7 @@ describe('pageVariable context resolution', () => {
 		const callsBefore = parserFactory.mock.calls.length
 
 		// A change scoped to a different page control must not trigger re-evaluation
-		stream.onVariablesChanged(new Set(['page:counter']), new Set(['page:different']))
+		stream.onVariablesChanged(new Set([CreatePageControlId('counter')]), new Set([CreatePageControlId('different')]))
 		expect(parserFactory.mock.calls.length).toBe(callsBefore)
 
 		await sub.cleanup()
@@ -660,7 +667,7 @@ describe('pageVariable context resolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'pageVariable', pageValue: exprVal('99'), nameValue: exprVal('missing') },
 			})
@@ -683,7 +690,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(test:val) + 1',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 			})
 		)
@@ -701,7 +708,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(test:val)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 			})
 		)
@@ -724,7 +731,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(test:val)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 			})
 		)
@@ -733,7 +740,7 @@ describe('no contextResolution', () => {
 
 		variables = { test: { val: 8 } }
 		// fromControlId matches session.controlId
-		stream.onVariablesChanged(new Set(['test:val']), new Set(['ctrl1']))
+		stream.onVariablesChanged(new Set(['test:val']), new Set([CreateBankControlId('ctrl1')]))
 
 		await sub.expectValue({ ok: true, value: 8 })
 		await sub.cleanup()
@@ -748,7 +755,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:page)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 			})
 		)
@@ -757,7 +764,7 @@ describe('no contextResolution', () => {
 
 		// The control is moved to another page — no variables_changed fires, but the grid event does
 		variables = { this: { page: 2 } }
-		stream.onControlIdsLocationChanged(['ctrl1'])
+		stream.onControlIdsLocationChanged([CreateBankControlId('ctrl1')])
 
 		await sub.expectValue({ ok: true, value: 2 })
 		await sub.cleanup()
@@ -772,7 +779,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(test:val) > 0',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 			})
 		)
@@ -800,7 +807,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '1 +', // invalid syntax
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 			})
 		)
@@ -819,7 +826,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(test:num)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				requiredType: 'number',
 			})
@@ -837,7 +844,7 @@ describe('no contextResolution', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(test:num)', // number, coerced to boolean
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				requiredType: 'boolean',
 			})
@@ -859,7 +866,7 @@ describe('isVariableString: true', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: 'Hello $(test:name)!',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: true,
 			})
 		)
@@ -877,7 +884,7 @@ describe('isVariableString: true', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: 'Label: $(test:label)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: true,
 			})
 		)
@@ -899,7 +906,7 @@ describe('isVariableString: true', () => {
 		const sub = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(unknown:var)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: true,
 			})
 		)
@@ -917,7 +924,11 @@ describe('session management', () => {
 		const lv = makeLocalVariablesMock(null, () => null)
 		const { caller } = createStream(cc, lv)
 
-		const input = { expression: '$(test:val)', controlId: 'ctrl1', isVariableString: false as const }
+		const input = {
+			expression: '$(test:val)',
+			controlId: CreateBankControlId('ctrl1'),
+			isVariableString: false as const,
+		}
 		const parserFactory = cc.createVariablesAndExpressionParser as ReturnType<typeof vi.fn>
 
 		const sub1 = new SubscriptionTester(await caller.watchExpression(input))
@@ -950,7 +961,7 @@ describe('session management', () => {
 		const sub1 = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('myVar') },
 			})
@@ -958,7 +969,7 @@ describe('session management', () => {
 		const sub2 = new SubscriptionTester(
 			await caller.watchExpression({
 				expression: '$(this:current)',
-				controlId: 'ctrl1',
+				controlId: CreateBankControlId('ctrl1'),
 				isVariableString: false,
 				contextResolution: { type: 'customVariable', nameValue: exprVal('other') },
 			})

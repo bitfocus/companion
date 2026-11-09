@@ -26,6 +26,7 @@ describe('SurfaceIPSatellite', () => {
 			configFields: undefined,
 			canChangePage: undefined,
 			bitmapFormat: 'rgb',
+			variableEncoding: 'string',
 		}
 
 		return new SurfaceIPSatellite(deviceInfo, 'satellite:dev1', vi.fn())

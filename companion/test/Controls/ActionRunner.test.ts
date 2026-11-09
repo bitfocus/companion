@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ActionRunner, ControlActionRunner } from '../../lib/Controls/ActionRunner.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
@@ -8,7 +9,7 @@ import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandler
 import type { InstanceController } from '../../lib/Instance/Controller.js'
 import type { InternalController } from '../../lib/Internal/Controller.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
-import type { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
+import type { LocalVariable, LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 
 let nextEntityId = 0
 
@@ -50,7 +51,7 @@ function makeExtras(overrides: Partial<RunActionExtras> = {}): { extras: RunActi
 	return {
 		abort,
 		extras: {
-			controlId: 'control:test',
+			controlId: CreateBankControlId('test'),
 			surfaceId: undefined,
 			location: { pageNumber: 2, row: 1, column: 3 },
 			abortDelayed: abort.signal,
@@ -361,7 +362,7 @@ describe('ActionRunner', () => {
 			const { runner, actionRun, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			actionRun.mockResolvedValue('the-result')
-			const targetVariable = { controlId: 'control:target', name: 'myvar' }
+			const targetVariable: LocalVariable = { controlId: CreateBankControlId('target'), name: 'myvar' }
 			localVariablesController.localVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -377,7 +378,7 @@ describe('ActionRunner', () => {
 			const { runner, internalModule, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			internalModule.executeAction.mockResolvedValue('internal-result')
-			const targetVariable = { controlId: 'control:target', name: 'myvar' }
+			const targetVariable: LocalVariable = { controlId: CreateBankControlId('target'), name: 'myvar' }
 			localVariablesController.localVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -441,7 +442,7 @@ describe('ActionRunner', () => {
 			const { runner, actionRun, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			actionRun.mockResolvedValue('page-result')
-			const targetVariable = { controlId: 'page:abc', name: 'pv' }
+			const targetVariable: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'pv' }
 			localVariablesController.pageVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -531,7 +532,7 @@ describe('ActionRunner', () => {
 			const { runner, actionRun, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			actionRun.mockResolvedValue(undefined)
-			const targetVariable = { controlId: 'control:target', name: 'myvar' }
+			const targetVariable: LocalVariable = { controlId: CreateBankControlId('target'), name: 'myvar' }
 			localVariablesController.localVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -549,7 +550,7 @@ describe('ControlActionRunner', () => {
 		const actionRunner = mock<ActionRunner>()
 		actionRunner.runMultipleActions.mockResolvedValue(undefined)
 		const triggerRedraw = vi.fn()
-		const controlRunner = new ControlActionRunner(actionRunner, 'control:abc', triggerRedraw)
+		const controlRunner = new ControlActionRunner(actionRunner, CreateBankControlId('abc'), triggerRedraw)
 		return { actionRunner, triggerRedraw, controlRunner }
 	}
 
@@ -574,7 +575,7 @@ describe('ControlActionRunner', () => {
 
 		expect(actionRunner.runMultipleActions).toHaveBeenCalledTimes(1)
 		expect(actionRunner.runMultipleActions).toHaveBeenCalledWith(actions, {
-			controlId: 'control:abc',
+			controlId: CreateBankControlId('abc'),
 			surfaceId: 'surface0',
 			location: { pageNumber: 1, row: 2, column: 3 },
 			executionMode: 'concurrent',

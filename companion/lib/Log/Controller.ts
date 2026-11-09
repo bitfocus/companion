@@ -23,6 +23,7 @@ import stripAnsi from 'strip-ansi'
 import supportsColor from 'supports-color'
 import { LOG_LEVELS, parseLogLevel, type LogLevel } from '@companion-app/shared/LaunchOptions.js'
 import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { AppInfo } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -357,7 +358,7 @@ class LogController {
 			})
 			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
 		} catch (e) {
-			this.#logger.error(`Failed to initialise syslog transport ${e}`)
+			this.#logger.error(`Failed to initialise syslog transport ${stringifyError(e)}`)
 		}
 	}
 
@@ -415,7 +416,7 @@ class LogController {
 				scope.setUser({ id: appInfo.machineId })
 				scope.setExtra('build', appInfo.appBuild)
 			} catch (e) {
-				this.#logger.info(`Failed to setup sentry reporting: ${e}`)
+				this.#logger.info(`Failed to setup sentry reporting: ${stringifyError(e)}`)
 			}
 
 			this.#addBreadcrumb = addBreadcrumb

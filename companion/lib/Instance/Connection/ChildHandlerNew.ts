@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import { isControlIdOfKind, isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -22,11 +23,11 @@ import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
-import { buildActionExecutionOverrides } from '../../Variables/Util.js'
 import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
 import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import { getActionExecutionTimeout } from './ActionExecutionTimeout.js'
 import type {
 	ConnectionChildHandlerApi,
 	ConnectionChildHandlerDependencies,
@@ -135,10 +136,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		// JSON.stringify per message and an exact wire byte count for metrics - no object-mode double-encode.
 		// Created before the IpcWrapper: its onMessage uses #ipcWrapper lazily (no message arrives until the
 		// child connects, after this constructor), so it only arms its listeners now.
-		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
-			this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
-			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
-		})
+		const transport = new HostFramedTransport(
+			dataChannel,
+			(msg, bytes) => {
+				this.#deps.trackIpcMessage(this.connectionId, 'received', bytes)
+				this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+			},
+			() => this.#rejectPendingIpc()
+		)
 
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
@@ -153,7 +158,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			new ConnectionNewEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 			this.#deps.controls,
 			this.connectionId,
-			this.#deps.renderClock
+			this.#deps.renderClock,
+			this.#deps.variables.dependencies
 		)
 
 		this.#unsubListeners = () => transport.destroy()
@@ -246,19 +252,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#entityManager.resendFeedbacks()
 	}
 
-	/**
-	 * Send the list of changed variables to the child process
-	 * @access public - called whenever variables change
-	 */
-	async sendVariablesChanged(
-		changedVariableIdSet: ReadonlySet<string>,
-		_changedVariableIds: string[],
-		controlIdFilter: ReadonlySet<string> | null
-	): Promise<void> {
-		this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
-	}
-
-	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
+	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 
 		this.#entityManager.trackEntity(entity, controlId)
@@ -269,9 +263,12 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string
+		controlId: SomeControlId,
+		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
+
+		if (signal.aborted) return
 
 		try {
 			const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
@@ -286,13 +283,15 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			const learnTimeout = entityDefinition.learnTimeout
 
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
-			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options, controlId)
 			if (!parseRes.ok) {
 				this.logger.warn(
 					`Failed to parse action options for ${entity.type} ${entity.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
 				)
 				throw new Error(`Failed to parse ${entity.type} options. One or more options were invalid`)
 			}
+
+			if (signal.aborted) return
 
 			switch (entity.type) {
 				case EntityModelType.Action: {
@@ -307,10 +306,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 							},
 						},
 						undefined,
-						learnTimeout
+						learnTimeout,
+						signal
 					)
 
-					if (!msg.options) return undefined
+					if (!msg.options || signal.aborted) return undefined
 
 					return {
 						...entity.options,
@@ -333,10 +333,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 							},
 						},
 						undefined,
-						learnTimeout
+						learnTimeout,
+						signal
 					)
 
-					if (!msg.options) return undefined
+					if (!msg.options || signal.aborted) return undefined
 
 					return {
 						...entity.options,
@@ -348,6 +349,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					break
 			}
 		} catch (e) {
+			// A cancelled learn is not an error
+			if (signal.aborted) return
+
 			this.logger.warn('Error learning options: ' + stringifyError(e))
 			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}
@@ -377,21 +381,15 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 			// Note: for actions, this doesn't need to be reactive
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(
-				extras.controlId,
-				buildActionExecutionOverrides(extras),
-				{
-					allowClockSensitive: false,
-				}
-			)
-			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+			const parser = this.#deps.controls.createActionExecutionParser(extras)
+			const parseRes = parser.parseEntityOptions(actionDefinition, action.options, extras.controlId)
 			if (!parseRes.ok) {
 				let location = 'Unknown'
 
 				if (extras.surfaceId && extras.surfaceId.startsWith('trigger'))
 					location = `Trigger ${extras.surfaceId.split(':')[1]}`
 
-				if (extras.controlId && extras.controlId.startsWith('bank') && extras.location)
+				if (isControlIdOfKind(extras.controlId, 'bank') && extras.location)
 					location = `Button ${extras.location.pageNumber}/${extras.location.row}/${extras.location.column}`
 
 				this.logger.warn(
@@ -402,16 +400,23 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				)
 			}
 
-			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
-				action: {
-					id: action.id,
-					controlId: extras?.controlId,
-					actionId: action.definitionId,
-					options: parseRes.parsedOptions,
-				},
+			const result = await this.#ipcWrapper.sendWithCb(
+				'executeAction',
+				{
+					action: {
+						id: action.id,
+						controlId: extras?.controlId,
+						actionId: action.definitionId,
+						options: parseRes.parsedOptions,
+					},
 
-				surfaceId: extras?.surfaceId,
-			})
+					surfaceId: extras?.surfaceId,
+				},
+				undefined,
+				getActionExecutionTimeout(actionDefinition),
+				// Aborting the chain this action belongs to cancels it inside the module too
+				extras.abortDelayed
+			)
 
 			if (result.success) {
 				return result.result
@@ -421,11 +426,12 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.logger.warn(`Error executing action: ${message}`)
 			this.#sendToModuleLog('error', `Error executing action: ${message}`)
 		} catch (e) {
+			// The user aborted the chain, so the action stopping is expected rather than an error
+			if (extras.abortDelayed.aborted) return undefined
+
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
 
-			if (e instanceof Error) {
-				this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e.message)}`)
-			}
+			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e, true)}`)
 
 			throw e
 		}
@@ -437,12 +443,13 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Tell the child instance class to 'destroy' itself
 	 */
 	async destroy(): Promise<void> {
-		// Cleanup the system once the module is destroyed
+		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
+		this.#entityManager.destroy()
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
 		} catch (e) {
-			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
+			console.warn(`Destroy for "${this.connectionId}" errored: ${stringifyError(e)}`)
 		}
 
 		// Stop ipc commands being received
@@ -457,6 +464,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Perform any cleanup
 	 */
 	cleanup(): void {
+		this.#rejectPendingIpc()
+
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
@@ -466,6 +475,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#deps.variables.values.forgetConnection(this.connectionId, this.#label)
 		this.#deps.variables.definitions.forgetConnection(this.connectionId, this.#label)
 		this.#deps.controls.clearConnectionState(this.connectionId)
+	}
+
+	/**
+	 * The child has gone away (or been replaced), so nothing sent to it can be answered any more. Fail those
+	 * calls now, rather than leaving each to run out its own timeout.
+	 */
+	#rejectPendingIpc(): void {
+		this.#ipcWrapper.rejectAllPending(new Error('Module process is no longer running'))
 	}
 
 	/**
@@ -503,8 +520,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					res.set(msg.response.headers ?? {})
 					res.send(msg.response.body ?? '')
 				})
-				.catch((err) => {
-					if (err.message.endsWith(timeoutMessage)) {
+				.catch((err: unknown) => {
+					if (err instanceof Error && err.message.endsWith(timeoutMessage)) {
 						res.status(504).send(JSON.stringify({ status: 504, message: 'Gateway Timeout' }))
 					} else {
 						res.status(500).send(JSON.stringify({ status: 500, message: 'Internal Server Error' }))
@@ -526,7 +543,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		}
 
 		// Send everything to the 'debug' page
-		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '/', msg.level, stringifyLogValue(msg.message))
+		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '', msg.level, stringifyLogValue(msg.message))
 	}
 
 	/**
@@ -575,11 +592,18 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
-			msg.values.map((val) => ({
-				entityId: val.id,
-				controlId: val.controlId,
-				value: val.value,
-			}))
+			// The control ids come back from the module, so are only trusted once checked
+			msg.values.flatMap((val) =>
+				isSomeControlId(val.controlId)
+					? [
+							{
+								entityId: val.id,
+								controlId: val.controlId,
+								value: val.value,
+							},
+						]
+					: []
+			)
 		)
 	}
 
@@ -620,9 +644,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			// This handler only serves 2.0+ modules, which all support presets being placed as references
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets, true)
 		} catch (e) {
-			this.logger.error(`setPresetDefinitions: ${e}`)
+			this.logger.error(`setPresetDefinitions: ${stringifyError(e)}`)
 
-			throw new Error(`Failed to set Preset Definitions: ${e}`)
+			throw new Error(`Failed to set Preset Definitions: ${stringifyError(e)}`)
 		}
 	}
 
@@ -631,10 +655,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.#sendToModuleLog('debug', `Updating composite element definitions (${msg.definitions.length} elements)`)
 
 			this.#deps.instanceDefinitions.setCompositeElementDefinitions(this.connectionId, msg.definitions)
-		} catch (e: any) {
-			this.logger.error(`setCompositeElementDefinitions: ${e}`)
+		} catch (e) {
+			this.logger.error(`setCompositeElementDefinitions: ${stringifyError(e)}`)
 
-			throw new Error(`Failed to set Composite Graphics Element Definitions: ${e}`)
+			throw new Error(`Failed to set Composite Graphics Element Definitions: ${stringifyError(e)}`)
 		}
 	}
 
@@ -677,7 +701,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				msg.uniquenessId ?? undefined
 			)
 		} catch (e) {
-			this.logger.error(`Record action failed: ${e}`)
+			this.logger.error(`Record action failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -691,7 +715,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
 		} catch (e) {
-			this.logger.error(`Set custom variable failed: ${e}`)
+			this.logger.error(`Set custom variable failed: ${stringifyError(e)}`)
 		}
 	}
 

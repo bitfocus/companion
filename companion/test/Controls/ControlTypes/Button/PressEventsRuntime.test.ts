@@ -1,12 +1,15 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ButtonPressEvents } from '../../../../lib/Controls/ButtonPressEvents.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonLayered } from '../../../../lib/Controls/ControlTypes/Button/Layered.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
-const CONTROL_ID = 'bank:press-events-test'
+const CONTROL_ID = CreateBankControlId('press-events-test')
 
 function action(id: string, disabled = false): ActionEntityModel {
 	return {
@@ -29,7 +32,13 @@ function storage(options: {
 }): LayeredButtonModel {
 	return {
 		type: 'button-layered',
-		options: { rotaryActions: false, stepProgression: 'manual', canModifyStyleInApis: false },
+		options: {
+			rotaryActions: false,
+			stepProgression: 'manual',
+			stepExpression: '',
+			canModifyStyleInApis: false,
+			notes: '',
+		},
 		style: { layers: [] },
 		feedbacks: [],
 		localVariables: [],
@@ -100,6 +109,9 @@ function createControl(model: LayeredButtonModel, runMultipleActions = vi.fn(asy
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+		variableDependencies: new VariableDependencyRegistry(),
+		linkButtons: null as any,
+		referencedLocations: new ReferencedLocationsIndex(),
 		controlsAccessor: {
 			getControl: vi.fn(() => undefined),
 			pressControl: vi.fn(() => false),
@@ -213,7 +225,7 @@ describe('button automatic press event dispatch', () => {
 		const send = vi.fn()
 
 		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
-		control.abortDelayedActions(false, null)
+		control.abortDelayedActions(false, null, 0)
 		vi.advanceTimersByTime(100)
 
 		expect(runMultipleActions).toHaveBeenCalledTimes(2)
@@ -259,7 +271,7 @@ describe('button automatic press event dispatch', () => {
 
 	test('explicit cancellation during dispatch takes precedence over that gesture cue', () => {
 		const { control, runMultipleActions } = createControl(storage({ down: [action('down1')] }))
-		runMultipleActions.mockImplementation(async () => control.abortDelayedActions(false, null))
+		runMultipleActions.mockImplementation(async () => control.abortDelayedActions(false, null, 0))
 		const send = vi.fn()
 		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
 		expect(runMultipleActions).toHaveBeenCalledTimes(1)

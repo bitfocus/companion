@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import {
+	decodeSatelliteVariableValue,
+	encodeSatelliteVariableValue,
 	formatSatelliteMessage,
 	isFalsey,
 	isTruthy,
 	parseLineParameters,
 	parseSatelliteBitmapFormat,
+	parseSatelliteVariableEncoding,
 	parseStringParamWithBooleanFallback,
 	SatelliteLineBuffer,
 	splitSatelliteCommand,
@@ -316,6 +319,63 @@ describe('parseSatelliteBitmapFormat', () => {
 		expect(parseSatelliteBitmapFormat(undefined)).toBe('rgb')
 		expect(parseSatelliteBitmapFormat(true)).toBe('rgb')
 		expect(parseSatelliteBitmapFormat('jpeg')).toBe('rgb')
+	})
+})
+
+// ── variable values ───────────────────────────────────────────────────────────
+
+describe('parseSatelliteVariableEncoding', () => {
+	test('defaults to string when absent', () => {
+		expect(parseSatelliteVariableEncoding(undefined)).toBe('string')
+	})
+
+	test('accepts the known encodings', () => {
+		expect(parseSatelliteVariableEncoding('string')).toBe('string')
+		expect(parseSatelliteVariableEncoding('json')).toBe('json')
+	})
+
+	test('rejects unknown encodings', () => {
+		expect(parseSatelliteVariableEncoding('xml')).toBeNull()
+		expect(parseSatelliteVariableEncoding('JSON')).toBeNull()
+		expect(parseSatelliteVariableEncoding(true)).toBeNull()
+	})
+})
+
+describe('encodeSatelliteVariableValue', () => {
+	test('string encoding sends the text of the value', () => {
+		expect(encodeSatelliteVariableValue('hello', 'string')).toBe('hello')
+		expect(encodeSatelliteVariableValue(12.5, 'string')).toBe('12.5')
+		expect(encodeSatelliteVariableValue(true, 'string')).toBe('true')
+		expect(encodeSatelliteVariableValue(null, 'string')).toBe('null')
+		expect(encodeSatelliteVariableValue(undefined, 'string')).toBe('')
+		expect(encodeSatelliteVariableValue({ a: [1, 2] }, 'string')).toBe('{"a":[1,2]}')
+	})
+
+	test('json encoding preserves the type', () => {
+		expect(encodeSatelliteVariableValue('hello', 'json')).toBe('"hello"')
+		expect(encodeSatelliteVariableValue(12.5, 'json')).toBe('12.5')
+		expect(encodeSatelliteVariableValue(false, 'json')).toBe('false')
+		expect(encodeSatelliteVariableValue(null, 'json')).toBe('null')
+		expect(encodeSatelliteVariableValue(undefined, 'json')).toBe('null')
+		expect(encodeSatelliteVariableValue({ a: [1, 2] }, 'json')).toBe('{"a":[1,2]}')
+	})
+})
+
+describe('decodeSatelliteVariableValue', () => {
+	test('string encoding returns the text as is', () => {
+		expect(decodeSatelliteVariableValue('123', 'string')).toBe('123')
+		expect(decodeSatelliteVariableValue('{"a":1}', 'string')).toBe('{"a":1}')
+	})
+
+	test('json encoding round trips typed values', () => {
+		for (const value of ['hello', 0, 12.5, true, null, [1, 'two'], { a: { b: null } }]) {
+			expect(decodeSatelliteVariableValue(encodeSatelliteVariableValue(value, 'json'), 'json')).toEqual(value)
+		}
+	})
+
+	test('json encoding throws on invalid json', () => {
+		expect(() => decodeSatelliteVariableValue('not json', 'json')).toThrow()
+		expect(() => decodeSatelliteVariableValue('', 'json')).toThrow()
 	})
 })
 

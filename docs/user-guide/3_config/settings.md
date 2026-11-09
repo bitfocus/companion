@@ -114,7 +114,7 @@ These settings are also on the **Surfaces** page.
 
 ## Protocols
 
-The Protocols page lists each network endpoint for controlling Companion remotely, with a switch to turn it on or off. Select a protocol to open its settings, such as the port it listens on, and use the help button there to find its API reference. There is more detail in the [Remote control](../5_remote-control/http-remote-control.md) section of this guide.
+The Protocols page lists each network endpoint for controlling Companion remotely, with a switch to turn it on or off. Select a protocol to open its settings, such as the port it listens on, and use the help button there to find its API reference. There is more detail in the [Remote control](../5_remote-control/http-remote-control.md) section of this guide. **Companion Link** is listed there too: it is how other Companion installations connect to this one (see [Link](./link.md)).
 
 Several of the older protocols have a **Deprecated ... API** switch in their settings. This enables the
 older commands of that protocol, which will be removed in a future release. Only turn these on if you have
@@ -297,11 +297,3 @@ _An HTTPS server can be enabled for the Companion web interfaces should your dep
 
   **Chain File (full path)**
   Optional field to provide the full file path for an external chain file.
-
-### Experiments
-
-_Do not touch these settings unless you know what you are doing!_
-
-- **Companion Cloud Tab (Deprecated)**  
-  Shows the **Cloud** page in the menu, for the deprecated Companion Cloud service. This setting is stored in your
-  browser rather than in Companion.

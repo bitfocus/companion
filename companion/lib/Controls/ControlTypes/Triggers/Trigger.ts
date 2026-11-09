@@ -1,12 +1,22 @@
 import debounceFn from 'debounce-fn'
-import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
+import {
+	TriggerOptionsSchema,
+	type ClientTriggerData,
+	type TriggerModel,
+	type TriggerOptions,
+} from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { clamp } from '../../../Resources/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -24,6 +34,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import { TriggersEventMisc } from './Events/Misc.js'
 import { TriggersEventTimer } from './Events/Timer.js'
@@ -46,14 +57,14 @@ import { TriggerExecutionSource } from './TriggerExecutionSource.js'
  * this program.
  */
 export class ControlTrigger
-	extends ControlBase<TriggerModel>
+	extends ControlBase<TriggerControlId, TriggerModel, NoRuntimeProps>
 	implements
 		ControlWithActions,
 		ControlWithEvents,
 		ControlWithEntities,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<TriggerOptions>,
 		ControlWithoutPushed
 {
 	readonly type = 'trigger'
@@ -68,15 +79,7 @@ export class ControlTrigger
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
-	/**
-	 * The defaults options for a trigger
-	 */
-	static DefaultOptions: TriggerOptions = {
-		name: 'New Trigger',
-		enabled: false,
-		sortOrder: 0,
-		notes: '',
-	}
+	readonly optionsSchema: z.ZodType<TriggerOptions> = TriggerOptionsSchema
 
 	/**
 	 * Enabled condition_true or condition_false events
@@ -153,7 +156,7 @@ export class ControlTrigger
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(deps: ControlDependencies, controlId: string, storage: TriggerModel | null, isImport: boolean) {
+	constructor(deps: ControlDependencies, controlId: TriggerControlId, storage: TriggerModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		const eventBus = deps.triggerEvents
@@ -169,6 +172,7 @@ export class ControlTrigger
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
+			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
@@ -179,7 +183,7 @@ export class ControlTrigger
 			this.#setVariableRateLimited(limited)
 		)
 
-		this.options = structuredClone(ControlTrigger.DefaultOptions)
+		this.options = this.optionsSchema.parse({})
 		this.events = []
 
 		if (!storage) {
@@ -218,7 +222,7 @@ export class ControlTrigger
 		}
 	}
 
-	abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null): void {
+	override abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		this.#actionRunner.abortAll(exceptSignal)
 	}
 
@@ -274,8 +278,8 @@ export class ControlTrigger
 				location: undefined,
 				rotationDelta: null,
 			})
-			.catch((e) => {
-				this.logger.error(`Failed to run actions: ${e.message}`)
+			.catch((e: unknown) => {
+				this.logger.error(`Failed to run actions: ${stringifyError(e)}`)
 			})
 	}
 
@@ -313,6 +317,10 @@ export class ControlTrigger
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
+	}
+
 	toJSON(clone = true): TriggerModel {
 		const obj: TriggerModel = {
 			type: this.type,
@@ -547,15 +555,16 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
-		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
+	optionsSetField(change: KeyValueChange<TriggerOptions>, forceSet?: boolean): boolean {
+		if (!forceSet && (change.key === 'sortOrder' || change.key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
-		// @ts-expect-error mismatch in types
-		this.options[key] = value
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-		if (key === 'enabled') {
+		this.options = options
+
+		if (change.key === 'enabled') {
 			// Pretend the collection changed, to re-trigger the events
 			this.setCollectionEnabled(this.#collectionEnabled)
 		}
@@ -585,7 +594,7 @@ export class ControlTrigger
 
 		if (this.deps.changeEvents.listenerCount('triggerChange') > 0) {
 			if (this.#lastSentTriggerJson) {
-				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
+				const patch = diffObject(this.#lastSentTriggerJson || {}, newJson || {})
 				if (patch.length > 0) {
 					this.deps.changeEvents.emit('triggerChange', this.controlId, {
 						type: 'update',
@@ -630,6 +639,8 @@ export class ControlTrigger
 	}
 
 	destroy(): void {
+		this.#actionRunner.abortAll(null)
+
 		this.#timerEvents.destroy()
 		this.#miscEvents.destroy()
 		this.#variablesEvents.destroy()
@@ -677,7 +688,7 @@ export class ControlTrigger
 				}
 				this.#conditionCheckLastValue = newStatus
 			} catch (e) {
-				this.logger.warn(`Failed to recheck condition: ${e}`)
+				this.logger.warn(`Failed to recheck condition: ${stringifyError(e)}`)
 			}
 		},
 		{

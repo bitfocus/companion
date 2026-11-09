@@ -13,8 +13,6 @@ export interface IButtonDrawer {
 	getDrawStyle(): Promise<DrawStyleLayeredButtonModel>
 	/** The most recently computed draw style, if any (without recomputing). */
 	getLastDrawStyle(): DrawStyleLayeredButtonModel | null
-	/** Propagate a variable change: invalidate affected cached elements and redraw if relevant. */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void
 	/** A composite element definition changed: invalidate and redraw if relevant. */
 	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void
 	/** Another located control finished rendering: invalidate and redraw if this button mirrors or references it. */

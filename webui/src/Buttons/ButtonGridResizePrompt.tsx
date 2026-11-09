@@ -17,12 +17,12 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 
 	const doAutoResize = () => {
 		if (!overflowing) return
-		setConfigKeyMutation.mutate({ key: 'gridSize', value: overflowing.neededBounds })
+		setConfigKeyMutation.mutate({ change: { key: 'gridSize', value: overflowing.neededBounds } })
 	}
 
 	const doDismiss = () => {
 		if (!overflowing) return
-		setConfigKeyMutation.mutate({ key: 'gridSizePromptGrow', value: false })
+		setConfigKeyMutation.mutate({ change: { key: 'gridSizePromptGrow', value: false } })
 	}
 
 	const count = overflowing.surfaces.length

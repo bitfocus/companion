@@ -19,7 +19,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, LinkButtonExternal } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
@@ -28,7 +28,9 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
+import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { PageHeader } from '~/Layout/PageHeader'
 import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
@@ -37,7 +39,7 @@ import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
@@ -68,7 +70,7 @@ export const TriggersPage = observer(function Triggers() {
 
 	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
-		exportModalRef.current?.show(makeAbsolutePath(`/int/export/triggers/all`))
+		exportModalRef.current?.show({ type: 'triggers' })
 	}, [])
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -137,7 +139,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<SplitPanels.Root showing={selectedTriggerId ? 'secondary' : 'primary'} resize={{ storageKey: 'triggers' }}>
 				<GenericConfirmModal ref={confirmModalRef} />
-				<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
+				<ConfirmExportModal ref={exportModalRef} />
 
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
@@ -173,6 +175,7 @@ export const TriggersPage = observer(function Triggers() {
 							>
 								<TriggersTableContextProvider
 									deleteModalRef={confirmModalRef}
+									exportModalRef={exportModalRef}
 									selectTrigger={selectTrigger}
 									selectedTriggerId={selectedTriggerId}
 								>
@@ -256,7 +259,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const deleteMutation = useMutationExt(trpc.controls.triggers.delete.mutationOptions())
 	const cloneMutation = useMutationExt(trpc.controls.triggers.clone.mutationOptions())
 
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(CreateTriggerControlId(item.id), 'trigger')
 
 	const { notifier } = useContext(RootAppStoreContext)
 	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
@@ -279,17 +282,11 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	const doEnableDisable = useCallback(
 		(enabled: boolean) => {
-			setOptionsFieldMutation
-				.mutateAsync({
-					controlId: CreateTriggerControlId(item.id),
-					key: 'enabled',
-					value: enabled,
-				})
-				.catch((e) => {
-					console.error('failed to toggle trigger state', e)
-				})
+			setOption('enabled', enabled).catch((e) => {
+				console.error('failed to toggle trigger state', e)
+			})
 		},
-		[setOptionsFieldMutation, item.id]
+		[setOption]
 	)
 
 	const doDelete = useCallback(() => {
@@ -307,15 +304,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const doEdit = useCallback(() => {
 		tableContext.selectTrigger(item.id)
 	}, [tableContext, item.id])
-	const doEditKey = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault()
-				tableContext.selectTrigger(item.id)
-			}
-		},
-		[tableContext, item.id]
-	)
+	const doEditKey = useActivateOnKey(doEdit)
 	const doClone = useCallback(() => {
 		cloneMutation
 			.mutateAsync({ controlId: CreateTriggerControlId(item.id) })
@@ -326,6 +315,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				console.error('Failed to clone', e)
 			})
 	}, [cloneMutation, item.id])
+	const doExport = useCallback(() => {
+		tableContext.exportModalRef.current?.show({ type: 'trigger', triggerId: item.id })
+	}, [tableContext.exportModalRef, item.id])
 
 	const descriptionHtml = useMemo(
 		() => ({
@@ -404,15 +396,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					<Button variant="ghost" size="sm" onClick={doClone} title="Clone Trigger" className="p-1.5">
 						<DuplicateIcon />
 					</Button>
-					<LinkButtonExternal
-						variant="ghost"
-						size="sm"
-						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
-						title="Export Trigger"
-						className="p-1.5"
-					>
+					<Button variant="ghost" size="sm" onClick={doExport} title="Export Trigger" className="p-1.5">
 						<FontAwesomeIcon icon={faDownload} className="text-xs" />
-					</LinkButtonExternal>
+					</Button>
 					<Button variant="ghost" size="sm" onClick={doDelete} title="Delete Trigger" className="p-1.5" color="danger">
 						<FontAwesomeIcon icon={faTrash} className="text-xs" />
 					</Button>

@@ -34,6 +34,14 @@ export class RestApiError extends Error {
 		return new RestApiError(401, 'UNAUTHORIZED', message)
 	}
 
+	static payloadTooLarge(message = 'Request body is too large'): RestApiError {
+		return new RestApiError(413, 'PAYLOAD_TOO_LARGE', message)
+	}
+
+	static unsupportedMediaType(message: string): RestApiError {
+		return new RestApiError(415, 'UNSUPPORTED_MEDIA_TYPE', message)
+	}
+
 	static unprocessable(message: string, details?: unknown): RestApiError {
 		return new RestApiError(422, 'UNPROCESSABLE_ENTITY', message, details)
 	}

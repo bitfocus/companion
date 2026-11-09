@@ -23,6 +23,7 @@ import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
 import { ConnectionVariablesModal, type ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
+import { ConnectionCollectionUpdates } from './ConnectionCollectionUpdates.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
 import { ConnectionListContextProvider, useConnectionListFilterContext } from './ConnectionListContext.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
@@ -284,7 +285,8 @@ function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCo
 	)
 
 	return (
-		<div className="ms-1">
+		<div className="ms-1 flex items-center gap-2">
+			<ConnectionCollectionUpdates collection={collection} />
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}

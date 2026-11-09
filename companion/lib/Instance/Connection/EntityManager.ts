@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -15,6 +16,11 @@ import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstan
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import type {
+	VariableDependency,
+	VariableDependencyListener,
+	VariableDependencyRegistry,
+} from '../../Variables/DependencyRegistry.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -36,21 +42,22 @@ interface EntityWrapper {
 	/** A unique id for this wrapper, so that we know if the entity was replaced/deleted */
 	readonly wrapperId: string
 	readonly entity: WeakRef<ControlEntityInstance>
-	readonly controlId: string
+	readonly controlId: SomeControlId
 
 	state: EntityState
-	lastReferencedVariableIds?: ReadonlySet<string>
+	/** The variables referenced by the last parse of the options, created when it first references any */
+	variables: VariableDependency<EntityWrapper> | null
 	/** Whether the last parsed options for this feedback entity depended on the render clock */
 	lastClockSensitive?: boolean
 }
 
 export interface EntityManagerActionEntity {
-	controlId: string
+	controlId: SomeControlId
 	entity: ActionEntityModel
 	parsedOptions: CompanionOptionValues
 }
 export interface EntityManagerFeedbackEntity {
-	controlId: string
+	controlId: SomeControlId
 	entity: FeedbackEntityModel
 	parsedOptions: CompanionOptionValues
 }
@@ -75,13 +82,14 @@ export interface EntityManagerAdapter {
  * With this, it will ensure that the entities are run through the upgrade scripts as needed, and also
  * have the options parsed (by as much as companion supports) before being sent to the module for subscription callbacks
  */
-export class ConnectionEntityManager {
+export class ConnectionEntityManager implements VariableDependencyListener<EntityWrapper> {
 	readonly #logger: Logger
 
 	readonly #adapter: EntityManagerAdapter
 	readonly controlsStore: IControlStore
 
 	readonly #entities = new Map<string, EntityWrapper>()
+	readonly #variableDependencies: VariableDependencyRegistry
 
 	// Before the connection is ready, we need to not send any updates
 	#ready = false
@@ -98,11 +106,13 @@ export class ConnectionEntityManager {
 		adapter: EntityManagerAdapter,
 		controlsStore: IControlStore,
 		connectionId: string,
-		renderClock: RenderClock
+		renderClock: RenderClock,
+		variableDependencies: VariableDependencyRegistry
 	) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
 		this.#adapter = adapter
 		this.controlsStore = controlsStore
+		this.#variableDependencies = variableDependencies
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
 	}
 
@@ -171,7 +181,7 @@ export class ConnectionEntityManager {
 						const entity = wrapper.entity.deref()
 						if (!entity) {
 							this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, skipping upgrade`)
-							this.#entities.delete(entityId)
+							this.#deleteEntity(entityId)
 							continue
 						}
 
@@ -196,7 +206,7 @@ export class ConnectionEntityManager {
 							try {
 								// Parse the options and track the variables referenced
 								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
-								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
+								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, wrapper.controlId)
 								if (!parseRes.ok) {
 									this.#logger.warn(
 										`Failed to parse options for entity ${entity.id} in control ${wrapper.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -204,7 +214,10 @@ export class ConnectionEntityManager {
 								} else {
 									updateOptions = parseRes.parsedOptions
 								}
-								wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
+								if (!wrapper.variables && parseRes.referencedVariableIds.size > 0) {
+									wrapper.variables = this.#variableDependencies.create(this, wrapper.controlId, wrapper)
+								}
+								wrapper.variables?.set(parseRes.referencedVariableIds)
 								wrapper.lastClockSensitive =
 									entityModel.type === EntityModelType.Feedback ? parseRes.clockSensitive : false
 							} catch (e) {
@@ -258,7 +271,7 @@ export class ConnectionEntityManager {
 						break
 					case EntityState.PENDING_DELETE: {
 						// Plan for deletion
-						this.#entities.delete(entityId)
+						this.#deleteEntity(entityId)
 
 						const entity = wrapper.entity.deref()
 
@@ -345,14 +358,14 @@ export class ConnectionEntityManager {
 
 	#queueUpdateActionsBatch(updateActionsPayload: Map<string, EntityManagerActionEntity | null>): void {
 		this.#queueBatch(async () =>
-			this.#adapter.updateActions(updateActionsPayload).catch((e) => {
+			this.#adapter.updateActions(updateActionsPayload).catch((e: unknown) => {
 				this.#logger.error('Error sending updateActions', e)
 			})
 		)
 	}
 	#queueUpdateFeedbacksBatch(updateFeedbacksPayload: Map<string, EntityManagerFeedbackEntity | null>): void {
 		this.#queueBatch(async () =>
-			this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e) => {
+			this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e: unknown) => {
 				this.#logger.error('Error sending updateFeedbacks', e)
 			})
 		)
@@ -368,7 +381,7 @@ export class ConnectionEntityManager {
 				.then((upgradedEntities) => {
 					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
 				})
-				.catch((e) => {
+				.catch((e: unknown) => {
 					this.#logger.error('Error sending upgradeActions', e)
 
 					this.#upgradeBatchRetry(entityIdsInThisBatch)
@@ -385,7 +398,7 @@ export class ConnectionEntityManager {
 				.then((upgradedEntities) => {
 					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
 				})
-				.catch((e) => {
+				.catch((e: unknown) => {
 					this.#logger.error('Error sending upgradeFeedbacks', e)
 
 					this.#upgradeBatchRetry(entityIdsInThisBatch)
@@ -411,7 +424,7 @@ export class ConnectionEntityManager {
 			const entity = wrapper.entity.deref()
 			if (!entity) {
 				this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, terminating upgrade`)
-				this.#entities.delete(entityId)
+				this.#deleteEntity(entityId)
 				continue
 			}
 
@@ -503,6 +516,9 @@ export class ConnectionEntityManager {
 		this.#unsubscribeRenderClock()
 		this.#debounceProcessPending.cancel()
 		this.#batchQueue.length = 0
+		for (const wrapper of this.#entities.values()) {
+			wrapper.variables?.dispose()
+		}
 		this.#entities.clear()
 		this.#ready = false
 	}
@@ -512,13 +528,15 @@ export class ConnectionEntityManager {
 	 * This will ensure that the entity is processed and sent to the module for subscription callbacks.
 	 * If the entity already exists, it will be replaced and the new entity will be processed as needed.
 	 */
-	trackEntity(entity: ControlEntityInstance, controlId: string): void {
+	trackEntity(entity: ControlEntityInstance, controlId: SomeControlId): void {
 		// This may replace an existing entity, if so it needs to restart the process
+		this.#entities.get(entity.id)?.variables?.dispose()
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
 			entity: new WeakRef(entity),
 			controlId: controlId,
 			state: EntityState.UNLOADED,
+			variables: null,
 		})
 
 		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
@@ -575,34 +593,22 @@ export class ConnectionEntityManager {
 	}
 
 	/**
-	 * Inform the entity manager that some variables have changed.
-	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
+	 * Some variables referenced by tracked entities have changed.
+	 * This will cause those entities to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariableDependenciesChanged(
+		hits: ReadonlyArray<VariableDependency<EntityWrapper>>,
+		changed: ReadonlySet<string>
+	): void {
 		let anyInvalidated = false
 
-		for (const wrapper of this.#entities.values()) {
-			if (
-				wrapper.state === EntityState.UNLOADED ||
-				wrapper.state === EntityState.UPGRADING_INVALIDATED ||
-				wrapper.state === EntityState.UPGRADING ||
-				wrapper.state === EntityState.PENDING_DELETE
-			) {
+		for (const { data: wrapper, variableIds } of hits) {
+			if (wrapper.state !== EntityState.READY) {
 				// Nothing to do, the entity is not in the ready state
 				continue
 			}
 
-			if (controlIdFilter && !controlIdFilter.has(wrapper.controlId)) {
-				// The change is scoped to specific control(s), and this entity is not in one of them
-				continue
-			}
-
-			if (!wrapper.lastReferencedVariableIds || wrapper.lastReferencedVariableIds.size === 0) {
-				// No variables to check, nothing to do
-				continue
-			}
-
-			if (variableIds.isDisjointFrom(wrapper.lastReferencedVariableIds)) {
+			if (!variableIds || variableIds.isDisjointFrom(changed)) {
 				// No variables changed that we care about, nothing to do
 				continue
 			}
@@ -613,6 +619,11 @@ export class ConnectionEntityManager {
 		}
 
 		if (anyInvalidated) this.#debounceProcessPending()
+	}
+
+	#deleteEntity(entityId: string): void {
+		this.#entities.get(entityId)?.variables?.dispose()
+		this.#entities.delete(entityId)
 	}
 
 	/**

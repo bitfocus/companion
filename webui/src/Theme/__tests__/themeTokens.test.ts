@@ -4,7 +4,7 @@ import { describe, expect, test } from 'vitest'
 import { FIXED_TOKENS } from '../themeTokens.js'
 
 const srcDir = path.resolve(import.meta.dirname, '../..')
-const css = fs.readFileSync(path.join(srcDir, 'tailwind.css'), 'utf8')
+const css = fs.readFileSync(path.join(srcDir, 'theme-tokens.css'), 'utf8')
 
 /** The `--color-*` declarations inside the first block that opens with `opener` */
 function colourTokensIn(opener: string): Map<string, string> {

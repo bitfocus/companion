@@ -59,7 +59,7 @@ export const SurfaceIntegrationsPage = observer(function SurfaceIntegrationsPage
 							<Modal.Header closeButton>
 								<Modal.Title>Add Surface Integration</Modal.Title>
 							</Modal.Header>
-							<Modal.Body>
+							<Modal.Body className="flex flex-col overflow-hidden">
 								<MyErrorBoundary>
 									<AddSurfaceInstancePanel />
 								</MyErrorBoundary>

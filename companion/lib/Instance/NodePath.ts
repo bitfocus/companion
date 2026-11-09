@@ -7,9 +7,31 @@ import { isPackaged } from '../Resources/Util.js'
 import { doesModuleSupportPermissionsModel } from './Connection/ApiVersions.js'
 
 /**
- * Get the path to the Node.js binary for the given runtime type.
+ * End-of-life runtimes that modules may still request, and the runtime they are run on instead.
  */
-export async function getNodeJsPath(runtimeType: string): Promise<string | null> {
+const NODEJS_RUNTIME_ALIASES: Record<string, string | undefined> = {
+	node18: 'node22',
+}
+
+/**
+ * Whether a module requesting this runtime type gets run on a different one instead.
+ */
+export function isNodeJsRuntimeOverridden(runtimeType: string): boolean {
+	return !!NODEJS_RUNTIME_ALIASES[runtimeType]
+}
+
+/**
+ * The runtime type a module requesting this runtime type is actually run on.
+ */
+export function resolveNodeJsRuntime(runtimeType: string): string {
+	return NODEJS_RUNTIME_ALIASES[runtimeType] ?? runtimeType
+}
+
+/**
+ * Get the path to the Node.js binary for the given runtime type, following any alias.
+ */
+export async function getNodeJsPath(requestedRuntimeType: string): Promise<string | null> {
+	let runtimeType = resolveNodeJsRuntime(requestedRuntimeType)
 	if (!isPackaged()) {
 		const nodeVersionsStr = fs
 			.readFileSync(path.join(import.meta.dirname, '../../../assets/nodejs-versions.json'))
@@ -62,7 +84,7 @@ export function getNodeJsPermissionArguments(
 
 	if (manifestPermissions['insecure-algorithms']) args.push('--openssl-legacy-provider')
 
-	// Node18 is more limited in supported arguments
+	// Modules requesting node18 predate the permissions model, so we can't know what they need
 	if (manifest.runtime.type === 'node18') return args
 
 	if (!process.env.COMPANION_SKIP_SYSTEM_CA) {

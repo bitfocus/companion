@@ -1,5 +1,7 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { isTypingTarget } from '~/util/isTypingTarget.js'
 import type { ButtonGridStore } from './ButtonGridStore.js'
 import type { GridToolActions } from './GridTools/index.js'
 import type { GridZoomController } from './GridZoom.js'
@@ -50,6 +52,30 @@ export function useGridKeyboard({
 		return () => document.removeEventListener('keydown', handleEscape)
 	}, [store, actions])
 
+	// The button Enter is holding down. Let go of wherever the focus has gone by then, or when the window loses
+	// it, so a button is never left stuck down.
+	const enterPressRef = useRef<ControlLocation | null>(null)
+	useEffect(() => {
+		const release = () => {
+			const location = enterPressRef.current
+			if (!location) return
+
+			enterPressRef.current = null
+			store.handleTestPress(location, false, actions)
+		}
+		const handleKeyUp = (e: KeyboardEvent) => {
+			if (e.key === 'Enter') release()
+		}
+
+		document.addEventListener('keyup', handleKeyUp)
+		window.addEventListener('blur', release)
+		return () => {
+			document.removeEventListener('keyup', handleKeyUp)
+			window.removeEventListener('blur', release)
+			release()
+		}
+	}, [store, actions])
+
 	return useCallback(
 		(e: React.KeyboardEvent) => {
 			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
@@ -76,13 +102,18 @@ export function useGridKeyboard({
 			if (!gridSize) return
 
 			// Shift extends the selection as the focus moves, ctrl walks the focus without disturbing it,
-			// and a plain arrow selects wherever it lands - the same three behaviours as any file list
+			// and a plain arrow selects wherever it lands and opens it - the same three behaviours as any file list
 			const navigate = (rowDelta: number, columnDelta: number) => {
 				e.preventDefault()
 
-				if (e.shiftKey) store.extendFocus(rowDelta, columnDelta, gridSize)
-				else if (isControlOrCommandCombo) store.moveFocusOnly(rowDelta, columnDelta, gridSize)
-				else store.moveFocus(rowDelta, columnDelta, gridSize)
+				if (e.shiftKey) {
+					store.extendFocus(rowDelta, columnDelta, gridSize)
+				} else if (isControlOrCommandCombo) {
+					store.moveFocusOnly(rowDelta, columnDelta, gridSize)
+				} else {
+					const next = store.moveFocus(rowDelta, columnDelta, gridSize)
+					if (next) store.handleFocusMoved(next, actions)
+				}
 			}
 
 			switch (e.key) {
@@ -105,6 +136,18 @@ export function useGridKeyboard({
 					e.preventDefault()
 					store.toggleFocused()
 					return
+				case 'Enter': {
+					// Press the focused button for real, as ctrl+shift+click does. Only on the way down: the editor
+					// hands its key-ups in here too, and an Enter there is for whatever it is on.
+					if (e.type !== 'keydown' || e.repeat || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return
+					const focus = store.focus
+					if (!focus || enterPressRef.current) return
+
+					e.preventDefault()
+					enterPressRef.current = focus
+					store.handleTestPress(focus, true, actions)
+					return
+				}
 				case 'PageUp': {
 					const focus = store.focus
 					if (!focus) return
@@ -155,14 +198,4 @@ export function useGridKeyboard({
 		},
 		[store, actions, gridSize, pageNumber, pageCount, setPageNumber, zoom]
 	)
-}
-
-/** Whether this is somewhere text is being typed, where the keys belong to whatever is being typed in */
-export function isTypingTarget(target: EventTarget | null): boolean {
-	if (!(target instanceof HTMLElement)) return false
-
-	if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return true
-
-	// The expression editor, which is neither
-	return target.classList.contains('native-edit-context')
 }
