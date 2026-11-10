@@ -908,6 +908,28 @@ describe('FeedbackEntityManager', () => {
 			expect(actionManager.getSubscriptionId('action-1')).not.toBe(feedbackManager.getSubscriptionId('fb-1'))
 		})
 
+		it('should find an entity of a subscription by its id, only in its own control', () => {
+			const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
+			const fb2 = createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' })
+
+			feedbackManager.trackEntity(fb1 as any, CreateBankControlId('control-1'))
+			feedbackManager.trackEntity(fb2 as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			const subscriptionId = feedbackManager.getSubscriptionId('fb-1')!
+			expect([fb1, fb2]).toContain(
+				feedbackManager.getSubscriptionEntity(subscriptionId, CreateBankControlId('control-1'))
+			)
+			expect(feedbackManager.getSubscriptionEntity(subscriptionId, CreateBankControlId('control-2'))).toBeUndefined()
+			expect(feedbackManager.getSubscriptionEntity('unknown', CreateBankControlId('control-1'))).toBeUndefined()
+
+			// Once the last member leaves, there is nothing to find
+			feedbackManager.forgetEntity('fb-1')
+			feedbackManager.forgetEntity('fb-2')
+			vi.runAllTimers()
+			expect(feedbackManager.getSubscriptionEntity(subscriptionId, CreateBankControlId('control-1'))).toBeUndefined()
+		})
+
 		it('should pass a value to every member of the subscription', () => {
 			const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
 			const fb2 = createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' })

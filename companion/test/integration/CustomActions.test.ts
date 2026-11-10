@@ -1845,6 +1845,77 @@ describe('custom actions using a connection', () => {
 		await vi.waitFor(() => expect(app.getCustomVariableValue('copied')).toBe('renamed'))
 	})
 
+	test.each([
+		{ moduleType: 'test-module-1-12-1', parsesActions: true },
+		{ moduleType: 'test-module-1-2-1', parsesActions: false },
+	])(
+		'an older module of $moduleType parsing variables itself sees the inputs and local variables of the custom action',
+		async ({ moduleType, parsesActions }) => {
+			const connectionId = await addConnection(moduleType)
+			const setLastValue = await addSetter(connectionId)
+			const customActionId = await app.trpc().controls.customActions.create({ name: 'Parsed' })
+			await app.trpc().controls.customActions.inputAdd({
+				controlId: customActionId,
+				field: { type: 'textinput', id: 'want', label: 'Want', default: '' },
+			})
+			app.addLocalVariable(customActionId, 'suffix', 'user_value', { startup_value: exprVal('inner') })
+
+			// These modules can't take expressions, so the variables are parsed in the text by the module
+			const text = exprVal('$(options:want)-$(local:suffix)')
+			const addConnectionEntity = async (
+				entityLocation: 'local-variables' | 'custom_action_actions',
+				entityType: EntityModelType,
+				definitionId: string
+			) => {
+				const entityId = await app.trpc().controls.entities.add({
+					controlId: customActionId,
+					entityLocation,
+					ownerId: null,
+					connectionId,
+					entityType,
+					entityDefinition: definitionId,
+				})
+				if (!entityId) throw new Error('Failed to add the entity')
+				await app.trpc().controls.entities.setOption({
+					controlId: customActionId,
+					entityLocation,
+					entityId,
+					key: 'value',
+					value: text,
+				})
+				return entityId
+			}
+			const matchesId = await addConnectionEntity('local-variables', EntityModelType.Feedback, 'parsed_is')
+			await app.trpc().controls.entities.setVariableName({
+				controlId: customActionId,
+				entityLocation: 'local-variables',
+				entityId: matchesId,
+				name: 'matches',
+			})
+			if (parsesActions) await addConnectionEntity('custom_action_actions', EntityModelType.Action, 'set_parsed')
+
+			// The caller has a local variable of the same name, which the custom action must not see
+			const location = { pageNumber: 1, row: 1, column: 1 }
+			const buttonId = app.createButton(location)
+			app.addLocalVariable(buttonId, 'suffix', 'user_value', { startup_value: exprVal('outer') })
+			const callId = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('alpha') }, null)
+
+			if (parsesActions) {
+				app.pressButton(location, true)
+				await vi.waitFor(
+					() => expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('alpha-inner'),
+					10_000
+				)
+			} else {
+				await setLastValue('alpha-inner')
+			}
+			await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
+
+			await setLastValue('alpha-outer')
+			await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(false), 10_000)
+		}
+	)
+
 	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)

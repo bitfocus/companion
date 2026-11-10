@@ -693,6 +693,23 @@ export abstract class EntityManagerBase<
 		return this.#entities.get(entityId)?.subscriptionId
 	}
 
+	/**
+	 * Get an entity which is a member of a module subscription. The members share their parsed options, so any will do
+	 * @param subscriptionId The id of the subscription, as the module knows it
+	 * @param controlId The control the module says the subscription is in
+	 * @returns An entity of the subscription, or undefined if there is none in that control
+	 */
+	getSubscriptionEntity(subscriptionId: string, controlId: SomeControlId): ControlEntityInstance | undefined {
+		const subscription = this.#subscriptions.get(subscriptionId)
+		if (!subscription || subscription.controlId !== controlId) return undefined
+
+		for (const memberId of subscription.memberIds) {
+			const entity = this.#entities.get(memberId)?.entity.deref()
+			if (entity) return entity
+		}
+		return undefined
+	}
+
 	/** Get a subscription, for reporting what the module said about it to its members */
 	protected getSubscription(subscriptionId: string): EntitySubscription | undefined {
 		return this.#subscriptions.get(subscriptionId)

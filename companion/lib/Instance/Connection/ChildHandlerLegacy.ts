@@ -1017,6 +1017,23 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 
 	/**
+	 * Find the entity the module refers to by an id it was given, including the copies held by calls of custom actions
+	 */
+	#findEntityForModule(
+		controlId: SomeControlId,
+		entityType: EntityModelType,
+		id: string
+	): ControlEntityInstance | undefined {
+		// From 1.13 the module knows an entity by its subscription
+		const subscribed = this.#getEntityManager(entityType)?.getSubscriptionEntity(id, controlId)
+		if (subscribed) return subscribed
+
+		const control = this.#deps.controls.getControl(controlId)
+		if (!control?.supportsEntities) return undefined
+		return control.entities.getAllEntitiesWithTransient().find((entity) => entity.id === id)
+	}
+
+	/**
 	 * Handle request to parse variables in a string
 	 */
 	async #handleParseVariablesInString(
@@ -1024,7 +1041,17 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
 			const controlId = msg.controlId && isSomeControlId(msg.controlId) ? msg.controlId : null
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+			const instance = msg.actionInstanceId
+				? { type: EntityModelType.Action, id: msg.actionInstanceId }
+				: msg.feedbackInstanceId
+					? { type: EntityModelType.Feedback, id: msg.feedbackInstanceId }
+					: null
+			// An entity in a custom action sees its inputs and local variables, rather than those of the control
+			const entity =
+				controlId && instance ? this.#findEntityForModule(controlId, instance.type, instance.id) : undefined
+			const parser = entity
+				? entity.createVariablesAndExpressionParser(null)
+				: this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
 			const result = parser.parseVariables(msg.text)
 
 			return {

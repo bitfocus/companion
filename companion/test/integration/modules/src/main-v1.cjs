@@ -20,7 +20,7 @@ class TestInstance extends InstanceBase {
 		this.trackedActions = new Set()
 		this.trackedFeedbacks = new Set()
 
-		this.setActionDefinitions({
+		const actions = {
 			set_var: {
 				name: 'Set the test variable',
 				options: [{ id: 'value', type: 'textinput', label: 'Value', default: '' }],
@@ -28,7 +28,7 @@ class TestInstance extends InstanceBase {
 					this.lastValue = `${this.prefix ?? ''}${action.options.value}`
 					this.runCount = (this.runCount ?? 0) + 1
 					this.setVariableValues({ last_value: this.lastValue, run_count: this.runCount })
-					this.checkFeedbacks('last_value_is', 'track_fb')
+					this.checkFeedbacks('last_value_is', 'track_fb', 'parsed_is')
 				},
 			},
 			track: {
@@ -42,9 +42,21 @@ class TestInstance extends InstanceBase {
 					return { value: this.lastValue ?? '' }
 				},
 			},
-		})
+		}
+		if (has('action-parse-context')) {
+			actions.set_parsed = {
+				name: 'Set the test variable (parsed by the module)',
+				options: [{ id: 'value', type: 'textinput', label: 'Value', default: '', useVariables: { local: true } }],
+				callback: async (action, context) => {
+					this.lastValue = await context.parseVariablesInString(action.options.value)
+					this.setVariableValues({ last_value: this.lastValue })
+					this.checkFeedbacks('last_value_is', 'track_fb', 'parsed_is')
+				},
+			}
+		}
+		this.setActionDefinitions(actions)
 
-		this.setFeedbackDefinitions({
+		const feedbacks = {
 			last_value_is: {
 				type: 'boolean',
 				name: 'Last value is',
@@ -65,7 +77,18 @@ class TestInstance extends InstanceBase {
 					return { value: this.lastValue ?? '' }
 				},
 			},
-		})
+		}
+		if (has('feedback-parse-context')) {
+			feedbacks.parsed_is = {
+				type: 'boolean',
+				name: 'Last value is (parsed by the module)',
+				defaultStyle: { bgcolor: 0xff0000 },
+				options: [{ id: 'value', type: 'textinput', label: 'Value', default: '', useVariables: { local: true } }],
+				callback: async (feedback, context) =>
+					this.lastValue === (await context.parseVariablesInString(feedback.options.value)),
+			}
+		}
+		this.setFeedbackDefinitions(feedbacks)
 
 		const variables = [
 			{ variableId: 'last_value', name: 'Last value' },
