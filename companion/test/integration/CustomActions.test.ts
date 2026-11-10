@@ -2026,4 +2026,267 @@ describe('custom actions using a connection', () => {
 		await vi.waitFor(async () => setLastValue('alpha'), 20_000)
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
 	})
+
+	describe('at scale', () => {
+		/** Create a custom action with a few connection feedbacks, and an output `seen` which a run sets from one */
+		async function createBusyCustomAction(connectionId: string): Promise<CustomActionControlId> {
+			const customActionId = await app.trpc().controls.customActions.create({ name: 'Busy' })
+			await app.trpc().controls.customActions.inputAdd({
+				controlId: customActionId,
+				field: { type: 'textinput', id: 'want', label: 'Want', default: '' },
+			})
+			const feedbacks: [string, ExpressionOrValue<any>][] = [
+				['m1', exprExpr('$(options:want)')],
+				['m2', exprExpr("concat($(options:want), 'x')")],
+				['m3', exprVal('v3')],
+			]
+			for (const [name, value] of feedbacks) {
+				const entityId = await app.trpc().controls.entities.add({
+					controlId: customActionId,
+					entityLocation: 'local-variables',
+					ownerId: null,
+					connectionId,
+					entityType: EntityModelType.Feedback,
+					entityDefinition: 'last_value_is',
+				})
+				if (!entityId) throw new Error('Failed to add the local variable')
+				await app.trpc().controls.entities.setVariableName({
+					controlId: customActionId,
+					entityLocation: 'local-variables',
+					entityId,
+					name,
+				})
+				await app.trpc().controls.entities.setOption({
+					controlId: customActionId,
+					entityLocation: 'local-variables',
+					entityId,
+					key: 'value',
+					value,
+				})
+			}
+			app.addLocalVariable(customActionId, 'seen', 'user_value', { startup_value: exprVal('') })
+			app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
+				location: exprVal('run'),
+				name: exprVal('seen'),
+				value: exprExpr('$(local:m1)'),
+			})
+			await app.trpc().controls.customActions.outputSet({ controlId: customActionId, variableName: 'seen', label: '' })
+			return customActionId
+		}
+
+		test('a hundred callers build, settle after an edit, run together and restart promptly', async () => {
+			const connectionId = await addConnection('test-module-2-1-3')
+			const setLastValue = await addSetter(connectionId)
+			await setLastValue('v3')
+			const customActionId = await createBusyCustomAction(connectionId)
+			await app.trpc().pages.insert({ asPageNumber: 2, pageNames: ['2', '3', '4', '5'] })
+
+			let start = performance.now()
+			const callers: { location: ControlLocation; buttonId: BankControlId; callId: string; want: string }[] = []
+			for (let i = 0; i < 100; i++) {
+				const location = { pageNumber: 2 + Math.floor(i / 32), row: Math.floor((i % 32) / 8), column: i % 8 }
+				const buttonId = app.createButton(location)
+				const want = `v${i % 10}`
+				const callId = app.addCustomActionCall(
+					buttonId,
+					customActionId,
+					{ want: exprVal(want) },
+					{
+						seen: {
+							type: 'custom-variable',
+							variableName: exprExpr("concat('seen_', $(this:page), '_', $(this:row), '_', $(this:column))"),
+							createIfNotExists: true,
+						},
+					}
+				)
+				callers.push({ location, buttonId, callId, want })
+			}
+			const expectCopyValues = (expected: (want: string) => boolean) => {
+				for (const { buttonId, callId, want } of callers) {
+					expect(getCopyValue(app, buttonId, callId, 'm1')).toBe(expected(want))
+				}
+			}
+			await vi.waitFor(() => expectCopyValues((want) => want === 'v3'), { timeout: 30_000, interval: 20 })
+			const buildMs = performance.now() - start
+
+			// Editing the custom action rebuilds every copy
+			const copiesBefore = callers.map(({ buttonId, callId }) =>
+				getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+			)
+			start = performance.now()
+			app.addCustomActionAction(customActionId, null, 'wait', { time: exprExpr('1') })
+			await vi.waitFor(
+				() => {
+					callers.forEach(({ buttonId, callId }, i) =>
+						expect(
+							getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+						).not.toBe(copiesBefore[i])
+					)
+					expectCopyValues((want) => want === 'v3')
+				},
+				{ timeout: 30_000, interval: 20 }
+			)
+			const editMs = performance.now() - start
+
+			// Pressing them all at once
+			start = performance.now()
+			for (const { location } of callers) {
+				app.pressButton(location, true)
+				app.pressButton(location, false)
+			}
+			await vi.waitFor(
+				() => {
+					for (const { location, want } of callers) {
+						expect(app.getCustomVariableValue(`seen_${location.pageNumber}_${location.row}_${location.column}`)).toBe(
+							want === 'v3'
+						)
+					}
+				},
+				{ timeout: 30_000, interval: 20 }
+			)
+			const pressMs = performance.now() - start
+
+			const { configDir } = app
+			await app.close()
+			start = performance.now()
+			app = await createTestApp({ configDir, extraModulePath: path.join(import.meta.dirname, 'modules/fixtures') })
+			// The module starts afresh, so knows no last value
+			await vi.waitFor(() => expectCopyValues(() => false), { timeout: 60_000, interval: 20 })
+			const restartMs = performance.now() - start
+
+			expect(buildMs).toBeLessThan(20_000)
+			expect(editMs).toBeLessThan(10_000)
+			expect(pressMs).toBeLessThan(10_000)
+			expect(restartMs).toBeLessThan(30_000)
+		}, 180_000)
+
+		test('custom actions calling each other in branching chains settle promptly when edited', async () => {
+			// Each level calls both custom actions of the next, so the copy held by a caller grows with the paths
+			const width = 2
+			const depth = 8
+			const levels: CustomActionControlId[][] = []
+			for (let level = 0; level < depth; level++) {
+				const ids: CustomActionControlId[] = []
+				for (let i = 0; i < width; i++) {
+					ids.push(await app.trpc().controls.customActions.create({ name: `L${level}.${i}` }))
+				}
+				levels.push(ids)
+			}
+			app.createCustomVariable('leaf', 0)
+			for (const leaf of levels[depth - 1]) {
+				app.addCustomActionAction(leaf, null, 'custom_variable_set_value', {
+					name: exprVal('leaf'),
+					create: exprVal(false),
+					value: exprExpr('$(custom:leaf) + 1'),
+				})
+			}
+			for (let level = 0; level < depth - 1; level++) {
+				for (const from of levels[level]) {
+					for (const to of levels[level + 1]) app.addCustomActionCall(from, to, {}, null)
+				}
+			}
+			const root = app.registry.controls.getControl(levels[0][0])
+			if (!(root instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+			await vi.waitFor(() => expect(root.toClientJSON().calledCustomActionIds).toHaveLength(width * (depth - 1)), {
+				timeout: 30_000,
+				interval: 20,
+			})
+
+			const location = { pageNumber: 1, row: 1, column: 1 }
+			const buttonId = app.createButton(location)
+			const button = app.registry.controls.getControl(buttonId)
+			if (!button?.supportsEntities) throw new Error('Expected a button')
+			/** Wait for the copies held by the button to stop changing, returning when they last did */
+			const waitForStableCopies = async () => {
+				let last = button.entities.getAllEntitiesWithTransient().length
+				let changedAt = performance.now()
+				await vi.waitFor(
+					() => {
+						const count = button.entities.getAllEntitiesWithTransient().length
+						if (count !== last) {
+							last = count
+							changedAt = performance.now()
+						}
+						expect(performance.now() - changedAt).toBeGreaterThanOrEqual(300)
+					},
+					{ timeout: 30_000, interval: 10 }
+				)
+				return changedAt
+			}
+			app.addCustomActionCall(buttonId, levels[0][0], {}, null)
+			await waitForStableCopies()
+
+			// An edit at the bottom of every chain rebuilds every copy of it
+			const start = performance.now()
+			app.addCustomActionAction(levels[depth - 1][0], null, 'wait', { time: exprExpr('0') })
+			expect((await waitForStableCopies()) - start).toBeLessThan(5_000)
+
+			app.pressButton(location, true)
+			await vi.waitFor(() => expect(app.getCustomVariableValue('leaf')).toBe(width ** (depth - 1)), {
+				timeout: 30_000,
+				interval: 10,
+			})
+		}, 120_000)
+
+		test('the uses of a custom action called in a fast loop are sent at most every 100ms', async () => {
+			const customActionId = await app.trpc().controls.customActions.create({ name: 'Quick' })
+			await vi.waitFor(() =>
+				expect(
+					app.registry.instance.definitions.getEntityDefinition(
+						EntityModelType.Action,
+						CUSTOM_ACTIONS_CONNECTION_ID,
+						customActionId.slice('custom-action:'.length)
+					)
+				).toBeTruthy()
+			)
+
+			// A button which calls it over and over
+			const location = { pageNumber: 1, row: 1, column: 1 }
+			const buttonId = app.createButton(location)
+			const loopId = app.addInternalAction(buttonId, 'logic_while', {})
+			app.addInternalChildFeedback(buttonId, { parentId: loopId, childGroup: 'condition' }, 'check_expression', {
+				expression: exprVal('true'),
+			})
+			const body = { parentId: loopId, childGroup: 'actions' }
+			const control = app.registry.controls.getControl(buttonId)
+			if (!control?.supportsEntities) throw new Error('Expected a button')
+			const stepId = (control.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+			await app.trpc().controls.entities.add({
+				controlId: buttonId,
+				entityLocation: { stepId, setId: 'down' },
+				ownerId: body,
+				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				entityType: EntityModelType.Action,
+				entityDefinition: customActionId.slice('custom-action:'.length),
+			})
+			app.createCustomVariable('calls', 0)
+			app.addInternalChildAction(buttonId, body, 'custom_variable_set_value', {
+				name: exprVal('calls'),
+				create: exprVal(false),
+				value: exprExpr('$(custom:calls) + 1'),
+			})
+			app.addInternalChildAction(buttonId, body, 'wait', { time: exprExpr('1') })
+
+			const iterable = await app.trpc().controls.customActions.watchUsage({ controlId: customActionId })
+			const iterator = iterable[Symbol.asyncIterator]()
+			try {
+				await iterator.next()
+				app.pressButton(location, true)
+
+				let sent = 0
+				const until = performance.now() + 1_000
+				while (performance.now() < until) {
+					await iterator.next()
+					sent++
+				}
+				// Each call starts and ends a run, which both change the uses
+				expect(app.getCustomVariableValue('calls')).toBeGreaterThan(50)
+				expect(sent).toBeLessThanOrEqual(12)
+			} finally {
+				await iterator.return?.()
+				await app.trpc().controls.customActions.abortAll({ controlId: customActionId })
+				app.registry.controls.abortAllDelayedActions(null)
+			}
+		})
+	})
 })
