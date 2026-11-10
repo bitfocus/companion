@@ -16,6 +16,10 @@ class TestInstance extends InstanceBase {
 	async init(config) {
 		this.updateStatus(InstanceStatus.Ok)
 
+		// The ids the module is subscribed with, reported as variables so tests can see them
+		this.trackedActions = new Set()
+		this.trackedFeedbacks = new Set()
+
 		this.setActionDefinitions({
 			set_var: {
 				name: 'Set the test variable',
@@ -24,7 +28,18 @@ class TestInstance extends InstanceBase {
 					this.lastValue = `${this.prefix ?? ''}${action.options.value}`
 					this.runCount = (this.runCount ?? 0) + 1
 					this.setVariableValues({ last_value: this.lastValue, run_count: this.runCount })
-					this.checkFeedbacks('last_value_is')
+					this.checkFeedbacks('last_value_is', 'track_fb')
+				},
+			},
+			track: {
+				name: 'Track (with subscribe and learn callbacks)',
+				options: [{ id: 'value', type: 'textinput', label: 'Value', default: '' }],
+				callback: async () => {},
+				subscribe: (action) => this.setTracked('tracked_actions', this.trackedActions, action.id, true),
+				unsubscribe: (action) => this.setTracked('tracked_actions', this.trackedActions, action.id, false),
+				learn: (action) => {
+					this.setVariableValues({ learned_id: action.id })
+					return { value: this.lastValue ?? '' }
 				},
 			},
 		})
@@ -37,6 +52,19 @@ class TestInstance extends InstanceBase {
 				options: [{ id: 'value', type: 'textinput', label: 'Value', default: '' }],
 				callback: (feedback) => this.lastValue === feedback.options.value,
 			},
+			track_fb: {
+				type: 'boolean',
+				name: 'Track (with subscribe and learn callbacks)',
+				defaultStyle: { bgcolor: 0xff0000 },
+				options: [{ id: 'value', type: 'textinput', label: 'Value', default: '' }],
+				callback: (feedback) => this.lastValue === feedback.options.value,
+				subscribe: (feedback) => this.setTracked('tracked_feedbacks', this.trackedFeedbacks, feedback.id, true),
+				unsubscribe: (feedback) => this.setTracked('tracked_feedbacks', this.trackedFeedbacks, feedback.id, false),
+				learn: (feedback) => {
+					this.setVariableValues({ learned_feedback_id: feedback.id })
+					return { value: this.lastValue ?? '' }
+				},
+			},
 		})
 
 		const variables = [
@@ -44,6 +72,10 @@ class TestInstance extends InstanceBase {
 			{ variableId: 'run_count', name: 'Run count' },
 			{ variableId: 'prefix', name: 'Configured prefix' },
 			{ variableId: 'node_version', name: 'Node.js version of the child process' },
+			{ variableId: 'tracked_actions', name: 'Ids of the subscribed track actions' },
+			{ variableId: 'tracked_feedbacks', name: 'Ids of the subscribed track feedbacks' },
+			{ variableId: 'learned_id', name: 'Id of the last action learnt' },
+			{ variableId: 'learned_feedback_id', name: 'Id of the last feedback learnt' },
 		]
 		if (has('shared-udp')) {
 			variables.push(
@@ -55,6 +87,12 @@ class TestInstance extends InstanceBase {
 		this.setVariableValues({ node_version: process.versions.node })
 
 		await this.configUpdated(config)
+	}
+
+	setTracked(variableId, ids, id, subscribed) {
+		if (subscribed) ids.add(id)
+		else ids.delete(id)
+		this.setVariableValues({ [variableId]: [...ids].sort().join(',') })
 	}
 
 	async destroy() {
@@ -109,4 +147,16 @@ class TestInstance extends InstanceBase {
 	}
 }
 
-runEntrypoint(TestInstance, [])
+// Moves the old `val` option of set_var to `value`, so tests can see upgrade scripts run
+function upgradeSetVarVal(_context, props) {
+	const updatedActions = []
+	for (const action of props.actions) {
+		if (action.actionId !== 'set_var' || action.options.val === undefined) continue
+		action.options.value = action.options.val
+		delete action.options.val
+		updatedActions.push(action)
+	}
+	return { updatedConfig: null, updatedActions, updatedFeedbacks: [] }
+}
+
+runEntrypoint(TestInstance, [upgradeSetVarVal])
