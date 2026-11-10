@@ -80,6 +80,7 @@ import type {
 	EntityManagerActionEntity,
 	EntityManagerAdapter,
 	EntityManagerFeedbackEntity,
+	EntityManagerUpgradeEntity,
 } from './EntityManagerBase.js'
 import { FeedbackEntityManager } from './FeedbackEntityManager.js'
 import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
@@ -187,10 +188,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		)
 
 		this.#usesSeparateUpgradeMethod = doesModuleUseSeparateUpgradeMethod(apiVersion)
-		const entityManagerAdapter = new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls)
 		this.#actionManager = this.#usesSeparateUpgradeMethod
 			? new ActionEntityManager(
-					entityManagerAdapter,
+					new ConnectionLegacyActionManagerAdapter(this.#ipcWrapper),
 					this.#deps.controls,
 					this.connectionId,
 					this.#deps.variables.dependencies
@@ -198,7 +198,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			: null
 		this.#feedbackManager = this.#usesSeparateUpgradeMethod
 			? new FeedbackEntityManager(
-					entityManagerAdapter,
+					new ConnectionLegacyFeedbackManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 					this.#deps.controls,
 					this.connectionId,
 					this.#deps.variables.dependencies,
@@ -1188,16 +1188,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 }
 
-class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
+class ConnectionLegacyActionManagerAdapter implements EntityManagerAdapter<ActionEntityModel> {
 	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
-	readonly #controlsStore: IControlStore
 
-	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>, controlsStore: IControlStore) {
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>) {
 		this.#ipcWrapper = ipcWrapper
-		this.#controlsStore = controlsStore
 	}
 
-	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
+	async update(actions: Map<string, EntityManagerActionEntity | null>) {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
@@ -1219,35 +1217,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateActions', updateMessage)
 	}
 
-	async updateFeedbacks(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
-		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
-
-		for (const [id, value] of feedbacks) {
-			if (value) {
-				const control = this.#controlsStore.getControl(value.controlId)
-
-				updateMessage.feedbacks[id] = {
-					id: id,
-					controlId: value.controlId,
-					feedbackId: value.entity.definitionId,
-					options: value.parsedOptions as OptionsObject,
-
-					image: getFeedbackImageSizeForControl(control),
-
-					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
-
-					upgradeIndex: value.entity.upgradeIndex ?? null,
-					disabled: !!value.entity.disabled,
-				}
-			} else {
-				updateMessage.feedbacks[id] = null
-			}
-		}
-
-		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
-	}
-
-	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
+	async upgrade(actions: EntityManagerUpgradeEntity<ActionEntityModel>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActionsAndFeedbacks', {
 				actions: actions.map((act) => ({
@@ -1275,8 +1245,46 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 				)
 			})
 	}
+}
 
-	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
+class ConnectionLegacyFeedbackManagerAdapter implements EntityManagerAdapter<FeedbackEntityModel> {
+	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #controlsStore: IControlStore
+
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>, controlsStore: IControlStore) {
+		this.#ipcWrapper = ipcWrapper
+		this.#controlsStore = controlsStore
+	}
+
+	async update(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
+		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
+
+		for (const [id, value] of feedbacks) {
+			if (value) {
+				const control = this.#controlsStore.getControl(value.controlId)
+
+				updateMessage.feedbacks[id] = {
+					id: id,
+					controlId: value.controlId,
+					feedbackId: value.entity.definitionId,
+					options: value.parsedOptions as OptionsObject,
+
+					image: getFeedbackImageSizeForControl(control),
+
+					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
+
+					upgradeIndex: value.entity.upgradeIndex ?? null,
+					disabled: !!value.entity.disabled,
+				}
+			} else {
+				updateMessage.feedbacks[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
+	}
+
+	async upgrade(feedbacks: EntityManagerUpgradeEntity<FeedbackEntityModel>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActionsAndFeedbacks', {
 				actions: [],

@@ -10,8 +10,6 @@ import type { VariableDependencyRegistry } from '../../Variables/DependencyRegis
 import {
 	EntityManagerBase,
 	type EntityManagerAdapter,
-	type EntityManagerFeedbackEntity,
-	type EntityManagerUpgradeEntity,
 	type EntitySubscriptionJoin,
 	type EntityWrapper,
 } from './EntityManagerBase.js'
@@ -32,7 +30,6 @@ export interface EntityManagerFeedbackValue {
  * given to every feedback sharing it, including those which join it later.
  */
 export class FeedbackEntityManager extends EntityManagerBase<FeedbackEntityModel> {
-	readonly #adapter: EntityManagerAdapter
 	readonly #unsubscribeRenderClock: () => void
 
 	/** The last value the module reported for each subscription, for a member which joins later */
@@ -41,26 +38,14 @@ export class FeedbackEntityManager extends EntityManagerBase<FeedbackEntityModel
 	readonly #clockSensitive = new WeakSet<EntityWrapper>()
 
 	constructor(
-		adapter: EntityManagerAdapter,
+		adapter: EntityManagerAdapter<FeedbackEntityModel>,
 		controlsStore: IControlStore,
 		connectionId: string,
 		variableDependencies: VariableDependencyRegistry,
 		renderClock: RenderClock
 	) {
-		super(EntityModelType.Feedback, controlsStore, connectionId, variableDependencies)
-		this.#adapter = adapter
+		super(EntityModelType.Feedback, adapter, controlsStore, connectionId, variableDependencies)
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
-	}
-
-	protected async sendUpdates(payload: Map<string, EntityManagerFeedbackEntity | null>): Promise<void> {
-		return this.#adapter.updateFeedbacks(payload)
-	}
-
-	protected async sendUpgrades(
-		entities: EntityManagerUpgradeEntity<FeedbackEntityModel>[],
-		currentUpgradeIndex: number
-	): ReturnType<EntityManagerAdapter['upgradeFeedbacks']> {
-		return this.#adapter.upgradeFeedbacks(entities, currentUpgradeIndex)
 	}
 
 	protected onOptionsParsed(wrapper: EntityWrapper, clockSensitive: boolean): void {

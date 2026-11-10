@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -27,7 +29,16 @@ describe('InstanceEntityManager', () => {
 
 		upgradeActions: vi.fn().mockResolvedValue([]),
 		upgradeFeedbacks: vi.fn().mockResolvedValue([]),
-	} satisfies EntityManagerAdapter
+	}
+	// The adapter of each manager, sending through the mock above
+	const mockActionAdapter: EntityManagerAdapter<ActionEntityModel> = {
+		update: async (actions) => mockAdapter.updateActions(actions),
+		upgrade: async (actions, currentUpgradeIndex) => mockAdapter.upgradeActions(actions, currentUpgradeIndex),
+	}
+	const mockFeedbackAdapter: EntityManagerAdapter<FeedbackEntityModel> = {
+		update: async (feedbacks) => mockAdapter.updateFeedbacks(feedbacks),
+		upgrade: async (feedbacks, currentUpgradeIndex) => mockAdapter.upgradeFeedbacks(feedbacks, currentUpgradeIndex),
+	}
 
 	const mockControl = {
 		entities: {
@@ -134,9 +145,14 @@ describe('InstanceEntityManager', () => {
 		// Create a new instance for each test
 		variableDependencies = new VariableDependencyRegistry()
 		entityManager = createEntityManagerRouter(
-			new ActionEntityManager(mockAdapter, mockControlsController as any, 'test-connection-id', variableDependencies),
+			new ActionEntityManager(
+				mockActionAdapter,
+				mockControlsController as any,
+				'test-connection-id',
+				variableDependencies
+			),
 			new FeedbackEntityManager(
-				mockAdapter,
+				mockFeedbackAdapter,
 				mockControlsController as any,
 				'test-connection-id',
 				variableDependencies,

@@ -4,6 +4,7 @@ import { isControlIdOfKind, type SomeControlId } from '@companion-app/shared/Con
 import {
 	EntityModelType,
 	type ActionEntityModel,
+	type FeedbackEntityModel,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
 	type SomeEntityModel,
@@ -38,6 +39,7 @@ import type {
 	EntityManagerActionEntity,
 	EntityManagerAdapter,
 	EntityManagerFeedbackEntity,
+	EntityManagerUpgradeEntity,
 } from './EntityManagerBase.js'
 import { FeedbackEntityManager } from './FeedbackEntityManager.js'
 import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
@@ -156,15 +158,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			5000
 		)
 
-		const entityManagerAdapter = new ConnectionNewEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls)
 		this.#actionManager = new ActionEntityManager(
-			entityManagerAdapter,
+			new ConnectionNewActionManagerAdapter(this.#ipcWrapper),
 			this.#deps.controls,
 			this.connectionId,
 			this.#deps.variables.dependencies
 		)
 		this.#feedbackManager = new FeedbackEntityManager(
-			entityManagerAdapter,
+			new ConnectionNewFeedbackManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 			this.#deps.controls,
 			this.connectionId,
 			this.#deps.variables.dependencies,
@@ -791,16 +792,14 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	}
 }
 
-class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
+class ConnectionNewActionManagerAdapter implements EntityManagerAdapter<ActionEntityModel> {
 	readonly #ipcWrapper: ModuleIpcWrapper
-	readonly #controlsStore: IControlStore
 
-	constructor(ipcWrapper: ModuleIpcWrapper, controlsStore: IControlStore) {
+	constructor(ipcWrapper: ModuleIpcWrapper) {
 		this.#ipcWrapper = ipcWrapper
-		this.#controlsStore = controlsStore
 	}
 
-	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
+	async update(actions: Map<string, EntityManagerActionEntity | null>) {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
@@ -819,30 +818,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateActions', updateMessage)
 	}
 
-	async updateFeedbacks(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
-		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
-
-		for (const [id, value] of feedbacks) {
-			if (value && !value.entity.disabled) {
-				const control = this.#controlsStore.getControl(value.controlId)
-
-				updateMessage.feedbacks[id] = {
-					id: id,
-					controlId: value.controlId,
-					feedbackId: value.entity.definitionId,
-					options: value.parsedOptions,
-
-					image: getFeedbackImageSizeForControl(control),
-				}
-			} else {
-				updateMessage.feedbacks[id] = null
-			}
-		}
-
-		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
-	}
-
-	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
+	async upgrade(actions: EntityManagerUpgradeEntity<ActionEntityModel>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActions', {
 				actions: actions.map((act) => ({
@@ -875,8 +851,41 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 				)
 			})
 	}
+}
 
-	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
+class ConnectionNewFeedbackManagerAdapter implements EntityManagerAdapter<FeedbackEntityModel> {
+	readonly #ipcWrapper: ModuleIpcWrapper
+	readonly #controlsStore: IControlStore
+
+	constructor(ipcWrapper: ModuleIpcWrapper, controlsStore: IControlStore) {
+		this.#ipcWrapper = ipcWrapper
+		this.#controlsStore = controlsStore
+	}
+
+	async update(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
+		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
+
+		for (const [id, value] of feedbacks) {
+			if (value && !value.entity.disabled) {
+				const control = this.#controlsStore.getControl(value.controlId)
+
+				updateMessage.feedbacks[id] = {
+					id: id,
+					controlId: value.controlId,
+					feedbackId: value.entity.definitionId,
+					options: value.parsedOptions,
+
+					image: getFeedbackImageSizeForControl(control),
+				}
+			} else {
+				updateMessage.feedbacks[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
+	}
+
+	async upgrade(feedbacks: EntityManagerUpgradeEntity<FeedbackEntityModel>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeFeedbacks', {
 				feedbacks: feedbacks.map((fb) => ({

@@ -4,8 +4,6 @@ import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ActionEntityModel,
 	FeedbackEntityModel,
-	ReplaceableActionEntityModel,
-	ReplaceableFeedbackEntityModel,
 	SomeEntityModel,
 	SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -89,35 +87,31 @@ export type EntityManagerUpgradeEntity<TModel extends SomeEntityModel> = Omit<
 	'parsedOptions'
 >
 
-export interface EntityManagerAdapter {
+/** Sends the entities of one type to the module */
+export interface EntityManagerAdapter<TModel extends SomeEntityModel> {
 	/** Send changes to the subscriptions, keyed by the id of each subscription. `null` deletes a subscription */
-	updateActions: (actions: Map<string, EntityManagerActionEntity | null>) => Promise<void>
-	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
+	update: (entities: Map<string, EntityManagerEntity<TModel> | null>) => Promise<void>
 
-	upgradeActions: (
-		actions: EntityManagerUpgradeEntity<ActionEntityModel>[],
+	/** Send entities to the module to be upgraded */
+	upgrade: (
+		entities: EntityManagerUpgradeEntity<TModel>[],
 		currentUpgradeIndex: number
-	) => Promise<ReplaceableActionEntityModel[]>
-
-	upgradeFeedbacks: (
-		feedbacks: EntityManagerUpgradeEntity<FeedbackEntityModel>[],
-		currentUpgradeIndex: number
-	) => Promise<ReplaceableFeedbackEntityModel[]>
+	) => Promise<Extract<SomeReplaceableEntityModel, { type: TModel['type'] }>[]>
 }
 
 /**
  * Get the key of the module subscription for an entity, from what makes the subscription unique
  * @param controlId The control the entity belongs to
- * @param entityModel The entity
+ * @param definitionId The definition of the entity
  * @param parsedOptions The options of the entity, as parsed for the module
  */
 function getEntitySubscriptionKey(
 	controlId: SomeControlId,
-	entityModel: SomeEntityModel,
+	definitionId: string,
 	parsedOptions: CompanionOptionValues
 ): string {
 	// Inversion is not part of it, as Companion applies that to the value of each entity
-	return JSON.stringify([controlId, entityModel.definitionId, createStableObjectHash(parsedOptions)])
+	return JSON.stringify([controlId, definitionId, createStableObjectHash(parsedOptions)])
 }
 
 /**
@@ -158,7 +152,8 @@ export abstract class EntityManagerBase<
 	protected readonly logger: Logger
 
 	readonly entityType: TModel['type']
-	readonly controlsStore: IControlStore
+	readonly #adapter: EntityManagerAdapter<TModel>
+	protected readonly controlsStore: IControlStore
 	protected readonly connectionId: string
 
 	readonly #entities = new Map<string, EntityWrapper>()
@@ -178,25 +173,18 @@ export abstract class EntityManagerBase<
 
 	constructor(
 		entityType: TModel['type'],
+		adapter: EntityManagerAdapter<TModel>,
 		controlsStore: IControlStore,
 		connectionId: string,
 		variableDependencies: VariableDependencyRegistry
 	) {
 		this.logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}/${entityType}`)
 		this.entityType = entityType
+		this.#adapter = adapter
 		this.connectionId = connectionId
 		this.controlsStore = controlsStore
 		this.#variableDependencies = variableDependencies
 	}
-
-	/** Send changes to the subscriptions, keyed by the id of each subscription. `null` deletes a subscription */
-	protected abstract sendUpdates(payload: Map<string, EntityManagerEntity<TModel> | null>): Promise<void>
-
-	/** Send entities to the module to be upgraded */
-	protected abstract sendUpgrades(
-		entities: EntityManagerUpgradeEntity<TModel>[],
-		currentUpgradeIndex: number
-	): Promise<SomeReplaceableEntityModel[]>
 
 	/** The options of an entity have been parsed */
 	protected abstract onOptionsParsed(wrapper: EntityWrapper, clockSensitive: boolean): void
@@ -244,7 +232,7 @@ export abstract class EntityManagerBase<
 				payload: EntityManagerEntity<TModel>,
 				resendRequested: boolean
 			) => {
-				const key = getEntitySubscriptionKey(wrapper.controlId, payload.entity, payload.parsedOptions)
+				const key = getEntitySubscriptionKey(wrapper.controlId, payload.entity.definitionId, payload.parsedOptions)
 
 				const isNewInstance = !!wrapper.isNewInstance
 				wrapper.isNewInstance = false
@@ -526,7 +514,7 @@ export abstract class EntityManagerBase<
 
 	#queueUpdateBatch(updatePayload: Map<string, EntityManagerEntity<TModel> | null>): void {
 		this.#queueBatch(async () =>
-			this.sendUpdates(updatePayload).catch((e: unknown) => {
+			this.#adapter.update(updatePayload).catch((e: unknown) => {
 				this.logger.error(`Error sending ${this.entityType} updates`, e)
 			})
 		)
@@ -537,7 +525,8 @@ export abstract class EntityManagerBase<
 		upgradeEntities: EntityManagerUpgradeEntity<TModel>[]
 	): void {
 		this.#queueBatch(async () =>
-			this.sendUpgrades(upgradeEntities, this.#currentUpgradeIndex)
+			this.#adapter
+				.upgrade(upgradeEntities, this.#currentUpgradeIndex)
 				.then((upgradedEntities) => {
 					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
 				})
