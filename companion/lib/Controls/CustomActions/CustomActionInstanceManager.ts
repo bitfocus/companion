@@ -330,10 +330,10 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				},
 			}
 
-			await customAction.runActions(lists.actions.getDirectEntities(), frame, runExtras)
-
-			// Write the final value of each output, which covers those computed from other variables
+			// The caller sees where each output starts, then each change as the run sets it
 			for (const variableName of outputTargets.keys()) writeOutput(variableName)
+
+			await customAction.runActions(lists.actions.getDirectEntities(), frame, runExtras)
 
 			return undefined
 		} finally {

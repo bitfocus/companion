@@ -679,11 +679,11 @@ describe('ControlCustomAction', () => {
 				},
 			])
 
-			// Each value as it is set, then the final value once the run is done
+			// The value it starts with, then each value as it is set
 			expect(variablesController.custom.setValue.mock.calls).toEqual([
+				['out', 0],
 				['out', 1],
 				['out', 2],
-				['out', 3],
 				['out', 3],
 			])
 		})
@@ -716,10 +716,13 @@ describe('ControlCustomAction', () => {
 				{ abortDelayed: abort.signal }
 			)
 
-			expect(variablesController.custom.setValue.mock.calls).toEqual([['out', 1]])
+			expect(variablesController.custom.setValue.mock.calls).toEqual([
+				['out', 0],
+				['out', 1],
+			])
 		})
 
-		test('the final value of an output is written, even if it is never set', async () => {
+		test('the value an output starts with is written when the run starts, even if it is never set', async () => {
 			const { variablesController, runAsButton } = createHarness({
 				actions: [action('nothing')],
 				localVariables: [userValue('v', 5)],
