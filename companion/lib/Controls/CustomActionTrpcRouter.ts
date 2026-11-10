@@ -321,7 +321,7 @@ export function createCustomActionTrpcRouter(
 
 			const newControlId = CreateCustomActionControlId(nanoid())
 
-			const controlJson = fromControl.toJSON(true)
+			const controlJson = structuredClone(fromControl.toJSON())
 			controlJson.options.name = `${controlJson.options.name} (copy)`
 
 			const newControl = factory.createCustomAction(newControlId, controlJson)

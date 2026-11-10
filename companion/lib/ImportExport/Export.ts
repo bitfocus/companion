@@ -659,7 +659,7 @@ export class ExportController {
 			for (const control of this.#controlsController.getAllCustomActions()) {
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type === 'custom-action') {
-					exp.customActions[parsedId.customActionId] = control.toJSON(false)
+					exp.customActions[parsedId.customActionId] = control.toJSON()
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,

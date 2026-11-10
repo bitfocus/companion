@@ -621,10 +621,9 @@ export class ControlCustomAction
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
 	 */
-	toJSON(clone = true): CustomActionModel {
-		const obj: CustomActionModel = {
+	toJSON(): CustomActionModel {
+		return {
 			type: this.type,
 			options: this.options,
 			inputs: this.#inputs,
@@ -632,7 +631,6 @@ export class ControlCustomAction
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 			outputs: this.#outputs,
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	toClientJSON(): ClientCustomActionData {
