@@ -1219,6 +1219,49 @@ describe('custom action scope and copies', () => {
 		await vi.waitFor(() => expect(app.getCustomVariableValue('made')).toBe(12))
 	})
 
+	test('a user value of a custom action does not persist what a run sets it to, even when told to', async () => {
+		app.createCustomVariable('before', '')
+		app.createCustomVariable('after', '')
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Persist' })
+		// The option is hidden in a custom action, but could come from an import
+		const storedId = app.addLocalVariable(customActionId, 'v', 'user_value', {
+			startup_value: exprVal('start'),
+			persist_value: exprVal(true),
+		})
+		const groupId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		const inOrder = { parentId: groupId, childGroup: 'default' }
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('before'),
+			create: exprVal(false),
+			value: exprExpr('$(local:v)'),
+		})
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', {
+			location: exprVal('run'),
+			name: exprVal('v'),
+			value: exprVal('changed'),
+		})
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('after'),
+			create: exprVal(false),
+			value: exprExpr('$(local:v)'),
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(location), customActionId, {}, null)
+		for (let i = 0; i < 2; i++) {
+			app.registry.variables.custom.setValue('before', '')
+			app.registry.variables.custom.setValue('after', '')
+			app.pressButton(location, true)
+			app.pressButton(location, false)
+			await vi.waitFor(() => expect(app.getCustomVariableValue('after')).toBe('changed'))
+			// Each run starts from the startup value
+			expect(app.getCustomVariableValue('before')).toBe('start')
+		}
+		expect(getEntity(app, customActionId, storedId).rawOptions.startup_value).toEqual(exprVal('start'))
+	})
+
 	test('setting a local variable in a run sees the other local variables as the run has them', async () => {
 		app.createCustomVariable('out', 0)
 		const customActionId = await createDoublingCustomAction()
@@ -1758,6 +1801,49 @@ describe('custom actions using a connection', () => {
 			expect(upgradedIds).toEqual([importedAction().id])
 		}
 	)
+
+	test('a connection labelled "options", which the inputs of a custom action would hide, is renamed at startup with what refers to it', async () => {
+		const connectionId = await addConnection('test-module-2-1-3')
+		const setLastValue = await addSetter(connectionId)
+		await setLastValue('renamed')
+		app.createCustomVariable('copied', '')
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		const copyId = app.addInternalAction(buttonId, 'custom_variable_set_value', {
+			name: exprVal('copied'),
+			create: exprVal(false),
+			value: exprExpr(`$(${label}:last_value)`),
+		})
+
+		// A config from before the label was reserved
+		const { configDir } = app
+		await app.close()
+		const { DataDatabase } = await import('../../lib/Data/Database.js')
+		const db = new DataDatabase(configDir, () => {})
+		const instances = db.getTableView<Record<string, any>>('instances')
+		instances.set(connectionId, { ...instances.get(connectionId), label: 'options' })
+		const controls = db.getTableView<Record<string, any>>('controls')
+		const button = controls.get(buttonId)
+		if (!button) throw new Error('Expected the button to be saved')
+		controls.set(buttonId, JSON.parse(JSON.stringify(button).replaceAll(`$(${label}:`, '$(options:')))
+		db.close()
+
+		app = await createTestApp({ configDir, extraModulePath: path.join(import.meta.dirname, 'modules/fixtures') })
+		await vi.waitFor(() => {
+			expect(app.registry.instance.getLabelForConnection(connectionId)).toBe('options_1')
+			expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeDefined()
+		}, 30_000)
+		expect(getEntity(app, buttonId, copyId).rawOptions.value).toEqual(exprExpr('$(options_1:last_value)'))
+
+		// The setter saved before the restart still sets the last value
+		await vi.waitFor(() => {
+			app.pressButton({ pageNumber: 1, row: 2, column: 1 }, true)
+			app.pressButton({ pageNumber: 1, row: 2, column: 1 }, false)
+			expect(app.registry.variables.values.getVariableValue('options_1', 'last_value')).toBe('renamed')
+		}, 20_000)
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('copied')).toBe('renamed'))
+	})
 
 	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
