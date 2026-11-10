@@ -97,11 +97,15 @@ export class LocalVariablesController {
 		const locationStr = stringifyVariableValue(location)
 		if (!locationStr) return null
 
-		if (locationStr?.trim().toLocaleLowerCase() === 'this') {
-			// Inside a custom action, this is the custom action, with the values of the run
-			if (extras.frame) return { controlId: extras.frame.customActionControlId, name, frame: extras.frame }
-
-			// This could be any type of control (button, trigger, etc)
+		const keyword = locationStr.trim().toLocaleLowerCase()
+		if (keyword === 'run') {
+			// The local variables of the custom action being run, with the values of the run
+			if (!extras.frame) return null
+			return { controlId: extras.frame.customActionControlId, name, frame: extras.frame }
+		}
+		if (keyword === 'this') {
+			// The control running it, which could be any type of control (button, trigger, etc). In a custom action, as
+			// with `$(this:*)`, this is the control which called it
 			if (!extras.controlId) return null
 			return { controlId: extras.controlId, name, frame: null }
 		}

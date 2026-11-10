@@ -618,7 +618,7 @@ describe('ControlCustomAction', () => {
 			const seen: any[] = []
 			executeAction.mockImplementation(async (action, extras) => {
 				if (action.definitionId === 'set') {
-					const variable = localVariables.localVariableFor('this', 'v', extras)!
+					const variable = localVariables.localVariableFor('run', 'v', extras)!
 					localVariables.setLocalVariable(variable, evaluate(extras, '$(options:n)'))
 
 					// Wait for both runs to have set their value, so that they overlap
@@ -665,7 +665,7 @@ describe('ControlCustomAction', () => {
 				outputs: [{ variableName: 'v', label: 'Count' }],
 			})
 			executeAction.mockImplementation(async (_action, extras) => {
-				const variable = localVariables.localVariableFor('this', 'v', extras)!
+				const variable = localVariables.localVariableFor('run', 'v', extras)!
 				for (let i = 1; i <= 3; i++) localVariables.setLocalVariable(variable, i)
 			})
 			variablesController.custom.hasCustomVariable.mockReturnValue(true)
@@ -696,7 +696,7 @@ describe('ControlCustomAction', () => {
 			})
 			const abort = new AbortController()
 			executeAction.mockImplementation(async (_action, extras) => {
-				const variable = localVariables.localVariableFor('this', 'v', extras)!
+				const variable = localVariables.localVariableFor('run', 'v', extras)!
 				localVariables.setLocalVariable(variable, 1)
 				abort.abort()
 				// Such as an action which carries on after it is aborted
@@ -749,7 +749,7 @@ describe('ControlCustomAction', () => {
 				outputs: [{ variableName: 'v', label: 'Discarded' }],
 			})
 			executeAction.mockImplementation(async (_action, extras) => {
-				localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 1)
+				localVariables.setLocalVariable(localVariables.localVariableFor('run', 'v', extras)!, 1)
 			})
 			variablesController.custom.hasCustomVariable.mockReturnValue(true)
 
@@ -1205,7 +1205,7 @@ describe('ControlCustomAction', () => {
 			executeAction.mockImplementation(async (entity, extras) => {
 				if (entity.definitionId === 'set') {
 					subscriptionsBeforeSet = runSubscriptions()
-					localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 1)
+					localVariables.setLocalVariable(localVariables.localVariableFor('run', 'v', extras)!, 1)
 				} else if (entity.definitionId === 'check') {
 					await vi.waitFor(() => expect(runSubscriptions()).toBeGreaterThan(subscriptionsBeforeSet))
 					subscriptionsAfterSet = runSubscriptions()

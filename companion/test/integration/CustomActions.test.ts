@@ -145,7 +145,7 @@ describe('custom actions', () => {
 			name: 'doubled',
 		})
 		app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
-			location: exprVal('this'),
+			location: exprVal('run'),
 			name: exprVal('doubled'),
 			value: exprExpr('$(options:n) * 2'),
 		})
@@ -297,7 +297,7 @@ describe('long running custom actions', () => {
 		})
 		const body: EntityOwner = { parentId: loopId, childGroup: 'actions' }
 		app.addCustomActionAction(controlId, body, 'local_variable_set_value', {
-			location: exprVal('this'),
+			location: exprVal('run'),
 			name: exprVal('count'),
 			value: exprExpr(increment),
 		})
@@ -498,7 +498,7 @@ describe('long running custom actions', () => {
 			innerId,
 			{ step: exprVal(1) },
 			{
-				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('count') },
+				count: { type: 'local-variable', location: exprVal('run'), variableName: exprVal('count') },
 			}
 		)
 		await app.trpc().controls.customActions.outputSet({ controlId: outerId, variableName: 'count', label: 'Seen' })
@@ -563,7 +563,7 @@ describe('long running custom actions', () => {
 			execution_mode: exprVal('sequential'),
 		})
 		const inOrder = { parentId: groupId, childGroup: 'default' }
-		const local = { location: exprVal('this'), name: exprVal('v') }
+		const local = { location: exprVal('run'), name: exprVal('v') }
 		const record = (variable: string) =>
 			app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
 				name: exprVal(variable),
@@ -817,7 +817,7 @@ describe('long running custom actions', () => {
 			innerId,
 			{},
 			{
-				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('count') },
+				count: { type: 'local-variable', location: exprVal('run'), variableName: exprVal('count') },
 			}
 		)
 		await app.trpc().controls.customActions.outputSet({ controlId: outerId, variableName: 'count', label: 'Seen' })
@@ -909,7 +909,7 @@ describe('custom action scope and copies', () => {
 		// Only a user value can be an output
 		app.addLocalVariable(controlId, 'result', 'user_value', { startup_value: exprVal(0) })
 		app.addCustomActionAction(controlId, null, 'local_variable_set_value', {
-			location: exprVal('this'),
+			location: exprVal('run'),
 			name: exprVal('result'),
 			value: exprExpr('$(local:double)'),
 		})
@@ -931,7 +931,7 @@ describe('custom action scope and copies', () => {
 		})
 		const inOrder = { parentId: groupId, childGroup: 'default' }
 		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', {
-			location: exprVal('this'),
+			location: exprVal('run'),
 			name: exprVal('count'),
 			value: exprExpr('$(local:count) + 1'),
 		})
@@ -979,7 +979,7 @@ describe('custom action scope and copies', () => {
 		const inOrder = { parentId: groupId, childGroup: 'default' }
 		// $(target:double) is computed from the input of the caller, rather than its default
 		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', {
-			location: exprVal('this'),
+			location: exprVal('run'),
 			name: exprVal('copied'),
 			value: exprExpr('$(target:double)'),
 		})
@@ -996,11 +996,37 @@ describe('custom action scope and copies', () => {
 		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe(10))
 	})
 
+	test('the location "this" in a custom action is the calling control, as $(this:*) is, and "run" is the run', async () => {
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Writer' })
+		app.addLocalVariable(customActionId, 'v', 'user_value', { startup_value: exprVal(0) })
+		app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
+			location: exprVal('this'),
+			name: exprVal('v'),
+			value: exprExpr('42'),
+		})
+		app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
+			location: exprVal('run'),
+			name: exprVal('v'),
+			value: exprExpr('7'),
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		const buttonLocalId = app.addLocalVariable(buttonId, 'v', 'user_value', { startup_value: exprVal(0) })
+		app.addCustomActionCall(buttonId, customActionId, {}, null)
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getFeedbackValue(buttonId, buttonLocalId)).toBe(42))
+
+		// The run only changed its own copy
+		expect(app.getFeedbackValue(customActionId, getStoredLocalVariableId(customActionId, 'v'))).toBe(0)
+	})
+
 	test('a custom action writing to a local variable of its caller does so through an output only', async () => {
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Writer' })
 		app.addLocalVariable(customActionId, 'result', 'user_value', { startup_value: exprVal(0) })
 		app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
-			location: exprVal('this'),
+			location: exprVal('run'),
 			name: exprVal('result'),
 			value: exprExpr('42'),
 		})

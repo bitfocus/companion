@@ -16,10 +16,14 @@ export const ControlLocationOption = {
  */
 export const LocalVariableLocationOption = {
 	...ControlLocationOption,
+	description:
+		'eg 1/0/0 or $(this:page)/$(this:row)/$(this:column). "this" can also be used to reference the current control, and in a custom action, "run" its own local variables',
+	expressionDescription: 'eg `1/0/0`, `${$(this:page) + 1}/${$(this:row)}/${$(this:column)}`, `this`, `run`',
 	defaultForControlType: {
 		trigger: 'this',
 		'expression-variable': 'this',
-		'custom-action': 'this',
+		// Its own local variables, rather than those of the control running it
+		'custom-action': 'run',
 		page: 'this',
 	},
 } as const satisfies CompanionInputFieldTextInputExtended

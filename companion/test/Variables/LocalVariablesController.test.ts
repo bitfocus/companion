@@ -70,6 +70,12 @@ describe('LocalVariablesController', () => {
 			expect(controller.localVariableFor(undefined, 'my_var', makeExtras())).toBe(null)
 		})
 
+		test('the location "run" resolves to nothing outside a run of a custom action', () => {
+			const { controller } = createController()
+
+			expect(controller.localVariableFor('run', 'my_var', makeExtras())).toBe(null)
+		})
+
 		test('the location "this" resolves to nothing when there is no calling control', () => {
 			const { controller } = createController()
 
@@ -320,14 +326,30 @@ describe('LocalVariablesController', () => {
 			}
 		}
 
-		test('the location "this" resolves to the custom action and its run', () => {
+		test('the location "run" resolves to the custom action and its run', () => {
 			const { controller } = createController()
 			const frame = makeFrame()
 
-			expect(controller.localVariableFor('this', 'my_var', { ...makeExtras(), frame })).toEqual({
+			expect(controller.localVariableFor('run', 'my_var', { ...makeExtras(), frame })).toEqual({
 				controlId: CreateCustomActionControlId('abc'),
 				name: 'my_var',
 				frame,
+			})
+			// Case and whitespace insensitive
+			expect(controller.localVariableFor(' RUN ', 'my_var', { ...makeExtras(), frame })).toEqual({
+				controlId: CreateCustomActionControlId('abc'),
+				name: 'my_var',
+				frame,
+			})
+		})
+
+		test('the location "this" resolves to the control which called it, as $(this:*) does', () => {
+			const { controller } = createController()
+
+			expect(controller.localVariableFor('this', 'my_var', { ...makeExtras(), frame: makeFrame() })).toEqual({
+				controlId: CreateBankControlId('control-self'),
+				name: 'my_var',
+				frame: null,
 			})
 		})
 
