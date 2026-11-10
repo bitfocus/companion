@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -9,6 +11,7 @@ import type { ExpressionVariableModel } from '@companion-app/shared/Model/Expres
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
 	fixupButtonReferenceControl,
+	fixupCustomActionControl,
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
@@ -410,6 +413,55 @@ describe('fixupExpressionVariableControl', () => {
 		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
 
 		expect((result.entity?.options.src as any).value).toBe('$(NewLabel:x)')
+	})
+})
+
+describe('fixupCustomActionControl', () => {
+	let internalModule: InternalController
+	beforeEach(() => {
+		internalModule = mockInternalModule()
+	})
+
+	function makeCustomAction(overrides: Partial<CustomActionModel> = {}): CustomActionModel {
+		return {
+			type: 'custom-action',
+			options: { name: 'Custom', description: '', sortOrder: 0 },
+			inputs: [{ type: 'textinput', id: 'text', label: 'Text', default: '' }],
+			actions: [],
+			localVariables: [],
+			outputs: [{ variableName: 'result', label: 'Result' }],
+			...overrides,
+		}
+	}
+
+	test('remaps connections and label references in its actions and local variables', () => {
+		const control = makeCustomAction({
+			actions: [makeAction({ id: 'a', connectionId: 'conn-old', options: { msg: exprVal('$(OldLabel:x)') } })],
+			localVariables: [makeFeedback({ id: 'lv', connectionId: 'conn-old', upgradeIndex: 0 })],
+		})
+
+		const result = fixupCustomActionControl(internalModule, control, standardMap(), {})
+
+		expect(result.actions[0].connectionId).toBe('conn-new')
+		expect((result.actions[0].options.msg as any).value).toBe('$(NewLabel:x)')
+		expect(result.localVariables[0].connectionId).toBe('conn-new')
+		expect(result.localVariables[0].upgradeIndex).toBe(3)
+		expect(result.inputs).toEqual(control.inputs)
+		expect(result.outputs).toEqual(control.outputs)
+	})
+
+	test('keeps the calls to other custom actions', () => {
+		const control = makeCustomAction({
+			actions: [makeAction({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' })],
+		})
+
+		// As the import maps each connection provided by Companion itself to itself
+		const map = { ...standardMap(), [CUSTOM_ACTIONS_CONNECTION_ID]: { id: CUSTOM_ACTIONS_CONNECTION_ID, label: '' } }
+		const result = fixupCustomActionControl(internalModule, control, map, {})
+
+		expect(result.actions).toEqual([
+			expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' }),
+		])
 	})
 })
 
