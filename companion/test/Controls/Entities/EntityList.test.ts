@@ -57,6 +57,7 @@ function createList(
 	} as any
 	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
 	const scope: EntityScope = {
+		isTransient: false,
 		specialExpressionManager,
 		customActionChain: [],
 		customActionInstances,
@@ -2099,6 +2100,7 @@ describe('transient child groups', () => {
 
 	function createTransientScope(): EntityScope {
 		return {
+			isTransient: true,
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
 			customActionChain: ['custom-action:1'],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },

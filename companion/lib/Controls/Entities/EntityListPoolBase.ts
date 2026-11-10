@@ -124,6 +124,7 @@ export abstract class ControlEntityListPoolBase {
 			props.variableDependencies
 		)
 		this.#scope = {
+			isTransient: false,
 			specialExpressionManager,
 			customActionChain,
 			customActionInstances: props.customActionInstances,
@@ -350,6 +351,9 @@ export abstract class ControlEntityListPoolBase {
 
 			// Ignore if the types do not match
 			if (entity.type !== newProps.type) return undefined
+
+			// A copy is rebuilt from what it copies once that is upgraded, so an upgrade of it is dropped
+			if (entity.isTransient) return undefined
 
 			const oldElementIds = entity.styleOverrideAffectedElementIds
 

@@ -426,6 +426,11 @@ export abstract class EntityManagerBase<
 								// The entity is inactive until its options can be parsed
 								leaveSubscription(entityId, wrapper)
 							}
+						} else if (entity.isTransient) {
+							// A copy, such as of a custom action, is rebuilt from what it copies once that is upgraded,
+							// so it waits for that rather than being upgraded itself
+							wrapper.state = EntityState.READY
+							leaveSubscription(entityId, wrapper)
 						} else {
 							wrapper.state = EntityState.UPGRADING
 							pushEntityToUpgrade(wrapper, entity)

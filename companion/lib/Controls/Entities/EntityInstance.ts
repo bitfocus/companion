@@ -88,6 +88,11 @@ export class ControlEntityInstance {
 	 */
 	#transientChildren = new Map<string, ControlEntityList>()
 
+	/** Whether this is a copy which exists only while running, such as of a custom action, so is never upgraded */
+	get isTransient(): boolean {
+		return this.#scope.isTransient
+	}
+
 	/**
 	 * Get the id of this entity
 	 */
@@ -685,7 +690,7 @@ export class ControlEntityInstance {
 			const result = childGroup.findById(id)
 			if (result) return result
 		}
-		// Transient children are included, so that they can be found to be upgraded and given values
+		// Transient children are included, so that they can be given values
 		for (const childGroup of this.#transientChildren.values()) {
 			const result = childGroup.findById(id)
 			if (result) return result

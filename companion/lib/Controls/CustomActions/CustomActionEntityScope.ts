@@ -24,6 +24,7 @@ export class CustomActionEntityScope implements EntityScope {
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
 	readonly customActionChain: ReadonlyArray<string>
 	readonly customActionInstances: CustomActionInstancesForEntity
+	readonly isTransient = true
 
 	readonly #customAction: ControlCustomAction
 	readonly #callerControlId: SomeControlId

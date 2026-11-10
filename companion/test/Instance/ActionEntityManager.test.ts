@@ -507,6 +507,37 @@ describe('ActionEntityManager', () => {
 			)
 		})
 
+		it('should not upgrade or subscribe a copy which is behind, as it is rebuilt once the original is upgraded', () => {
+			const mockEntity = {
+				id: 'copy-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 3,
+				isTransient: true,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'copy-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: {},
+					upgradeIndex: 3,
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			actionManager.start(5)
+			actionManager.trackEntity(mockEntity as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			expect(mockAdapter.upgradeActions).not.toHaveBeenCalled()
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
+			expect(actionManager.getSubscriptionId('copy-1')).toBeUndefined()
+		})
+
 		it('should update entity with upgraded version when upgrade completes', async () => {
 			// Create entity with older upgrade index
 			const mockEntity = {

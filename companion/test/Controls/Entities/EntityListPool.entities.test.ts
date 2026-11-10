@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
+import type { EntityScope } from '../../../lib/Controls/Entities/Types.js'
 import { actionModel, createPool, downSet, feedbackModel } from './EntityListPoolTestHelpers.js'
 
 // The pool schedules debounced timers (e.g. for local-variable/special-expression processing) that
@@ -302,6 +303,32 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 		})
 
 		expect(result).toBeUndefined()
+	})
+
+	test('ignores a copy in a transient group, as it is rebuilt once what it copies is upgraded', () => {
+		const { pool } = createPool()
+		const caller = actionModel()
+		pool.entityAdd(downSet(), null, caller)
+		const copy = actionModel({ definitionId: 'def-old' })
+		const copyScope: EntityScope = {
+			isTransient: true,
+			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			customActionChain: [],
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		}
+		pool.findEntityById(caller.id)!.setTransientChildGroup('copy', copyScope, { type: EntityModelType.Action }, [copy])
+
+		const result = pool.entityReplaceForUpgrade({
+			id: copy.id,
+			type: EntityModelType.Action,
+			definitionId: 'def-new',
+			options: {},
+			upgradeIndex: undefined,
+		})
+
+		expect(result).toBeUndefined()
+		expect(pool.findEntityById(caller.id)!.findChildById(copy.id)?.definitionId).toBe('def-old')
 	})
 
 	test('returns undefined for an unknown entity', () => {

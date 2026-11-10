@@ -45,6 +45,11 @@ export interface EntityScope {
 	readonly customActionChain: ReadonlyArray<string>
 	/** Builds the copy of a custom action held by an action which calls it */
 	readonly customActionInstances: CustomActionInstancesForEntity
+	/**
+	 * Whether the entities are copies which exist only while running, such as of a custom action. They are rebuilt
+	 * from what they copy when it changes, so are never upgraded or saved themselves
+	 */
+	readonly isTransient: boolean
 	/** Create a parser for the options of the entities */
 	createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null,
