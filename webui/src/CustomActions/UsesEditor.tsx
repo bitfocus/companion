@@ -1,5 +1,6 @@
 import { faLink, faStop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Link } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
@@ -16,9 +17,10 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useNow } from '~/Hooks/useNow.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { assertNever } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import './UsesEditor.css'
-import { describeUseControl, formatElapsed } from './UsesDescription.js'
+import { describeUseControl, formatElapsed, type UseControlLink } from './UsesDescription.js'
 
 interface CustomActionUsesEditorProps {
 	controlId: CustomActionControlId
@@ -143,7 +145,7 @@ const UseRow = observer(function UseRow({
 		<li className="custom-action-use">
 			<div className="custom-action-use-name">
 				<span className="custom-action-use-kind">{description.kind}</span>
-				{description.name}
+				<UseControlName name={description.name} link={description.link} />
 			</div>
 			<RunsStatus runs={use.runs} useControlId={use.controlId} disabled={use.disabled} />
 			<Button
@@ -159,6 +161,39 @@ const UseRow = observer(function UseRow({
 		</li>
 	)
 })
+
+/** The name of a control which calls the custom action, linking to roughly where it is */
+function UseControlName({ name, link }: { name: string; link: UseControlLink | null }): React.JSX.Element {
+	if (!link) return <>{name}</>
+
+	switch (link.type) {
+		case 'buttons-page':
+			return (
+				<Link to="/buttons/$page" params={{ page: String(link.pageNumber) }} title="Show its page of buttons">
+					{name}
+				</Link>
+			)
+		case 'trigger':
+			return (
+				<Link to="/triggers/$controlId" params={{ controlId: link.triggerId }} title="Edit the trigger">
+					{name}
+				</Link>
+			)
+		case 'custom-action':
+			return (
+				<Link
+					to="/custom-actions/$controlId"
+					params={{ controlId: link.customActionId }}
+					title="Edit the custom action"
+				>
+					{name}
+				</Link>
+			)
+		default:
+			assertNever(link)
+			return <>{name}</>
+	}
+}
 
 function OtherRunsRow({ runs }: { runs: CustomActionRunInfo[] }) {
 	return (

@@ -35,13 +35,19 @@ function createStores(): UseControlStores {
 
 describe('describeUseControl', () => {
 	test('a button is described by where it is', () => {
-		expect(describeUseControl(placedButton, createStores())).toEqual({ kind: 'Button', name: '2/1/4' })
+		// It can only be found by its page
+		expect(describeUseControl(placedButton, createStores())).toEqual({
+			kind: 'Button',
+			name: '2/1/4',
+			link: { type: 'buttons-page', pageNumber: 2 },
+		})
 	})
 
 	test('a button which is not on a page says so', () => {
 		expect(describeUseControl(CreateBankControlId('loose'), createStores())).toEqual({
 			kind: 'Button',
 			name: 'Not on a page',
+			link: null,
 		})
 	})
 
@@ -57,25 +63,35 @@ describe('describeUseControl', () => {
 			updatedOrder: null,
 		})
 
-		expect(describeUseControl(placedButton, stores)).toEqual({ kind: 'Button', name: '1/0/0' })
+		expect(describeUseControl(placedButton, stores)).toEqual({
+			kind: 'Button',
+			name: '1/0/0',
+			link: { type: 'buttons-page', pageNumber: 1 },
+		})
 	})
 
 	test('a trigger or custom action is described by its name', () => {
 		const stores = createStores()
-		expect(describeUseControl(CreateTriggerControlId('named'), stores)).toEqual({ kind: 'Trigger', name: 'Morning' })
+		expect(describeUseControl(CreateTriggerControlId('named'), stores)).toEqual({
+			kind: 'Trigger',
+			name: 'Morning',
+			link: { type: 'trigger', triggerId: 'named' },
+		})
 		expect(describeUseControl(CreateTriggerControlId('unnamed'), stores)).toEqual({
 			kind: 'Trigger',
 			name: 'Unnamed trigger',
+			link: { type: 'trigger', triggerId: 'unnamed' },
 		})
 		expect(describeUseControl(CreateCustomActionControlId('outer'), stores)).toEqual({
 			kind: 'Custom action',
 			name: 'Outer',
+			link: { type: 'custom-action', customActionId: 'outer' },
 		})
 	})
 
 	test('any other control is described by its id', () => {
 		const controlId = CreateExpressionVariableControlId('x')
-		expect(describeUseControl(controlId, createStores())).toEqual({ kind: 'Control', name: controlId })
+		expect(describeUseControl(controlId, createStores())).toEqual({ kind: 'Control', name: controlId, link: null })
 	})
 })
 
