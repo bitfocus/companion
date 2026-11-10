@@ -328,9 +328,13 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 					const members = membersByKey.get(key)!
 					const payload = members[0].payload
 
-					// Reuse a subscription these entities have emptied, so the module sees its options change
+					// Reuse a subscription these entities have emptied, so the module sees its options change.
+					// Not one from another control, as a subscription keeps the control it was made for
 					const reusedId = members.find(
-						(member) => member.fromSubscriptionId !== undefined && vacatedSubscriptionIds.has(member.fromSubscriptionId)
+						(member) =>
+							member.fromSubscriptionId !== undefined &&
+							vacatedSubscriptionIds.has(member.fromSubscriptionId) &&
+							this.#subscriptions.get(member.fromSubscriptionId)?.controlId === payload.controlId
 					)?.fromSubscriptionId
 					if (reusedId !== undefined) {
 						vacatedSubscriptionIds.delete(reusedId)

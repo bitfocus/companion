@@ -2585,6 +2585,35 @@ describe('InstanceEntityManager', () => {
 			expect(mockControlsController.updateFeedbackValues).not.toHaveBeenCalled()
 		})
 
+		it('should not reuse the subscription of an entity moving to another control', () => {
+			const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
+
+			entityManager.trackEntity(fb1 as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+			const oldSubscriptionId = entityManager.getSubscriptionId('fb-1')!
+			mockAdapter.updateFeedbacks.mockClear()
+
+			entityManager.trackEntity(fb1 as any, CreateBankControlId('control-2'))
+			vi.runAllTimers()
+
+			// The subscription knows its control, so the old one is deleted and a new one made
+			const newSubscriptionId = entityManager.getSubscriptionId('fb-1')!
+			expect(newSubscriptionId).not.toBe(oldSubscriptionId)
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
+				new Map([
+					[newSubscriptionId, expect.objectContaining({ controlId: CreateBankControlId('control-2') })],
+					[oldSubscriptionId, null],
+				])
+			)
+
+			entityManager.handleFeedbackValues([
+				{ id: newSubscriptionId, controlId: CreateBankControlId('control-2'), value: true },
+			])
+			expect(mockControlsController.updateFeedbackValues).toHaveBeenCalledWith('test-connection-id', [
+				{ entityId: 'fb-1', controlId: CreateBankControlId('control-2'), value: true },
+			])
+		})
+
 		it('should ignore a value reported for an action subscription, and not give it to an action joining later', () => {
 			const action1 = createMockEntity('action-1', EntityModelType.Action, { field1: 'a' })
 			const action2 = createMockEntity('action-2', EntityModelType.Action, { field1: 'a' })
