@@ -27,8 +27,8 @@ import {
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import {
+	pruneCustomActionOutputTargets,
 	removeCustomActionInputInCallers,
-	removeCustomActionOutputInCallers,
 	renameCustomActionInputInCallers,
 } from '../../../lib/Controls/CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
@@ -279,7 +279,11 @@ describe('ControlCustomAction', () => {
 		test('describes the inputs and outputs', () => {
 			const { control } = createHarness({
 				options: { ...ControlCustomAction.DefaultOptions, name: 'My action', description: 'desc' },
-				outputs: [{ id: 'count', label: 'Count', variableName: 'v' }],
+				localVariables: [userValue('v', 0), userValue('unlabelled', 0)],
+				outputs: [
+					{ variableName: 'v', label: 'Count' },
+					{ variableName: 'unlabelled', label: '' },
+				],
 			})
 
 			const definition = control.toActionDefinition()
@@ -290,7 +294,11 @@ describe('ControlCustomAction', () => {
 				options: [numberInput],
 				optionsSupportExpressions: true,
 				actionHasResult: false,
-				actionOutputs: [{ id: 'count', label: 'Count' }],
+				// An output is known by the name of its variable, which is its label when it has none
+				actionOutputs: [
+					{ id: 'v', label: 'Count' },
+					{ id: 'unlabelled', label: 'unlabelled' },
+				],
 				hasLifecycleFunctions: false,
 			})
 		})
@@ -420,25 +428,83 @@ describe('ControlCustomAction', () => {
 			expect(untouched.rawOptions).toEqual({ n: exprVal(6) })
 		})
 
-		test('an output follows its local variable being renamed', () => {
+		test('an output follows its local variable being renamed, and callers are told', () => {
 			const local = userValue('v', 0)
-			const { control } = createHarness({
+			const { deps, control } = createHarness({
 				localVariables: [local, userValue('other', 0)],
 				outputs: [
-					{ id: 'out', label: 'Out', variableName: 'v' },
-					{ id: 'unrelated', label: 'Unrelated', variableName: 'other' },
+					{ variableName: 'v', label: 'Out' },
+					{ variableName: 'other', label: 'Unrelated' },
 				],
 			})
+			const renamed = vi.fn()
+			deps.events.on('customActionOutputRenamed', renamed)
 
 			expect(control.entities.entitySetVariableName('local-variables', local.id, 'renamed')).toBe(true)
 
 			expect(control.outputs).toEqual([
-				{ id: 'out', label: 'Out', variableName: 'renamed' },
-				{ id: 'unrelated', label: 'Unrelated', variableName: 'other' },
+				{ variableName: 'renamed', label: 'Out' },
+				{ variableName: 'other', label: 'Unrelated' },
 			])
+			expect(renamed).toHaveBeenCalledWith(CUSTOM_ACTION_CONTROL_ID, 'v', 'renamed')
 		})
 
-		test('removing an output removes where the actions which call the custom action write it', () => {
+		test('renaming a local variable which is not an output does not tell callers', () => {
+			const local = userValue('v', 0)
+			const { deps, control } = createHarness({ localVariables: [local] })
+			const renamed = vi.fn()
+			deps.events.on('customActionOutputRenamed', renamed)
+
+			expect(control.entities.entitySetVariableName('local-variables', local.id, 'renamed')).toBe(true)
+
+			expect(renamed).not.toHaveBeenCalled()
+		})
+
+		test('only a user value local variable can be an output', () => {
+			const { control } = createHarness({
+				localVariables: [userValue('v', 0), computedValue('double', '$(options:n) * 2')],
+				outputs: [
+					{ variableName: 'v', label: 'V' },
+					{ variableName: 'double', label: 'Double' },
+				],
+			})
+
+			expect(control.outputs).toEqual([{ variableName: 'v', label: 'V' }])
+			expect(control.outputSet('double', 'Double')).toBe(false)
+			expect(control.outputSet('missing', 'Missing')).toBe(false)
+		})
+
+		test('an output is turned on, relabelled and off by its local variable', () => {
+			const { control } = createHarness({ localVariables: [userValue('v', 0), userValue('w', 0)] })
+
+			expect(control.outputSet('w', 'W')).toBe(true)
+			expect(control.outputSet('v', 'V')).toBe(true)
+			// In the order of the local variables
+			expect(control.outputs).toEqual([
+				{ variableName: 'v', label: 'V' },
+				{ variableName: 'w', label: 'W' },
+			])
+
+			expect(control.outputSet('v', 'Renamed')).toBe(true)
+			expect(control.outputs[0]).toEqual({ variableName: 'v', label: 'Renamed' })
+
+			expect(control.outputSet('v', null)).toBe(true)
+			expect(control.outputs).toEqual([{ variableName: 'w', label: 'W' }])
+			expect(control.toJSON().outputs).toEqual([{ variableName: 'w', label: 'W' }])
+		})
+
+		test('removing a local variable removes its output, which a new variable of the same name does not get', () => {
+			const local = userValue('v', 0)
+			const { control } = createHarness({ localVariables: [local], outputs: [{ variableName: 'v', label: 'V' }] })
+
+			expect(control.entities.entityRemove('local-variables', local.id)).toBe(true)
+			expect(control.outputs).toEqual([])
+
+			control.entities.entityAdd('local-variables', null, userValue('v', 0))
+			expect(control.outputs).toEqual([])
+		})
+
+		test('callers stop writing outputs which their custom action no longer has', () => {
 			const { deps, controlStore } = createHarness({})
 			const target = { type: 'custom-variable' as const, variableName: exprVal('x'), createIfNotExists: false }
 
@@ -447,13 +513,14 @@ describe('ControlCustomAction', () => {
 				...callAction(),
 				outputTargets: { removed: target, kept: target },
 			})
+			// A call to a custom action which doesn't exist keeps its targets, for if it is imported again
 			caller.entities.entityAdd('custom_action_actions', null, {
-				...callAction({}, 'other'),
+				...callAction({}, 'missing'),
 				outputTargets: { removed: target },
 			})
 			controlStore.controls.set(CALLER_CONTROL_ID, caller)
 
-			removeCustomActionOutputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'removed')
+			pruneCustomActionOutputTargets(controlStore, new Map([[CUSTOM_ACTION_ID, new Set(['kept'])]]))
 
 			const [changed, untouched] = caller.entities.getActionEntities()
 			expect(changed.rawOutputTargets).toEqual({ kept: target })
@@ -595,7 +662,7 @@ describe('ControlCustomAction', () => {
 			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
 				actions: [action('count')],
 				localVariables: [userValue('v', 0)],
-				outputs: [{ id: 'count', label: 'Count', variableName: 'v' }],
+				outputs: [{ variableName: 'v', label: 'Count' }],
 			})
 			executeAction.mockImplementation(async (_action, extras) => {
 				const variable = localVariables.localVariableFor('this', 'v', extras)!
@@ -607,7 +674,7 @@ describe('ControlCustomAction', () => {
 				{
 					...callAction(),
 					outputTargets: {
-						count: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+						v: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
 					},
 				},
 			])
@@ -625,7 +692,7 @@ describe('ControlCustomAction', () => {
 			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
 				actions: [action('count')],
 				localVariables: [userValue('v', 0)],
-				outputs: [{ id: 'count', label: 'Count', variableName: 'v' }],
+				outputs: [{ variableName: 'v', label: 'Count' }],
 			})
 			const abort = new AbortController()
 			executeAction.mockImplementation(async (_action, extras) => {
@@ -642,7 +709,7 @@ describe('ControlCustomAction', () => {
 					{
 						...callAction(),
 						outputTargets: {
-							count: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+							v: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
 						},
 					},
 				],
@@ -652,34 +719,31 @@ describe('ControlCustomAction', () => {
 			expect(variablesController.custom.setValue.mock.calls).toEqual([['out', 1]])
 		})
 
-		test('the final value of an output is written, which may be computed', async () => {
+		test('the final value of an output is written, even if it is never set', async () => {
 			const { variablesController, runAsButton } = createHarness({
 				actions: [action('nothing')],
-				localVariables: [computedValue('double', '$(options:n) * 2')],
-				outputs: [{ id: 'double', label: 'Double', variableName: 'double' }],
+				localVariables: [userValue('v', 5)],
+				outputs: [{ variableName: 'v', label: 'V' }],
 			})
 			variablesController.custom.hasCustomVariable.mockReturnValue(true)
 
 			await runAsButton([
 				{
-					...callAction({ n: exprVal(7) }),
+					...callAction(),
 					outputTargets: {
-						double: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+						v: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
 					},
 				},
 			])
 
-			expect(variablesController.custom.setValue).toHaveBeenCalledWith('out', 14)
+			expect(variablesController.custom.setValue).toHaveBeenCalledWith('out', 5)
 		})
 
-		test('an output without a target, or not from a local variable, is not written', async () => {
+		test('an output without a target, or a target for something which is not an output, is not written', async () => {
 			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
 				actions: [action('set')],
 				localVariables: [userValue('v', 0)],
-				outputs: [
-					{ id: 'discarded', label: 'Discarded', variableName: 'v' },
-					{ id: 'unbound', label: 'Unbound', variableName: '' },
-				],
+				outputs: [{ variableName: 'v', label: 'Discarded' }],
 			})
 			executeAction.mockImplementation(async (_action, extras) => {
 				localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 1)
@@ -690,7 +754,7 @@ describe('ControlCustomAction', () => {
 				{
 					...callAction(),
 					outputTargets: {
-						unbound: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+						unknown: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
 					},
 				},
 			])

@@ -10,7 +10,6 @@ import {
 	type CustomActionControlId,
 } from '@companion-app/shared/ControlId.js'
 import {
-	CustomActionOutputSchema,
 	type ClientCustomActionData,
 	type CustomActionsUpdate,
 	type CustomActionsUpdateInitOp,
@@ -95,30 +94,31 @@ export function removeCustomActionInputInCallers(
 }
 
 /**
- * Remove where the actions which run a custom action write one of its outputs, after it has been removed, so that a
- * new output with the same id doesn't write there
+ * Remove where the actions which run custom actions write outputs which their custom action no longer has, so that a
+ * new output of the same name doesn't write there. A call to a custom action which doesn't exist is left alone, so
+ * that it is whole again if the custom action is imported
  * @param controlStore The store of all the controls
- * @param customActionControlId The control id of the custom action
- * @param outputId The id of the removed output
+ * @param outputIds The ids of the outputs of each custom action, by its id
  */
-export function removeCustomActionOutputInCallers(
+export function pruneCustomActionOutputTargets(
 	controlStore: ControlStore,
-	customActionControlId: CustomActionControlId,
-	outputId: string
+	outputIds: ReadonlyMap<string, ReadonlySet<string>>
 ): void {
-	const parsedId = ParseControlId(customActionControlId)
-	if (parsedId?.type !== 'custom-action') return
-
 	for (const control of controlStore.controls.values()) {
 		if (!control.supportsEntities) continue
 
 		let changed = false
 		for (const entity of control.entities.getAllEntities()) {
-			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
-			if (!Object.hasOwn(entity.rawOutputTargets, outputId)) continue
+			if (!isCustomActionsConnectionId(entity.connectionId)) continue
 
-			entity.setRawOutputTarget(outputId, undefined)
-			changed = true
+			const ids = outputIds.get(entity.definitionId)
+			if (!ids) continue
+
+			for (const outputId of Object.keys(entity.rawOutputTargets)) {
+				if (ids.has(outputId)) continue
+				entity.setRawOutputTarget(outputId, undefined)
+				changed = true
+			}
 		}
 
 		if (changed) control.commitChange(false)
@@ -389,55 +389,19 @@ export function createCustomActionTrpcRouter(
 				return true
 			}),
 
-		outputAdd: publicProcedure
-			.input(z.object({ controlId: zodControlIds['custom-action'], output: CustomActionOutputSchema }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				return control.outputAdd(input.output)
-			}),
-
-		outputRemove: publicProcedure
-			.input(z.object({ controlId: zodControlIds['custom-action'], outputId: z.string() }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				if (!control.outputRemove(input.outputId)) return false
-
-				removeCustomActionOutputInCallers(controlStore, input.controlId, input.outputId)
-
-				return true
-			}),
-
-		outputMove: publicProcedure
+		outputSet: publicProcedure
 			.input(
-				z.object({ controlId: zodControlIds['custom-action'], outputId: z.string(), index: z.number().int().min(0) })
+				z.object({
+					controlId: zodControlIds['custom-action'],
+					variableName: z.string(),
+					label: z.string().nullable(),
+				})
 			)
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
 
-				return control.outputMove(input.outputId, input.index)
-			}),
-
-		outputUpdate: publicProcedure
-			.input(
-				z.object({ controlId: zodControlIds['custom-action'], outputId: z.string(), output: CustomActionOutputSchema })
-			)
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				if (!control.outputUpdate(input.outputId, input.output)) return false
-
-				// Make sure the actions using the custom action keep where a renamed output is written
-				if (input.output.id !== input.outputId) {
-					renameCustomActionOutputInCallers(controlStore, input.controlId, input.outputId, input.output.id)
-				}
-
-				return true
+				return control.outputSet(input.variableName, input.label)
 			}),
 
 		reorder: publicProcedure

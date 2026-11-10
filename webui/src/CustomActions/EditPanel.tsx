@@ -15,6 +15,7 @@ import {
 } from '~/Components/InputFieldDefinitionsEditor/InputFieldDefinitionsEditor.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
+import type { LocalVariableOutputs } from '~/Controls/Components/EntityEditorContext.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -27,7 +28,6 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { CustomActionEditTab } from './customActionEditTabs.js'
-import { CustomActionOutputsEditor } from './OutputsEditor.js'
 import { CustomActionUsesEditor } from './UsesEditor.js'
 
 interface EditCustomActionPanelProps {
@@ -81,12 +81,17 @@ function CustomActionPanelContent({
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 
 	const inputFields = useMemo(() => config.inputs.map(toCompanionInputField), [config.inputs])
-	const localVariableNames = useMemo(
-		() =>
-			config.localVariables.flatMap((entity) =>
-				entity.type === EntityModelType.Feedback && entity.variableName ? [entity.variableName] : []
-			),
-		[config.localVariables]
+	const outputSetMutation = useMutationExt(trpc.controls.customActions.outputSet.mutationOptions())
+	const localVariableOutputs = useMemo(
+		(): LocalVariableOutputs => ({
+			labels: new Map(config.outputs.map((output) => [output.variableName, output.label])),
+			setOutput: (variableName, label) => {
+				outputSetMutation
+					.mutateAsync({ controlId, variableName, label })
+					.catch((e) => console.error(`Failed to set the output: ${stringifyError(e)}`))
+			},
+		}),
+		[config.outputs, controlId, outputSetMutation]
 	)
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, inputFields)
 
@@ -113,14 +118,6 @@ function CustomActionPanelContent({
 								</span>
 							)}
 						</TabArea.Tab>
-						<TabArea.Tab value="outputs">
-							<span>Outputs</span>
-							{config.outputs.length > 0 && (
-								<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
-									{config.outputs.length}
-								</span>
-							)}
-						</TabArea.Tab>
 						<TabArea.Tab value="variables">
 							<span>Local Variables</span>
 							{config.localVariables.length > 0 && (
@@ -142,16 +139,6 @@ function CustomActionPanelContent({
 						</MyErrorBoundary>
 					)}
 
-					{activeTab === 'outputs' && (
-						<MyErrorBoundary>
-							<CustomActionOutputsEditor
-								controlId={controlId}
-								outputs={config.outputs}
-								variableNames={localVariableNames}
-							/>
-						</MyErrorBoundary>
-					)}
-
 					{activeTab === 'uses' && (
 						<MyErrorBoundary>
 							<CustomActionUsesEditor controlId={controlId} testRunning={testRunning} />
@@ -161,11 +148,12 @@ function CustomActionPanelContent({
 					{activeTab === 'variables' && (
 						<MyErrorBoundary>
 							<LocalVariablesEditor
-								description="Each run of the custom action starts with these variables at their startup values. Changes to them only last for that run."
+								description="Each run of the custom action starts with these variables at their startup values. Changes to them only last for that run. A user value can be an output, written to wherever the calling action chooses."
 								controlId={controlId}
 								location={undefined}
 								variables={config.localVariables}
 								localVariablesStore={localVariablesStore}
+								outputs={localVariableOutputs}
 							/>
 						</MyErrorBoundary>
 					)}

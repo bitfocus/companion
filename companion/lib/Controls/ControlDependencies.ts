@@ -95,6 +95,8 @@ export interface ControlCommonEvents {
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
 	/** Emitted when a custom action is changed or deleted, so that its action definition can be updated */
 	customActionDefinitionChanged: [controlId: CustomActionControlId]
+	/** Emitted when the local variable of an output of a custom action is renamed, as callers know the output by it */
+	customActionOutputRenamed: [controlId: CustomActionControlId, fromId: string, toId: string]
 	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
 	presetDrawn: [controlId: PresetControlId, render: ImageResult]

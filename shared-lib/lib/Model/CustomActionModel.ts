@@ -59,15 +59,19 @@ export function getCustomActionCallsExcludedFrom(
 }
 
 /**
- * An output of a custom action: one of its local variables, whose value is written to wherever the action which
- * calls it chooses, each time it is set during a run
+ * An output of a custom action: one of its user value local variables, whose value is written to wherever the action
+ * which calls it chooses, each time it is set during a run
  */
 export const CustomActionOutputSchema = z.object({
-	/** Used by the actions which call the custom action to say where the output goes */
-	id: z.string().regex(INPUT_FIELD_ID_PATTERN).refine(isAuthorableFieldId, "Id can't be used in a variable"),
+	/**
+	 * The name of the local variable whose value is the output. It is also what the actions which call the custom
+	 * action know the output by, to say where it goes
+	 */
+	variableName: z
+		.string()
+		.regex(INPUT_FIELD_ID_PATTERN)
+		.refine(isAuthorableFieldId, "Name can't be used for an output"),
 	label: z.string(),
-	/** The name of the local variable of the custom action whose value is the output, or '' for none */
-	variableName: z.string().default(''),
 })
 
 export type CustomActionOutput = z.output<typeof CustomActionOutputSchema>

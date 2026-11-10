@@ -300,8 +300,8 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			const outputTargets = new Map<string, StoreResult[]>()
 			for (const output of customAction.outputs) {
 				if (!output.variableName) continue
-				const rawTarget = Object.hasOwn(caller.rawOutputTargets, output.id)
-					? caller.rawOutputTargets[output.id]
+				const rawTarget = Object.hasOwn(caller.rawOutputTargets, output.variableName)
+					? caller.rawOutputTargets[output.variableName]
 					: undefined
 				const target = resolveStoreResult(rawTarget, parser, this.#logger)
 				if (!target) continue

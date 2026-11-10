@@ -149,10 +149,9 @@ describe('custom actions', () => {
 			name: exprVal('doubled'),
 			value: exprExpr('$(options:n) * 2'),
 		})
-		await app.trpc().controls.customActions.outputAdd({
-			controlId: customActionId,
-			output: { id: 'doubled', label: 'Doubled', variableName: 'doubled' },
-		})
+		await app
+			.trpc()
+			.controls.customActions.outputSet({ controlId: customActionId, variableName: 'doubled', label: 'Doubled' })
 
 		const location = { pageNumber: 1, row: 2, column: 1 }
 		const buttonId = app.createButton(location)
@@ -304,10 +303,7 @@ describe('long running custom actions', () => {
 		})
 		app.addCustomActionAction(controlId, body, 'wait', { time: exprExpr(String(sleepMs)) })
 
-		await app.trpc().controls.customActions.outputAdd({
-			controlId,
-			output: { id: 'count', label: 'Count', variableName: 'count' },
-		})
+		await app.trpc().controls.customActions.outputSet({ controlId, variableName: 'count', label: 'Count' })
 
 		return { controlId, body }
 	}
@@ -487,7 +483,7 @@ describe('long running custom actions', () => {
 
 		// The outer one calls it, writing its output to a local variable which is the outer's own output
 		const outerId = await app.trpc().controls.customActions.create({ name: 'Outer' })
-		app.addLocalVariable(outerId, 'seen', 'user_value', { startup_value: exprVal(0) })
+		app.addLocalVariable(outerId, 'count', 'user_value', { startup_value: exprVal(0) })
 		await vi.waitFor(() =>
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
@@ -502,13 +498,10 @@ describe('long running custom actions', () => {
 			innerId,
 			{ step: exprVal(1) },
 			{
-				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('seen') },
+				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('count') },
 			}
 		)
-		await app.trpc().controls.customActions.outputAdd({
-			controlId: outerId,
-			output: { id: 'count', label: 'Seen', variableName: 'seen' },
-		})
+		await app.trpc().controls.customActions.outputSet({ controlId: outerId, variableName: 'count', label: 'Seen' })
 
 		const location = { pageNumber: 1, row: 1, column: 1 }
 		addCountingButton(location, outerId, {}, 'progress')
@@ -818,19 +811,16 @@ describe('long running custom actions', () => {
 			100
 		)
 		const outerId = await app.trpc().controls.customActions.create({ name: 'Outer' })
-		app.addLocalVariable(outerId, 'seen', 'user_value', { startup_value: exprVal(0) })
+		app.addLocalVariable(outerId, 'count', 'user_value', { startup_value: exprVal(0) })
 		app.addCustomActionCall(
 			outerId,
 			innerId,
 			{},
 			{
-				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('seen') },
+				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('count') },
 			}
 		)
-		await app.trpc().controls.customActions.outputAdd({
-			controlId: outerId,
-			output: { id: 'count', label: 'Seen', variableName: 'seen' },
-		})
+		await app.trpc().controls.customActions.outputSet({ controlId: outerId, variableName: 'count', label: 'Seen' })
 
 		const location = { pageNumber: 1, row: 1, column: 1 }
 		const buttonId = addCountingButton(location, outerId, {}, 'progress')
@@ -905,7 +895,10 @@ describe('custom action scope and copies', () => {
 		return local.id
 	}
 
-	/** Create a custom action with an input `n`, and a local variable `double` computed from it */
+	/**
+	 * Create a custom action with an input `n`, a local variable `double` computed from it, and an output `result`
+	 * which a run sets to it
+	 */
 	async function createDoublingCustomAction(): Promise<CustomActionControlId> {
 		const controlId = await app.trpc().controls.customActions.create({ name: 'Double' })
 		await app.trpc().controls.customActions.inputAdd({
@@ -913,10 +906,14 @@ describe('custom action scope and copies', () => {
 			field: { type: 'number', id: 'n', label: 'N', default: 1, min: -1000, max: 1000 },
 		})
 		app.addLocalVariable(controlId, 'double', 'expression_value', { expression: exprVal('$(options:n) * 2') })
-		await app.trpc().controls.customActions.outputAdd({
-			controlId,
-			output: { id: 'double', label: 'Double', variableName: 'double' },
+		// Only a user value can be an output
+		app.addLocalVariable(controlId, 'result', 'user_value', { startup_value: exprVal(0) })
+		app.addCustomActionAction(controlId, null, 'local_variable_set_value', {
+			location: exprVal('this'),
+			name: exprVal('result'),
+			value: exprExpr('$(local:double)'),
 		})
+		await app.trpc().controls.customActions.outputSet({ controlId, variableName: 'result', label: 'Result' })
 		return controlId
 	}
 
@@ -1007,10 +1004,9 @@ describe('custom action scope and copies', () => {
 			name: exprVal('result'),
 			value: exprExpr('42'),
 		})
-		await app.trpc().controls.customActions.outputAdd({
-			controlId: customActionId,
-			output: { id: 'result', label: 'Result', variableName: 'result' },
-		})
+		await app
+			.trpc()
+			.controls.customActions.outputSet({ controlId: customActionId, variableName: 'result', label: 'Result' })
 
 		// Two buttons with a local variable of the same name, only one of which takes the output
 		const withOutput = { pageNumber: 1, row: 1, column: 1 }
@@ -1117,7 +1113,7 @@ describe('custom action scope and copies', () => {
 			customActionId,
 			{ n: exprVal(21) },
 			{
-				double: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
+				result: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
 			}
 		)
 
@@ -1128,7 +1124,7 @@ describe('custom action scope and copies', () => {
 		const call = getEntity(app, buttonId, callId)
 		expect(call.rawOptions).toEqual({ n: exprVal(21) })
 		expect(call.rawOutputTargets).toEqual({
-			double: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
+			result: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
 		})
 
 		// The copy is rebuilt from the restored custom action and inputs

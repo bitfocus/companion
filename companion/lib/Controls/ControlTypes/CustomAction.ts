@@ -41,7 +41,7 @@ import {
 	type CustomActionValues,
 } from '../CustomActionRunFrame.js'
 import type { CustomActionCallAnalysis } from '../CustomActions/CustomActionCalls.js'
-import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
+import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
 import type {
@@ -127,9 +127,9 @@ export class ControlCustomAction
 	#inputs: AuthorableInputField[] = []
 
 	/**
-	 * The outputs of the custom action
+	 * The label of each local variable which is an output, by the id of the variable, so that renaming it keeps it
 	 */
-	#outputs: CustomActionOutput[] = []
+	#outputLabels = new Map<string, string>()
 
 	/**
 	 * What it calls through the other custom actions, and why some of those calls can't run, if they can't
@@ -142,8 +142,17 @@ export class ControlCustomAction
 		return this.#inputs
 	}
 
-	get outputs(): ReadonlyArray<CustomActionOutput> {
-		return this.#outputs
+	/**
+	 * The outputs, in the order of their local variables. Only a user value can be an output, as only that is set
+	 * during a run
+	 */
+	get outputs(): CustomActionOutput[] {
+		return this.entities.getLocalVariableEntities().flatMap((entity) => {
+			const variableName = entity.rawLocalVariableName
+			const label = this.#outputLabels.get(entity.id)
+			if (!variableName || label === undefined || !isInternalUserValueFeedback(entity)) return []
+			return [{ variableName, label }]
+		})
 	}
 
 	/**
@@ -194,8 +203,11 @@ export class ControlCustomAction
 			this.options = { ...this.options, ...storage.options }
 			// The inputs are checked by the schema of the custom action when it is loaded
 			this.#inputs = storage.inputs
-			this.#outputs = storage.outputs
 			this.entities.loadStorage(storage, true, isImport)
+			for (const output of storage.outputs) {
+				const variable = this.#findLocalVariable(output.variableName)
+				if (variable) this.#outputLabels.set(variable.id, output.label)
+			}
 
 			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()
@@ -203,6 +215,12 @@ export class ControlCustomAction
 	}
 
 	#entityListReportChange(options: ControlEntityListChangeProps): void {
+		// Forget the outputs of local variables which have gone
+		const variableIds = new Set(this.entities.getLocalVariableEntities().map((entity) => entity.id))
+		for (const variableId of this.#outputLabels.keys()) {
+			if (!variableIds.has(variableId)) this.#outputLabels.delete(variableId)
+		}
+
 		if (!options.noSave) {
 			this.commitChange(false)
 		}
@@ -261,7 +279,10 @@ export class ControlCustomAction
 			showInvert: false,
 			actionHasResult: false,
 			actionExecutionTimeout: undefined,
-			actionOutputs: this.#outputs.map((output) => ({ id: output.id, label: output.label })),
+			actionOutputs: this.outputs.map((output) => ({
+				id: output.variableName,
+				label: output.label || output.variableName,
+			})),
 			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
 			optionsSupportExpressions: true,
@@ -474,79 +495,40 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Add an output
+	 * Make a local variable an output, change its label, or stop it being one
+	 * @param variableName The name of the local variable, which must be a user value
+	 * @param label The label of the output, or null for it not to be an output
+	 * @returns Whether it was changed
 	 */
-	outputAdd(output: CustomActionOutput): boolean {
-		if (!CustomActionOutputSchema.safeParse(output).success) return false
-		if (this.#outputs.some((existing) => existing.id === output.id)) return false
+	outputSet(variableName: string, label: string | null): boolean {
+		const variable = this.#findLocalVariable(variableName)
+		if (!variable) return false
 
-		this.#outputs.push(structuredClone(output))
+		if (label === null) {
+			if (!this.#outputLabels.delete(variable.id)) return false
+		} else {
+			if (!isInternalUserValueFeedback(variable)) return false
+			if (!CustomActionOutputSchema.safeParse({ variableName, label }).success) return false
+
+			this.#outputLabels.set(variable.id, label)
+		}
 
 		this.commitChange()
 		return true
 	}
 
-	/**
-	 * Remove an output
-	 */
-	outputRemove(outputId: string): boolean {
-		const index = this.#outputs.findIndex((output) => output.id === outputId)
-		if (index === -1) return false
-
-		this.#outputs.splice(index, 1)
-
-		this.commitChange()
-		return true
+	#findLocalVariable(variableName: string): ControlEntityInstance | undefined {
+		return this.entities.getLocalVariableEntities().find((entity) => entity.rawLocalVariableName === variableName)
 	}
 
 	/**
-	 * Move an output to a new position in the list
-	 * @param outputId The id of the output
-	 * @param target The index to move it to
-	 */
-	outputMove(outputId: string, target: number): boolean {
-		const index = this.#outputs.findIndex((output) => output.id === outputId)
-		if (index === -1 || target < 0 || target >= this.#outputs.length || target === index) return false
-
-		const [output] = this.#outputs.splice(index, 1)
-		this.#outputs.splice(target, 0, output)
-
-		this.commitChange()
-		return true
-	}
-
-	/**
-	 * Replace an output. The caller is responsible for updating the actions which call this custom action, if the id
-	 * of the output changes
-	 * @returns Whether the output was updated
-	 */
-	outputUpdate(outputId: string, output: CustomActionOutput): boolean {
-		if (!CustomActionOutputSchema.safeParse(output).success) return false
-
-		const index = this.#outputs.findIndex((existing) => existing.id === outputId)
-		if (index === -1) return false
-
-		// Renaming, so the new id must be unused
-		if (output.id !== outputId && this.#outputs.some((existing) => existing.id === output.id)) return false
-
-		this.#outputs[index] = structuredClone(output)
-
-		this.commitChange()
-		return true
-	}
-
-	/**
-	 * An output comes from a local variable by its name, so it follows the variable being renamed
+	 * A local variable has been renamed
 	 */
 	#localVariableRenamed(fromName: string, toName: string): void {
-		let changed = false
-		this.#outputs = this.#outputs.map((output) => {
-			if (output.variableName !== fromName) return output
-			changed = true
-			return { ...output, variableName: toName }
-		})
-
-		if (changed) this.commitChange(false)
+		// Callers know an output by the name of its variable, so they follow it being renamed
+		if (this.outputs.some((output) => output.variableName === toName)) {
+			this.deps.events.emit('customActionOutputRenamed', this.controlId, fromName, toName)
+		}
 	}
 
 	/**
@@ -629,7 +611,7 @@ export class ControlCustomAction
 			inputs: this.#inputs,
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
-			outputs: this.#outputs,
+			outputs: this.outputs,
 		}
 	}
 

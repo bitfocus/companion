@@ -869,20 +869,16 @@
 								"items": {
 									"type": "object",
 									"properties": {
-										"id": {
+										"variableName": {
 											"type": "string",
 											"pattern": "^[\\w-]+$"
 										},
 										"label": {
 											"type": "string"
-										},
-										"variableName": {
-											"default": "",
-											"type": "string"
 										}
 									},
 									"required": [
-										"id",
+										"variableName",
 										"label"
 									]
 								}

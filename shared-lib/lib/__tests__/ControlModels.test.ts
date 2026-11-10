@@ -304,10 +304,9 @@ describe('CustomActionModelSchema', () => {
 		expect(CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [input] }).success).toBe(false)
 	})
 
-	test.each(['a b', '__proto__'])('an output can not have the id %s', (id) => {
+	test.each(['', 'a b', '__proto__'])('an output can not be of a variable named "%s"', (variableName) => {
 		expect(
-			CustomActionModelSchema.safeParse({ type: 'custom-action', outputs: [{ id, label: 'Out', variableName: 'v' }] })
-				.success
+			CustomActionModelSchema.safeParse({ type: 'custom-action', outputs: [{ variableName, label: 'Out' }] }).success
 		).toBe(false)
 	})
 })

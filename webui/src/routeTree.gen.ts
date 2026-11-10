@@ -74,7 +74,6 @@ import { Route as StandaloneEmulatorIndexRouteImport } from './routes/_standalon
 import { Route as AppConnectionsConnectionIdDotdiagnosticsRouteImport } from './routes/_app/connections/$connectionId.diagnostics.tsx'
 import { Route as AppConnectionsConnectionIdDotdocsRouteImport } from './routes/_app/connections/$connectionId.docs.tsx'
 import { Route as AppCustomActionsControlIdDotinputsRouteImport } from './routes/_app/custom-actions/$controlId.inputs.tsx'
-import { Route as AppCustomActionsControlIdDotoutputsRouteImport } from './routes/_app/custom-actions/$controlId.outputs.tsx'
 import { Route as AppCustomActionsControlIdDotusesRouteImport } from './routes/_app/custom-actions/$controlId.uses.tsx'
 import { Route as AppCustomActionsControlIdDotvariablesRouteImport } from './routes/_app/custom-actions/$controlId.variables.tsx'
 import { Route as AppLinkTransportsIndexRouteImport } from './routes/_app/link_/transports/index.tsx'
@@ -449,12 +448,6 @@ const AppCustomActionsControlIdDotinputsRoute =
     path: '/inputs',
     getParentRoute: () => AppCustomActionsControlIdRoute,
   } as any)
-const AppCustomActionsControlIdDotoutputsRoute =
-  AppCustomActionsControlIdDotoutputsRouteImport.update({
-    id: '/outputs',
-    path: '/outputs',
-    getParentRoute: () => AppCustomActionsControlIdRoute,
-  } as any)
 const AppCustomActionsControlIdDotusesRoute =
   AppCustomActionsControlIdDotusesRouteImport.update({
     id: '/uses',
@@ -683,7 +676,6 @@ export interface FileRoutesByFullPath {
   '/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
   '/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
   '/custom-actions/$controlId/inputs': typeof AppCustomActionsControlIdDotinputsRoute
-  '/custom-actions/$controlId/outputs': typeof AppCustomActionsControlIdDotoutputsRoute
   '/custom-actions/$controlId/uses': typeof AppCustomActionsControlIdDotusesRoute
   '/custom-actions/$controlId/variables': typeof AppCustomActionsControlIdDotvariablesRoute
   '/link/transports/$transportId': typeof AppLinkTransportsTransportIdRoute
@@ -761,7 +753,6 @@ export interface FileRoutesByTo {
   '/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
   '/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
   '/custom-actions/$controlId/inputs': typeof AppCustomActionsControlIdDotinputsRoute
-  '/custom-actions/$controlId/outputs': typeof AppCustomActionsControlIdDotoutputsRoute
   '/custom-actions/$controlId/uses': typeof AppCustomActionsControlIdDotusesRoute
   '/custom-actions/$controlId/variables': typeof AppCustomActionsControlIdDotvariablesRoute
   '/link/transports/$transportId': typeof AppLinkTransportsTransportIdRoute
@@ -858,7 +849,6 @@ export interface FileRoutesById {
   '/_app/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
   '/_app/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
   '/_app/custom-actions/$controlId/inputs': typeof AppCustomActionsControlIdDotinputsRoute
-  '/_app/custom-actions/$controlId/outputs': typeof AppCustomActionsControlIdDotoutputsRoute
   '/_app/custom-actions/$controlId/uses': typeof AppCustomActionsControlIdDotusesRoute
   '/_app/custom-actions/$controlId/variables': typeof AppCustomActionsControlIdDotvariablesRoute
   '/_app/link_/transports/$transportId': typeof AppLinkTransportsTransportIdRoute
@@ -955,7 +945,6 @@ export interface FileRouteTypes {
     | '/connections/$connectionId/diagnostics'
     | '/connections/$connectionId/docs'
     | '/custom-actions/$controlId/inputs'
-    | '/custom-actions/$controlId/outputs'
     | '/custom-actions/$controlId/uses'
     | '/custom-actions/$controlId/variables'
     | '/link/transports/$transportId'
@@ -1033,7 +1022,6 @@ export interface FileRouteTypes {
     | '/connections/$connectionId/diagnostics'
     | '/connections/$connectionId/docs'
     | '/custom-actions/$controlId/inputs'
-    | '/custom-actions/$controlId/outputs'
     | '/custom-actions/$controlId/uses'
     | '/custom-actions/$controlId/variables'
     | '/link/transports/$transportId'
@@ -1129,7 +1117,6 @@ export interface FileRouteTypes {
     | '/_app/connections/$connectionId/diagnostics'
     | '/_app/connections/$connectionId/docs'
     | '/_app/custom-actions/$controlId/inputs'
-    | '/_app/custom-actions/$controlId/outputs'
     | '/_app/custom-actions/$controlId/uses'
     | '/_app/custom-actions/$controlId/variables'
     | '/_app/link_/transports/$transportId'
@@ -1634,13 +1621,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomActionsControlIdDotinputsRouteImport
       parentRoute: typeof AppCustomActionsControlIdRoute
     }
-    '/_app/custom-actions/$controlId/outputs': {
-      id: '/_app/custom-actions/$controlId/outputs'
-      path: '/outputs'
-      fullPath: '/custom-actions/$controlId/outputs'
-      preLoaderRoute: typeof AppCustomActionsControlIdDotoutputsRouteImport
-      parentRoute: typeof AppCustomActionsControlIdRoute
-    }
     '/_app/custom-actions/$controlId/uses': {
       id: '/_app/custom-actions/$controlId/uses'
       path: '/uses'
@@ -1888,7 +1868,6 @@ const AppConnectionsRouteWithChildren = AppConnectionsRoute._addFileChildren(
 
 interface AppCustomActionsControlIdRouteChildren {
   AppCustomActionsControlIdDotinputsRoute: typeof AppCustomActionsControlIdDotinputsRoute
-  AppCustomActionsControlIdDotoutputsRoute: typeof AppCustomActionsControlIdDotoutputsRoute
   AppCustomActionsControlIdDotusesRoute: typeof AppCustomActionsControlIdDotusesRoute
   AppCustomActionsControlIdDotvariablesRoute: typeof AppCustomActionsControlIdDotvariablesRoute
 }
@@ -1897,8 +1876,6 @@ const AppCustomActionsControlIdRouteChildren: AppCustomActionsControlIdRouteChil
   {
     AppCustomActionsControlIdDotinputsRoute:
       AppCustomActionsControlIdDotinputsRoute,
-    AppCustomActionsControlIdDotoutputsRoute:
-      AppCustomActionsControlIdDotoutputsRoute,
     AppCustomActionsControlIdDotusesRoute:
       AppCustomActionsControlIdDotusesRoute,
     AppCustomActionsControlIdDotvariablesRoute:

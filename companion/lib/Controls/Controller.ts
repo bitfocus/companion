@@ -61,7 +61,11 @@ import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { CustomActionCollections } from './CustomActionCollections.js'
 import { MAX_CUSTOM_ACTION_DEPTH } from './CustomActionRunFrame.js'
 import { analyseCustomActionCalls, type CustomActionCallAnalysis } from './CustomActions/CustomActionCalls.js'
-import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
+import {
+	createCustomActionTrpcRouter,
+	pruneCustomActionOutputTargets,
+	renameCustomActionOutputInCallers,
+} from './CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
@@ -178,6 +182,9 @@ export class ControlsController {
 			this.#publishCustomActionDefinitions()
 			this.#deps.customActionInstances.onCustomActionChanged(controlId)
 		})
+		this.#controlEvents.on('customActionOutputRenamed', (controlId, fromId, toId) =>
+			renameCustomActionOutputInCallers(this.#store, controlId, fromId, toId)
+		)
 	}
 
 	#cleanUnknownCustomActionCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -216,6 +223,14 @@ export class ControlsController {
 			for (const [id, control] of customActions) {
 				definitions[id] = control.toActionDefinition()
 			}
+
+			// Callers no longer write outputs which have gone
+			pruneCustomActionOutputTargets(
+				this.#store,
+				new Map(
+					[...customActions].map(([id, control]) => [id, new Set(control.outputs.map((output) => output.variableName))])
+				)
+			)
 
 			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_ACTIONS_CONNECTION_ID, definitions)
 		},

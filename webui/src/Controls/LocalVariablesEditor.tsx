@@ -7,6 +7,7 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { LocalVariableOutputs } from './Components/EntityEditorContext.js'
 import { ControlEntitiesEditor } from './EntitiesEditor.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 
@@ -20,6 +21,8 @@ interface LocalVariablesEditorProps {
 	/** What the local variables are for, shown below the heading */
 	description: React.ReactNode
 	localVariablePrefix?: string
+	/** When set, its user values can be outputs, as in a custom action */
+	outputs?: LocalVariableOutputs
 }
 export function LocalVariablesEditor({
 	className,
@@ -30,6 +33,7 @@ export function LocalVariablesEditor({
 	heading = 'Local Variables',
 	description,
 	localVariablePrefix = 'local',
+	outputs,
 }: LocalVariablesEditorProps): React.JSX.Element {
 	return (
 		<>
@@ -54,6 +58,7 @@ export function LocalVariablesEditor({
 				feedbackListType={FeedbackEntitySubType.Value}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
+				localVariableOutputs={outputs}
 			/>
 		</>
 	)
