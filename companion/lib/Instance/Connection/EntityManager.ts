@@ -784,6 +784,8 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 			const subscription = this.#subscriptions.get(id)
 			// The subscription may have been removed while the value was in flight
 			if (!subscription || subscription.controlId !== controlId) continue
+			// Only a feedback has a value, so an action never holds one to give to the members which join it
+			if (subscription.type !== EntityModelType.Feedback) continue
 
 			subscription.lastValue = { value }
 
