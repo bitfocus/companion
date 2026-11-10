@@ -135,16 +135,6 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									service={service}
 								/>
 							</MyErrorBoundary>
-
-							{localVariableOutputs && isInternalUserValueFeedback(entity) && !!entity.variableName && (
-								<MyErrorBoundary>
-									<EntityLocalVariableOutputFields
-										variableName={entity.variableName}
-										outputs={localVariableOutputs}
-										readonly={readonly}
-									/>
-								</MyErrorBoundary>
-							)}
 						</>
 					)}
 
@@ -233,6 +223,20 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								localVariablesStore={localVariablesStore}
 							/>
 						))}
+
+					{/* After the options, as where a result is stored is */}
+					{localVariableOutputs &&
+						entity.type === EntityModelType.Feedback &&
+						isInternalUserValueFeedback(entity) &&
+						!!entity.variableName && (
+							<MyErrorBoundary>
+								<EntityLocalVariableOutputFields
+									variableName={entity.variableName}
+									outputs={localVariableOutputs}
+									readonly={readonly}
+								/>
+							</MyErrorBoundary>
+						)}
 
 					{!!entity &&
 						!!entityDefinition &&
