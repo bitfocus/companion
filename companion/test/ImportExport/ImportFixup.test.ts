@@ -450,6 +450,23 @@ describe('fixupCustomActionControl', () => {
 		expect(result.outputs).toEqual(control.outputs)
 	})
 
+	test('keeps only the first of the inputs with the same id', () => {
+		const control = makeCustomAction({
+			inputs: [
+				{ type: 'textinput', id: 'text', label: 'First', default: '' },
+				{ type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 10 },
+				{ type: 'textinput', id: 'text', label: 'Second', default: '' },
+			],
+		})
+
+		const result = fixupCustomActionControl(internalModule, control, standardMap(), {})
+
+		expect(result.inputs.map((input) => [input.id, input.label])).toEqual([
+			['text', 'First'],
+			['n', 'N'],
+		])
+	})
+
 	test('keeps the calls to other custom actions', () => {
 		const control = makeCustomAction({
 			actions: [makeAction({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' })],

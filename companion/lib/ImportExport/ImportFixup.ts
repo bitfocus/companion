@@ -138,7 +138,12 @@ export function fixupCustomActionControl(
 	const result: CustomActionModel = {
 		type: 'custom-action',
 		options: structuredClone(control.options),
-		inputs: structuredClone(control.inputs || []),
+		// Inputs of the same id would share one value from each caller, so only the first is kept
+		inputs: structuredClone(
+			(control.inputs || []).filter(
+				(input, index, inputs) => inputs.findIndex((other) => other.id === input.id) === index
+			)
+		),
 		actions: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.actions || [])),
 		localVariables: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables || [])),
 		outputs: structuredClone(control.outputs),
