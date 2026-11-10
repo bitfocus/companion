@@ -133,7 +133,6 @@ export class ControlPage
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
 	 */
 	toRuntimeJSON(): NoRuntimeProps {
 		return {}
