@@ -30,6 +30,7 @@ interface TriggerEventEditorProps {
 	controlId: TriggerControlId
 	events: EventInstance[]
 	heading: React.JSX.Element | string
+	headingActions: React.ReactNode
 	subheading?: React.ReactNode
 	localVariablesStore: LocalVariablesStore
 }
@@ -38,6 +39,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 	controlId,
 	events,
 	heading,
+	headingActions,
 	subheading,
 	localVariablesStore,
 }: TriggerEventEditorProps) {
@@ -71,7 +73,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 				<ListHeading
 					heading={heading}
 					subheading={subheading}
-					actions={null}
+					actions={headingActions}
 					collapse={
 						events.length > 1
 							? {
