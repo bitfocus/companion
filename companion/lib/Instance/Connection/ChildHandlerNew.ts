@@ -33,12 +33,17 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
+import type {
+	EntityManagerActionEntity,
+	EntityManagerAdapter,
+	EntityManagerFeedbackEntity,
+} from './EntityManagerBase.js'
 import {
-	ConnectionEntityManager,
-	type EntityManagerActionEntity,
-	type EntityManagerAdapter,
-	type EntityManagerFeedbackEntity,
-} from './EntityManager.js'
+	createConnectionEntityManagers,
+	destroyConnectionEntityManagers,
+	startConnectionEntityManagers,
+	type ConnectionEntityManagers,
+} from './EntityManagers.js'
 import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
 import type {
 	LogMessageMessage,
@@ -75,7 +80,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	hasRecordActionsHandler: boolean = false
 	usesNewConfigLayout: boolean = true
 
-	readonly #entityManager: ConnectionEntityManager
+	readonly #entityManagers: ConnectionEntityManagers
 
 	/**
 	 * Current label of the connection
@@ -154,7 +159,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			5000
 		)
 
-		this.#entityManager = new ConnectionEntityManager(
+		this.#entityManagers = createConnectionEntityManagers(
 			new ConnectionNewEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
 			this.#deps.controls,
 			this.connectionId,
@@ -184,7 +189,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					entity.setMissingUpgradeIndex(config.lastUpgradeIndex)
 				}
 
-				this.#entityManager.trackEntity(entity, controlId)
+				this.#entityManagers[entity.type].trackEntity(entity, controlId)
 			}
 		}
 
@@ -209,7 +214,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
-		this.#entityManager.start(config.lastUpgradeIndex)
+		startConnectionEntityManagers(this.#entityManagers, config.lastUpgradeIndex)
 
 		// Inform action recorder
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
@@ -249,13 +254,13 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * @access public - needs to be re-run when the topbar setting changes
 	 */
 	async sendAllFeedbackInstances(): Promise<void> {
-		this.#entityManager.resendFeedbacks()
+		this.#entityManagers[EntityModelType.Feedback].resendFeedbacks()
 	}
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 
-		this.#entityManager.trackEntity(entity, controlId)
+		this.#entityManagers[entity.type].trackEntity(entity, controlId)
 	}
 
 	/**
@@ -300,7 +305,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						{
 							action: {
 								// The module knows the entity by its subscription, if it has one
-								id: this.#entityManager.getSubscriptionId(entity.id) ?? entity.id,
+								id: this.#entityManagers[entity.type].getSubscriptionId(entity.id) ?? entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
 								options: parseRes.parsedOptions,
@@ -326,7 +331,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						{
 							feedback: {
 								// The module knows the entity by its subscription, if it has one
-								id: this.#entityManager.getSubscriptionId(entity.id) ?? entity.id,
+								id: this.#entityManagers[entity.type].getSubscriptionId(entity.id) ?? entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
 								options: parseRes.parsedOptions,
@@ -363,7 +368,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Inform the child instance class about an entity that has been deleted
 	 */
 	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
-		this.#entityManager.forgetEntity(oldEntity.id)
+		this.#entityManagers[oldEntity.type].forgetEntity(oldEntity.id)
 	}
 
 	/**
@@ -407,7 +412,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				{
 					action: {
 						// The module knows the action by its subscription, if it has one
-						id: this.#entityManager.getSubscriptionId(action.id) ?? action.id,
+						id: this.#entityManagers[EntityModelType.Action].getSubscriptionId(action.id) ?? action.id,
 						controlId: extras?.controlId,
 						actionId: action.definitionId,
 						options: parseRes.parsedOptions,
@@ -447,7 +452,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async destroy(): Promise<void> {
 		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
-		this.#entityManager.destroy()
+		destroyConnectionEntityManagers(this.#entityManagers)
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
@@ -472,7 +477,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
-		this.#entityManager.destroy()
+		destroyConnectionEntityManagers(this.#entityManagers)
 
 		this.#deps.instanceDefinitions.forgetConnection(this.connectionId)
 		this.#deps.variables.values.forgetConnection(this.connectionId, this.#label)
@@ -574,7 +579,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#sendToModuleLog('debug', `Updating action definitions (${Object.keys(msg.actions).length} actions)`)
 
 		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, msg.actions)
-		this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Action)
+		this.#entityManagers[EntityModelType.Action].onEntityDefinitionsChanged()
 	}
 
 	/**
@@ -584,7 +589,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${Object.keys(msg.feedbacks).length} feedbacks)`)
 
 		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, msg.feedbacks)
-		this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Feedback)
+		this.#entityManagers[EntityModelType.Feedback].onEntityDefinitionsChanged()
 	}
 
 	/**
@@ -594,7 +599,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
 
 		// The values are for subscriptions, which can be shared by multiple entities
-		this.#entityManager.handleFeedbackValues(msg.values)
+		this.#entityManagers[EntityModelType.Feedback].handleFeedbackValues(msg.values)
 	}
 
 	/**

@@ -1,17 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
+import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
+import type {
+	EntityManagerActionEntity,
+	EntityManagerAdapter,
+	EntityManagerFeedbackEntity,
+} from '../../lib/Instance/Connection/EntityManagerBase.js'
 import {
-	ConnectionEntityManager,
-	type EntityManagerActionEntity,
-	type EntityManagerAdapter,
-	type EntityManagerFeedbackEntity,
-} from '../../lib/Instance/Connection/EntityManager.js'
+	createConnectionEntityManagers,
+	destroyConnectionEntityManagers,
+	startConnectionEntityManagers,
+	type ConnectionEntityManagers,
+} from '../../lib/Instance/Connection/EntityManagers.js'
+import type { EntityManagerFeedbackValue } from '../../lib/Instance/Connection/FeedbackEntityManager.js'
 import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 describe('InstanceEntityManager', () => {
@@ -59,7 +66,29 @@ describe('InstanceEntityManager', () => {
 		destroy: vi.fn(),
 	}
 
-	let entityManager: ConnectionEntityManager
+	/**
+	 * The entity managers of a connection, used as the child handlers do: each entity goes to the manager for its type
+	 */
+	const createEntityManagerRouter = (managers: ConnectionEntityManagers) => ({
+		start: (currentUpgradeIndex: number) => startConnectionEntityManagers(managers, currentUpgradeIndex),
+		destroy: () => destroyConnectionEntityManagers(managers),
+		trackEntity: (entity: ControlEntityInstance, controlId: SomeControlId) =>
+			managers[entity.type].trackEntity(entity, controlId),
+		// An entity is only tracked by the manager for its type, so the other ignores it
+		forgetEntity: (entityId: string) => {
+			managers[EntityModelType.Action].forgetEntity(entityId)
+			managers[EntityModelType.Feedback].forgetEntity(entityId)
+		},
+		getSubscriptionId: (entityId: string) =>
+			managers[EntityModelType.Action].getSubscriptionId(entityId) ??
+			managers[EntityModelType.Feedback].getSubscriptionId(entityId),
+		onEntityDefinitionsChanged: (entityType: EntityModelType) => managers[entityType].onEntityDefinitionsChanged(),
+		handleFeedbackValues: (values: EntityManagerFeedbackValue[]) =>
+			managers[EntityModelType.Feedback].handleFeedbackValues(values),
+		resendFeedbacks: () => managers[EntityModelType.Feedback].resendFeedbacks(),
+	})
+
+	let entityManager: ReturnType<typeof createEntityManagerRouter>
 	let variableDependencies: VariableDependencyRegistry
 
 	/**
@@ -97,12 +126,14 @@ describe('InstanceEntityManager', () => {
 
 		// Create a new instance for each test
 		variableDependencies = new VariableDependencyRegistry()
-		entityManager = new ConnectionEntityManager(
-			mockAdapter,
-			mockControlsController as any,
-			'test-connection-id',
-			mockRenderClock as any,
-			variableDependencies
+		entityManager = createEntityManagerRouter(
+			createConnectionEntityManagers(
+				mockAdapter,
+				mockControlsController as any,
+				'test-connection-id',
+				mockRenderClock as any,
+				variableDependencies
+			)
 		)
 
 		vi.useFakeTimers()

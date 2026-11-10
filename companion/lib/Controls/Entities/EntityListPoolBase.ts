@@ -311,7 +311,7 @@ export abstract class ControlEntityListPoolBase {
 	/**
 	 * Replace an entity's stored props with a module-upgraded version.
 	 *
-	 * This is SOLELY the connection/module upgrade path (see {@link ../../Instance/Connection/EntityManager.js}
+	 * This is SOLELY the connection/module upgrade path (see {@link ../../Instance/Connection/EntityManagerBase.js}
 	 * and the legacy child handler) - it is invoked when a connection upgrades the definition of one of its
 	 * entities, never as a result of a user edit. That is why it lives on the read-only base (it must work on
 	 * every control, including read-only ones like a preset reference) and is not part of the editable mutator
