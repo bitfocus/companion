@@ -17,6 +17,7 @@ import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import type { LocalVariableOutputs } from '~/Controls/Components/EntityEditorContext.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
+import { LocalVariablesSupportHint } from '~/Controls/InputFeatures.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
@@ -270,10 +271,13 @@ function CustomActionInputsEditor({
 		<InputFieldDefinitionsEditor
 			heading="Inputs"
 			subheading={
-				<p className="text-sm text-muted">
-					The inputs are the options of the action. Their values are available to the actions as{' '}
-					<code>$(options:id)</code>.
-				</p>
+				<>
+					<p className="text-sm text-muted mb-1">
+						The inputs are the options of the action. Their values are available to the actions as{' '}
+						<code>$(options:id)</code>.
+					</p>
+					<LocalVariablesSupportHint subject="Inputs" />
+				</>
 			}
 			headingActions={null}
 			fields={inputs}

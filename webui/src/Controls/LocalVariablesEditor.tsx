@@ -1,5 +1,3 @@
-import { faGlobe } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
@@ -9,6 +7,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { LocalVariableOutputs } from './Components/EntityEditorContext.js'
 import { ControlEntitiesEditor } from './EntitiesEditor.js'
+import { LocalVariablesSupportHint } from './InputFeatures.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 
 interface LocalVariablesEditorProps {
@@ -43,10 +42,7 @@ export function LocalVariablesEditor({
 				subheading={
 					<>
 						{description && <p className="text-sm text-muted mb-1">{description}</p>}
-						<span className="text-xs text-muted">
-							Local variables are supported on fields featuring the{' '}
-							<FontAwesomeIcon icon={faGlobe} className="mx-0.5" /> icon.
-						</span>
+						<LocalVariablesSupportHint subject="Local variables" />
 					</>
 				}
 				controlId={controlId}

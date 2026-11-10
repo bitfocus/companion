@@ -1,10 +1,10 @@
-import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { FormLabel } from '~/Components/Form.js'
+import { LocalVariablesSupportHint } from '~/Controls/InputFeatures.js'
 import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import './EditPanel.css'
 import { useCallback, useContext, useId, useMemo, useRef, useState } from 'react'
@@ -321,12 +321,7 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 								</InlineHelpIcon>
 							</>
 						}
-						subheading={
-							<span className="text-xs text-muted">
-								Local variables are supported on fields featuring the{' '}
-								<FontAwesomeIcon icon={faGlobe} className="mx-0.5" /> icon.
-							</span>
-						}
+						subheading={<LocalVariablesSupportHint subject="Local variables" />}
 						entities={localVariables}
 						ownerId={null}
 						entityType={EntityModelType.Feedback}
