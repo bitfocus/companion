@@ -328,7 +328,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
 
-			const controlEntities = control.entities.getAllEntitiesWithTransient()
+			const controlEntities = control.entities.getAllEntities()
 			if (!controlEntities || controlEntities.length === 0) continue
 
 			for (const entity of controlEntities) {
@@ -392,7 +392,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
 
-			for (const entity of control.entities.getAllEntitiesWithTransient()) {
+			for (const entity of control.entities.getAllEntities()) {
 				if (entity.connectionId !== this.connectionId) continue
 				if (entity.type !== EntityModelType.Action) continue
 
