@@ -12,6 +12,10 @@ import type { CustomActionUsage } from '@companion-app/shared/Model/CustomAction
 import { EntityModelType, type EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import {
+	IpcWrapper as LegacyIpcWrapper,
+	// eslint-disable-next-line n/no-missing-import
+} from '@companion-module/base-old/dist/host-api/ipc-wrapper.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH } from '../../lib/Controls/CustomActionRunFrame.js'
 import { CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
@@ -1457,6 +1461,7 @@ describe('custom actions using a connection', () => {
 		})
 	})
 	afterEach(async () => {
+		vi.restoreAllMocks()
 		await app.close()
 	})
 
@@ -1643,6 +1648,116 @@ describe('custom actions using a connection', () => {
 		await setLastValue('alpha')
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
 	})
+
+	test('the copies held by calls get the values for their own inputs after a restart', async () => {
+		const connectionId = await addConnection('test-module-2-1-3')
+		const customActionId = await createCheckingCustomAction(connectionId)
+		const setLastValue = await addSetter(connectionId)
+
+		const alphaId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const alphaCall = app.addCustomActionCall(alphaId, customActionId, { want: exprVal('alpha') }, null)
+		const betaId = app.createButton({ pageNumber: 1, row: 1, column: 2 })
+		const betaCall = app.addCustomActionCall(betaId, customActionId, { want: exprVal('beta') }, null)
+		await setLastValue('alpha')
+		await vi.waitFor(() => {
+			expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(true)
+			expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(false)
+		}, 10_000)
+
+		const { configDir } = app
+		await app.close()
+		app = await createTestApp({ configDir, extraModulePath: path.join(import.meta.dirname, 'modules/fixtures') })
+		await vi.waitFor(
+			() => expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeDefined(),
+			30_000
+		)
+
+		// The module starts afresh, without a last value
+		await vi.waitFor(() => {
+			expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(false)
+			expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(false)
+		}, 10_000)
+		await vi.waitFor(async () => setLastValue('beta'), 20_000)
+		await vi.waitFor(() => {
+			expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(false)
+			expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(true)
+		}, 10_000)
+	})
+
+	test.each(['test-module-2-1-3', 'test-module-1-14-1'])(
+		'an upgrade of an action in a custom action of %s upgrades it there, and not the copies held by its calls',
+		async (moduleType) => {
+			const connectionId = await addConnection(moduleType)
+			const customActionId = await app.trpc().controls.customActions.create({ name: 'Old' })
+			const setVarId = await app.trpc().controls.entities.add({
+				controlId: customActionId,
+				entityLocation: 'custom_action_actions',
+				ownerId: null,
+				connectionId,
+				entityType: EntityModelType.Action,
+				entityDefinition: 'set_var',
+			})
+			if (!setVarId) throw new Error('Failed to add the action')
+			const first = { pageNumber: 1, row: 1, column: 1 }
+			app.addCustomActionCall(app.createButton(first), customActionId, {}, null)
+			const second = { pageNumber: 1, row: 1, column: 2 }
+			app.addCustomActionCall(app.createButton(second), customActionId, {}, null)
+
+			// An export from before the upgrade script, when set_var had the option `val`
+			const res = await app.http.get('/int/export/full?format=json').expect(200)
+			const exported = JSON.parse(res.text || res.body.toString())
+			exported.instances[connectionId].lastUpgradeIndex = -1
+			const exportedAction = exported.customActions[customActionId.slice('custom-action:'.length)].actions.find(
+				(action: { id: string }) => action.id === setVarId
+			)
+			exportedAction.options = { val: exprVal('upgraded') }
+
+			// Legacy modules are talked to through the ipc wrapper of the old base library
+			const sent = vi.spyOn(IpcWrapper.prototype, 'sendWithCb')
+			const sentLegacy = vi.spyOn(LegacyIpcWrapper.prototype, 'sendWithCb')
+			const ctx = createMockTrpcContext()
+			ctx.pendingImport = { object: exported, timeout: null }
+			await app.trpc(ctx).importExport.importFull({
+				config: {
+					buttons: 'unchanged',
+					surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'unchanged' },
+					triggers: 'unchanged',
+					customVariables: 'unchanged',
+					expressionVariables: 'unchanged',
+					customActions: 'reset-and-import',
+					connections: 'unchanged',
+					userconfig: 'unchanged',
+					imageLibrary: 'unchanged',
+				},
+			})
+
+			// The action in the custom action is upgraded. The import gives it a new id
+			const importedAction = () => {
+				const customAction = app.registry.controls.getControl(customActionId)
+				if (!(customAction instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+				return customAction.entities.getActionEntities()[0]
+			}
+			await vi.waitFor(
+				() => expect(importedAction().asEntityModel(false).options).toEqual({ value: exprVal('upgraded') }),
+				10_000
+			)
+
+			// And the calls run it as upgraded
+			const lastValue = () => app.registry.variables.values.getVariableValue(label, 'last_value')
+			await vi.waitFor(() => {
+				app.pressButton(first, true)
+				app.pressButton(first, false)
+				expect(lastValue()).toBe('upgraded')
+			}, 10_000)
+
+			// Only the action in the custom action was sent to the module to upgrade, not the copies
+			const upgradedIds = [...sent.mock.calls, ...sentLegacy.mock.calls]
+				// Legacy modules are sent actions and feedbacks to upgrade in one message
+				.filter(([name]) => name === 'upgradeActions' || name === 'upgradeActionsAndFeedbacks')
+				.flatMap(([, msg]) => (msg as { actions: { id: string }[] }).actions.map((action) => action.id))
+			expect(upgradedIds).toEqual([importedAction().id])
+		}
+	)
 
 	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
