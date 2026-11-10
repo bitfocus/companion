@@ -282,7 +282,9 @@ export class ControlCustomAction
 		rawOptions: ExpressionableOptionsObject,
 		parser: VariablesAndExpressionParser,
 		callerControlId: SomeControlId | null
-	): { options: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> } {
+	):
+		| { ok: true; options: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> }
+		| { ok: false; optionErrors: Record<string, string | undefined>; referencedVariableIds: ReadonlySet<string> } {
 		const optionsWithDefaults: ExpressionableOptionsObject = { ...rawOptions }
 		for (const input of this.#inputs) {
 			if (optionsWithDefaults[input.id] === undefined && 'default' in input) {
@@ -290,15 +292,11 @@ export class ControlCustomAction
 			}
 		}
 
+		// Invalid inputs are refused, as the options of a module action are
 		const parseRes = parser.parseEntityOptions(this.toActionDefinition(), optionsWithDefaults, callerControlId)
-		if (!parseRes.ok) {
-			this.logger.debug(`Using defaults for invalid inputs: ${JSON.stringify(parseRes.optionErrors)}`)
-		}
-
-		return {
-			options: parseRes.ok ? parseRes.parsedOptions : parseRes.parsedOptionsWithDefaults,
-			referencedVariableIds: parseRes.referencedVariableIds,
-		}
+		return parseRes.ok
+			? { ok: true, options: parseRes.parsedOptions, referencedVariableIds: parseRes.referencedVariableIds }
+			: { ok: false, optionErrors: parseRes.optionErrors, referencedVariableIds: parseRes.referencedVariableIds }
 	}
 
 	/**

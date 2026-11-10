@@ -237,7 +237,16 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		if (!(customAction instanceof ControlCustomAction)) return undefined
 
 		// The inputs are fixed for the run, in the execution context of the caller
-		const { options } = customAction.parseCallInputs(caller.rawOptions, parser, copy.controlId)
+		const parseRes = customAction.parseCallInputs(caller.rawOptions, parser, copy.controlId)
+		if (!parseRes.ok) {
+			this.#logger.warn(
+				`Failed to parse the inputs of custom action "${customAction.options.name}" in ${copy.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+			)
+			throw new Error(
+				`Failed to parse the inputs of custom action "${customAction.options.name}". One or more inputs were invalid\nErrors: ${JSON.stringify(parseRes.optionErrors)}`
+			)
+		}
+		const options = parseRes.options
 
 		const scope = new CustomActionEntityScope(
 			customAction,
@@ -399,12 +408,21 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			return
 		}
 
-		const { options, referencedVariableIds } = customAction.parseCallInputs(
+		const parseRes = customAction.parseCallInputs(
 			caller.rawOptions,
 			copy.callerScope.createVariablesAndExpressionParser(null),
 			copy.controlId
 		)
-		copy.inputVariables.set(referencedVariableIds)
+		// Even when invalid, so that the copy is built once a variable they use changes
+		copy.inputVariables.set(parseRes.referencedVariableIds)
+		if (!parseRes.ok) {
+			// Inactive until its inputs can be parsed, as a module feedback is
+			this.#logger.warn(
+				`Failed to parse the inputs of custom action "${customAction.options.name}" in ${copy.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+			)
+			return
+		}
+		const options = parseRes.options
 
 		const scope = new CustomActionEntityScope(
 			customAction,
@@ -515,21 +533,30 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 */
 	#refreshInputs(caller: ControlEntityInstance, copy: PlacedCopy): void {
 		const scope = copy.scope
-		if (!scope) return
+		if (!scope) {
+			// Inactive because its inputs were invalid, so try building it again
+			this.#build(caller, copy)
+			return
+		}
 
 		const customAction = this.#controlStore.getControl(scope.values.customActionControlId)
 		if (!(customAction instanceof ControlCustomAction)) return
 
-		const { options, referencedVariableIds } = customAction.parseCallInputs(
+		const parseRes = customAction.parseCallInputs(
 			caller.rawOptions,
 			copy.callerScope.createVariablesAndExpressionParser(null),
 			copy.controlId
 		)
-		copy.inputVariables.set(referencedVariableIds)
+		if (!parseRes.ok) {
+			// It becomes inactive, which building it again does
+			this.#build(caller, copy)
+			return
+		}
+		copy.inputVariables.set(parseRes.referencedVariableIds)
 
-		if (isEqual(options, scope.values.options)) return
+		if (isEqual(parseRes.options, scope.values.options)) return
 
-		scope.setValues({ ...scope.values, options })
+		scope.setValues({ ...scope.values, options: parseRes.options })
 	}
 
 	/**

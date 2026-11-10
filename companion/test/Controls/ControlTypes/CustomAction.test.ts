@@ -489,16 +489,28 @@ describe('ControlCustomAction', () => {
 			expect(seen.sort()).toEqual([5, 8])
 		})
 
-		test('a missing or invalid input uses its default', async () => {
+		test('a missing input uses its default', async () => {
 			const { executeAction, evaluate, runAsButton } = createHarness({ actions: [action('record')] })
 			const seen: any[] = []
 			executeAction.mockImplementation(async (_action, extras) => {
 				seen.push(evaluate(extras, '$(options:n)'))
 			})
 
-			await runAsButton([callAction({}), callAction({ n: exprExpr('nonsense(') })])
+			await runAsButton([callAction({})])
 
-			expect(seen).toEqual([3, 3])
+			expect(seen).toEqual([3])
+		})
+
+		test.each([
+			['an expression which fails', exprExpr('nonsense(')],
+			['a value out of range', exprVal(99)],
+		])('an input with %s refuses the run, as a module action does', async (_name, value) => {
+			const { executeAction, runAsButton, customActionInstances } = createHarness({ actions: [action('record')] })
+
+			await runAsButton([callAction({ n: value })])
+
+			expect(executeAction).not.toHaveBeenCalled()
+			expect(customActionInstances.getRuns(CUSTOM_ACTION_CONTROL_ID)).toEqual([])
 		})
 
 		test('a missing text input uses its default', async () => {
@@ -948,6 +960,25 @@ describe('ControlCustomAction', () => {
 
 			expect(notified).not.toHaveBeenCalled()
 			expect(variableDependencies.stats().dependencies).toBe(dependenciesWithoutCopy)
+		})
+
+		test('the copy is inactive while its inputs are invalid, as a module feedback is, until they are valid again', () => {
+			const { createCaller, customActionInstances, variableValues } = createHarness({ actions: [action('record')] })
+			variableValues.setVariableValues('test', [{ id: 'num', value: 99 }])
+
+			const caller = createCaller([callAction({ n: exprExpr('$(test:num)') })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+
+			// A variable it uses makes it valid
+			variableValues.setVariableValues('test', [{ id: 'num', value: 4 }])
+			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(4)
+
+			// And invalid again
+			variableValues.setVariableValues('test', [{ id: 'num', value: 99 }])
+			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
 		})
 
 		test('the copy is not re-subscribed when a variable change leaves its inputs the same', () => {
