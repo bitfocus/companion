@@ -14,7 +14,6 @@ import { INVALID_LABEL_MESSAGE, isLabelValid } from '@companion-app/shared/Label
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
-	isInternalUserValueFeedback,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -25,8 +24,6 @@ import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay'
-import { AddEntityPanel } from '~/Controls/Components/AddEntityPanel.js'
-import { EntityManageChildGroups } from '~/Controls/Components/EntityChildGroup'
 import { EntityCommonCells } from '~/Controls/Components/EntityCommonCells'
 import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
@@ -88,20 +85,18 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 						</div>
 					</EditSectionCard>
 
-					{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
-						// The entity list draws its own heading (with help), so this is a bare section rather than a card
-						<section className="edit-section">
-							<div className="edit-button-panel flex-form">
-								<MyErrorBoundary>
-									<ExpressionVariableLocalVariablesEditor
-										controlId={controlId}
-										localVariables={controlConfig.config.localVariables}
-										localVariablesStore={localVariablesStore}
-									/>
-								</MyErrorBoundary>
-							</div>
-						</section>
-					)}
+					{/* The entity list draws its own heading (with help), so this is a bare section rather than a card */}
+					<section className="edit-section">
+						<div className="edit-button-panel flex-form">
+							<MyErrorBoundary>
+								<ExpressionVariableLocalVariablesEditor
+									controlId={controlId}
+									localVariables={controlConfig.config.localVariables}
+									localVariablesStore={localVariablesStore}
+								/>
+							</MyErrorBoundary>
+						</div>
+					</section>
 				</div>
 			) : (
 				''
@@ -197,9 +192,8 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
 	const serviceFactory = useControlEntitiesEditorService(controlId, 'feedbacks', confirmModal)
-	useEntityListReorderMonitor(controlId, EntityModelType.Feedback, serviceFactory)
 
-	const entityIds = useMemo(() => findAllEntityIdsDeep(entity ? [entity] : []), [entity])
+	const entityIds = useMemo(() => (entity ? [entity.id] : []), [entity])
 
 	return (
 		<>
@@ -221,27 +215,13 @@ const ExpressionVariableEntityEditor = observer(function ExpressionVariableEntit
 					<GenericConfirmModal ref={confirmModal} />
 
 					{!entity ? (
-						<ExpressionVariableAddRootEntity />
+						// Every expression variable is created with an expression_value root, which can't be removed
+						<NonIdealState text="This expression variable has no value definition" icon={faDollarSign} />
 					) : (
 						<ExpressionVariableSoleEntityEditor controlId={controlId} entity={entity} />
 					)}
 				</PanelCollapseHelperProvider>
 			</EntityEditorContextProvider>
-		</>
-	)
-})
-
-const ExpressionVariableAddRootEntity = observer(function ExpressionVariableAddRootEntity() {
-	return (
-		<>
-			<NonIdealState text="Choose the root type of the expression variable below to begin" icon={faDollarSign} />
-			<AddEntityPanel
-				ownerId={null}
-				entityType={EntityModelType.Feedback}
-				feedbackListType={FeedbackEntitySubType.Value}
-				entityTypeLabel="definition"
-				anyEntities={false}
-			/>
 		</>
 	)
 })
@@ -285,8 +265,6 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 					entityDefinition={entityDefinition}
 					service={entityService}
 				/>
-
-				<EntityManageChildGroups entity={entity} entityDefinition={entityDefinition} />
 			</div>
 		</>
 	)
