@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ReplaceableActionEntityModel,
@@ -812,19 +812,20 @@ describe('InstanceEntityManager', () => {
 			// The entity moves to control-2
 			entityManager.trackEntity(mockEntity as any, CreateBankControlId('control-2'))
 			vi.runAllTimers()
-			mockAdapter.updateFeedbacks.mockClear()
+			mockVariablesParser.parseEntityOptions.mockClear()
 
 			// A change scoped to the old control must not invalidate it
 			variableDependencies.dispatch(new Set(['control-var']), new Set([CreateBankControlId('control-1')]))
 			vi.runAllTimers()
-			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+			expect(mockVariablesParser.parseEntityOptions).not.toHaveBeenCalled()
 
-			// A change scoped to the new control must
+			// A change scoped to the new control must. The options parse the same, so nothing is resent to the module
 			variableDependencies.dispatch(new Set(['control-var']), new Set([CreateBankControlId('control-2')]))
 			vi.runAllTimers()
-			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
-			expect([...mockAdapter.updateFeedbacks.mock.calls[0][0].keys()]).toEqual(['entity-1'])
-			expect(mockAdapter.updateFeedbacks.mock.calls[0][0].get('entity-1')?.controlId).toBe(
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledTimes(1)
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.anything(),
 				CreateBankControlId('control-2')
 			)
 		})
@@ -917,15 +918,16 @@ describe('InstanceEntityManager', () => {
 			}))
 			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
-			mockAdapter.updateFeedbacks.mockClear()
+			mockVariablesParser.parseEntityOptions.mockClear()
 
+			// The options parse the same, so a re-parse is not resent to the module
 			variableDependencies.dispatch(new Set(['var1']), null)
 			vi.runAllTimers()
-			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+			expect(mockVariablesParser.parseEntityOptions).not.toHaveBeenCalled()
 
 			variableDependencies.dispatch(new Set(['other-var']), null)
 			vi.runAllTimers()
-			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledTimes(1)
 		})
 
 		it('ignores changes while an entity is not ready', () => {
@@ -933,6 +935,7 @@ describe('InstanceEntityManager', () => {
 			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
 			vi.runAllTimers()
 			mockAdapter.updateFeedbacks.mockClear()
+			const subscriptionId = entityManager.getSubscriptionId('entity-1')!
 
 			// Pending deletion, so the change must not resurrect it
 			entityManager.forgetEntity('entity-1')
@@ -940,7 +943,7 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
-			expect(mockAdapter.updateFeedbacks.mock.calls[0][0].get('entity-1')).toBeNull()
+			expect(mockAdapter.updateFeedbacks.mock.calls[0][0]).toEqual(new Map([[subscriptionId, null]]))
 		})
 	})
 
@@ -2448,7 +2451,12 @@ describe('InstanceEntityManager', () => {
 			const subscriptionId = entityManager.getSubscriptionId('fb-1')!
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
-				new Map([[subscriptionId, expect.objectContaining({ controlId: CreateBankControlId('control-1'), parsedOptions: { field1: 'a' } })]])
+				new Map([
+					[
+						subscriptionId,
+						expect.objectContaining({ controlId: CreateBankControlId('control-1'), parsedOptions: { field1: 'a' } }),
+					],
+				])
 			)
 			expect(entityManager.getSubscriptionId('fb-1')).toBe(subscriptionId)
 			expect(entityManager.getSubscriptionId('fb-2')).toBe(subscriptionId)
@@ -2677,7 +2685,9 @@ describe('InstanceEntityManager', () => {
 			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
 
 			// Values now only go to the remaining member
-			entityManager.handleFeedbackValues([{ id: subscriptionId, controlId: CreateBankControlId('control-1'), value: true }])
+			entityManager.handleFeedbackValues([
+				{ id: subscriptionId, controlId: CreateBankControlId('control-1'), value: true },
+			])
 			expect(mockControlsController.updateFeedbackValues).toHaveBeenCalledWith('test-connection-id', [
 				{ entityId: 'fb-2', controlId: CreateBankControlId('control-1'), value: true },
 			])
@@ -2694,7 +2704,9 @@ describe('InstanceEntityManager', () => {
 			entityManager.trackEntity(fb1 as any, CreateBankControlId('control-1'))
 			vi.runAllTimers()
 			const subscriptionId = entityManager.getSubscriptionId('fb-1')!
-			entityManager.handleFeedbackValues([{ id: subscriptionId, controlId: CreateBankControlId('control-1'), value: true }])
+			entityManager.handleFeedbackValues([
+				{ id: subscriptionId, controlId: CreateBankControlId('control-1'), value: true },
+			])
 			entityManager.forgetEntity('fb-1')
 			vi.runAllTimers()
 			mockAdapter.updateFeedbacks.mockClear()
@@ -2784,8 +2796,14 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateFeedbacks.mockClear()
 			const subscriptionId = entityManager.getSubscriptionId('fb-1')!
 
-			entityManager.trackEntity(createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'b' }) as any, CreateBankControlId('control-1'))
-			entityManager.trackEntity(createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'b' }) as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(
+				createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'b' }) as any,
+				CreateBankControlId('control-1')
+			)
+			entityManager.trackEntity(
+				createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'b' }) as any,
+				CreateBankControlId('control-1')
+			)
 			vi.runAllTimers()
 
 			expect(entityManager.getSubscriptionId('fb-1')).toBe(subscriptionId)
@@ -2806,12 +2824,18 @@ describe('InstanceEntityManager', () => {
 			const subscriptionId = entityManager.getSubscriptionId('fb-1')!
 
 			// fb-2 splits off first
-			entityManager.trackEntity(createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'b' }) as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(
+				createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'b' }) as any,
+				CreateBankControlId('control-1')
+			)
 			vi.runAllTimers()
 			mockAdapter.updateFeedbacks.mockClear()
 
 			// fb-1 is now the only member, so its subscription follows it
-			entityManager.trackEntity(createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'c' }) as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(
+				createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'c' }) as any,
+				CreateBankControlId('control-1')
+			)
 			vi.runAllTimers()
 
 			expect(entityManager.getSubscriptionId('fb-1')).toBe(subscriptionId)
@@ -2836,8 +2860,14 @@ describe('InstanceEntityManager', () => {
 			mockAdapter.updateFeedbacks.mockClear()
 			mockControlsController.updateFeedbackValues.mockClear()
 
-			entityManager.trackEntity(createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'b' }) as any, CreateBankControlId('control-1'))
-			entityManager.trackEntity(createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' }) as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(
+				createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'b' }) as any,
+				CreateBankControlId('control-1')
+			)
+			entityManager.trackEntity(
+				createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' }) as any,
+				CreateBankControlId('control-1')
+			)
 			vi.runAllTimers()
 
 			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
@@ -2857,12 +2887,18 @@ describe('InstanceEntityManager', () => {
 			entityManager.handleFeedbackValues([
 				{ id: entityManager.getSubscriptionId('fb-1')!, controlId: CreateBankControlId('control-1'), value: 'old' },
 			])
-			entityManager.trackEntity(createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'b' }) as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(
+				createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'b' }) as any,
+				CreateBankControlId('control-1')
+			)
 			vi.runAllTimers()
 			mockControlsController.updateFeedbackValues.mockClear()
 
 			// fb-2 joins before the module has reported a value for the new options
-			entityManager.trackEntity(createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'b' }) as any, CreateBankControlId('control-1'))
+			entityManager.trackEntity(
+				createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'b' }) as any,
+				CreateBankControlId('control-1')
+			)
 			vi.runAllTimers()
 
 			expect(entityManager.getSubscriptionId('fb-2')).toBe(entityManager.getSubscriptionId('fb-1'))
@@ -2933,7 +2969,9 @@ describe('InstanceEntityManager', () => {
 			const subscriptionId = entityManager.getSubscriptionId('fb-1')!
 			entityManager.destroy()
 
-			entityManager.handleFeedbackValues([{ id: subscriptionId, controlId: CreateBankControlId('control-1'), value: true }])
+			entityManager.handleFeedbackValues([
+				{ id: subscriptionId, controlId: CreateBankControlId('control-1'), value: true },
+			])
 			expect(mockControlsController.updateFeedbackValues).not.toHaveBeenCalled()
 		})
 	})
