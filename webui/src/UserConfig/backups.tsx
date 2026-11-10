@@ -1,6 +1,6 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faAdd, faCog, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faCog, faGripVertical, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
@@ -201,7 +201,7 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 			)}
 		>
 			<div ref={handleRef} className="cursor-grab text-muted/60 hover:text-muted px-1">
-				<FontAwesomeIcon icon={faSort} />
+				<FontAwesomeIcon icon={faGripVertical} />
 				<GenericConfirmModal ref={confirmRef} />
 			</div>
 			<div className={classNames('grow min-w-0', { 'opacity-60': !rule.enabled })} onClick={doEdit}>

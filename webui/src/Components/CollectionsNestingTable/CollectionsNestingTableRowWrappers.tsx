@@ -1,7 +1,7 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDroppable } from '@dnd-kit/react'
 import { useSortable } from '@dnd-kit/react/sortable'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
+import { faGripVertical } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -171,7 +171,7 @@ function CollectionsNestingTableRowBase({
 			>
 				{allowDrag ? (
 					<div ref={dragRef} className="row-reorder-handle">
-						<FontAwesomeIcon icon={faSort} />
+						<FontAwesomeIcon icon={faGripVertical} />
 					</div>
 				) : (
 					// Empty div to preserve columns
