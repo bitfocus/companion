@@ -115,7 +115,7 @@ export function createExpressionVariableTrpcRouter(
 
 				const fromControl = controlStore.controls.get(controlId)
 				if (fromControl && fromControl instanceof ControlExpressionVariable) {
-					const controlJson = fromControl.toJSON(true)
+					const controlJson = structuredClone(fromControl.toJSON())
 
 					const newControl = factory.createExpressionVariable(newControlId, controlJson)
 					controlStore.controls.set(newControlId, newControl)

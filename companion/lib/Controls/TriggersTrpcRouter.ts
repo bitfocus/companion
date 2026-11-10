@@ -91,7 +91,7 @@ export function createTriggersTrpcRouter(
 
 			const fromControl = controlStore.controls.get(controlId)
 			if (fromControl && fromControl instanceof ControlTrigger) {
-				const controlJson = fromControl.toJSON(true)
+				const controlJson = structuredClone(fromControl.toJSON())
 
 				const newControl = factory.createTrigger(newControlId, controlJson)
 				controlStore.controls.set(newControlId, newControl)

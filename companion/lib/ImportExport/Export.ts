@@ -388,7 +388,7 @@ export class ExportController {
 		for (const control of triggerControls) {
 			const parsedId = ParseControlId(control.controlId)
 			if (parsedId?.type === 'trigger') {
-				triggersExport[parsedId.trigger] = control.toJSON(false)
+				triggersExport[parsedId.trigger] = control.toJSON()
 
 				control.collectReferencedConnectionsAndVariables(
 					referencedConnectionIds,
@@ -610,7 +610,7 @@ export class ExportController {
 			for (const control of triggerControls) {
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type === 'trigger') {
-					triggersExport[parsedId.trigger] = control.toJSON(false)
+					triggersExport[parsedId.trigger] = control.toJSON()
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,
@@ -639,7 +639,7 @@ export class ExportController {
 			for (const control of expressionVariableControls) {
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type === 'expression-variable') {
-					exp.expressionVariables[parsedId.variableId] = control.toJSON(false)
+					exp.expressionVariables[parsedId.variableId] = control.toJSON()
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,

@@ -264,11 +264,10 @@ export class ControlButtonReference
 		return {}
 	}
 
-	toJSON(clone = true): ButtonReferenceButtonModel {
-		const obj: ButtonReferenceButtonModel = {
+	toJSON(): ButtonReferenceButtonModel {
+		return {
 			type: this.type,
 			options: this.options,
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 }

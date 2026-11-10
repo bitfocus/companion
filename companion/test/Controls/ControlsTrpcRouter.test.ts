@@ -51,7 +51,7 @@ function setup(options: { cells?: Cell[]; validPages?: number[]; gridSize?: User
 	for (const { controlId, type } of cells) {
 		controlsMap.set(controlId, {
 			type: type ?? 'button-layered',
-			toJSON: vi.fn((_clone: boolean) => ({ type: 'button', __sourceId: controlId })),
+			toJSON: vi.fn(() => ({ type: 'button', __sourceId: controlId })),
 			triggerLocationHasChanged: vi.fn(),
 			abortDelayedActions: vi.fn(),
 			supportsOptions: true,

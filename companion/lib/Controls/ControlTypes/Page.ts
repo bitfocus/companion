@@ -139,12 +139,11 @@ export class ControlPage
 		return {}
 	}
 
-	toJSON(clone = true): PageControlModel {
-		const obj: PageControlModel = {
+	toJSON(): PageControlModel {
+		return {
 			type: this.type,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

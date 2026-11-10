@@ -191,14 +191,13 @@ export class ControlExpressionVariable
 		return {}
 	}
 
-	toJSON(clone = true): ExpressionVariableModel {
-		const obj: ExpressionVariableModel = {
+	toJSON(): ExpressionVariableModel {
+		return {
 			type: this.type,
 			options: this.options,
 			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	toClientJSON(): ClientExpressionVariableData {

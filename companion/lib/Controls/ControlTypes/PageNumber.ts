@@ -148,7 +148,7 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 	 * To be sent to the client and written to the db
 	 * @param _clone - Whether to return a cloned object
 	 */
-	toJSON(_clone = true): PageNumberButtonModel {
+	toJSON(): PageNumberButtonModel {
 		return {
 			type: this.type,
 		}

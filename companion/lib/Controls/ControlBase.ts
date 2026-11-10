@@ -164,7 +164,7 @@ export abstract class ControlBase<
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
+	 * Never cloned: the result references the control's own state, so clone it before keeping or mutating it
 	 */
 	abstract toJSON(): TJson
 

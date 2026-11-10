@@ -314,11 +314,10 @@ export class ControlButtonLink
 		return { status: state.status, peerName: state.peerName }
 	}
 
-	toJSON(clone = true): LinkButtonModel {
-		const obj: LinkButtonModel = {
+	toJSON(): LinkButtonModel {
+		return {
 			type: this.type,
 			options: this.options,
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 }

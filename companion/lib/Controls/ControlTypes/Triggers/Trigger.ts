@@ -321,8 +321,8 @@ export class ControlTrigger
 		return {}
 	}
 
-	toJSON(clone = true): TriggerModel {
-		const obj: TriggerModel = {
+	toJSON(): TriggerModel {
+		return {
 			type: this.type,
 			options: this.options,
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
@@ -330,7 +330,6 @@ export class ControlTrigger
 			events: this.events,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	toTriggerJSON(): ClientTriggerData {
