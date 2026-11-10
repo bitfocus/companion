@@ -54,7 +54,7 @@ export function CloudPage(): React.JSX.Element {
 					<a
 						target="_blank"
 						rel="noreferrer"
-						href="https://user.bitfocus.io/docs/companion-cloud"
+						href="https://bitfocus.io/companion-cloud"
 						className="text-primary hover:underline font-medium"
 					>
 						Companion Cloud documentation

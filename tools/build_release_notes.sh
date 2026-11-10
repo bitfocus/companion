@@ -29,7 +29,7 @@ PREVIOUS=$(git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | { cat; ec
 
 cat <<EOF
 ## 📦  Downloads available at
-* https://user.bitfocus.io/download
+* https://bitfocus.io/account/downloads
 
 ## 💵  Donate to the project at
 * open collective https://opencollective.com/companion

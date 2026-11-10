@@ -22,7 +22,7 @@ Slack is also the perfect place for asking questions, especially when you're get
 
 **Bleeding edge builds**
 
-- https://user.bitfocus.io/download
+- https://bitfocus.io/account/downloads
 
 For checking known bugs or reporting of potential bugs, please use the [issue system](https://github.com/bitfocus/companion/issues) on GitHub
 
