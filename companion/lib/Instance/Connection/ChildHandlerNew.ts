@@ -299,7 +299,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						'learnAction',
 						{
 							action: {
-								id: entity.id,
+								// The module knows the entity by its subscription, if it has one
+								id: this.#entityManager.getSubscriptionId(entity.id) ?? entity.id,
 								controlId: controlId,
 								actionId: entity.definitionId,
 								options: parseRes.parsedOptions,
@@ -324,7 +325,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 						'learnFeedback',
 						{
 							feedback: {
-								id: entity.id,
+								// The module knows the entity by its subscription, if it has one
+								id: this.#entityManager.getSubscriptionId(entity.id) ?? entity.id,
 								controlId: controlId,
 								feedbackId: entity.definitionId,
 								options: parseRes.parsedOptions,

@@ -57,18 +57,30 @@ function buildManifest(entry: FixtureVersion): Record<string, unknown> {
 	}
 }
 
+/** The version of the base library already installed in a scratch prefix, if any */
+function readInstalledBaseVersion(installDir: string): string | undefined {
+	try {
+		const pkgPath = path.join(installDir, 'node_modules/@companion-module/base/package.json')
+		return (JSON.parse(fs.readFileSync(pkgPath, 'utf8')) as { version?: string }).version
+	} catch {
+		return undefined
+	}
+}
+
 async function buildFixture(entry: FixtureVersion): Promise<void> {
 	const moduleId = fixtureModuleId(entry.apiVersion)
 	console.log(`Building ${moduleId}`)
 
 	// Install the real base library at the requested version into a scratch prefix
 	const installDir = path.join(buildCacheDir, entry.apiVersion)
-	fs.mkdirSync(installDir, { recursive: true })
-	fs.writeFileSync(path.join(installDir, 'package.json'), JSON.stringify({ private: true }))
-	execFileSync('npm', ['install', '--no-audit', '--no-fund', `@companion-module/base@${entry.apiVersion}`], {
-		cwd: installDir,
-		stdio: 'inherit',
-	})
+	if (readInstalledBaseVersion(installDir) !== entry.apiVersion) {
+		fs.mkdirSync(installDir, { recursive: true })
+		fs.writeFileSync(path.join(installDir, 'package.json'), JSON.stringify({ private: true }))
+		execFileSync('npm', ['install', '--no-audit', '--no-fund', `@companion-module/base@${entry.apiVersion}`], {
+			cwd: installDir,
+			stdio: 'inherit',
+		})
+	}
 
 	const fixtureDir = path.join(fixturesDir, moduleId, 'companion')
 	fs.rmSync(path.join(fixturesDir, moduleId), { recursive: true, force: true })
