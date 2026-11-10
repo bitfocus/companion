@@ -82,7 +82,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	const parentNestingLevel = useContext(EntityNestingLevelContext)
 
 	return (
-		<div className="mt-2">
+		<div>
 			<EntityNestingLevelContext.Provider value={parentNestingLevel + 1}>
 				<EditableEntityList
 					heading={

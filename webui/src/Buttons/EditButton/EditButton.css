@@ -175,7 +175,7 @@
 
 .edit-button-action-sections > .entity-category {
 	margin-top: var(--button-editor-section-gap);
-	padding-top: 0;
+	padding-top: 0.5rem;
 
 	&:first-child {
 		margin-top: 0;
@@ -188,7 +188,6 @@
 
 .edit-button-panel .entity-editor-heading {
 	min-height: 2rem;
-	margin: 0 0 0.625rem;
 }
 
 .edit-button-panel .entity-editor-heading-title {

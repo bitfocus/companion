@@ -35,8 +35,8 @@ export function ListHeading({ heading, subheading, actions, collapse }: ListHead
 		<>
 			{showHeadingRow && (
 				<div
-					className={classNames('entity-editor-heading flex items-center justify-between gap-2 my-2', {
-						'mb-0': !!subheading,
+					className={classNames('entity-editor-heading flex items-center justify-between gap-2', {
+						'mb-2': !subheading,
 					})}
 				>
 					<div className="entity-editor-heading-title text-base font-semibold text-body">{heading}</div>
