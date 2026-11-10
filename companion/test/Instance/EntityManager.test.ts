@@ -7,18 +7,16 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
+import { ActionEntityManager } from '../../lib/Instance/Connection/ActionEntityManager.js'
 import type {
 	EntityManagerActionEntity,
 	EntityManagerAdapter,
 	EntityManagerFeedbackEntity,
 } from '../../lib/Instance/Connection/EntityManagerBase.js'
 import {
-	createConnectionEntityManagers,
-	destroyConnectionEntityManagers,
-	startConnectionEntityManagers,
-	type ConnectionEntityManagers,
-} from '../../lib/Instance/Connection/EntityManagers.js'
-import type { EntityManagerFeedbackValue } from '../../lib/Instance/Connection/FeedbackEntityManager.js'
+	FeedbackEntityManager,
+	type EntityManagerFeedbackValue,
+} from '../../lib/Instance/Connection/FeedbackEntityManager.js'
 import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 describe('InstanceEntityManager', () => {
@@ -69,24 +67,33 @@ describe('InstanceEntityManager', () => {
 	/**
 	 * The entity managers of a connection, used as the child handlers do: each entity goes to the manager for its type
 	 */
-	const createEntityManagerRouter = (managers: ConnectionEntityManagers) => ({
-		start: (currentUpgradeIndex: number) => startConnectionEntityManagers(managers, currentUpgradeIndex),
-		destroy: () => destroyConnectionEntityManagers(managers),
-		trackEntity: (entity: ControlEntityInstance, controlId: SomeControlId) =>
-			managers[entity.type].trackEntity(entity, controlId),
-		// An entity is only tracked by the manager for its type, so the other ignores it
-		forgetEntity: (entityId: string) => {
-			managers[EntityModelType.Action].forgetEntity(entityId)
-			managers[EntityModelType.Feedback].forgetEntity(entityId)
-		},
-		getSubscriptionId: (entityId: string) =>
-			managers[EntityModelType.Action].getSubscriptionId(entityId) ??
-			managers[EntityModelType.Feedback].getSubscriptionId(entityId),
-		onEntityDefinitionsChanged: (entityType: EntityModelType) => managers[entityType].onEntityDefinitionsChanged(),
-		handleFeedbackValues: (values: EntityManagerFeedbackValue[]) =>
-			managers[EntityModelType.Feedback].handleFeedbackValues(values),
-		resendFeedbacks: () => managers[EntityModelType.Feedback].resendFeedbacks(),
-	})
+	const createEntityManagerRouter = (actionManager: ActionEntityManager, feedbackManager: FeedbackEntityManager) => {
+		const getManager = (entityType: EntityModelType) =>
+			entityType === EntityModelType.Action ? actionManager : feedbackManager
+
+		return {
+			start: (currentUpgradeIndex: number) => {
+				actionManager.start(currentUpgradeIndex)
+				feedbackManager.start(currentUpgradeIndex)
+			},
+			destroy: () => {
+				actionManager.destroy()
+				feedbackManager.destroy()
+			},
+			trackEntity: (entity: ControlEntityInstance, controlId: SomeControlId) =>
+				getManager(entity.type).trackEntity(entity, controlId),
+			// An entity is only tracked by the manager for its type, so the other ignores it
+			forgetEntity: (entityId: string) => {
+				actionManager.forgetEntity(entityId)
+				feedbackManager.forgetEntity(entityId)
+			},
+			getSubscriptionId: (entityId: string) =>
+				actionManager.getSubscriptionId(entityId) ?? feedbackManager.getSubscriptionId(entityId),
+			onEntityDefinitionsChanged: (entityType: EntityModelType) => getManager(entityType).onEntityDefinitionsChanged(),
+			handleFeedbackValues: (values: EntityManagerFeedbackValue[]) => feedbackManager.handleFeedbackValues(values),
+			resendFeedbacks: () => feedbackManager.resendFeedbacks(),
+		}
+	}
 
 	let entityManager: ReturnType<typeof createEntityManagerRouter>
 	let variableDependencies: VariableDependencyRegistry
@@ -127,12 +134,13 @@ describe('InstanceEntityManager', () => {
 		// Create a new instance for each test
 		variableDependencies = new VariableDependencyRegistry()
 		entityManager = createEntityManagerRouter(
-			createConnectionEntityManagers(
+			new ActionEntityManager(mockAdapter, mockControlsController as any, 'test-connection-id', variableDependencies),
+			new FeedbackEntityManager(
 				mockAdapter,
 				mockControlsController as any,
 				'test-connection-id',
-				mockRenderClock as any,
-				variableDependencies
+				variableDependencies,
+				mockRenderClock as any
 			)
 		)
 
