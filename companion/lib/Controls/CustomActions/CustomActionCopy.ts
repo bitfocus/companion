@@ -13,17 +13,17 @@ import type { CustomActionValues } from '../CustomActionRunFrame.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
 import { EntityPoolSpecialExpressionManager } from '../Entities/EntitySpecialExpressionManager.js'
-import type { EntityCopy, EntityScope } from '../Entities/Types.js'
+import type { EntityScope, TransientCopy } from '../Entities/Types.js'
 import type { RenderClock } from '../RenderClock.js'
 import type { CustomActionInstancesForEntity } from './CustomActionInstanceManager.js'
 
 /**
- * The scope of the entities of a copy of a custom action, held by an action which calls it, either while it waits to
- * be run or for one run of it.
- * The entities see the `this:*` variables of the control holding the copy, the inputs of the copy as
- * `$(options:*)`, and the local variables of the copy.
+ * A copy of the actions and local variables of a custom action, held by an action which calls it, either while it
+ * waits to be run or for one run of it. It is also the scope its entities parse their options in: they see the
+ * `this:*` variables of the control holding the copy, the inputs of the copy as `$(options:*)`, and the local
+ * variables of the copy.
  */
-export class CustomActionEntityScope implements EntityScope, EntityCopy {
+export class CustomActionCopy implements EntityScope, TransientCopy {
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
 	readonly customActionChain: ReadonlyArray<string>
 	readonly customActionInstances: CustomActionInstancesForEntity

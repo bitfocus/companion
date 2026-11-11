@@ -74,7 +74,7 @@ export type NewEntityIds = boolean | ((id: string) => string)
  * A copy of something held by an entity, such as of a custom action, which exists only while it is needed. Its lists
  * are included with the entities of the one holding it, which subscribes them in order once it holds it
  */
-export interface EntityCopy {
+export interface TransientCopy {
 	readonly lists: ReadonlyArray<ControlEntityList>
 }
 

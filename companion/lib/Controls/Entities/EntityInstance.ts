@@ -38,7 +38,6 @@ import type {
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
-	EntityCopy,
 	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
@@ -47,6 +46,7 @@ import type {
 	NewFeedbackValue,
 	ProcessManagerForEntity,
 	StoreResult,
+	TransientCopy,
 } from './Types.js'
 
 export class ControlEntityInstance {
@@ -89,7 +89,7 @@ export class ControlEntityInstance {
 	 * which calls it). They are never persisted or shown in the ui, and parse their options in their own scope.
 	 */
 	/** Copies of something this holds, such as of a custom action, by key */
-	#copies = new Map<string, EntityCopy>()
+	#transientCopies = new Map<string, TransientCopy>()
 
 	/** Whether this is a copy which exists only while running, such as of a custom action, so is never upgraded */
 	get isTransient(): boolean {
@@ -342,7 +342,7 @@ export class ControlEntityInstance {
 		for (const childGroup of this.#children.values()) {
 			childGroup.cleanup()
 		}
-		for (const childGroup of this.#copyLists()) {
+		for (const childGroup of this.#transientCopyLists()) {
 			childGroup.cleanup()
 		}
 	}
@@ -381,9 +381,9 @@ export class ControlEntityInstance {
 	 * Hold a copy, replacing any held with the same key, so that it is included with the entities of this one, and
 	 * subscribe its lists in order
 	 */
-	setCopy(key: string, copy: EntityCopy): void {
-		this.removeCopy(key)
-		this.#copies.set(key, copy)
+	setTransientCopy(key: string, copy: TransientCopy): void {
+		this.removeTransientCopy(key)
+		this.#transientCopies.set(key, copy)
 
 		// Only once held, so that the values its entities are given as they subscribe reach them.
 		// A disabled entity has nothing subscribed, so neither should its copies
@@ -395,24 +395,24 @@ export class ControlEntityInstance {
 	/**
 	 * Get a copy held by this entity
 	 */
-	getCopy(key: string): EntityCopy | undefined {
-		return this.#copies.get(key)
+	getTransientCopy(key: string): TransientCopy | undefined {
+		return this.#transientCopies.get(key)
 	}
 
 	/**
 	 * Stop holding a copy, cleaning up its entities
 	 */
-	removeCopy(key: string): void {
-		const copy = this.#copies.get(key)
+	removeTransientCopy(key: string): void {
+		const copy = this.#transientCopies.get(key)
 		if (!copy) return
 
-		this.#copies.delete(key)
+		this.#transientCopies.delete(key)
 		for (const list of copy.lists) list.cleanup()
 	}
 
 	/** The lists of the copies held by this entity */
-	#copyLists(): ControlEntityList[] {
-		return [...this.#copies.values()].flatMap((copy) => copy.lists)
+	#transientCopyLists(): ControlEntityList[] {
+		return [...this.#transientCopies.values()].flatMap((copy) => copy.lists)
 	}
 
 	/**
@@ -456,7 +456,7 @@ export class ControlEntityInstance {
 			for (const childGroup of this.#children.values()) {
 				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
 			}
-			for (const childGroup of this.#copyLists()) {
+			for (const childGroup of this.#transientCopyLists()) {
 				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
 			}
 		}
@@ -708,7 +708,7 @@ export class ControlEntityInstance {
 			if (result) return result
 		}
 		// Transient children are included, so that they can be given values
-		for (const childGroup of this.#copyLists()) {
+		for (const childGroup of this.#transientCopyLists()) {
 			const result = childGroup.findById(id)
 			if (result) return result
 		}
@@ -819,7 +819,7 @@ export class ControlEntityInstance {
 				entities.push(...childGroup.getAllEntitiesWithTransient())
 			}
 		}
-		for (const childGroup of this.#copyLists()) {
+		for (const childGroup of this.#transientCopyLists()) {
 			entities.push(...childGroup.getAllEntitiesWithTransient())
 		}
 
@@ -840,7 +840,7 @@ export class ControlEntityInstance {
 			}
 		}
 		if (includeTransient) {
-			for (const childGroup of this.#copyLists()) {
+			for (const childGroup of this.#transientCopyLists()) {
 				entities.push(...childGroup.getAllEnabledEntities(includeTransient))
 			}
 		}
@@ -950,7 +950,7 @@ export class ControlEntityInstance {
 			changed = true
 		}
 
-		for (const childGroup of [...this.#children.values(), ...this.#copyLists()]) {
+		for (const childGroup of [...this.#children.values(), ...this.#transientCopyLists()]) {
 			if (childGroup.clearCachedValueForConnectionId(connectionId).length > 0) {
 				changed = true
 			}
@@ -1082,7 +1082,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#copyLists()) {
+		for (const childGroup of this.#transientCopyLists()) {
 			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
 		}
 
@@ -1119,7 +1119,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#copyLists()) {
+		for (const childGroup of this.#transientCopyLists()) {
 			changed.push(...childGroup.updateIsInvertedValues(newValues))
 		}
 
@@ -1155,7 +1155,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of [...this.#children.values(), ...this.#copyLists()]) {
+		for (const childGroup of [...this.#children.values(), ...this.#transientCopyLists()]) {
 			const childrenChanged = childGroup.updateStoreResultValues(newValues)
 			changed.push(...childrenChanged)
 		}

@@ -2137,7 +2137,7 @@ describe('transient child groups', () => {
 			[transientAction, transientFeedback],
 			false
 		)
-		callerEntity.setCopy('instance', { lists: [group] })
+		callerEntity.setTransientCopy('instance', { lists: [group] })
 
 		return { ...res, callerEntity, transientScope, group }
 	}
@@ -2181,7 +2181,7 @@ describe('transient child groups', () => {
 			transientFeedback.id,
 		])
 		expect(list.findById(transientFeedback.id)?.id).toBe(transientFeedback.id)
-		expect(callerEntity.getCopy('instance')?.lists[0].getDirectEntities()).toHaveLength(2)
+		expect(callerEntity.getTransientCopy('instance')?.lists[0].getDirectEntities()).toHaveLength(2)
 	})
 
 	test('entities can not be edited through the list', () => {
@@ -2222,7 +2222,7 @@ describe('transient child groups', () => {
 			[transientAction],
 			false
 		)
-		callerEntity.setCopy('instance', { lists: [newGroup] })
+		callerEntity.setTransientCopy('instance', { lists: [newGroup] })
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
 		expect(connectionEntityDelete).toHaveBeenCalledWith(
@@ -2230,20 +2230,20 @@ describe('transient child groups', () => {
 			CreateBankControlId('test01')
 		)
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(callerEntity.getCopy('instance')?.lists).toEqual([newGroup])
+		expect(callerEntity.getTransientCopy('instance')?.lists).toEqual([newGroup])
 	})
 
 	test('removing the copy cleans up its entities', () => {
 		const { list, callerEntity, connectionEntityDelete } = setup()
 
-		callerEntity.removeCopy('instance')
+		callerEntity.removeTransientCopy('instance')
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
-		expect(callerEntity.getCopy('instance')).toBeUndefined()
+		expect(callerEntity.getTransientCopy('instance')).toBeUndefined()
 		expect(list.findById(transientAction.id)).toBeUndefined()
 
 		// Removing again does nothing
-		callerEntity.removeCopy('instance')
+		callerEntity.removeTransientCopy('instance')
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
 	})
 
@@ -2278,7 +2278,7 @@ describe('transient child groups', () => {
 		)
 		expect(connectionEntityUpdate).not.toHaveBeenCalled()
 
-		callerEntity.setCopy('other', { lists: [list] })
+		callerEntity.setTransientCopy('other', { lists: [list] })
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 	})
 })

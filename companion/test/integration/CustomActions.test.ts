@@ -18,7 +18,7 @@ import {
 } from '@companion-module/base-old/dist/host-api/ipc-wrapper.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH } from '../../lib/Controls/CustomActionRunFrame.js'
-import type { CustomActionEntityScope } from '../../lib/Controls/CustomActions/CustomActionEntityScope.js'
+import type { CustomActionCopy } from '../../lib/Controls/CustomActions/CustomActionCopy.js'
 import { CUSTOM_ACTION_HELD_COPY } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
@@ -30,8 +30,8 @@ import { createTestApp, type TestApp } from './TestApp.js'
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
 
 /** The copy of a custom action held by an action which calls it */
-function heldCopy(caller: ControlEntityInstance): CustomActionEntityScope | undefined {
-	return caller.getCopy(CUSTOM_ACTION_HELD_COPY) as CustomActionEntityScope | undefined
+function heldCopy(caller: ControlEntityInstance): CustomActionCopy | undefined {
+	return caller.getTransientCopy(CUSTOM_ACTION_HELD_COPY) as CustomActionCopy | undefined
 }
 
 /** Find an entity on a control */

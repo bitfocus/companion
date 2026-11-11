@@ -21,7 +21,7 @@ import { ActionRunner } from '../../../lib/Controls/ActionRunner.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomAction } from '../../../lib/Controls/ControlTypes/CustomAction.js'
-import type { CustomActionEntityScope } from '../../../lib/Controls/CustomActions/CustomActionEntityScope.js'
+import type { CustomActionCopy } from '../../../lib/Controls/CustomActions/CustomActionCopy.js'
 import {
 	CUSTOM_ACTION_HELD_COPY,
 	CustomActionInstanceManager,
@@ -67,8 +67,8 @@ function getEntityDefinition(
 }
 
 /** The copy of a custom action held by an action which calls it */
-function heldCopy(caller: ControlEntityInstance): CustomActionEntityScope | undefined {
-	return caller.getCopy(CUSTOM_ACTION_HELD_COPY) as CustomActionEntityScope | undefined
+function heldCopy(caller: ControlEntityInstance): CustomActionCopy | undefined {
+	return caller.getTransientCopy(CUSTOM_ACTION_HELD_COPY) as CustomActionCopy | undefined
 }
 
 let nextId = 0
@@ -920,7 +920,7 @@ describe('ControlCustomAction', () => {
 			callerEntity: ControlEntityInstance,
 			expression: string
 		) => {
-			const scope = customActionInstances.getCopyScope(callerEntity)
+			const scope = customActionInstances.getHeldCopy(callerEntity)
 			if (!scope) return 'no copy'
 			const res = scope.createVariablesAndExpressionParser(null).executeExpression(expression, undefined)
 			return res.ok ? res.value : undefined
@@ -1034,7 +1034,7 @@ describe('ControlCustomAction', () => {
 
 			const caller = createCaller([callAction({ n: exprExpr('$(test:num)') })])
 			const callerEntity = caller.entities.getActionEntities()[0]
-			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(customActionInstances.getHeldCopy(callerEntity)).toBeUndefined()
 			expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 
 			// A variable it uses makes it valid
@@ -1043,7 +1043,7 @@ describe('ControlCustomAction', () => {
 
 			// And invalid again
 			variableValues.setVariableValues('test', [{ id: 'num', value: 99 }])
-			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(customActionInstances.getHeldCopy(callerEntity)).toBeUndefined()
 			expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 		})
 
@@ -1250,7 +1250,7 @@ describe('ControlCustomAction', () => {
 			await vi.waitFor(() => {
 				expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 			})
-			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(customActionInstances.getHeldCopy(callerEntity)).toBeUndefined()
 		})
 
 		test('the copy is removed when the calling action is disabled or removed', () => {
@@ -1263,7 +1263,7 @@ describe('ControlCustomAction', () => {
 
 			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, false)
 			expect(heldCopy(callerEntity)?.actions).toBeUndefined()
-			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(customActionInstances.getHeldCopy(callerEntity)).toBeUndefined()
 			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
 
 			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, true)
@@ -1271,7 +1271,7 @@ describe('ControlCustomAction', () => {
 
 			internalModule.entityDelete.mockClear()
 			caller.entities.entityRemove('custom_action_actions', callerEntity.id)
-			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
+			expect(customActionInstances.getHeldCopy(callerEntity)).toBeUndefined()
 			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
 		})
 
@@ -1335,7 +1335,7 @@ describe('ControlCustomAction', () => {
 
 			// But that calls the first custom action again, so isn't copied
 			expect(heldCopy(callBack)?.actions).toBeUndefined()
-			expect(customActionInstances.getCopyScope(callBack)).toBeUndefined()
+			expect(customActionInstances.getHeldCopy(callBack)).toBeUndefined()
 		})
 
 		test('custom actions nested too deeply are not copied', () => {

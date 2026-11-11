@@ -326,7 +326,7 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			[copy],
 			false
 		)
-		callerEntity.setCopy('copy', { lists: [copyList] })
+		callerEntity.setTransientCopy('copy', { lists: [copyList] })
 
 		const result = pool.entityReplaceForUpgrade({
 			id: copy.id,

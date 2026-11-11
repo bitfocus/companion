@@ -25,7 +25,7 @@ import { resolveStoreResult } from '../Entities/EntitySpecialExpressionManager.j
 import type { EntityScope, StoreResult } from '../Entities/Types.js'
 import type { IControlStore } from '../IControlStore.js'
 import type { RenderClock } from '../RenderClock.js'
-import { CustomActionEntityScope } from './CustomActionEntityScope.js'
+import { CustomActionCopy } from './CustomActionCopy.js'
 
 /** The key of the copy of a custom action held by an action which calls it, while it waits to be run */
 export const CUSTOM_ACTION_HELD_COPY = 'custom-action'
@@ -33,17 +33,17 @@ export const CUSTOM_ACTION_HELD_COPY = 'custom-action'
 export type CustomActionInstancesForEntity = Pick<CustomActionInstanceManager, 'entityUpdate' | 'entityDelete'>
 
 /**
- * The copy of a custom action held by an action which calls it
+ * What is kept for each action which calls a custom action: how it parses its inputs, and the copy it holds
  */
-interface PlacedCopy {
+interface CallerState {
 	/** The control holding the calling action */
 	readonly controlId: SomeControlId
 	/** The scope the calling action parses its options in */
 	callerScope: EntityScope
 	/** The control id of the custom action which was copied, if there is a copy */
 	customActionControlId: CustomActionControlId | null
-	/** The scope of the copy, or null if there is no copy */
-	scope: CustomActionEntityScope | null
+	/** The copy held by the caller, or null if there is none, such as while its inputs are invalid */
+	heldCopy: CustomActionCopy | null
 	/** The variables the inputs of the copy referenced when they were parsed, so that they are re-parsed when one changes */
 	readonly inputVariables: VariableDependency<ControlEntityInstance>
 }
@@ -90,7 +90,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	readonly #variableDependencies: VariableDependencyRegistry
 
 	/** The copies, by the action which calls the custom action */
-	readonly #copies = new Map<ControlEntityInstance, PlacedCopy>()
+	readonly #callers = new Map<ControlEntityInstance, CallerState>()
 
 	/** The runs in progress, by their id */
 	readonly #runs = new Map<string, ActiveRun>()
@@ -121,25 +121,25 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 
 		if (caller.disabled) {
 			// A disabled action has nothing subscribed
-			this.#removeCopy(caller)
+			this.#forgetCaller(caller)
 			return
 		}
 
-		const copy = this.#copies.get(caller)
-		if (copy && copy.customActionControlId === CreateCustomActionControlId(caller.definitionId)) {
-			copy.callerScope = callerScope
-			this.#refreshInputs(caller, copy)
+		const state = this.#callers.get(caller)
+		if (state && state.customActionControlId === CreateCustomActionControlId(caller.definitionId)) {
+			state.callerScope = callerScope
+			this.#refreshInputs(caller, state)
 		} else {
-			const newCopy: PlacedCopy = copy ?? {
+			const newState: CallerState = state ?? {
 				controlId,
 				callerScope,
 				customActionControlId: null,
-				scope: null,
+				heldCopy: null,
 				inputVariables: this.#variableDependencies.create(this, controlId, caller),
 			}
-			newCopy.callerScope = callerScope
-			this.#copies.set(caller, newCopy)
-			this.#build(caller, newCopy)
+			newState.callerScope = callerScope
+			this.#callers.set(caller, newState)
+			this.#build(caller, newState)
 		}
 	}
 
@@ -148,7 +148,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 * @param caller The action which calls a custom action
 	 */
 	entityDelete(caller: ControlEntityInstance): void {
-		this.#removeCopy(caller)
+		this.#forgetCaller(caller)
 		this.events.emit('usageChanged')
 	}
 
@@ -188,12 +188,12 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	}
 
 	/**
-	 * Get the scope of the copy held by an action which calls a custom action
+	 * Get the copy held by an action which calls a custom action
 	 * @param caller The action which calls a custom action
-	 * @returns The scope, or undefined if the action has no copy
+	 * @returns The copy, or undefined if the action has none
 	 */
-	getCopyScope(caller: ControlEntityInstance): CustomActionEntityScope | undefined {
-		return this.#copies.get(caller)?.scope ?? undefined
+	getHeldCopy(caller: ControlEntityInstance): CustomActionCopy | undefined {
+		return this.#callers.get(caller)?.heldCopy ?? undefined
 	}
 
 	/**
@@ -212,8 +212,8 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		storeOutput: (target: StoreResult, value: JsonValue | undefined) => void,
 		runActions: (actions: ControlEntityInstance[], extras: CustomActionRunExtras) => Promise<void>
 	): Promise<undefined> {
-		const copy = this.#copies.get(caller)
-		if (!copy) {
+		const state = this.#callers.get(caller)
+		if (!state) {
 			this.#logger.silly(`Not running custom action "${caller.definitionId}", as its caller is not known`)
 			return undefined
 		}
@@ -224,17 +224,17 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		const customAction = this.#controlStore.getControl(customActionControlId)
 		if (!(customAction instanceof ControlCustomAction)) return undefined
 
-		const chain = copy.callerScope.customActionChain
+		const chain = state.callerScope.customActionChain
 		if (chain.includes(customActionControlId) || chain.length >= MAX_CUSTOM_ACTION_DEPTH) {
 			this.#logger.silly(`Not running custom action "${caller.definitionId}", as it would loop or nest too deeply`)
 			return undefined
 		}
 
 		// The inputs are fixed for the run, in the execution context of the caller
-		const parseRes = customAction.parseCallInputs(caller.rawOptions, parser, copy.controlId)
+		const parseRes = customAction.parseCallInputs(caller.rawOptions, parser, state.controlId)
 		if (!parseRes.ok) {
 			this.#logger.warn(
-				`Failed to parse the inputs of custom action "${customAction.options.name}" in ${copy.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+				`Failed to parse the inputs of custom action "${customAction.options.name}" in ${state.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
 			)
 			throw new Error(
 				`Failed to parse the inputs of custom action "${customAction.options.name}". One or more inputs were invalid\nErrors: ${JSON.stringify(parseRes.optionErrors)}`
@@ -255,7 +255,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 
 		this.#runs.set(runId, {
 			runId,
-			controlId: copy.controlId,
+			controlId: state.controlId,
 			startedAt: Date.now(),
 			customActionControlId: customAction.controlId,
 			useEntityId: getUseEntityId(caller.id),
@@ -263,13 +263,13 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		})
 		this.events.emit('usageChanged')
 
-		let runScope: CustomActionEntityScope | undefined
+		let runCopy: CustomActionCopy | undefined
 		try {
 			// Built inside the try, so that the run is forgotten again if building it fails
-			const scope = new CustomActionEntityScope(
+			const copy = new CustomActionCopy(
 				customAction,
 				caller,
-				copy.controlId,
+				state.controlId,
 				`${caller.id}@${runId}/`,
 				[...chain, customActionControlId],
 				this,
@@ -277,12 +277,12 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				this.#variableDependencies,
 				{ customActionControlId: customAction.controlId, inputValues, localValues: new Map() }
 			)
-			runScope = scope
-			caller.setCopy(copyKey, scope)
+			runCopy = copy
+			caller.setTransientCopy(copyKey, copy)
 
 			// When the run sees what the copy held by the caller sees, it can start with its values
-			if (copy.scope && isEqual(inputValues, copy.scope.values.inputValues)) {
-				this.#copyRuntimeValues(scope, `${caller.id}@${runId}/`, copy.scope, `${caller.id}/`)
+			if (state.heldCopy && isEqual(inputValues, state.heldCopy.values.inputValues)) {
+				this.#copyRuntimeValues(copy, `${caller.id}@${runId}/`, state.heldCopy, `${caller.id}/`)
 			}
 
 			// Where each local variable of the run is written as an output, resolved in the context of the caller
@@ -308,16 +308,16 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				// An output is a user value, so it is what the run has set it to, or else its startup value
 				const value = frame.localValues.has(variableName)
 					? frame.localValues.get(variableName)
-					: scope.localVariables.getDirectEntities().find((entity) => entity.rawLocalVariableName === variableName)
+					: copy.localVariables.getDirectEntities().find((entity) => entity.rawLocalVariableName === variableName)
 							?.feedbackValue
 				for (const target of targets) storeOutput(target, value)
 			}
 
 			const frame: CustomActionRunFrame = {
-				...scope.values,
-				getLocalVariableEntities: () => scope.localVariables.getDirectEntities(),
+				...copy.values,
+				getLocalVariableEntities: () => copy.localVariables.getDirectEntities(),
 				localValueChanged: (name) => {
-					scope.localValueChanged(name)
+					copy.localValueChanged(name)
 					// Outputs are written as they change, so that the caller can see the progress of a run
 					writeOutput(name)
 				},
@@ -326,15 +326,15 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			// The caller sees where each output starts, then each change as the run sets it
 			for (const variableName of outputTargets.keys()) writeOutput(variableName)
 
-			await runActions(scope.actions.getDirectEntities(), { ...runExtras, frame })
+			await runActions(copy.actions.getDirectEntities(), { ...runExtras, frame })
 
 			return undefined
 		} finally {
 			this.#runs.delete(runId)
 			this.events.emit('usageChanged')
 
-			caller.removeCopy(copyKey)
-			runScope?.destroy()
+			caller.removeTransientCopy(copyKey)
+			runCopy?.destroy()
 		}
 	}
 
@@ -353,11 +353,11 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			this.#changedCustomActionIds = new Set()
 
 			// Building a copy adds and removes the copies nested inside it, so work from a snapshot
-			for (const [caller, copy] of [...this.#copies]) {
-				if (this.#copies.get(caller) !== copy) continue
+			for (const [caller, state] of [...this.#callers]) {
+				if (this.#callers.get(caller) !== state) continue
 
 				if (changedIds.has(CreateCustomActionControlId(caller.definitionId))) {
-					this.#build(caller, copy)
+					this.#build(caller, state)
 				}
 			}
 		},
@@ -371,55 +371,55 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	onVariableDependenciesChanged(hits: ReadonlyArray<VariableDependency<ControlEntityInstance>>): void {
 		for (const hit of hits) {
 			// Re-parsing the inputs of a copy can remove the copies nested inside it
-			const copy = this.#copies.get(hit.data)
-			if (copy?.inputVariables !== hit) continue
+			const state = this.#callers.get(hit.data)
+			if (state?.inputVariables !== hit) continue
 
-			this.#refreshInputs(hit.data, copy)
+			this.#refreshInputs(hit.data, state)
 		}
 	}
 
 	/**
 	 * Build the copy held by a calling action, replacing any existing copy
 	 */
-	#build(caller: ControlEntityInstance, copy: PlacedCopy): void {
-		this.#clearCopy(caller, copy)
+	#build(caller: ControlEntityInstance, state: CallerState): void {
+		this.#clearHeldCopy(caller, state)
 
 		const customActionControlId = CreateCustomActionControlId(caller.definitionId)
-		copy.customActionControlId = customActionControlId
+		state.customActionControlId = customActionControlId
 
 		const customAction = this.#controlStore.getControl(customActionControlId)
 		if (!(customAction instanceof ControlCustomAction)) return
 
-		const chain = copy.callerScope.customActionChain
+		const chain = state.callerScope.customActionChain
 		if (chain.includes(customActionControlId)) {
-			this.#logger.warn(`Not running "${customAction.options.name}" in ${copy.controlId}, as it calls itself`)
+			this.#logger.warn(`Not running "${customAction.options.name}" in ${state.controlId}, as it calls itself`)
 			return
 		}
 		if (chain.length >= MAX_CUSTOM_ACTION_DEPTH) {
-			this.#logger.warn(`Not running "${customAction.options.name}" in ${copy.controlId}, as it is nested too deeply`)
+			this.#logger.warn(`Not running "${customAction.options.name}" in ${state.controlId}, as it is nested too deeply`)
 			return
 		}
 
 		const parseRes = customAction.parseCallInputs(
 			caller.rawOptions,
-			copy.callerScope.createVariablesAndExpressionParser(null),
-			copy.controlId
+			state.callerScope.createVariablesAndExpressionParser(null),
+			state.controlId
 		)
 		// Even when invalid, so that the copy is built once a variable they use changes
-		copy.inputVariables.set(parseRes.referencedVariableIds)
+		state.inputVariables.set(parseRes.referencedVariableIds)
 		if (!parseRes.ok) {
 			// Inactive until its inputs can be parsed, as a module feedback is
 			this.#logger.warn(
-				`Failed to parse the inputs of custom action "${customAction.options.name}" in ${copy.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+				`Failed to parse the inputs of custom action "${customAction.options.name}" in ${state.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
 			)
 			return
 		}
 		const inputValues = parseRes.inputValues
 
-		const scope = new CustomActionEntityScope(
+		const copy = new CustomActionCopy(
 			customAction,
 			caller,
-			copy.controlId,
+			state.controlId,
 			`${caller.id}/`,
 			[...chain, customActionControlId],
 			this,
@@ -427,8 +427,8 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			this.#variableDependencies,
 			{ customActionControlId, inputValues, localValues: new Map() }
 		)
-		copy.scope = scope
-		caller.setCopy(CUSTOM_ACTION_HELD_COPY, scope)
+		state.heldCopy = copy
+		caller.setTransientCopy(CUSTOM_ACTION_HELD_COPY, copy)
 	}
 
 	/**
@@ -440,9 +440,9 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 * @param sourcePrefix The prefix of the ids in the existing copy
 	 */
 	#copyRuntimeValues(
-		target: CustomActionEntityScope,
+		target: CustomActionCopy,
 		targetPrefix: string,
-		source: CustomActionEntityScope,
+		source: CustomActionCopy,
 		sourcePrefix: string
 	): void {
 		const sourceEntities = new Map<string, ControlEntityInstance>()
@@ -459,64 +459,63 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			if (!isCustomActionsConnectionId(entity.connectionId)) continue
 
 			// The custom action this calls has its own copy, which can start from the existing one if it sees the same
-			const targetScope = this.getCopyScope(entity)
-			const sourceScope = this.getCopyScope(sourceEntity)
-			if (!targetScope || !sourceScope || !isEqual(targetScope.values.inputValues, sourceScope.values.inputValues))
-				continue
+			const targetHeld = this.getHeldCopy(entity)
+			const sourceHeld = this.getHeldCopy(sourceEntity)
+			if (!targetHeld || !sourceHeld || !isEqual(targetHeld.values.inputValues, sourceHeld.values.inputValues)) continue
 
-			this.#copyRuntimeValues(targetScope, `${entity.id}/`, sourceScope, `${sourceEntity.id}/`)
+			this.#copyRuntimeValues(targetHeld, `${entity.id}/`, sourceHeld, `${sourceEntity.id}/`)
 		}
 	}
 
 	/**
-	 * Re-parse the inputs of a copy, and re-subscribe its entities if they have changed
+	 * Re-parse the inputs of a caller, and update its held copy if they have changed
 	 */
-	#refreshInputs(caller: ControlEntityInstance, copy: PlacedCopy): void {
-		const scope = copy.scope
-		if (!scope) {
+	#refreshInputs(caller: ControlEntityInstance, state: CallerState): void {
+		const heldCopy = state.heldCopy
+		if (!heldCopy) {
 			// Inactive because its inputs were invalid, so try building it again
-			this.#build(caller, copy)
+			this.#build(caller, state)
 			return
 		}
 
-		const customAction = this.#controlStore.getControl(scope.values.customActionControlId)
+		const customAction = this.#controlStore.getControl(heldCopy.values.customActionControlId)
 		if (!(customAction instanceof ControlCustomAction)) return
 
 		const parseRes = customAction.parseCallInputs(
 			caller.rawOptions,
-			copy.callerScope.createVariablesAndExpressionParser(null),
-			copy.controlId
+			state.callerScope.createVariablesAndExpressionParser(null),
+			state.controlId
 		)
 		if (!parseRes.ok) {
 			// It becomes inactive, which building it again does
-			this.#build(caller, copy)
+			this.#build(caller, state)
 			return
 		}
-		copy.inputVariables.set(parseRes.referencedVariableIds)
+		state.inputVariables.set(parseRes.referencedVariableIds)
 
-		if (isEqual(parseRes.inputValues, scope.values.inputValues)) return
+		if (isEqual(parseRes.inputValues, heldCopy.values.inputValues)) return
 
-		scope.setValues({ ...scope.values, inputValues: parseRes.inputValues })
+		heldCopy.setValues({ ...heldCopy.values, inputValues: parseRes.inputValues })
 	}
 
 	/**
-	 * Remove the entities and scope of a copy
+	 * Remove the copy held by a caller
 	 */
-	#clearCopy(caller: ControlEntityInstance, copy: PlacedCopy): void {
-		caller.removeCopy(CUSTOM_ACTION_HELD_COPY)
+	#clearHeldCopy(caller: ControlEntityInstance, state: CallerState): void {
+		caller.removeTransientCopy(CUSTOM_ACTION_HELD_COPY)
 
-		copy.scope?.destroy()
-		copy.scope = null
-		copy.customActionControlId = null
-		copy.inputVariables.set(null)
+		state.heldCopy?.destroy()
+		state.heldCopy = null
+		state.customActionControlId = null
+		state.inputVariables.set(null)
 	}
 
-	#removeCopy(caller: ControlEntityInstance): void {
-		const copy = this.#copies.get(caller)
-		if (!copy) return
+	#forgetCaller(caller: ControlEntityInstance): void {
+		const state = this.#callers.get(caller)
+		if (!state) return
 
-		this.#copies.delete(caller)
-		this.#clearCopy(caller, copy)
-		copy.inputVariables.dispose()
+		this.#callers.delete(caller)
+		this.#clearHeldCopy(caller, state)
+		state.inputVariables.dispose()
 	}
 }
