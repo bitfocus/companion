@@ -967,31 +967,28 @@ describe('ControlCustomAction', () => {
 			expect(evaluateInCopy(customActionInstances, caller, missing, '$(options:n)')).toBe(3)
 		})
 
-		test('the inputs of the copy follow the options of the calling action', () => {
-			const recordAction = action('record')
-			const { createCaller, customActionInstances, internalModule } = createHarness({ actions: [recordAction] })
+		test('the inputs of the copy follow the options of the calling action', async () => {
+			const { createCaller, customActionInstances, variableDependencies } = createHarness({
+				actions: [action('record')],
+			})
 
 			const caller = createCaller([callAction({ n: exprVal(5) })])
 			const callerEntity = caller.entities.getActionEntities()[0]
-			internalModule.entityUpdate.mockClear()
+			const dispatch = vi.spyOn(variableDependencies, 'dispatch')
 
 			caller.entities.entitySetOption('custom_action_actions', callerEntity.id, 'n', exprVal(6))
 
 			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(6)
 
-			// The entities of the copy are re-subscribed, so that they parse with the new inputs
-			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
-				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
-				caller.controlId,
-				expect.any(Function)
-			)
+			// Whatever in the copy uses the input is told, so that it parses with the new value
+			await vi.waitFor(() => expect(dispatch).toHaveBeenCalledWith(new Set(['options:n']), new Set([caller.controlId])))
 		})
 
-		test('the inputs of the copy follow the variables they use', () => {
-			const recordAction = action('record')
-			const { createCaller, customActionInstances, internalModule, variableValues } = createHarness({
-				actions: [recordAction],
-			})
+		test('the inputs of the copy follow the variables they use', async () => {
+			const { createCaller, customActionInstances, internalModule, variableValues, variableDependencies } =
+				createHarness({
+					actions: [action('record')],
+				})
 			variableValues.setVariableValues('test', [{ id: 'num', value: 1 }])
 
 			const caller = createCaller([callAction({ n: exprExpr('$(test:num) + 1') })])
@@ -1003,14 +1000,11 @@ describe('ControlCustomAction', () => {
 			variableValues.setVariableValues('test', [{ id: 'other', value: 1 }])
 			expect(internalModule.entityUpdate).not.toHaveBeenCalled()
 
+			const dispatch = vi.spyOn(variableDependencies, 'dispatch')
 			variableValues.setVariableValues('test', [{ id: 'num', value: 4 }])
 
 			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(5)
-			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
-				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
-				caller.controlId,
-				expect.any(Function)
-			)
+			await vi.waitFor(() => expect(dispatch).toHaveBeenCalledWith(new Set(['options:n']), new Set([caller.controlId])))
 		})
 
 		test('the variables used by the inputs are forgotten when the calling action is removed', () => {
@@ -1184,7 +1178,7 @@ describe('ControlCustomAction', () => {
 			expect(seen).toEqual([[1, undefined]])
 		})
 
-		test('the connection entities of a run are re-parsed when its local variables change', async () => {
+		test('whatever in a run uses its local variables is told when one changes', async () => {
 			const moduleAction: ActionEntityModel = {
 				type: EntityModelType.Action,
 				id: `module-${nextId++}`,
@@ -1199,30 +1193,28 @@ describe('ControlCustomAction', () => {
 				actions: [action('set'), moduleAction, action('check')],
 				localVariables: [userValue('v', 0)],
 			})
-			const { createCaller, executeAction, localVariables, processManager } = harness
+			const { createCaller, executeAction, localVariables, variableDependencies } = harness
 
 			const caller = createCaller([callAction({ n: exprVal(5) })])
 			const callerEntity = caller.entities.getActionEntities()[0]
+			const dispatch = vi.spyOn(variableDependencies, 'dispatch')
 
-			const runSubscriptions = () =>
-				processManager.connectionEntityUpdate.mock.calls.filter(([entity]) => entity.id.includes('@')).length
-
-			let subscriptionsBeforeSet = 0
-			let subscriptionsAfterSet = 0
+			let toldBeforeSet = true
 			executeAction.mockImplementation(async (entity, extras) => {
 				if (entity.definitionId === 'set') {
-					subscriptionsBeforeSet = runSubscriptions()
+					toldBeforeSet = dispatch.mock.calls.length > 0
 					localVariables.setLocalVariable(localVariables.localVariableFor('run', 'v', extras)!, 1)
 				} else if (entity.definitionId === 'check') {
-					await vi.waitFor(() => expect(runSubscriptions()).toBeGreaterThan(subscriptionsBeforeSet))
-					subscriptionsAfterSet = runSubscriptions()
+					// The connection entity using it is registered by what it read, so the change reaches it
+					await vi.waitFor(() =>
+						expect(dispatch).toHaveBeenCalledWith(new Set(['local:v']), new Set([caller.controlId]))
+					)
 				}
 			})
 
 			await runCall(harness, caller, callerEntity)
 
-			expect(subscriptionsBeforeSet).toBe(1)
-			expect(subscriptionsAfterSet).toBe(2)
+			expect(toldBeforeSet).toBe(false)
 		})
 
 		test('the copy is rebuilt when the custom action changes', async () => {

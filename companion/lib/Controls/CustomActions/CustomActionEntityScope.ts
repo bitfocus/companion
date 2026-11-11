@@ -1,4 +1,5 @@
 import debounceFn from 'debounce-fn'
+import isEqual from 'fast-deep-equal'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
@@ -34,6 +35,7 @@ export class CustomActionEntityScope implements EntityScope, EntityCopy {
 
 	readonly #customAction: ControlCustomAction
 	readonly #callerControlId: SomeControlId
+	readonly #variableDependencies: VariableDependencyRegistry
 
 	readonly actions: ControlEntityList
 	readonly localVariables: ControlEntityList
@@ -69,6 +71,7 @@ export class CustomActionEntityScope implements EntityScope, EntityCopy {
 	) {
 		this.#customAction = customAction
 		this.#callerControlId = callerControlId
+		this.#variableDependencies = variableDependencies
 		this.customActionChain = customActionChain
 		this.customActionInstances = customActionInstances
 		this.#values = values
@@ -112,37 +115,60 @@ export class CustomActionEntityScope implements EntityScope, EntityCopy {
 	}
 
 	/**
-	 * Replace the inputs and local variable values of the copy, and re-subscribe its entities so that they are parsed
-	 * with the new values
+	 * Replace the inputs and local variable values of the copy, and re-parse whatever uses an input which changed
 	 */
 	setValues(values: CustomActionValues): void {
+		const oldInputValues = this.#values.inputValues
 		this.#values = values
 
-		this.#resubscribeEntities()
+		const changed = new Set<string>()
+		for (const id of new Set([...Object.keys(oldInputValues), ...Object.keys(values.inputValues)])) {
+			if (!isEqual(oldInputValues[id], values.inputValues[id])) changed.add(`options:${id}`)
+		}
+		this.#variablesChanged(changed)
 	}
 
 	/**
-	 * A local variable of the copy has been set, so re-parse anything which may use it
+	 * A local variable of the copy has been set, so re-parse whatever uses it
 	 * @param name The name of the variable, without the `local:` prefix
 	 */
 	localValueChanged(name: string): void {
-		// The values of the copy are its own, so the registry doesn't know of them
-		this.specialExpressionManager.onVariableDependenciesChanged([], new Set([`local:${name}`]))
-
-		// A run may set its variables many times in quick succession
-		this.#debounceResubscribeEntities()
+		this.#variablesChanged(new Set([`local:${name}`]))
 	}
 
 	localVariablesChanged(names: ReadonlySet<string>): void {
-		for (const name of names) this.localValueChanged(name.slice('local:'.length))
+		this.#variablesChanged(names)
 	}
 
-	readonly #debounceResubscribeEntities = debounceFn(() => this.#resubscribeEntities(), { wait: 10, maxWait: 50 })
+	/** The variables of the copy which have changed, and not yet been dispatched */
+	#pendingChanges = new Set<string>()
 
-	#resubscribeEntities(): void {
-		this.localVariables.subscribe(true)
-		this.actions.subscribe(true)
+	/**
+	 * Some variables of the copy have changed. The values are its own, so nothing else reports them, but its entities
+	 * are registered by the variables they read, under the caller's control, so only those which use one are re-parsed.
+	 *
+	 * This is noisier than it needs to be, but safe: `local:` variables are only keyed by control, so the change also
+	 * reaches whatever else on the caller's control reads a variable of the same name, such as the caller's own local
+	 * variable or the copy of another call, which are re-parsed for nothing. A notification only means "possibly
+	 * affected", so they find nothing changed.
+	 * TODO: invalidate precisely, by keying the variables of a copy by the copy rather than the caller's control
+	 */
+	#variablesChanged(changed: ReadonlySet<string>): void {
+		if (changed.size === 0) return
+
+		for (const id of changed) this.#pendingChanges.add(id)
+		// A run may set its variables many times in quick succession
+		this.#debounceDispatchChanges()
 	}
+
+	readonly #debounceDispatchChanges = debounceFn(
+		() => {
+			const changed = this.#pendingChanges
+			this.#pendingChanges = new Set()
+			this.#variableDependencies.dispatch(changed, new Set([this.#callerControlId]))
+		},
+		{ wait: 10, maxWait: 50 }
+	)
 
 	createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null,
@@ -159,7 +185,7 @@ export class CustomActionEntityScope implements EntityScope, EntityCopy {
 	}
 
 	destroy(): void {
-		this.#debounceResubscribeEntities.cancel()
+		this.#debounceDispatchChanges.cancel()
 		this.specialExpressionManager.destroy()
 	}
 }

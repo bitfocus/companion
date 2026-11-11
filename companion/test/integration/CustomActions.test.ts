@@ -22,6 +22,7 @@ import type { CustomActionEntityScope } from '../../lib/Controls/CustomActions/C
 import { CUSTOM_ACTION_HELD_COPY } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
+import type { UpdateFeedbackInstancesMessage } from '../../lib/Instance/Connection/IpcTypesNew.js'
 import { createMockTrpcContext } from '../Util.js'
 import { createTestApp, type TestApp } from './TestApp.js'
 
@@ -1428,7 +1429,21 @@ describe('custom action scope and copies', () => {
 			expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(2)
 			expect(getCopyValue(app, betaId, betaCall, 'double')).toBe(10)
 		})
-		const betaCopy = heldCopy(getEntity(app, betaId, betaCall))?.localVariables
+		// Setting up the custom action queued a rebuild of its copies, which must be done before taking one.
+		// It is debounced, so wait for the copy to stay the same for a while
+		let betaCopy = heldCopy(getEntity(app, betaId, betaCall))
+		let stableSince = Date.now()
+		await vi.waitFor(
+			() => {
+				const copy = heldCopy(getEntity(app, betaId, betaCall))
+				if (copy !== betaCopy) {
+					betaCopy = copy
+					stableSince = Date.now()
+				}
+				expect(Date.now() - stableSince).toBeGreaterThanOrEqual(300)
+			},
+			{ timeout: 10_000, interval: 20 }
+		)
 
 		// A variable used by one caller's input only changes that caller's copy
 		app.registry.variables.custom.setValue('a', 3)
@@ -1447,7 +1462,7 @@ describe('custom action scope and copies', () => {
 		expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(6)
 
 		// The copy was updated in place, rather than rebuilt
-		expect(heldCopy(getEntity(app, betaId, betaCall))?.localVariables).toBe(betaCopy)
+		expect(heldCopy(getEntity(app, betaId, betaCall))).toBe(betaCopy)
 	})
 
 	test('editing a custom action updates the copies held by its callers, and their runs', async () => {
@@ -2032,6 +2047,97 @@ describe('custom actions using a connection', () => {
 		}
 	)
 
+	test('a run changing its local variables leaves alone what reads a variable of the same name elsewhere', async () => {
+		const connectionId = await addConnection('test-module-2-1-3')
+		const setLastValue = await addSetter(connectionId)
+		app.createCustomVariable('done', false)
+
+		/** Add a local variable which is the connection feedback `last_value_is` for `$(local:x)` */
+		const addMatchesVariable = async (controlId: SomeControlId, name: string) => {
+			const entityId = await app.trpc().controls.entities.add({
+				controlId,
+				entityLocation: 'local-variables',
+				ownerId: null,
+				connectionId,
+				entityType: EntityModelType.Feedback,
+				entityDefinition: 'last_value_is',
+			})
+			if (!entityId) throw new Error('Failed to add the local variable')
+			await app.trpc().controls.entities.setVariableName({
+				controlId,
+				entityLocation: 'local-variables',
+				entityId,
+				name,
+			})
+			await app.trpc().controls.entities.setOption({
+				controlId,
+				entityLocation: 'local-variables',
+				entityId,
+				key: 'value',
+				value: exprExpr('$(local:x)'),
+			})
+			return entityId
+		}
+
+		// A custom action whose run changes its own `x`, which a connection feedback reads
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Changes x' })
+		app.addLocalVariable(customActionId, 'x', 'user_value', { startup_value: exprVal('alpha') })
+		await addMatchesVariable(customActionId, 'matches')
+		const groupId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		const inOrder = { parentId: groupId, childGroup: 'default' }
+		for (const value of ['beta', 'gamma']) {
+			app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', {
+				location: exprVal('run'),
+				name: exprVal('x'),
+				value: exprVal(value),
+			})
+			app.addCustomActionAction(customActionId, inOrder, 'wait', { time: exprExpr('100') })
+		}
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('done'),
+			create: exprVal(false),
+			value: exprExpr('true'),
+		})
+
+		// A button with an `x` of its own, read by its own connection feedback, which calls the custom action
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		const buttonXId = app.addLocalVariable(buttonId, 'x', 'user_value', { startup_value: exprVal('own') })
+		const ownMatchesId = await addMatchesVariable(buttonId, 'ownMatches')
+		const callId = app.addCustomActionCall(buttonId, customActionId, {}, null)
+
+		await setLastValue('own')
+		const expectUntouched = () => {
+			expect(app.getFeedbackValue(buttonId, buttonXId)).toBe('own')
+			expect(app.getFeedbackValue(buttonId, ownMatchesId)).toBe(true)
+			expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(false)
+		}
+		await vi.waitFor(expectUntouched, 10_000)
+		// Let any rebuild of the copy settle
+		await new Promise((resolve) => setTimeout(resolve, 500))
+
+		const sent = vi.spyOn(IpcWrapper.prototype, 'sendWithCb')
+		app.pressButton(location, true)
+		while (app.getCustomVariableValue('done') !== true) {
+			// The run's changes reach what reads `x` on the button, but none of it changes
+			expectUntouched()
+			await new Promise((resolve) => setTimeout(resolve, 10))
+		}
+		expectUntouched()
+
+		// Only the run's own subscription was sent to the module as `x` changed: not the button's, nor the held copy's
+		const sentValues = sent.mock.calls
+			.filter(([name]) => name === 'updateFeedbacks')
+			.flatMap(([, msg]) => Object.values((msg as UpdateFeedbackInstancesMessage).feedbacks))
+			.flatMap((feedback) => (feedback ? [feedback.options.value] : []))
+		expect(sentValues).toContain('beta')
+		expect(sentValues).toContain('gamma')
+		expect(sentValues).not.toContain('own')
+		expect(sentValues).not.toContain('alpha')
+	})
+
 	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
@@ -2050,7 +2156,7 @@ describe('custom actions using a connection', () => {
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true))
 	})
 
-	test('changing the input of one caller re-subscribes only its own copy', async () => {
+	test('changing the input of one caller updates only its own copy', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
 		const setLastValue = await addSetter(connectionId)
@@ -2087,7 +2193,6 @@ describe('custom actions using a connection', () => {
 		)
 		const alphaCopy = lastCopies[0]
 
-		const updated = vi.spyOn(app.registry.instance.processManager, 'connectionEntityUpdate')
 		await app.trpc().controls.entities.setOption({
 			controlId: betaId,
 			entityLocation: { stepId: getStepId(betaId), setId: 'down' },
@@ -2099,11 +2204,6 @@ describe('custom actions using a connection', () => {
 		await vi.waitFor(() => expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(true), 10_000)
 		expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(true)
 		expect(heldCopy(getEntity(app, alphaId, alphaCall))?.localVariables).toBe(alphaCopy)
-
-		// Only the entities of the copy whose inputs changed were sent to the connection
-		const updatedIds = updated.mock.calls.map(([entity]) => entity.id)
-		expect(updatedIds.length).toBeGreaterThan(0)
-		expect(updatedIds.filter((id) => !id.startsWith(`${betaCall}/`))).toEqual([])
 	})
 
 	test('a connection action in a custom action runs with the inputs of each caller', async () => {
