@@ -57,8 +57,10 @@ jobs:
         run: |
           yarn fetch-test-modules
       - name: run tests
+        # The Windows runners are starved by the integration tests' module child processes running alongside
+        # other test files, timing out light tests, so fewer files run at once there
         run: |
-          yarn test
+          yarn test ${{ matrix.os == 'windows-latest' && '--maxWorkers=2' || '' }}
 
       - name: upload image snapshot failures
         if: failure()
