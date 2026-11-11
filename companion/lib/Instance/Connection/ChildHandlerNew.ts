@@ -35,12 +35,7 @@ import type {
 	ConnectionChildHandlerDependencies,
 	RunActionExtras,
 } from './ChildHandlerApi.js'
-import type {
-	EntityManagerActionEntity,
-	EntityManagerAdapter,
-	EntityManagerFeedbackEntity,
-	EntityManagerUpgradeEntity,
-} from './EntityManagerBase.js'
+import type { EntityManagerAdapter, EntityManagerEntity, EntityManagerUpgradeEntity } from './EntityManagerBase.js'
 import { FeedbackEntityManager } from './FeedbackEntityManager.js'
 import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
 import type {
@@ -799,7 +794,7 @@ class ConnectionNewActionManagerAdapter implements EntityManagerAdapter<ActionEn
 		this.#ipcWrapper = ipcWrapper
 	}
 
-	async update(actions: Map<string, EntityManagerActionEntity | null>) {
+	async update(actions: Map<string, EntityManagerEntity<ActionEntityModel> | null>) {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
@@ -862,7 +857,7 @@ class ConnectionNewFeedbackManagerAdapter implements EntityManagerAdapter<Feedba
 		this.#controlsStore = controlsStore
 	}
 
-	async update(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
+	async update(feedbacks: Map<string, EntityManagerEntity<FeedbackEntityModel> | null>) {
 		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
 
 		for (const [id, value] of feedbacks) {

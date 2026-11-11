@@ -1,12 +1,7 @@
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	ActionEntityModel,
-	FeedbackEntityModel,
-	SomeEntityModel,
-	SomeReplaceableEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
+import type { SomeEntityModel, SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
@@ -80,8 +75,6 @@ export interface EntityManagerEntity<TModel extends SomeEntityModel> {
 	entity: TModel
 	parsedOptions: CompanionOptionValues
 }
-export type EntityManagerActionEntity = EntityManagerEntity<ActionEntityModel>
-export type EntityManagerFeedbackEntity = EntityManagerEntity<FeedbackEntityModel>
 export type EntityManagerUpgradeEntity<TModel extends SomeEntityModel> = Omit<
 	EntityManagerEntity<TModel>,
 	'parsedOptions'

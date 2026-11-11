@@ -76,12 +76,7 @@ import type {
 	RunActionExtras,
 } from './ChildHandlerApi.js'
 import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
-import type {
-	EntityManagerActionEntity,
-	EntityManagerAdapter,
-	EntityManagerFeedbackEntity,
-	EntityManagerUpgradeEntity,
-} from './EntityManagerBase.js'
+import type { EntityManagerAdapter, EntityManagerEntity, EntityManagerUpgradeEntity } from './EntityManagerBase.js'
 import { FeedbackEntityManager } from './FeedbackEntityManager.js'
 import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
@@ -1195,7 +1190,7 @@ class ConnectionLegacyActionManagerAdapter implements EntityManagerAdapter<Actio
 		this.#ipcWrapper = ipcWrapper
 	}
 
-	async update(actions: Map<string, EntityManagerActionEntity | null>) {
+	async update(actions: Map<string, EntityManagerEntity<ActionEntityModel> | null>) {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
@@ -1256,7 +1251,7 @@ class ConnectionLegacyFeedbackManagerAdapter implements EntityManagerAdapter<Fee
 		this.#controlsStore = controlsStore
 	}
 
-	async update(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
+	async update(feedbacks: Map<string, EntityManagerEntity<FeedbackEntityModel> | null>) {
 		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
 
 		for (const [id, value] of feedbacks) {
