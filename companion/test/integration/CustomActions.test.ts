@@ -403,6 +403,60 @@ describe('custom actions', () => {
 		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe('second > outer > middle > inner'))
 	})
 
+	test('an input given a variable of the execution, such as the delta of a rotation, is valid when the action runs', async () => {
+		app.createCustomVariable('out', 0)
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Turn' })
+		await app.trpc().controls.customActions.inputAdd({
+			controlId: customActionId,
+			field: { type: 'number', id: 'n', label: 'N', default: 0, min: -100, max: 100 },
+		})
+		app.addCustomActionAction(customActionId, null, 'custom_variable_set_value', {
+			name: exprVal('out'),
+			create: exprVal(false),
+			value: exprExpr('$(options:n)'),
+		})
+		await vi.waitFor(() =>
+			expect(
+				app.registry.instance.definitions.getEntityDefinition(
+					EntityModelType.Action,
+					CUSTOM_ACTIONS_CONNECTION_ID,
+					customActionId.slice('custom-action:'.length)
+				)
+			).toBeTruthy()
+		)
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		await app.trpc().controls.setOptionsField({
+			controlId: buttonId,
+			change: { controlType: 'button-layered', key: 'rotaryActions', value: true },
+		})
+		const control = app.registry.controls.getControl(buttonId)
+		if (!control?.supportsEntities) throw new Error('Expected a button')
+		const stepId = (control.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+		const rotateRight = { stepId, setId: 'rotate_right' } as const
+		const callId = await app.trpc().controls.entities.add({
+			controlId: buttonId,
+			entityLocation: rotateRight,
+			ownerId: null,
+			connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+			entityType: EntityModelType.Action,
+			entityDefinition: customActionId.slice('custom-action:'.length),
+		})
+		if (!callId) throw new Error('Failed to add the call')
+		// Outside of a rotation there is no delta, so the input can't be checked until the action runs
+		await app.trpc().controls.entities.setOption({
+			controlId: buttonId,
+			entityLocation: rotateRight,
+			entityId: callId,
+			key: 'n',
+			value: exprExpr('$(this:delta)'),
+		})
+
+		app.rotateButton(location, 3)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe(3))
+	})
+
 	test('a caller giving an input an invalid value runs nothing, until the value is fixed', async () => {
 		app.createCustomVariable('out', 0)
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Ranged' })

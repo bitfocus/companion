@@ -226,15 +226,22 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		storeOutput: (target: StoreResult, value: JsonValue | undefined) => void
 	): Promise<undefined> {
 		const copy = this.#copies.get(caller)
-		const copyScope = copy?.scope
-		if (!copy || !copyScope) {
-			// The custom action is unknown, or calling it would loop or nest too deeply
-			this.#logger.silly(`Not running custom action "${caller.definitionId}", as it has no copy`)
+		if (!copy) {
+			this.#logger.silly(`Not running custom action "${caller.definitionId}", as its caller is not known`)
 			return undefined
 		}
 
-		const customAction = this.#controlStore.getControl(copyScope.values.customActionControlId)
+		// Not the copy held by the caller, as its inputs are parsed outside of any execution, so may be invalid where
+		// they are not when run (eg using $(this:delta))
+		const customActionControlId = CreateCustomActionControlId(caller.definitionId)
+		const customAction = this.#controlStore.getControl(customActionControlId)
 		if (!(customAction instanceof ControlCustomAction)) return undefined
+
+		const chain = copy.callerScope.customActionChain
+		if (chain.includes(customActionControlId) || chain.length >= MAX_CUSTOM_ACTION_DEPTH) {
+			this.#logger.silly(`Not running custom action "${caller.definitionId}", as it would loop or nest too deeply`)
+			return undefined
+		}
 
 		// The inputs are fixed for the run, in the execution context of the caller
 		const parseRes = customAction.parseCallInputs(caller.rawOptions, parser, copy.controlId)
@@ -251,7 +258,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		const scope = new CustomActionEntityScope(
 			customAction,
 			copy.controlId,
-			copyScope.customActionChain,
+			[...chain, customActionControlId],
 			this,
 			this.#renderClock,
 			this.#variableDependencies,
@@ -287,7 +294,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			const lists = this.#buildCopyLists(caller, scope, customAction, groupIds, `${caller.id}@${runId}/`)
 
 			// When the run sees what the copy held by the caller sees, it can start with its values
-			if (isEqual(options, copyScope.values.options)) {
+			if (copy.scope && isEqual(options, copy.scope.values.options)) {
 				const copyLists = getCopyLists(
 					caller,
 					CUSTOM_ACTION_COPY_ACTIONS_GROUP,
