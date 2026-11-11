@@ -94,28 +94,29 @@ export function removeCustomActionInputInCallers(
 }
 
 /**
- * Remove where the actions which run custom actions write outputs which their custom action no longer has, so that a
- * new output of the same name doesn't write there. A call to a custom action which doesn't exist is left alone, so
- * that it is whole again if the custom action is imported
+ * Remove where the actions which run a custom action write outputs which it no longer has, so that a new output of the
+ * same name doesn't write there
  * @param controlStore The store of all the controls
- * @param outputIds The ids of the outputs of each custom action, by its id
+ * @param customActionControlId The control id of the custom action
+ * @param outputIds The ids of the outputs it has
  */
-export function pruneCustomActionOutputTargets(
+export function pruneCustomActionOutputTargetsInCallers(
 	controlStore: ControlStore,
-	outputIds: ReadonlyMap<string, ReadonlySet<string>>
+	customActionControlId: CustomActionControlId,
+	outputIds: ReadonlySet<string>
 ): void {
+	const parsedId = ParseControlId(customActionControlId)
+	if (parsedId?.type !== 'custom-action') return
+
 	for (const control of controlStore.controls.values()) {
 		if (!control.supportsEntities) continue
 
 		let changed = false
 		for (const entity of control.entities.getAllEntities()) {
-			if (!isCustomActionsConnectionId(entity.connectionId)) continue
-
-			const ids = outputIds.get(entity.definitionId)
-			if (!ids) continue
+			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
 
 			for (const outputId of Object.keys(entity.rawOutputTargets)) {
-				if (ids.has(outputId)) continue
+				if (outputIds.has(outputId)) continue
 				entity.setRawOutputTarget(outputId, null)
 				changed = true
 			}

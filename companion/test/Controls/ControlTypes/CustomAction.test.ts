@@ -27,7 +27,7 @@ import {
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import {
-	pruneCustomActionOutputTargets,
+	pruneCustomActionOutputTargetsInCallers,
 	removeCustomActionInputInCallers,
 	renameCustomActionInputInCallers,
 } from '../../../lib/Controls/CustomActionTrpcRouter.js'
@@ -315,7 +315,7 @@ describe('ControlCustomAction', () => {
 
 			control.optionsSetField({ key: 'name', value: 'Renamed' })
 
-			expect(listener).toHaveBeenCalledWith(CUSTOM_ACTION_CONTROL_ID)
+			expect(listener).toHaveBeenCalledWith(CUSTOM_ACTION_CONTROL_ID, control)
 		})
 	})
 
@@ -518,14 +518,14 @@ describe('ControlCustomAction', () => {
 				...callAction(),
 				outputTargets: { removed: target, kept: target },
 			})
-			// A call to a custom action which doesn't exist keeps its targets, for if it is imported again
+			// A call to another custom action keeps its targets
 			caller.entities.entityAdd('custom_action_actions', null, {
 				...callAction({}, 'missing'),
 				outputTargets: { removed: target },
 			})
 			controlStore.controls.set(CALLER_CONTROL_ID, caller)
 
-			pruneCustomActionOutputTargets(controlStore, new Map([[CUSTOM_ACTION_ID, new Set(['kept'])]]))
+			pruneCustomActionOutputTargetsInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, new Set(['kept']))
 
 			const [changed, untouched] = caller.entities.getActionEntities()
 			expect(changed.rawOutputTargets).toEqual({ kept: target })

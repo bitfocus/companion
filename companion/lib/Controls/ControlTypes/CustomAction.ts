@@ -654,7 +654,7 @@ export class ControlCustomAction
 
 		this.#sendClientJsonChange()
 
-		this.deps.events.emit('customActionDefinitionChanged', this.controlId)
+		this.deps.events.emit('customActionDefinitionChanged', this.controlId, this)
 	}
 
 	destroy(): void {
@@ -663,7 +663,7 @@ export class ControlCustomAction
 
 		super.destroy()
 
-		this.deps.events.emit('customActionDefinitionChanged', this.controlId)
+		this.deps.events.emit('customActionDefinitionChanged', this.controlId, null)
 
 		if (this.deps.changeEvents.listenerCount('customActionChange') > 0) {
 			this.deps.changeEvents.emit('customActionChange', this.controlId, {

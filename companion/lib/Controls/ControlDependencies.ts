@@ -25,6 +25,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariableDependencyRegistry } from '../Variables/DependencyRegistry.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
@@ -93,8 +94,8 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: SomeControlId]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
-	/** Emitted when a custom action is changed or deleted, so that its action definition can be updated */
-	customActionDefinitionChanged: [controlId: CustomActionControlId]
+	/** Emitted when a custom action is changed, or deleted when it is null, so that its action definition can be updated */
+	customActionDefinitionChanged: [controlId: CustomActionControlId, customAction: ControlCustomAction | null]
 	/** Emitted when the local variable of an output of a custom action is renamed, as callers know the output by it */
 	customActionOutputRenamed: [controlId: CustomActionControlId, fromId: string, toId: string]
 	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]

@@ -63,7 +63,7 @@ import { MAX_CUSTOM_ACTION_DEPTH } from './CustomActionRunFrame.js'
 import { analyseCustomActionCalls, type CustomActionCallAnalysis } from './CustomActions/CustomActionCalls.js'
 import {
 	createCustomActionTrpcRouter,
-	pruneCustomActionOutputTargets,
+	pruneCustomActionOutputTargetsInCallers,
 	renameCustomActionOutputInCallers,
 } from './CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
@@ -178,9 +178,16 @@ export class ControlsController {
 			this.#cleanUnknownCustomActionCollectionIds(validCollectionIds)
 		)
 
-		this.#controlEvents.on('customActionDefinitionChanged', (controlId) => {
+		this.#controlEvents.on('customActionDefinitionChanged', (controlId, customAction) => {
 			this.#publishCustomActionDefinitions()
 			this.#deps.customActionInstances.onCustomActionChanged(controlId)
+
+			// Callers stop writing outputs which have gone. Not when it is deleted, so that they are whole again if it
+			// is imported
+			if (customAction) {
+				const outputIds = new Set(customAction.outputs.map((output) => output.variableName))
+				pruneCustomActionOutputTargetsInCallers(this.#store, controlId, outputIds)
+			}
 		})
 		this.#controlEvents.on('customActionOutputRenamed', (controlId, fromId, toId) =>
 			renameCustomActionOutputInCallers(this.#store, controlId, fromId, toId)
@@ -214,23 +221,14 @@ export class ControlsController {
 			const analysis = analyseCustomActionCalls(
 				new Map([...customActions].map(([id, control]) => [id, control.getCalledCustomActionIds()]))
 			)
-			for (const [id, control] of customActions) {
-				const callAnalysis = analysis.get(id)
-				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))
-			}
 
 			const definitions: Record<string, ClientEntityDefinition> = {}
 			for (const [id, control] of customActions) {
+				const callAnalysis = analysis.get(id)
+				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))
+
 				definitions[id] = control.toActionDefinition()
 			}
-
-			// Callers no longer write outputs which have gone
-			pruneCustomActionOutputTargets(
-				this.#store,
-				new Map(
-					[...customActions].map(([id, control]) => [id, new Set(control.outputs.map((output) => output.variableName))])
-				)
-			)
 
 			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_ACTIONS_CONNECTION_ID, definitions)
 		},
