@@ -258,7 +258,14 @@ export class ControlStore implements IControlStore {
 		if (frame) {
 			const customAction = this.getControl(frame.customActionControlId)
 			if (customAction instanceof ControlCustomAction) {
-				return customAction.createRunParser({ ...extras, frame }, { allowClockSensitive: false })
+				return customAction.createCopyParser(
+					frame,
+					frame.getLocalVariableEntities(),
+					extras.controlId,
+					extras.location ?? null,
+					buildActionExecutionOverrides(extras),
+					{ allowClockSensitive: false }
+				)
 			}
 		}
 

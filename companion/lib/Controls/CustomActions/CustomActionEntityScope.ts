@@ -125,8 +125,9 @@ export class CustomActionEntityScope implements EntityScope {
 	): VariablesAndExpressionParser {
 		return this.#customAction.createCopyParser(
 			this.#values,
-			this.#callerControlId,
 			this.#localVariables?.getDirectEntities() ?? [],
+			this.#callerControlId,
+			null,
 			overrideVariableValues,
 			options ?? {}
 		)

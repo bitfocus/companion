@@ -2,6 +2,7 @@ import type z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	CustomActionOptionsSchema,
 	CustomActionOutputSchema,
@@ -26,7 +27,6 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
-import { buildActionExecutionOverrides } from '../../Variables/Util.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -341,45 +341,30 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * A parser for an action being executed as part of a run of this custom action
-	 */
-	createRunParser(extras: CustomActionRunExtras, options: ExpressionParserOptions): VariablesAndExpressionParser {
-		// Where the caller is now, as it may have moved since the run started, as the actions of a button would see
-		const location =
-			(extras.controlId ? this.deps.pageStore.getLocationOfControlId(extras.controlId) : undefined) ??
-			extras.location ??
-			null
-		const pageEntities = location ? this.deps.getPageVariableEntities(location.pageNumber) : null
-
-		return this.entities.createRunParser(
-			extras.frame,
-			extras.frame.getLocalVariableEntities(),
-			location,
-			pageEntities,
-			buildActionExecutionOverrides(extras),
-			options
-		)
-	}
-
-	/**
-	 * A parser for the entities of a copy of this custom action, held by an action which calls it
+	 * A parser for the entities of a copy of this custom action: one held by an action which calls it, or one made for
+	 * a run. The `options:*` and `local:*` variables are those of the copy, and the `this:*` and `page:*` variables
+	 * those of the caller, where it is now
 	 * @param values The inputs and local variable values of the copy
-	 * @param callerControlId The control which holds the copy, which provides the `this:*` and `page:*` variables
 	 * @param localVariableEntities The local variables of the copy
-	 * @param overrideVariableValues Any additional variables
+	 * @param callerControlId The control holding the caller, if there is one
+	 * @param fallbackLocation Where the caller is when its control isn't on a page, such as where a run was started
+	 * @param overrideVariableValues Any additional variables, such as those of an action being executed
 	 * @param options Options for the parser
 	 */
 	createCopyParser(
 		values: CustomActionValues,
-		callerControlId: SomeControlId,
 		localVariableEntities: ControlEntityInstance[],
+		callerControlId: SomeControlId | null,
+		fallbackLocation: ControlLocation | null,
 		overrideVariableValues: VariableValues | null,
 		options: ExpressionParserOptions
 	): VariablesAndExpressionParser {
-		const location = this.deps.pageStore.getLocationOfControlId(callerControlId) ?? null
+		// Where the caller is now, as it may have moved, as the actions of a button would see
+		const location =
+			(callerControlId ? this.deps.pageStore.getLocationOfControlId(callerControlId) : undefined) ?? fallbackLocation
 		const pageEntities = location ? this.deps.getPageVariableEntities(location.pageNumber) : null
 
-		return this.entities.createRunParser(
+		return this.entities.createCopyParser(
 			values,
 			localVariableEntities,
 			location,

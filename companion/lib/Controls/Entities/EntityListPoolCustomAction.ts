@@ -99,17 +99,17 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	}
 
 	/**
-	 * A parser for an action being executed as part of a run of this custom action.
+	 * A parser for the entities of a copy of this custom action, held by a caller or made for a run.
 	 * The `this:*` and `page:*` variables are those of the control which called the custom action, and the
-	 * `local:*` variables are those of this custom action, with the values they have in this run.
-	 * @param frame The run of the custom action
-	 * @param localVariableEntities The local variables to use, either those of this custom action or of a copy of it
+	 * `local:*` variables are those of the copy, with the values they have in it.
+	 * @param frame The values of the copy
+	 * @param localVariableEntities The local variables of the copy, or of this custom action for a test run
 	 * @param callerLocation The location of the control which called the custom action
 	 * @param callerPageEntities The page variables of the control which called the custom action
-	 * @param overrideVariableValues The execution context variables, including the `options:*` of the run
+	 * @param overrideVariableValues The `options:*` of the copy, and any other variables such as those of an execution
 	 * @param options Options for the parser
 	 */
-	createRunParser(
+	createCopyParser(
 		frame: CustomActionValues,
 		localVariableEntities: ControlEntityInstance[],
 		callerLocation: ControlLocation | null,
