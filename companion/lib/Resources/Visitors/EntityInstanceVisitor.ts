@@ -20,6 +20,8 @@ export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityMod
 	} else if (entity.type === EntityModelType.Action) {
 		// Where the result is stored can be an expression, or name a variable
 		if (entity.storeResult) visitExpressionFields(visitor, entity.storeResult, entity.id)
+		// As can where each output of a custom action is written
+		for (const target of Object.values(entity.outputTargets ?? {})) visitExpressionFields(visitor, target, entity.id)
 	}
 
 	// Fixup any references in entity options

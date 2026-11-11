@@ -656,6 +656,27 @@ describe('visitEntityModel', () => {
 		})
 	})
 
+	it('renames the references in where each output of a custom action is written', () => {
+		const visitor = makeUpdater({ labelRemap: { old: 'new' } })
+		const action: ActionEntityModel = {
+			type: EntityModelType.Action,
+			id: 'act-1',
+			definitionId: 'def',
+			connectionId: 'custom-actions',
+			options: {},
+			upgradeIndex: undefined,
+			outputTargets: {
+				count: { type: 'page-variable', page: exprExpr('$(old:page)'), variableName: exprVal('shown') },
+			},
+		}
+
+		visitEntityModel(visitor, action)
+
+		expect(action.outputTargets).toEqual({
+			count: { type: 'page-variable', page: exprExpr('$(new:page)'), variableName: exprVal('shown') },
+		})
+	})
+
 	it('renames the references in the inversion of a feedback', () => {
 		const visitor = makeUpdater({ labelRemap: { old: 'new' } })
 		const feedback: FeedbackEntityModel = {
