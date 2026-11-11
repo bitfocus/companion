@@ -23,7 +23,7 @@ import type {
 	VariableDependencyRegistry,
 } from '../../Variables/DependencyRegistry.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
-import { ControlCustomAction } from '../ControlTypes/CustomAction.js'
+import { ControlCustomAction, type CustomActionRunExtras } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
@@ -217,13 +217,16 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 * @param caller The action which calls a custom action
 	 * @param parser A parser in the execution context of the caller, for its inputs
 	 * @param extras The execution context of the caller
+	 * @param storeOutput Writes an output of the custom action where the caller chose
+	 * @param runActions Runs the actions of the copy, as the actions of a control are run
 	 * @returns The result of the custom action
 	 */
 	async runCall(
 		caller: ControlEntityInstance,
 		parser: VariablesAndExpressionParser,
 		extras: RunActionExtras,
-		storeOutput: (target: StoreResult, value: JsonValue | undefined) => void
+		storeOutput: (target: StoreResult, value: JsonValue | undefined) => void,
+		runActions: (actions: ControlEntityInstance[], extras: CustomActionRunExtras) => Promise<void>
 	): Promise<undefined> {
 		const copy = this.#copies.get(caller)
 		if (!copy) {
@@ -340,7 +343,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			// The caller sees where each output starts, then each change as the run sets it
 			for (const variableName of outputTargets.keys()) writeOutput(variableName)
 
-			await customAction.runActions(lists.actions.getDirectEntities(), frame, runExtras)
+			await runActions(lists.actions.getDirectEntities(), { ...runExtras, frame })
 
 			return undefined
 		} finally {

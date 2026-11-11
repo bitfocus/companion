@@ -155,7 +155,9 @@ export class ActionRunner {
 			this.#controlStore.createActionExecutionParser(extras),
 			extras,
 			// The outputs are stored relative to the caller
-			(target, value) => this.storeValue(target, value, extras)
+			(target, value) => this.storeValue(target, value, extras),
+			async (actions, runExtras) =>
+				this.runMultipleActions(actions, runExtras, runExtras.executionMode === 'sequential')
 		)
 	}
 

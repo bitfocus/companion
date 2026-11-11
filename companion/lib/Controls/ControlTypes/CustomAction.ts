@@ -311,22 +311,6 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Run some actions as a run of this custom action
-	 * @param actions The actions to run, which are this custom action's own or a copy of them
-	 * @param frame The state of the run
-	 * @param extras The execution context of the caller
-	 */
-	async runActions(
-		actions: ControlEntityInstance[],
-		frame: CustomActionRunFrame,
-		extras: RunActionExtras
-	): Promise<void> {
-		const runExtras: CustomActionRunExtras = { ...extras, frame }
-
-		await this.deps.actionRunner.runMultipleActions(actions, runExtras, extras.executionMode === 'sequential')
-	}
-
-	/**
 	 * Run the custom action from the editor, with the default values for its inputs
 	 */
 	testRun(): void {
@@ -345,7 +329,11 @@ export class ControlCustomAction
 			.runChain(
 				{ surfaceId: this.controlId, location: undefined, rotationDelta: null, frame: null },
 				async (extras) => {
-					await this.runActions(this.entities.getActionEntities(), frame, extras)
+					await this.deps.actionRunner.runMultipleActions(
+						this.entities.getActionEntities(),
+						{ ...extras, frame },
+						extras.executionMode === 'sequential'
+					)
 				}
 			)
 			.catch((e) => {

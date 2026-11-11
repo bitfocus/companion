@@ -1081,7 +1081,9 @@ describe('ControlCustomAction', () => {
 				callerEntity,
 				harness.controlStore.createActionExecutionParser(fullExtras),
 				fullExtras,
-				() => {}
+				() => {},
+				async (actions, runExtras) =>
+					harness.deps.actionRunner.runMultipleActions(actions, runExtras, runExtras.executionMode === 'sequential')
 			)
 		}
 
