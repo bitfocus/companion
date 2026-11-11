@@ -1,5 +1,5 @@
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { DropdownChoiceGroup } from '~/Components/DropdownChoices.js'
 
 /**
@@ -13,13 +13,16 @@ import type { DropdownChoiceGroup } from '~/Components/DropdownChoices.js'
  * @param ungroupedLabel - Label for the ungrouped items group (default: "Ungrouped")
  * @returns Array of DropdownChoiceGroups, or flat array if no groups exist
  */
-export function groupItemsByCollection<TItem extends { collectionId: string | null; sortOrder?: number }>(
+export function groupItemsByCollection<
+	TItem extends { collectionId: string | null; sortOrder?: number },
+	TId extends DropdownChoiceId = DropdownChoiceId,
+>(
 	rootCollections: CollectionBase<any>[],
 	items: TItem[],
-	getItemChoice: (item: TItem) => DropdownChoice,
+	getItemChoice: (item: TItem) => DropdownChoice<TId>,
 	filterItem?: (item: TItem) => boolean,
 	ungroupedLabel = 'Ungrouped'
-): DropdownChoiceGroup[] | DropdownChoice[] {
+): DropdownChoiceGroup<TId>[] | DropdownChoice<TId>[] {
 	// Track which items have been assigned to collections
 	const assignedItemIds = new Set<TItem>()
 
@@ -42,9 +45,9 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 	const buildGroupForCollection = (
 		collection: CollectionBase<any>,
 		parentPath: string[]
-	): DropdownChoiceGroup | null => {
+	): DropdownChoiceGroup<TId> | null => {
 		const groupLabel = [...parentPath, collection.label || `Collection #${collection.id}`].join(' / ')
-		const groupOptions: DropdownChoice[] = []
+		const groupOptions: DropdownChoice<TId>[] = []
 
 		// Add direct children items of this collection
 		for (const item of sortedItems) {
@@ -66,7 +69,7 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 	const collectAllGroups = (
 		collections: CollectionBase<any>[],
 		parentPath: string[],
-		result: DropdownChoiceGroup[]
+		result: DropdownChoiceGroup<TId>[]
 	): void => {
 		for (const collection of collections) {
 			const group = buildGroupForCollection(collection, parentPath)
@@ -84,11 +87,11 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 	}
 
 	// Collect all groups
-	const allGroups: DropdownChoiceGroup[] = []
+	const allGroups: DropdownChoiceGroup<TId>[] = []
 	collectAllGroups(rootCollections, [], allGroups)
 
 	// Collect ungrouped items (not assigned to any collection)
-	const ungrouped: DropdownChoice[] = []
+	const ungrouped: DropdownChoice<TId>[] = []
 	for (const item of items) {
 		if (filterItem && !filterItem(item)) continue
 		if (assignedItemIds.has(item)) continue

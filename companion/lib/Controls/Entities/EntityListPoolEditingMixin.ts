@@ -97,7 +97,7 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 	 * @param id the id of the entity
 	 * @param connectionId the id of the new connection
 	 */
-	entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean
+	entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string): boolean
 
 	/**
 	 * Set whether a boolean feedback should be inverted
@@ -368,7 +368,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			return true
 		}
 
-		entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean {
+		entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string): boolean {
 			const entityList = this.getEntityList(listId)
 			if (!entityList) return false
 

@@ -392,10 +392,7 @@ export class ControlEntityInstance {
 	/**
 	 * Set the connection of this entity
 	 */
-	setConnectionId(connectionId: string | number): void {
-		// TODO - why can this be a number?
-		connectionId = String(connectionId)
-
+	setConnectionId(connectionId: string): void {
 		// first unsubscribe action from old connection
 		this.cleanup()
 		// next change connectionId
