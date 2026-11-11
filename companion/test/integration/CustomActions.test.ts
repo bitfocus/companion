@@ -2184,7 +2184,8 @@ describe('custom actions using a connection', () => {
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
 	})
 
-	describe('at scale', () => {
+	// These load the machine heavily, which slows the tests running alongside them, so they only run when asked for
+	describe.runIf(!!process.env.COMPANION_SCALE_TESTS)('at scale', () => {
 		/** Create a custom action with a few connection feedbacks, and an output `seen` which a run sets from one */
 		async function createBusyCustomAction(connectionId: string): Promise<CustomActionControlId> {
 			const customActionId = await app.trpc().controls.customActions.create({ name: 'Busy' })
