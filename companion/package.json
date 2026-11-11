@@ -60,7 +60,6 @@
     "@napi-rs/canvas": "^1.1.0",
     "@sentry/node": "^11.11.0",
     "@trpc/server": "^11.25.2",
-    "bufferutil": "npm:@julusian/bufferutil@^4.1.0",
     "colord": "^2.10.0",
     "commander": "^15.1.0",
     "compression": "^1.8.2",
