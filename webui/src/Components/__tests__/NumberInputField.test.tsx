@@ -227,10 +227,11 @@ describe('NumberInputField', () => {
 
 		it('does not call setValue with a value below min', async () => {
 			const setValue = vi.fn()
-			const user = userEvent.setup()
+			const user = userEvent.setup({ pointerEventsCheck: 0 })
 			const { container } = render(<ControlledNumber initialValue={0} setValue={setValue} min={0} max={100} />)
 
 			const decrementBtn = container.querySelector('.number-field-decrement') as HTMLElement
+			// Disabled at the limit, it takes no pointer events, so the click is forced through
 			await user.click(decrementBtn)
 
 			for (const [v] of setValue.mock.calls) {
@@ -240,10 +241,11 @@ describe('NumberInputField', () => {
 
 		it('does not call setValue with a value above max', async () => {
 			const setValue = vi.fn()
-			const user = userEvent.setup()
+			const user = userEvent.setup({ pointerEventsCheck: 0 })
 			const { container } = render(<ControlledNumber initialValue={100} setValue={setValue} min={0} max={100} />)
 
 			const incrementBtn = container.querySelector('.number-field-increment') as HTMLElement
+			// Disabled at the limit, it takes no pointer events, so the click is forced through
 			await user.click(incrementBtn)
 
 			for (const [v] of setValue.mock.calls) {

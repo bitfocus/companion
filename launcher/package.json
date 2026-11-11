@@ -19,14 +19,14 @@
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.4.1",
 		"nanoid": "^6.0.2",
-		"plist": "^5.0.0",
+		"plist": "^5.1.0",
 		"semver": "^7.8.6",
 		"strip-ansi": "^7.2.0",
 		"systeminformation": "^5.33.19"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "45.2.1",
+		"electron": "45.2.3",
 		"electron-builder": "26.18.1",
 		"electron-reloader": "^2.0.0"
 	}

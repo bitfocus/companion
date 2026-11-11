@@ -54,7 +54,12 @@ function renderPicker(opts: RenderOptions & { initialValue?: string; setValue?: 
 		<ControlledPicker {...opts} setValue={setValue} initialValue={opts.initialValue ?? 'connection:var_a'} />
 	)
 	const input = utils.getByRole('combobox')
-	return { ...utils, input, setValue, user }
+	return { ...utils, input, field: getField(input), setValue, user }
+}
+
+// The input takes no pointer events until focused; a click lands on its group, which focuses it
+function getField(input: HTMLElement) {
+	return input.parentElement!
 }
 
 function getListbox() {
@@ -178,8 +183,8 @@ describe('Selection', () => {
 
 	it('selects an item via keyboard Arrow + Enter', async () => {
 		const setValue = vi.fn()
-		const { user, input } = renderPicker({ setValue })
-		await user.click(input)
+		const { user, field } = renderPicker({ setValue })
+		await user.click(field)
 		await user.keyboard('{ArrowDown}')
 		await user.keyboard('{Enter}')
 		expect(setValue).toHaveBeenCalledTimes(1)
@@ -192,8 +197,8 @@ describe('Selection', () => {
 
 describe('Fuzzy filtering', () => {
 	it('hides non-matching options when typing', async () => {
-		const { user, input } = renderPicker()
-		await user.click(input)
+		const { user, input, field } = renderPicker()
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'Variable B')
 		const list = getListbox()
@@ -203,8 +208,8 @@ describe('Fuzzy filtering', () => {
 
 	it('searches by id (not just label)', async () => {
 		// VPF always uses searchLabelsOnly=false, so typing an id fragment must work
-		const { user, input } = renderPicker()
-		await user.click(input)
+		const { user, input, field } = renderPicker()
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'other:var_d')
 		const list = getListbox()
@@ -213,16 +218,16 @@ describe('Fuzzy filtering', () => {
 	})
 
 	it('shows empty message when no options match', async () => {
-		const { user, input } = renderPicker()
-		await user.click(input)
+		const { user, input, field } = renderPicker()
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'zzzzz')
 		expect(screen.getByText('No options found.')).toBeInTheDocument()
 	})
 
 	it('shows custom noOptionsMessage when allowCustom + regex fails', async () => {
-		const { user, input } = renderPicker({ allowCustom: true, regex: '/^\\d+$/' })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true, regex: '/^\\d+$/' })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'zzzzz')
 		expect(screen.getAllByText('Begin typing to use a custom value').length).toBeGreaterThan(0)
@@ -235,22 +240,22 @@ describe('Fuzzy filtering', () => {
 
 describe('allowCustom=true', () => {
 	it('pre-fills the input with the raw id on focus', async () => {
-		const { user, input } = renderPicker({ allowCustom: true, initialValue: 'connection:var_a' })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true, initialValue: 'connection:var_a' })
+		await user.click(field)
 		expect(input).toHaveValue('connection:var_a')
 	})
 
 	it('shows the Use "X" synthetic item when typing a value not in choices', async () => {
-		const { user, input } = renderPicker({ allowCustom: true })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'my:custom-var')
 		expect(screen.getByText(/Use "my:custom-var"/)).toBeInTheDocument()
 	})
 
 	it('does not show Use "X" when input exactly matches an existing id', async () => {
-		const { user, input } = renderPicker({ allowCustom: true })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'connection:var_a')
 		expect(screen.queryByText(/Use "connection:var_a"/)).toBeNull()
@@ -258,8 +263,8 @@ describe('allowCustom=true', () => {
 
 	it('calls setValue with the typed text when selecting the synthetic item', async () => {
 		const setValue = vi.fn()
-		const { user, input } = renderPicker({ allowCustom: true, setValue })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true, setValue })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'custom:value')
 		await user.click(screen.getByText(/Use "custom:value"/))
@@ -268,8 +273,8 @@ describe('allowCustom=true', () => {
 
 	it('commits the typed text via setValue on blur (no selection made)', async () => {
 		const setValue = vi.fn()
-		const { user, input } = renderPicker({ allowCustom: true, setValue })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true, setValue })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'blur:value')
 		await user.tab()
@@ -277,16 +282,16 @@ describe('allowCustom=true', () => {
 	})
 
 	it('hides synthetic item when typed value fails regex', async () => {
-		const { user, input } = renderPicker({ allowCustom: true, regex: '/^[\\w-]+:[\\w-]+$/' })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true, regex: '/^[\\w-]+:[\\w-]+$/' })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'not-valid-format')
 		expect(screen.queryByText(/Use "not-valid-format"/)).toBeNull()
 	})
 
 	it('shows synthetic item when typed value passes regex', async () => {
-		const { user, input } = renderPicker({ allowCustom: true, regex: '/^[\\w-]+:[\\w-]+$/' })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ allowCustom: true, regex: '/^[\\w-]+:[\\w-]+$/' })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'ns:varname')
 		expect(screen.getByText(/Use "ns:varname"/)).toBeInTheDocument()
@@ -324,8 +329,8 @@ describe('Grouped choices — interactions', () => {
 	})
 
 	it('removes an entire group from the popup when none of its items match the filter', async () => {
-		const { user, input } = renderPicker({ choices: GROUPED, initialValue: 'g1:alpha' })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ choices: GROUPED, initialValue: 'g1:alpha' })
+		await user.click(field)
 		await user.clear(input)
 		// typos:disable-line
 		await user.type(input, 'Alph')
@@ -334,8 +339,8 @@ describe('Grouped choices — interactions', () => {
 	})
 
 	it('keeps a group in the popup but hides non-matching items within it', async () => {
-		const { user, input } = renderPicker({ choices: GROUPED, initialValue: 'g1:alpha' })
-		await user.click(input)
+		const { user, input, field } = renderPicker({ choices: GROUPED, initialValue: 'g1:alpha' })
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'Celery')
 		const list = getListbox()
@@ -344,12 +349,12 @@ describe('Grouped choices — interactions', () => {
 	})
 
 	it('still shows the synthetic "Use X" item when allowCustom=true and choices are all grouped', async () => {
-		const { user, input } = renderPicker({
+		const { user, input, field } = renderPicker({
 			choices: GROUPED,
 			allowCustom: true,
 			initialValue: 'g1:alpha',
 		})
-		await user.click(input)
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'custom:grouped')
 		expect(screen.getByText(/Use "custom:grouped"/)).toBeInTheDocument()
@@ -377,7 +382,8 @@ describe('onPasteIntercept', () => {
 			</MenuPortalContext.Provider>
 		)
 		const input = screen.getByRole('combobox')
-		await user.click(input)
+		const field = getField(input)
+		await user.click(field)
 		await user.clear(input)
 		await user.paste('hello')
 		// The intercept uppercases the value, so the synthetic item should show the transformed string
@@ -400,7 +406,8 @@ describe('onPasteIntercept', () => {
 			</MenuPortalContext.Provider>
 		)
 		const input = screen.getByRole('combobox')
-		await user.click(input)
+		const field = getField(input)
+		await user.click(field)
 		await user.clear(input)
 		await user.paste('connection:var_a')
 		expect(onPasteIntercept).toHaveBeenCalledTimes(1)
@@ -438,7 +445,8 @@ describe('VariablePickerField — fancy format', () => {
 			</MenuPortalContext.Provider>
 		)
 		const input = screen.getByRole('combobox')
-		await user.click(input)
+		const field = getField(input)
+		await user.click(field)
 		await user.clear(input)
 		await user.type(input, 'internal:date')
 		const list = getListbox()

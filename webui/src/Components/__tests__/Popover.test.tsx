@@ -165,7 +165,8 @@ describe('Disabled items', () => {
 		const user = userEvent.setup()
 		renderMenu({ disableDelete: true })
 		await user.click(screen.getByRole('button', { name: 'Options' }))
-		await user.click(screen.getByRole('button', { name: 'Delete' }))
+		// It takes no pointer events, so the click is forced through to prove the item itself refuses it
+		await userEvent.setup({ pointerEventsCheck: 0 }).click(screen.getByRole('button', { name: 'Delete' }))
 		expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument()
 	})
 
@@ -173,7 +174,8 @@ describe('Disabled items', () => {
 		const user = userEvent.setup()
 		const { onDelete } = renderMenu({ disableDelete: true })
 		await user.click(screen.getByRole('button', { name: 'Options' }))
-		await user.click(screen.getByRole('button', { name: 'Delete' }))
+		// It takes no pointer events, so the click is forced through to prove the item itself refuses it
+		await userEvent.setup({ pointerEventsCheck: 0 }).click(screen.getByRole('button', { name: 'Delete' }))
 		expect(onDelete).not.toHaveBeenCalled()
 	})
 })
