@@ -16,7 +16,6 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	AuthorableInputFieldSchema,
-	isExpressionOrValue,
 	toCompanionInputField,
 	type AuthorableInputField,
 	type ExpressionableOptionsObject,
@@ -27,6 +26,7 @@ import type { CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
+import { VisitorVariableRenamer } from '../../Resources/Visitors/VariableRenamer.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -481,42 +481,13 @@ export class ControlCustomAction
 	 * Update the `$(options:<id>)` references to an input in the entities of this custom action
 	 */
 	#renameInputReferences(fromId: string, toId: string): void {
-		const fromVariable = `$(options:${fromId})`
-		const toVariable = `$(options:${toId})`
+		const changed = new VisitorVariableRenamer(this.deps.internalModule, `options:${fromId}`, `options:${toId}`)
+			.visitEntities(this.entities.getAllEntities(), [])
+			.recheckChangedFeedbacks()
+			.hasChanges()
 
-		/** The fields of an object with the reference renamed, or null if none had it */
-		const renameFields = <T extends object>(fields: T): T | null => {
-			let changed = false
-			const renamed: Record<string, unknown> = {}
-			for (const [key, value] of Object.entries(fields)) {
-				if (isExpressionOrValue(value) && typeof value.value === 'string' && value.value.includes(fromVariable)) {
-					renamed[key] = { ...value, value: value.value.replaceAll(fromVariable, toVariable) }
-					changed = true
-				} else {
-					renamed[key] = value
-				}
-			}
-			return changed ? (renamed as T) : null
-		}
-
-		for (const entity of this.entities.getAllEntities()) {
-			const newOptions = renameFields(entity.rawOptions)
-			if (newOptions) entity.setOptions(newOptions)
-
-			// Where its result and outputs are written can refer to the inputs too
-			const storeResult = entity.rawStoreResult
-			const newStoreResult = storeResult && renameFields(storeResult)
-			if (newStoreResult) entity.setRawStoreResult(newStoreResult)
-
-			for (const [outputId, target] of Object.entries(entity.rawOutputTargets)) {
-				const newTarget = renameFields(target)
-				if (newTarget) entity.setRawOutputTarget(outputId, newTarget)
-			}
-
-			const isInverted = entity.rawIsInverted
-			const renamedInverted = isInverted ? renameFields({ isInverted }) : null
-			if (renamedInverted) entity.setInverted(renamedInverted.isInverted)
-		}
+		// The entities were changed in place, so must be parsed again
+		if (changed) this.entities.resubscribeEntities()
 	}
 
 	/**
