@@ -319,7 +319,13 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
 		const callerEntity = pool.findEntityById(caller.id)!
-		const copyList = callerEntity.createTransientList('copy', copyScope, { type: EntityModelType.Action }, [copy])
+		const copyList = callerEntity.createTransientList(
+			'copy',
+			copyScope,
+			{ type: EntityModelType.Action },
+			[copy],
+			false
+		)
 		callerEntity.setCopy('copy', { lists: [copyList] })
 
 		const result = pool.entityReplaceForUpgrade({

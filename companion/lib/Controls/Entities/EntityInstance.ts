@@ -43,6 +43,7 @@ import type {
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
+	NewEntityIds,
 	NewFeedbackValue,
 	ProcessManagerForEntity,
 	StoreResult,
@@ -219,7 +220,7 @@ export class ControlEntityInstance {
 	 * @param processManager
 	 * @param controlId - id of the control
 	 * @param data
-	 * @param isCloned Whether this is a cloned instance and should generate new ids
+	 * @param newIds How this entity and its children get their ids
 	 */
 	constructor(
 		instanceDefinitions: InstanceDefinitionsForEntity,
@@ -228,7 +229,7 @@ export class ControlEntityInstance {
 		scope: EntityScope,
 		controlId: SomeControlId,
 		data: SomeEntityModel,
-		isCloned: boolean
+		newIds: NewEntityIds
 	) {
 		this.#logger = LogController.createLogger(`Controls/Fragments/EntityInstance/${controlId}/${data.id}`)
 
@@ -245,8 +246,8 @@ export class ControlEntityInstance {
 			this.#data = newData
 		}
 
-		if (isCloned) {
-			this.#data.id = nanoid()
+		if (newIds) {
+			this.#data.id = newIds === true ? nanoid() : newIds(this.#data.id)
 		}
 
 		if (isInternalConnectionId(data.connectionId)) {
@@ -265,7 +266,7 @@ export class ControlEntityInstance {
 			for (const groupDefinition of supportedChildGroups) {
 				try {
 					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
-					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, isCloned)
+					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, newIds)
 				} catch (e) {
 					this.#logger.error(`Error loading child entity group: ${stringifyError(e)}`)
 				}
@@ -353,13 +354,15 @@ export class ControlEntityInstance {
 	 * @param listId Id of the list, unique among the lists of the copies held by this entity
 	 * @param scope The scope the entities of the list parse their options in
 	 * @param listDefinition The type of entities in the list
-	 * @param entities The entities of the list. Their ids are used as is, so must be unique within the control
+	 * @param entities The entities of the list
+	 * @param newIds How the entities get their ids, which must be unique within the control
 	 */
 	createTransientList(
 		listId: string,
 		scope: EntityScope,
 		listDefinition: ControlEntityListDefinition,
-		entities: SomeEntityModel[]
+		entities: SomeEntityModel[],
+		newIds: NewEntityIds
 	): ControlEntityList {
 		const list = new ControlEntityList(
 			this.#instanceDefinitions,
@@ -370,7 +373,7 @@ export class ControlEntityInstance {
 			{ parentId: this.id, childGroup: listId },
 			listDefinition
 		)
-		list.loadStorage(entities, true, false)
+		list.loadStorage(entities, true, newIds)
 		return list
 	}
 

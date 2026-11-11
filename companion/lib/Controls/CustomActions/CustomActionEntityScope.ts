@@ -1,11 +1,7 @@
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import {
-	EntityModelType,
-	FeedbackEntitySubType,
-	type SomeEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
 import type {
@@ -92,23 +88,21 @@ export class CustomActionEntityScope implements EntityScope, EntityCopy {
 			variableDependencies
 		)
 
+		// The copied entities are told apart from the originals by a prefix, so that they can be matched up again
+		const newIds = (id: string) => `${idPrefix}${id}`
 		this.localVariables = caller.createTransientList(
 			`${idPrefix}local-variables`,
 			this,
 			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Value },
-			deriveEntityIds(
-				idPrefix,
-				customAction.entities.getLocalVariableEntities().map((entity) => entity.asEntityModel(true))
-			)
+			customAction.entities.getLocalVariableEntities().map((entity) => entity.asEntityModel(true)),
+			newIds
 		)
 		this.actions = caller.createTransientList(
 			`${idPrefix}actions`,
 			this,
 			{ type: EntityModelType.Action },
-			deriveEntityIds(
-				idPrefix,
-				customAction.entities.getActionEntities().map((entity) => entity.asEntityModel(true))
-			)
+			customAction.entities.getActionEntities().map((entity) => entity.asEntityModel(true)),
+			newIds
 		)
 		// The local variables first, as the actions use them as they are subscribed
 		this.lists = [this.localVariables, this.actions]
@@ -188,25 +182,4 @@ export class CustomActionEntityScope implements EntityScope, EntityCopy {
 		this.#debounceDispatchChanges.cancel()
 		this.specialExpressionManager.destroy()
 	}
-}
-
-/**
- * Prefix the ids of some entities and their children, so that copies of them have their own ids
- */
-function deriveEntityIds(prefix: string, models: SomeEntityModel[]): SomeEntityModel[] {
-	return models.map((model) => {
-		const children = model.children
-		return {
-			...model,
-			id: `${prefix}${model.id}`,
-			...(children && {
-				children: Object.fromEntries(
-					Object.entries(children).map(([groupId, entities]) => [
-						groupId,
-						entities ? deriveEntityIds(prefix, entities) : entities,
-					])
-				),
-			}),
-		}
-	})
 }

@@ -15,6 +15,7 @@ import type {
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
+	NewEntityIds,
 	NewFeedbackValue,
 	ProcessManagerForEntity,
 } from './Types.js'
@@ -92,9 +93,9 @@ export class ControlEntityList {
 	 * Initialise from storage
 	 * @param entities
 	 * @param skipSubscribe Whether to skip calling subscribe for the new entities
-	 * @param isCloned Whether this is a cloned instance
+	 * @param newIds How the entities get their ids
 	 */
-	loadStorage(entities: SomeEntityModel[], skipSubscribe: boolean, isCloned: boolean): void {
+	loadStorage(entities: SomeEntityModel[], skipSubscribe: boolean, newIds: NewEntityIds): void {
 		// Inform modules of entity cleanup
 		for (const entity of this.#entities) {
 			entity.cleanup()
@@ -117,7 +118,7 @@ export class ControlEntityList {
 						this.#scope,
 						this.#controlId,
 						entity,
-						!!isCloned
+						newIds
 					)
 			) || []
 

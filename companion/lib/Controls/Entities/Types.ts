@@ -65,6 +65,12 @@ export interface EntityScope {
 }
 
 /**
+ * How entities being loaded get their ids: `false` keeps their own, `true` gives each a new random id, as for a
+ * duplicate, or a function gives each an id derived from its own, as for a copy which must be matched to the original
+ */
+export type NewEntityIds = boolean | ((id: string) => string)
+
+/**
  * A copy of something held by an entity, such as of a custom action, which exists only while it is needed. Its lists
  * are included with the entities of the one holding it, which subscribes them in order once it holds it
  */

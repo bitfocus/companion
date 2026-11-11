@@ -270,6 +270,19 @@ describe('loadStorage', () => {
 		expect(getEntityDefinition).toHaveBeenCalledTimes(2)
 	})
 
+	test('ids derived from their own, including those of children', () => {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		const inputModels = ActionTree
+		list.loadStorage(structuredClone(inputModels), true, (id) => `copy/${id}`)
+
+		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
+		const compiledIds = list.getAllEntities().map((e) => e.id)
+		expect(compiledIds).toEqual(inputIds.map((id) => `copy/${id}`))
+	})
+
 	test('ids when cloned', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
@@ -2117,10 +2130,13 @@ describe('transient child groups', () => {
 		res.connectionEntityUpdate.mockClear()
 
 		const transientScope = createTransientScope()
-		const group = callerEntity.createTransientList('instance', transientScope, { type: EntityModelType.Action }, [
-			transientAction,
-			transientFeedback,
-		])
+		const group = callerEntity.createTransientList(
+			'instance',
+			transientScope,
+			{ type: EntityModelType.Action },
+			[transientAction, transientFeedback],
+			false
+		)
 		callerEntity.setCopy('instance', { lists: [group] })
 
 		return { ...res, callerEntity, transientScope, group }
@@ -2203,7 +2219,8 @@ describe('transient child groups', () => {
 			{
 				type: EntityModelType.Action,
 			},
-			[transientAction]
+			[transientAction],
+			false
 		)
 		callerEntity.setCopy('instance', { lists: [newGroup] })
 
@@ -2252,9 +2269,13 @@ describe('transient child groups', () => {
 		const { callerEntity, connectionEntityUpdate } = setup()
 		connectionEntityUpdate.mockClear()
 
-		const list = callerEntity.createTransientList('other', createTransientScope(), { type: EntityModelType.Action }, [
-			{ ...transientAction, id: 'other:action' },
-		])
+		const list = callerEntity.createTransientList(
+			'other',
+			createTransientScope(),
+			{ type: EntityModelType.Action },
+			[{ ...transientAction, id: 'other:action' }],
+			false
+		)
 		expect(connectionEntityUpdate).not.toHaveBeenCalled()
 
 		callerEntity.setCopy('other', { lists: [list] })
