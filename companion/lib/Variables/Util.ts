@@ -39,7 +39,7 @@ import {
 } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
-import { buildCustomActionOptionsVariables } from '../Controls/CustomActionRunFrame.js'
+import { buildCustomActionInputVariables } from '../Controls/CustomActionRunFrame.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
@@ -531,7 +531,7 @@ export function injectOverriddenLocalVariableValues(
  */
 export function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
 	return {
-		...(extras.frame ? buildCustomActionOptionsVariables(extras.frame.options) : {}),
+		...(extras.frame ? buildCustomActionInputVariables(extras.frame.inputValues) : {}),
 		'this:surface_id': extras.surfaceId,
 		'this:delta': extras.rotationDelta ?? undefined,
 	}

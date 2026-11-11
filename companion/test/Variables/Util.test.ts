@@ -714,7 +714,7 @@ describe('buildActionExecutionOverrides', () => {
 			makeExtras({
 				frame: {
 					customActionControlId: CreateCustomActionControlId('abc'),
-					options: { count: 3, name: 'cam' },
+					inputValues: { count: 3, name: 'cam' },
 					localValues: new Map(),
 					getLocalVariableEntities: () => [],
 					localValueChanged: () => {},

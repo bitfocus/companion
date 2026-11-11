@@ -36,7 +36,7 @@ import { ControlActionRunner } from '../ActionRunner.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import {
-	buildCustomActionOptionsVariables,
+	buildCustomActionInputVariables,
 	type CustomActionRunFrame,
 	type CustomActionValues,
 } from '../CustomActionRunFrame.js'
@@ -175,7 +175,7 @@ export class ControlCustomAction
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
-			getDefaultOptionsVariables: () => buildCustomActionOptionsVariables(this.#getDefaultOptions()),
+			getDefaultInputVariables: () => buildCustomActionInputVariables(this.#getDefaultInputValues()),
 			localVariableRenamed: (fromName, toName) => this.#localVariableRenamed(fromName, toName),
 		})
 
@@ -240,7 +240,7 @@ export class ControlCustomAction
 	/**
 	 * The values of the inputs when they have not been given
 	 */
-	#getDefaultOptions(): VariableValues {
+	#getDefaultInputValues(): VariableValues {
 		const values: VariableValues = {}
 		for (const input of this.#inputs) {
 			values[input.id] = 'default' in input ? structuredClone(input.default) : undefined
@@ -294,7 +294,7 @@ export class ControlCustomAction
 		parser: VariablesAndExpressionParser,
 		callerControlId: SomeControlId | null
 	):
-		| { ok: true; options: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> }
+		| { ok: true; inputValues: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> }
 		| { ok: false; optionErrors: Record<string, string | undefined>; referencedVariableIds: ReadonlySet<string> } {
 		const optionsWithDefaults: ExpressionableOptionsObject = { ...rawOptions }
 		for (const input of this.#inputs) {
@@ -306,7 +306,7 @@ export class ControlCustomAction
 		// Invalid inputs are refused, as the options of a module action are
 		const parseRes = parser.parseEntityOptions(this.toActionDefinition(), optionsWithDefaults, callerControlId)
 		return parseRes.ok
-			? { ok: true, options: parseRes.parsedOptions, referencedVariableIds: parseRes.referencedVariableIds }
+			? { ok: true, inputValues: parseRes.parsedOptions, referencedVariableIds: parseRes.referencedVariableIds }
 			: { ok: false, optionErrors: parseRes.optionErrors, referencedVariableIds: parseRes.referencedVariableIds }
 	}
 
@@ -334,7 +334,7 @@ export class ControlCustomAction
 
 		const frame: CustomActionRunFrame = {
 			customActionControlId: this.controlId,
-			options: this.#getDefaultOptions(),
+			inputValues: this.#getDefaultInputValues(),
 			localValues: new Map(),
 			getLocalVariableEntities: () => this.entities.getLocalVariableEntities(),
 			// The entities of the custom action itself are not specific to a run
@@ -413,7 +413,7 @@ export class ControlCustomAction
 			localVariableEntities,
 			location,
 			pageEntities,
-			{ ...buildCustomActionOptionsVariables(values.options), ...overrideVariableValues },
+			{ ...buildCustomActionInputVariables(values.inputValues), ...overrideVariableValues },
 			options
 		)
 	}

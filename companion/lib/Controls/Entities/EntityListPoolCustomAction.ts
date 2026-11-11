@@ -24,7 +24,7 @@ import type { NewFeedbackValue } from './Types.js'
 
 export interface ControlEntityListPoolCustomActionProps extends ControlEntityListPoolProps {
 	/** Get the `$(options:*)` variables for when the custom action is not being run, from the defaults of its inputs */
-	getDefaultOptionsVariables: () => VariableValues
+	getDefaultInputVariables: () => VariableValues
 	/** A local variable has been renamed, so that whatever refers to it by name can follow */
 	localVariableRenamed: (fromName: string, toName: string) => void
 }
@@ -34,7 +34,7 @@ export interface ControlEntityListPoolCustomActionProps extends ControlEntityLis
  * pool (the structural entity-edit mutators are mixed in via {@link WithEntityEditing}).
  */
 export class ControlEntityListPoolCustomAction extends WithEntityEditing(ControlEntityListPoolBase) {
-	readonly #getDefaultOptionsVariables: () => VariableValues
+	readonly #getDefaultInputVariables: () => VariableValues
 	readonly #localVariableRenamed: (fromName: string, toName: string) => void
 
 	#actions: ControlEntityList
@@ -45,7 +45,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		// Its entities run inside the custom action itself
 		super(props, false, [props.controlId])
 
-		this.#getDefaultOptionsVariables = props.getDefaultOptionsVariables
+		this.#getDefaultInputVariables = props.getDefaultInputVariables
 		this.#localVariableRenamed = props.localVariableRenamed
 
 		this.#actions = this.createEntityList({ type: EntityModelType.Action })
@@ -92,7 +92,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		return this.variableValues.createVariablesAndExpressionParser(
 			null,
 			this.getLocalVariableEntities(),
-			{ ...this.#getDefaultOptionsVariables(), ...overrideVariableValues },
+			{ ...this.#getDefaultInputVariables(), ...overrideVariableValues },
 			null,
 			options
 		)

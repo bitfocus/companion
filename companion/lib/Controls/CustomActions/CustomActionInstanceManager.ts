@@ -253,7 +253,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				`Failed to parse the inputs of custom action "${customAction.options.name}". One or more inputs were invalid\nErrors: ${JSON.stringify(parseRes.optionErrors)}`
 			)
 		}
-		const options = parseRes.options
+		const inputValues = parseRes.inputValues
 
 		const scope = new CustomActionEntityScope(
 			customAction,
@@ -262,7 +262,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			this,
 			this.#renderClock,
 			this.#variableDependencies,
-			{ customActionControlId: customAction.controlId, options, localValues: new Map() }
+			{ customActionControlId: customAction.controlId, inputValues, localValues: new Map() }
 		)
 
 		const runId = nanoid()
@@ -294,7 +294,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			const lists = this.#buildCopyLists(caller, scope, customAction, groupIds, `${caller.id}@${runId}/`)
 
 			// When the run sees what the copy held by the caller sees, it can start with its values
-			if (copy.scope && isEqual(options, copy.scope.values.options)) {
+			if (copy.scope && isEqual(inputValues, copy.scope.values.inputValues)) {
 				const copyLists = getCopyLists(
 					caller,
 					CUSTOM_ACTION_COPY_ACTIONS_GROUP,
@@ -429,7 +429,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			)
 			return
 		}
-		const options = parseRes.options
+		const inputValues = parseRes.inputValues
 
 		const scope = new CustomActionEntityScope(
 			customAction,
@@ -438,7 +438,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			this,
 			this.#renderClock,
 			this.#variableDependencies,
-			{ customActionControlId, options, localValues: new Map() }
+			{ customActionControlId, inputValues, localValues: new Map() }
 		)
 		copy.scope = scope
 
@@ -517,7 +517,8 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			// The custom action this calls has its own copy, which can start from the existing one if it sees the same
 			const targetScope = this.getCopyScope(entity)
 			const sourceScope = this.getCopyScope(sourceEntity)
-			if (!targetScope || !sourceScope || !isEqual(targetScope.values.options, sourceScope.values.options)) continue
+			if (!targetScope || !sourceScope || !isEqual(targetScope.values.inputValues, sourceScope.values.inputValues))
+				continue
 
 			const targetLists = getCopyLists(
 				entity,
@@ -561,9 +562,9 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		}
 		copy.inputVariables.set(parseRes.referencedVariableIds)
 
-		if (isEqual(parseRes.options, scope.values.options)) return
+		if (isEqual(parseRes.inputValues, scope.values.inputValues)) return
 
-		scope.setValues({ ...scope.values, options: parseRes.options })
+		scope.setValues({ ...scope.values, inputValues: parseRes.inputValues })
 	}
 
 	/**

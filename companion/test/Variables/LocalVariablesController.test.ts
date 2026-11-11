@@ -319,7 +319,7 @@ describe('LocalVariablesController', () => {
 		function makeFrame(): CustomActionRunFrame {
 			return {
 				customActionControlId: CreateCustomActionControlId('abc'),
-				options: {},
+				inputValues: {},
 				localValues: new Map(),
 				getLocalVariableEntities: () => [],
 				localValueChanged: vi.fn(),

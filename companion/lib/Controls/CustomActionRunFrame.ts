@@ -14,7 +14,7 @@ export interface CustomActionValues {
 	/** The control id of the custom action */
 	readonly customActionControlId: CustomActionControlId
 	/** The values of the inputs of the custom action, exposed to its entities as `$(options:<id>)` */
-	readonly options: VariableValues
+	readonly inputValues: VariableValues
 	/**
 	 * The values of the local variables which have been set, by name (without the `local:` prefix).
 	 * A variable which has not been set has its startup value
@@ -34,11 +34,11 @@ export interface CustomActionRunFrame extends CustomActionValues {
 }
 
 /**
- * Build the `$(options:*)` variables for a run of a custom action
+ * Build the `$(options:*)` variables from the values of the inputs of a custom action
  */
-export function buildCustomActionOptionsVariables(options: VariableValues): VariableValues {
+export function buildCustomActionInputVariables(inputValues: VariableValues): VariableValues {
 	const values: VariableValues = {}
-	for (const [id, value] of Object.entries(options)) {
+	for (const [id, value] of Object.entries(inputValues)) {
 		values[`options:${id}`] = value
 	}
 	return values

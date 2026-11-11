@@ -842,7 +842,7 @@ describe('ControlCustomAction', () => {
 			const finished: unknown[] = []
 			executeAction.mockImplementation(async (_action, extras) => {
 				await new Promise((resolve) => setTimeout(resolve, 300))
-				if (!extras.abortDelayed.aborted) finished.push(extras.frame?.options.n)
+				if (!extras.abortDelayed.aborted) finished.push(extras.frame?.inputValues.n)
 			})
 
 			const run = runAsButton([stopped, kept])
