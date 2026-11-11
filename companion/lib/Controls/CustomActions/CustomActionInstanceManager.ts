@@ -326,7 +326,11 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				// Once aborted the caller has moved on, so must not see anything the run does after
 				if (!targets || runExtras.abortDelayed.aborted) return
 
-				const value = customAction.readRunLocalVariable(frame, runExtras, variableName)
+				// An output is a user value, so it is what the run has set it to, or else its startup value
+				const value = frame.localValues.has(variableName)
+					? frame.localValues.get(variableName)
+					: lists.localVariables.getDirectEntities().find((entity) => entity.rawLocalVariableName === variableName)
+							?.feedbackValue
 				for (const target of targets) storeOutput(target, value)
 			}
 

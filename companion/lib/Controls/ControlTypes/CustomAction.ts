@@ -1,4 +1,3 @@
-import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
@@ -339,22 +338,6 @@ export class ControlCustomAction
 			.catch((e) => {
 				this.logger.error(`Failed to run actions: ${e.message}`)
 			})
-	}
-
-	/**
-	 * Get the value of a local variable during a run
-	 * @param frame The state of the run
-	 * @param extras The execution context of the caller
-	 * @param variableName The name of the local variable, without the `local:` prefix
-	 */
-	readRunLocalVariable(
-		frame: CustomActionRunFrame,
-		extras: RunActionExtras,
-		variableName: string
-	): JsonValue | undefined {
-		const parser = this.createRunParser({ ...extras, frame }, { allowClockSensitive: false })
-		const result = parser.executeExpression(`$(local:${variableName})`, undefined)
-		return result.ok ? result.value : undefined
 	}
 
 	/**
