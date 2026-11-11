@@ -820,7 +820,8 @@
 								"default": {
 									"name": "New custom action",
 									"description": "",
-									"sortOrder": 0
+									"sortOrder": 0,
+									"notes": ""
 								},
 								"type": "object",
 								"properties": {
@@ -840,6 +841,7 @@
 										"type": "string"
 									},
 									"notes": {
+										"default": "",
 										"type": "string"
 									}
 								}

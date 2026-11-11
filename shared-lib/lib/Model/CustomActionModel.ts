@@ -13,7 +13,7 @@ export const CustomActionOptionsSchema = z.object({
 	description: z.string().default(''),
 	sortOrder: z.number().default(0),
 	collectionId: z.string().optional(),
-	notes: z.string().optional(),
+	notes: z.string().default(''),
 })
 
 export type CustomActionOptions = z.output<typeof CustomActionOptionsSchema>

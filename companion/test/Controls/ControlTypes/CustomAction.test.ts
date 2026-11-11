@@ -7,7 +7,7 @@ import {
 	CreateCustomActionControlId,
 	type CustomActionControlId,
 } from '@companion-app/shared/ControlId.js'
-import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import { CustomActionOptionsSchema, type CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -206,7 +206,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 
 	const storage: CustomActionModel = {
 		type: 'custom-action',
-		options: { ...ControlCustomAction.DefaultOptions },
+		options: { ...CustomActionOptionsSchema.parse({}) },
 		inputs: [numberInput],
 		actions: [],
 		localVariables: [],
@@ -278,7 +278,7 @@ describe('ControlCustomAction', () => {
 	describe('action definition', () => {
 		test('describes the inputs and outputs', () => {
 			const { control } = createHarness({
-				options: { ...ControlCustomAction.DefaultOptions, name: 'My action', description: 'desc' },
+				options: { ...CustomActionOptionsSchema.parse({}), name: 'My action', description: 'desc' },
 				localVariables: [userValue('v', 0), userValue('unlabelled', 0)],
 				outputs: [
 					{ variableName: 'v', label: 'Count' },
@@ -877,7 +877,7 @@ describe('ControlCustomAction', () => {
 				CreateCustomActionControlId('other'),
 				{
 					type: 'custom-action',
-					options: { ...ControlCustomAction.DefaultOptions },
+					options: { ...CustomActionOptionsSchema.parse({}) },
 					inputs: [],
 					actions: [callAction()],
 					localVariables: [],
@@ -1286,7 +1286,7 @@ describe('ControlCustomAction', () => {
 				CreateCustomActionControlId('inner'),
 				{
 					type: 'custom-action',
-					options: { ...ControlCustomAction.DefaultOptions },
+					options: { ...CustomActionOptionsSchema.parse({}) },
 					inputs: [numberInput],
 					actions: [action('record')],
 					localVariables: [],
@@ -1318,7 +1318,7 @@ describe('ControlCustomAction', () => {
 				CreateCustomActionControlId('other'),
 				{
 					type: 'custom-action',
-					options: { ...ControlCustomAction.DefaultOptions },
+					options: { ...CustomActionOptionsSchema.parse({}) },
 					inputs: [],
 					actions: [callAction()],
 					localVariables: [],
@@ -1351,7 +1351,7 @@ describe('ControlCustomAction', () => {
 					CreateCustomActionControlId(`level-${i}`),
 					{
 						type: 'custom-action',
-						options: { ...ControlCustomAction.DefaultOptions },
+						options: { ...CustomActionOptionsSchema.parse({}) },
 						inputs: [],
 						actions: [callAction({}, `level-${i + 1}`)],
 						localVariables: [],

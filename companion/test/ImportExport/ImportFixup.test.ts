@@ -425,7 +425,7 @@ describe('fixupCustomActionControl', () => {
 	function makeCustomAction(overrides: Partial<CustomActionModel> = {}): CustomActionModel {
 		return {
 			type: 'custom-action',
-			options: { name: 'Custom', description: '', sortOrder: 0 },
+			options: { name: 'Custom', description: '', sortOrder: 0, notes: '' },
 			inputs: [{ type: 'textinput', id: 'text', label: 'Text', default: '' }],
 			actions: [],
 			localVariables: [],

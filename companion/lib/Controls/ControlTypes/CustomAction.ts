@@ -97,16 +97,6 @@ export class ControlCustomAction
 	readonly optionsSchema: z.ZodType<CustomActionOptions> = CustomActionOptionsSchema
 
 	/**
-	 * The defaults options for a custom action
-	 */
-	static DefaultOptions: CustomActionOptions = {
-		name: 'New custom action',
-		description: '',
-		sortOrder: 0,
-		notes: '',
-	}
-
-	/**
 	 * The last sent custom action json object
 	 */
 	#lastSentClientJson: ClientCustomActionData | null = null
@@ -189,7 +179,7 @@ export class ControlCustomAction
 			localVariableRenamed: (fromName, toName) => this.#localVariableRenamed(fromName, toName),
 		})
 
-		this.options = structuredClone(ControlCustomAction.DefaultOptions)
+		this.options = this.optionsSchema.parse({})
 
 		if (!storage) {
 			// New control
