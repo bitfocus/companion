@@ -277,13 +277,14 @@ const StoreResultTargetOption = {
 	] satisfies (DropdownChoice & { id: StoreType })[],
 	default: 'discard',
 	label: 'Store Action Result',
-	tooltip: 'The action result will be stored here',
 	disableAutoExpression: true,
 } as const satisfies CompanionInputFieldDropdownExtended
 
 interface StoreResultProps {
 	/** The label of the field which chooses where the value goes */
 	label: string
+	/** What the value is, for the tooltip of that field */
+	tooltip: string
 	isLocatedInGrid: boolean
 	controlId: SomeControlId
 	storeResult: RawStoreResult | undefined
@@ -294,6 +295,7 @@ interface StoreResultProps {
 
 export const StoreResultFields = observer(function StoreResultFields({
 	label,
+	tooltip,
 	isLocatedInGrid,
 	controlId,
 	storeResult,
@@ -305,7 +307,7 @@ export const StoreResultFields = observer(function StoreResultFields({
 
 	const entityType = EntityModelType.Action
 
-	const targetOption = useMemo(() => ({ ...StoreResultTargetOption, label }), [label])
+	const targetOption = useMemo(() => ({ ...StoreResultTargetOption, label, tooltip }), [label, tooltip])
 
 	const localVariableTarget = useRef<RawStoreResultLocalVariable>(
 		storeResult?.type === 'local-variable'

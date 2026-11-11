@@ -199,6 +199,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						controlId && (
 							<StoreResultFields
 								label="Store Action Result"
+								tooltip="The action result will be stored here"
 								isLocatedInGrid={!!location}
 								controlId={controlId}
 								storeResult={entity.type === EntityModelType.Action ? entity.storeResult : undefined}
@@ -215,6 +216,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							<StoreResultFields
 								key={output.id}
 								label={`Store ${output.label || output.id}`}
+								tooltip="This output of the custom action will be stored here"
 								isLocatedInGrid={!!location}
 								controlId={controlId}
 								storeResult={entity.outputTargets?.[output.id]}
