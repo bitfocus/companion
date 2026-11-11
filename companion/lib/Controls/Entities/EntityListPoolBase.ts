@@ -128,6 +128,8 @@ export abstract class ControlEntityListPoolBase {
 			specialExpressionManager,
 			customActionChain,
 			customActionInstances: props.customActionInstances,
+			// The pool reports the changes of its own local variables, in tryTriggerLocalVariablesChanged
+			localVariablesChanged: () => undefined,
 			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),
 		}
 	}

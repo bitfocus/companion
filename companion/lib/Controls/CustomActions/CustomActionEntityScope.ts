@@ -108,6 +108,10 @@ export class CustomActionEntityScope implements EntityScope {
 		this.#debounceResubscribeEntities()
 	}
 
+	localVariablesChanged(names: ReadonlySet<string>): void {
+		for (const name of names) this.localValueChanged(name.slice('local:'.length))
+	}
+
 	readonly #debounceResubscribeEntities = debounceFn(() => this.#resubscribeEntities(), { wait: 10, maxWait: 50 })
 
 	#resubscribeEntities(): void {

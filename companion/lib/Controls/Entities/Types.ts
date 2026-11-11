@@ -50,6 +50,12 @@ export interface EntityScope {
 	 * from what they copy when it changes, so are never upgraded or saved themselves
 	 */
 	readonly isTransient: boolean
+	/**
+	 * Some local variables among the entities have changed value. A control reports its own local variables itself, so
+	 * only a copy, whose values are its own, needs to do anything
+	 * @param names The names of the variables, with their `local:` prefix
+	 */
+	localVariablesChanged(names: ReadonlySet<string>): void
 	/** Create a parser for the options of the entities */
 	createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null,

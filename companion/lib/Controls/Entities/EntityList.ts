@@ -433,7 +433,9 @@ export class ControlEntityList {
 		connectionId: string,
 		newValues: ReadonlyMap<string, NewFeedbackValue>
 	): ControlEntityInstance[] {
-		return this.#entities.flatMap((entity) => entity.updateFeedbackValues(connectionId, newValues))
+		const changed = this.#entities.flatMap((entity) => entity.updateFeedbackValues(connectionId, newValues))
+		this.#reportLocalVariablesChanged(changed)
+		return changed
 	}
 
 	/**
@@ -443,7 +445,21 @@ export class ControlEntityList {
 	updateIsInvertedValues(
 		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
 	): ControlEntityInstance[] {
-		return this.#entities.flatMap((entity) => entity.updateIsInvertedValues(newValues))
+		const changed = this.#entities.flatMap((entity) => entity.updateIsInvertedValues(newValues))
+		this.#reportLocalVariablesChanged(changed)
+		return changed
+	}
+
+	/**
+	 * Tell the scope which of the local variables in this list have changed value, as for a copy nothing else will
+	 * @param changed The entities which changed, in this list or inside its entities
+	 */
+	#reportLocalVariablesChanged(changed: ControlEntityInstance[]): void {
+		const names = new Set<string>()
+		for (const entity of changed) {
+			if (entity.localVariableName && this.#entities.includes(entity)) names.add(entity.localVariableName)
+		}
+		if (names.size > 0) this.#scope.localVariablesChanged(names)
 	}
 
 	/**

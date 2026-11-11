@@ -61,6 +61,7 @@ function createList(
 		specialExpressionManager,
 		customActionChain: [],
 		customActionInstances,
+		localVariablesChanged: vi.fn(),
 		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 	}
 	const internalController: InternalControllerForEntity = {
@@ -2104,6 +2105,7 @@ describe('transient child groups', () => {
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
 			customActionChain: ['custom-action:1'],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			localVariablesChanged: vi.fn(),
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
 	}

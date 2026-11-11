@@ -1916,6 +1916,64 @@ describe('custom actions using a connection', () => {
 		}
 	)
 
+	test.each([{ inCustomAction: false }, { inCustomAction: true }])(
+		'a connection feedback follows a local variable fed by the connection (in a custom action: $inCustomAction)',
+		async ({ inCustomAction }) => {
+			const connectionId = await addConnection('test-module-2-1-3')
+			const setLastValue = await addSetter(connectionId)
+
+			const buttonId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+			const customActionId = inCustomAction ? await app.trpc().controls.customActions.create({ name: 'Follow' }) : null
+			const ownerId = customActionId ?? buttonId
+
+			/** Add a local variable which is the connection feedback `last_value_is`, with its value option */
+			const addFeedbackVariable = async (name: string, value: ExpressionOrValue<any>) => {
+				const entityId = await app.trpc().controls.entities.add({
+					controlId: ownerId,
+					entityLocation: 'local-variables',
+					ownerId: null,
+					connectionId,
+					entityType: EntityModelType.Feedback,
+					entityDefinition: 'last_value_is',
+				})
+				if (!entityId) throw new Error('Failed to add the local variable')
+				await app.trpc().controls.entities.setVariableName({
+					controlId: ownerId,
+					entityLocation: 'local-variables',
+					entityId,
+					name,
+				})
+				await app.trpc().controls.entities.setOption({
+					controlId: ownerId,
+					entityLocation: 'local-variables',
+					entityId,
+					key: 'value',
+					value,
+				})
+				return entityId
+			}
+			const matchesId = await addFeedbackVariable('matches', exprVal('alpha'))
+			// Checks for alpha only once `matches` says the last value is alpha
+			const followId = await addFeedbackVariable('follow', exprExpr("$(local:matches) ? 'alpha' : 'beta'"))
+
+			const callId = customActionId ? app.addCustomActionCall(buttonId, customActionId, {}, null) : null
+			const valueOf = (entityId: string, name: string) =>
+				callId ? getCopyValue(app, buttonId, callId, name) : app.getFeedbackValue(buttonId, entityId)
+
+			await setLastValue('beta')
+			await vi.waitFor(() => {
+				expect(valueOf(matchesId, 'matches')).toBe(false)
+				expect(valueOf(followId, 'follow')).toBe(true)
+			}, 10_000)
+
+			await setLastValue('alpha')
+			await vi.waitFor(() => {
+				expect(valueOf(matchesId, 'matches')).toBe(true)
+				expect(valueOf(followId, 'follow')).toBe(true)
+			}, 10_000)
+		}
+	)
+
 	test('a copy rebuilt as the custom action is edited keeps the value from the connection', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
