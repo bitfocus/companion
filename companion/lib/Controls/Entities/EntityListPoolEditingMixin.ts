@@ -1,5 +1,6 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
+import { isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import {
@@ -382,6 +383,9 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 
 			const entity = entityList.findById(id)
 			if (!entity) return false
+
+			// The definitions of the internal module and of custom actions mean nothing to a connection, and the reverse
+			if (isVirtualConnectionId(entity.connectionId) || isVirtualConnectionId(String(connectionId))) return false
 
 			entity.setConnectionId(connectionId)
 

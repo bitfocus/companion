@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CUSTOM_ACTIONS_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
@@ -184,6 +185,22 @@ describe('EntityListPool - entitySetConnection', () => {
 
 		expect(pool.entitySetConnection(downSet(), 'nope', 'conn')).toBe(false)
 	})
+
+	test.each([INTERNAL_CONNECTION_ID, CUSTOM_ACTIONS_CONNECTION_ID])(
+		'does not change an action to or from the %s connection',
+		(virtualConnectionId) => {
+			const { pool } = createPool()
+			const action = actionModel({ connectionId: 'conn-old' })
+			const virtual = actionModel({ connectionId: virtualConnectionId, definitionId: 'def-virtual' })
+			pool.entityAdd(downSet(), null, action, virtual)
+
+			expect(pool.entitySetConnection(downSet(), action.id, virtualConnectionId)).toBe(false)
+			expect(pool.findEntityById(action.id)?.connectionId).toBe('conn-old')
+
+			expect(pool.entitySetConnection(downSet(), virtual.id, 'conn-new')).toBe(false)
+			expect(pool.findEntityById(virtual.id)?.connectionId).toBe(virtualConnectionId)
+		}
+	)
 })
 
 describe('EntityListPool - entitySetInverted', () => {

@@ -1,4 +1,4 @@
-import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { getCustomActionCallDefinition, type CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import {
@@ -158,11 +158,6 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	override entityReplaceAll(listId: SomeSocketEntityLocation, entities: SomeEntityModel[]): boolean {
 		if (this.#containsSelfCall(entities)) return false
 		return super.entityReplaceAll(listId, entities)
-	}
-
-	override entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean {
-		if (isCustomActionsConnectionId(String(connectionId))) return false
-		return super.entitySetConnection(listId, id, connectionId)
 	}
 
 	/**
