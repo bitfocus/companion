@@ -114,7 +114,7 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 		listId: SomeSocketEntityLocation,
 		id: string,
 		outputId: string,
-		target: RawStoreResult | undefined
+		target: RawStoreResult | null
 	): boolean
 
 	/**
@@ -429,7 +429,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			listId: SomeSocketEntityLocation,
 			id: string,
 			outputId: string,
-			target: RawStoreResult | undefined
+			target: RawStoreResult | null
 		): boolean {
 			const entity = this.getEntityList(listId)?.findById(id)
 			if (!entity) return false

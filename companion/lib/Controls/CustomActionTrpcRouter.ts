@@ -116,7 +116,7 @@ export function pruneCustomActionOutputTargets(
 
 			for (const outputId of Object.keys(entity.rawOutputTargets)) {
 				if (ids.has(outputId)) continue
-				entity.setRawOutputTarget(outputId, undefined)
+				entity.setRawOutputTarget(outputId, null)
 				changed = true
 			}
 		}
@@ -152,7 +152,7 @@ export function renameCustomActionOutputInCallers(
 			const target = entity.rawOutputTargets[fromId]
 			if (!target) continue
 
-			entity.setRawOutputTarget(fromId, undefined)
+			entity.setRawOutputTarget(fromId, null)
 			entity.setRawOutputTarget(toId, target)
 			changed = true
 		}

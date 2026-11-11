@@ -47,7 +47,7 @@ export interface IEntityEditorService {
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
 	setRawStoreResult: ((entityId: string, target: RawStoreResult | undefined) => void) | undefined
-	setRawOutputTarget: ((entityId: string, outputId: string, target: RawStoreResult | undefined) => void) | undefined
+	setRawOutputTarget: ((entityId: string, outputId: string, target: RawStoreResult | null) => void) | undefined
 
 	setInverted: (entityId: string, inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (entityId: string, name: string) => void
@@ -68,7 +68,7 @@ export interface IEntityEditorActionService {
 	setHeadline: ((headline: string) => void) | undefined
 
 	setRawStoreResult: ((target: RawStoreResult | undefined) => void) | undefined
-	setRawOutputTarget: ((outputId: string, target: RawStoreResult | undefined) => void) | undefined
+	setRawOutputTarget: ((outputId: string, target: RawStoreResult | null) => void) | undefined
 
 	setInverted: (inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (name: string) => void
@@ -271,7 +271,7 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
-			setRawOutputTarget: (entityId: string, outputId: string, target: RawStoreResult | undefined) => {
+			setRawOutputTarget: (entityId: string, outputId: string, target: RawStoreResult | null) => {
 				setRawOutputTargetMutation
 					.mutateAsync({ controlId, entityLocation: listId, entityId, outputId, target })
 					.catch((e) => {
@@ -385,7 +385,7 @@ export function useControlEntityService(
 				? (target: RawStoreResult | undefined) => serviceFactory.setRawStoreResult?.(entityId, target)
 				: undefined,
 			setRawOutputTarget: serviceFactory.setRawOutputTarget
-				? (outputId: string, target: RawStoreResult | undefined) =>
+				? (outputId: string, target: RawStoreResult | null) =>
 						serviceFactory.setRawOutputTarget?.(entityId, outputId, target)
 				: undefined,
 			setInverted: (inverted: ExpressionOrValue<boolean>) => serviceFactory.setInverted(entityId, inverted),

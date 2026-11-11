@@ -149,8 +149,7 @@ export function createEntitiesTrpcRouter(
 					entityLocation: zodEntityLocation,
 					entityId: z.string(),
 					outputId: z.string(),
-					// Optional rather than undefined, as tRPC drops undefined fields
-					target: zodRawStoreResult.optional(),
+					target: zodRawStoreResult.nullable(),
 				})
 			)
 			.mutation(async ({ input: { controlId, entityLocation, entityId, outputId, target } }) => {

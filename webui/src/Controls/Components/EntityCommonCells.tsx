@@ -220,7 +220,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								isLocatedInGrid={!!location}
 								controlId={controlId}
 								storeResult={entity.outputTargets?.[output.id]}
-								setStoreResult={(target) => service.setRawOutputTarget?.(output.id, target)}
+								setStoreResult={(target) => service.setRawOutputTarget?.(output.id, target ?? null)}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
 							/>

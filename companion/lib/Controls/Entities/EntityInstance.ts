@@ -576,10 +576,10 @@ export class ControlEntityInstance {
 	/**
 	 * Set the target into which an output of this action is written
 	 * @param outputId The id of the output
-	 * @param target The target, or undefined to discard the output
+	 * @param target The target, or null to discard the output
 	 * @returns Whether it was set, as only an action has outputs
 	 */
-	setRawOutputTarget(outputId: string, target: RawStoreResult | undefined): boolean {
+	setRawOutputTarget(outputId: string, target: RawStoreResult | null): boolean {
 		if (this.type !== EntityModelType.Action) return false
 		// The id is used as a key, so it can't be one which every object has
 		if (BANNED_PROPS.has(outputId)) return false
