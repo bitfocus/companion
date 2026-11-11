@@ -21,9 +21,9 @@ import { ActionRunner } from '../../../lib/Controls/ActionRunner.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomAction } from '../../../lib/Controls/ControlTypes/CustomAction.js'
+import type { CustomActionEntityScope } from '../../../lib/Controls/CustomActions/CustomActionEntityScope.js'
 import {
-	CUSTOM_ACTION_COPY_ACTIONS_GROUP,
-	CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP,
+	CUSTOM_ACTION_HELD_COPY,
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import {
@@ -64,6 +64,11 @@ function getEntityDefinition(
 	}
 	void definitionId
 	return undefined
+}
+
+/** The copy of a custom action held by an action which calls it */
+function heldCopy(caller: ControlEntityInstance): CustomActionEntityScope | undefined {
+	return caller.getCopy(CUSTOM_ACTION_HELD_COPY) as CustomActionEntityScope | undefined
 }
 
 let nextId = 0
@@ -929,9 +934,9 @@ describe('ControlCustomAction', () => {
 			const caller = createCaller([callAction({ n: exprVal(5) })])
 			const callerEntity = caller.entities.getActionEntities()[0]
 
-			const copyActions = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
+			const copyActions = heldCopy(callerEntity)?.actions
 			expect(copyActions?.getDirectEntities().map((e) => e.id)).toEqual([`${callerEntity.id}/${recordAction.id}`])
-			const copyLocals = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+			const copyLocals = heldCopy(callerEntity)?.localVariables
 			expect(copyLocals?.getDirectEntities().map((e) => e.id)).toEqual([`${callerEntity.id}/${local.id}`])
 
 			// The copy is subscribed in the control holding it
@@ -1036,7 +1041,7 @@ describe('ControlCustomAction', () => {
 			const caller = createCaller([callAction({ n: exprExpr('$(test:num)') })])
 			const callerEntity = caller.entities.getActionEntities()[0]
 			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
-			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 
 			// A variable it uses makes it valid
 			variableValues.setVariableValues('test', [{ id: 'num', value: 4 }])
@@ -1045,7 +1050,7 @@ describe('ControlCustomAction', () => {
 			// And invalid again
 			variableValues.setVariableValues('test', [{ id: 'num', value: 99 }])
 			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
-			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 		})
 
 		test('the copy is not re-subscribed when a variable change leaves its inputs the same', () => {
@@ -1231,9 +1236,8 @@ describe('ControlCustomAction', () => {
 
 			await vi.waitFor(() => {
 				expect(
-					callerEntity
-						.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
-						?.getDirectEntities()
+					heldCopy(callerEntity)
+						?.actions.getDirectEntities()
 						.map((e) => e.definitionId)
 				).toEqual(['first', 'second'])
 			})
@@ -1252,7 +1256,7 @@ describe('ControlCustomAction', () => {
 			controlStore.controls.delete(control.controlId)
 
 			await vi.waitFor(() => {
-				expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+				expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 			})
 			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
 		})
@@ -1266,12 +1270,12 @@ describe('ControlCustomAction', () => {
 			const copyId = `${callerEntity.id}/${recordAction.id}`
 
 			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, false)
-			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			expect(heldCopy(callerEntity)?.actions).toBeUndefined()
 			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
 			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
 
 			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, true)
-			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeDefined()
+			expect(heldCopy(callerEntity)?.actions).toBeDefined()
 
 			internalModule.entityDelete.mockClear()
 			caller.entities.entityRemove('custom_action_actions', callerEntity.id)
@@ -1301,12 +1305,11 @@ describe('ControlCustomAction', () => {
 			const caller = createCaller([callAction({ n: exprVal(5) })])
 			const callerEntity = caller.entities.getActionEntities()[0]
 
-			const nestedCall = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!.getDirectEntities()[0]
+			const nestedCall = heldCopy(callerEntity)!.actions.getDirectEntities()[0]
 			expect(evaluateInCopy(customActionInstances, caller, nestedCall, '$(options:n)')).toBe(6)
 			expect(
-				nestedCall
-					.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
-					?.getDirectEntities()
+				heldCopy(nestedCall)
+					?.actions.getDirectEntities()
 					.map((e) => e.definitionId)
 			).toEqual(['record'])
 		})
@@ -1334,12 +1337,12 @@ describe('ControlCustomAction', () => {
 			const callerEntity = caller.entities.getActionEntities()[0]
 
 			// The caller holds a copy of the custom action, which holds a copy of the other one
-			const callOther = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!.getDirectEntities()[0]
-			const callBack = callOther.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!.getDirectEntities()[0]
+			const callOther = heldCopy(callerEntity)!.actions.getDirectEntities()[0]
+			const callBack = heldCopy(callOther)!.actions.getDirectEntities()[0]
 			expect(callBack.definitionId).toBe(CUSTOM_ACTION_ID)
 
 			// But that calls the first custom action again, so isn't copied
-			expect(callBack.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			expect(heldCopy(callBack)?.actions).toBeUndefined()
 			expect(customActionInstances.getCopyScope(callBack)).toBeUndefined()
 		})
 
@@ -1369,10 +1372,10 @@ describe('ControlCustomAction', () => {
 			let depth = 0
 			let entity: ControlEntityInstance | undefined = caller.entities.getActionEntities()[0]
 			while (entity) {
-				const group = entity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
-				if (!group) break
+				const copy = heldCopy(entity)
+				if (!copy) break
 				depth++
-				entity = group.getDirectEntities()[0]
+				entity = copy.actions.getDirectEntities()[0]
 			}
 
 			// The caller here is a custom action itself, so is the first of the levels allowed

@@ -18,7 +18,8 @@ import {
 } from '@companion-module/base-old/dist/host-api/ipc-wrapper.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH } from '../../lib/Controls/CustomActionRunFrame.js'
-import { CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
+import type { CustomActionEntityScope } from '../../lib/Controls/CustomActions/CustomActionEntityScope.js'
+import { CUSTOM_ACTION_HELD_COPY } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
 import { createMockTrpcContext } from '../Util.js'
@@ -26,6 +27,11 @@ import { createTestApp, type TestApp } from './TestApp.js'
 
 // Booting the application takes a few seconds, so the default timeouts are too tight
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
+
+/** The copy of a custom action held by an action which calls it */
+function heldCopy(caller: ControlEntityInstance): CustomActionEntityScope | undefined {
+	return caller.getCopy(CUSTOM_ACTION_HELD_COPY) as CustomActionEntityScope | undefined
+}
 
 /** Find an entity on a control */
 function getEntity(app: TestApp, controlId: SomeControlId, entityId: string): ControlEntityInstance {
@@ -47,7 +53,7 @@ function findCallId(app: TestApp, controlId: SomeControlId): string {
 
 /** The value of a local variable in the copy of a custom action held by an action which calls it */
 function getCopyValue(app: TestApp, controlId: SomeControlId, callId: string, variableName: string): unknown {
-	const copyLocals = getEntity(app, controlId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+	const copyLocals = heldCopy(getEntity(app, controlId, callId))?.localVariables
 	const local = copyLocals?.getDirectEntities().find((entity) => entity.localVariableName === `local:${variableName}`)
 	return local ? local.feedbackValue : 'no copy'
 }
@@ -1422,7 +1428,7 @@ describe('custom action scope and copies', () => {
 			expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(2)
 			expect(getCopyValue(app, betaId, betaCall, 'double')).toBe(10)
 		})
-		const betaCopy = getEntity(app, betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+		const betaCopy = heldCopy(getEntity(app, betaId, betaCall))?.localVariables
 
 		// A variable used by one caller's input only changes that caller's copy
 		app.registry.variables.custom.setValue('a', 3)
@@ -1441,9 +1447,7 @@ describe('custom action scope and copies', () => {
 		expect(getCopyValue(app, alphaId, alphaCall, 'double')).toBe(6)
 
 		// The copy was updated in place, rather than rebuilt
-		expect(getEntity(app, betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)).toBe(
-			betaCopy
-		)
+		expect(heldCopy(getEntity(app, betaId, betaCall))?.localVariables).toBe(betaCopy)
 	})
 
 	test('editing a custom action updates the copies held by its callers, and their runs', async () => {
@@ -2037,15 +2041,11 @@ describe('custom actions using a connection', () => {
 		const callId = app.addCustomActionCall(buttonId, customActionId, { want: exprVal('alpha') }, null)
 		await setLastValue('alpha')
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true), 10_000)
-		const copyBefore = getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+		const copyBefore = heldCopy(getEntity(app, buttonId, callId))?.localVariables
 
 		// Editing the custom action rebuilds the copy, with the same subscription as before
 		app.addCustomActionAction(customActionId, null, 'wait', { time: exprExpr('1') })
-		await vi.waitFor(() =>
-			expect(
-				getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
-			).not.toBe(copyBefore)
-		)
+		await vi.waitFor(() => expect(heldCopy(getEntity(app, buttonId, callId))?.localVariables).not.toBe(copyBefore))
 
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'matches')).toBe(true))
 	})
@@ -2071,11 +2071,7 @@ describe('custom actions using a connection', () => {
 			[
 				[alphaId, alphaCall],
 				[betaId, betaCall],
-			].map(([controlId, callId]) =>
-				getEntity(app, controlId as SomeControlId, callId).getTransientChildGroup(
-					CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
-				)
-			)
+			].map(([controlId, callId]) => heldCopy(getEntity(app, controlId as SomeControlId, callId))?.localVariables)
 		let lastCopies = copiesOf()
 		let stableSince = Date.now()
 		await vi.waitFor(
@@ -2102,9 +2098,7 @@ describe('custom actions using a connection', () => {
 
 		await vi.waitFor(() => expect(getCopyValue(app, betaId, betaCall, 'matches')).toBe(true), 10_000)
 		expect(getCopyValue(app, alphaId, alphaCall, 'matches')).toBe(true)
-		expect(getEntity(app, alphaId, alphaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)).toBe(
-			alphaCopy
-		)
+		expect(heldCopy(getEntity(app, alphaId, alphaCall))?.localVariables).toBe(alphaCopy)
 
 		// Only the entities of the copy whose inputs changed were sent to the connection
 		const updatedIds = updated.mock.calls.map(([entity]) => entity.id)
@@ -2380,17 +2374,15 @@ describe('custom actions using a connection', () => {
 			const buildMs = performance.now() - start
 
 			// Editing the custom action rebuilds every copy
-			const copiesBefore = callers.map(({ buttonId, callId }) =>
-				getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+			const copiesBefore = callers.map(
+				({ buttonId, callId }) => heldCopy(getEntity(app, buttonId, callId))?.localVariables
 			)
 			start = performance.now()
 			app.addCustomActionAction(customActionId, null, 'wait', { time: exprExpr('1') })
 			await vi.waitFor(
 				() => {
 					callers.forEach(({ buttonId, callId }, i) =>
-						expect(
-							getEntity(app, buttonId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
-						).not.toBe(copiesBefore[i])
+						expect(heldCopy(getEntity(app, buttonId, callId))?.localVariables).not.toBe(copiesBefore[i])
 					)
 					expectCopyValues((want) => want === 'v3')
 				},

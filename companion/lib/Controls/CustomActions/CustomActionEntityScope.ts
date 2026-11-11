@@ -1,5 +1,10 @@
 import debounceFn from 'debounce-fn'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import {
+	EntityModelType,
+	FeedbackEntitySubType,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
 import type {
@@ -8,9 +13,10 @@ import type {
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import type { CustomActionValues } from '../CustomActionRunFrame.js'
+import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
 import { EntityPoolSpecialExpressionManager } from '../Entities/EntitySpecialExpressionManager.js'
-import type { EntityScope } from '../Entities/Types.js'
+import type { EntityCopy, EntityScope } from '../Entities/Types.js'
 import type { RenderClock } from '../RenderClock.js'
 import type { CustomActionInstancesForEntity } from './CustomActionInstanceManager.js'
 
@@ -20,7 +26,7 @@ import type { CustomActionInstancesForEntity } from './CustomActionInstanceManag
  * The entities see the `this:*` variables of the control holding the copy, the inputs of the copy as
  * `$(options:*)`, and the local variables of the copy.
  */
-export class CustomActionEntityScope implements EntityScope {
+export class CustomActionEntityScope implements EntityScope, EntityCopy {
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
 	readonly customActionChain: ReadonlyArray<string>
 	readonly customActionInstances: CustomActionInstancesForEntity
@@ -29,9 +35,11 @@ export class CustomActionEntityScope implements EntityScope {
 	readonly #customAction: ControlCustomAction
 	readonly #callerControlId: SomeControlId
 
+	readonly actions: ControlEntityList
+	readonly localVariables: ControlEntityList
+	readonly lists: ReadonlyArray<ControlEntityList>
+
 	#values: CustomActionValues
-	#actions: ControlEntityList | null = null
-	#localVariables: ControlEntityList | null = null
 
 	get values(): CustomActionValues {
 		return this.#values
@@ -39,7 +47,9 @@ export class CustomActionEntityScope implements EntityScope {
 
 	/**
 	 * @param customAction The custom action this is a copy of
+	 * @param caller The action which holds the copy
 	 * @param callerControlId The control which holds the copy
+	 * @param idPrefix The prefix for the ids of the copied entities, which must be unique within the control
 	 * @param customActionChain The custom actions this copy is running inside, ending with this one
 	 * @param customActionInstances For any copies of custom actions called by this copy
 	 * @param renderClock The render clock, for special expressions which depend on it
@@ -48,7 +58,9 @@ export class CustomActionEntityScope implements EntityScope {
 	 */
 	constructor(
 		customAction: ControlCustomAction,
+		caller: ControlEntityInstance,
 		callerControlId: SomeControlId,
+		idPrefix: string,
 		customActionChain: ReadonlyArray<string>,
 		customActionInstances: CustomActionInstancesForEntity,
 		renderClock: RenderClock,
@@ -66,24 +78,37 @@ export class CustomActionEntityScope implements EntityScope {
 			this.createVariablesAndExpressionParser.bind(this),
 			{
 				isInverted: (values) => {
-					this.#actions?.updateIsInvertedValues(values)
-					this.#localVariables?.updateIsInvertedValues(values)
+					this.actions.updateIsInvertedValues(values)
+					this.localVariables.updateIsInvertedValues(values)
 				},
 				storeResult: (values) => {
-					this.#actions?.updateStoreResultValues(values)
+					this.actions.updateStoreResultValues(values)
 				},
 			},
 			renderClock,
 			variableDependencies
 		)
-	}
 
-	/**
-	 * Set the lists holding the entities of the copy
-	 */
-	setEntityLists(actions: ControlEntityList | null, localVariables: ControlEntityList | null): void {
-		this.#actions = actions
-		this.#localVariables = localVariables
+		this.localVariables = caller.createTransientList(
+			`${idPrefix}local-variables`,
+			this,
+			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Value },
+			deriveEntityIds(
+				idPrefix,
+				customAction.entities.getLocalVariableEntities().map((entity) => entity.asEntityModel(true))
+			)
+		)
+		this.actions = caller.createTransientList(
+			`${idPrefix}actions`,
+			this,
+			{ type: EntityModelType.Action },
+			deriveEntityIds(
+				idPrefix,
+				customAction.entities.getActionEntities().map((entity) => entity.asEntityModel(true))
+			)
+		)
+		// The local variables first, as the actions use them as they are subscribed
+		this.lists = [this.localVariables, this.actions]
 	}
 
 	/**
@@ -115,8 +140,8 @@ export class CustomActionEntityScope implements EntityScope {
 	readonly #debounceResubscribeEntities = debounceFn(() => this.#resubscribeEntities(), { wait: 10, maxWait: 50 })
 
 	#resubscribeEntities(): void {
-		this.#localVariables?.subscribe(true)
-		this.#actions?.subscribe(true)
+		this.localVariables.subscribe(true)
+		this.actions.subscribe(true)
 	}
 
 	createVariablesAndExpressionParser(
@@ -125,7 +150,7 @@ export class CustomActionEntityScope implements EntityScope {
 	): VariablesAndExpressionParser {
 		return this.#customAction.createCopyParser(
 			this.#values,
-			this.#localVariables?.getDirectEntities() ?? [],
+			this.localVariables.getDirectEntities(),
 			this.#callerControlId,
 			null,
 			overrideVariableValues,
@@ -137,4 +162,25 @@ export class CustomActionEntityScope implements EntityScope {
 		this.#debounceResubscribeEntities.cancel()
 		this.specialExpressionManager.destroy()
 	}
+}
+
+/**
+ * Prefix the ids of some entities and their children, so that copies of them have their own ids
+ */
+function deriveEntityIds(prefix: string, models: SomeEntityModel[]): SomeEntityModel[] {
+	return models.map((model) => {
+		const children = model.children
+		return {
+			...model,
+			id: `${prefix}${model.id}`,
+			...(children && {
+				children: Object.fromEntries(
+					Object.entries(children).map(([groupId, entities]) => [
+						groupId,
+						entities ? deriveEntityIds(prefix, entities) : entities,
+					])
+				),
+			}),
+		}
+	})
 }

@@ -10,11 +10,6 @@ import {
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { CustomActionRunInfo } from '@companion-app/shared/Model/CustomActionModel.js'
-import {
-	EntityModelType,
-	FeedbackEntitySubType,
-	type SomeEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type {
@@ -26,17 +21,14 @@ import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndE
 import { ControlCustomAction, type CustomActionRunExtras } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
-import type { ControlEntityList } from '../Entities/EntityList.js'
 import { resolveStoreResult } from '../Entities/EntitySpecialExpressionManager.js'
 import type { EntityScope, StoreResult } from '../Entities/Types.js'
 import type { IControlStore } from '../IControlStore.js'
 import type { RenderClock } from '../RenderClock.js'
 import { CustomActionEntityScope } from './CustomActionEntityScope.js'
 
-/** The transient child group of a calling action, holding the actions of its copy of the custom action */
-export const CUSTOM_ACTION_COPY_ACTIONS_GROUP = 'custom-action-copy:actions'
-/** The transient child group of a calling action, holding the local variables of its copy of the custom action */
-export const CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP = 'custom-action-copy:local-variables'
+/** The key of the copy of a custom action held by an action which calls it, while it waits to be run */
+export const CUSTOM_ACTION_HELD_COPY = 'custom-action'
 
 export type CustomActionInstancesForEntity = Pick<CustomActionInstanceManager, 'entityUpdate' | 'entityDelete'>
 
@@ -77,14 +69,6 @@ export interface CustomActionInstanceEvents {
  */
 function getUseEntityId(callerId: string): string {
 	return callerId.slice(callerId.lastIndexOf('/') + 1)
-}
-
-/**
- * The lists of entities of a copy of a custom action
- */
-interface CopyLists {
-	readonly actions: ControlEntityList
-	readonly localVariables: ControlEntityList
 }
 
 /**
@@ -258,16 +242,6 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		}
 		const inputValues = parseRes.inputValues
 
-		const scope = new CustomActionEntityScope(
-			customAction,
-			copy.controlId,
-			[...chain, customActionControlId],
-			this,
-			this.#renderClock,
-			this.#variableDependencies,
-			{ customActionControlId: customAction.controlId, inputValues, localValues: new Map() }
-		)
-
 		const runId = nanoid()
 
 		// A run can be aborted on its own, as well as with its caller
@@ -277,10 +251,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			abortDelayed: AbortSignal.any([extras.abortDelayed, abortController.signal]),
 		}
 
-		const groupIds = {
-			actions: `custom-action-run:${runId}:actions`,
-			localVariables: `custom-action-run:${runId}:local-variables`,
-		}
+		const copyKey = `custom-action-run:${runId}`
 
 		this.#runs.set(runId, {
 			runId,
@@ -292,18 +263,26 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		})
 		this.events.emit('usageChanged')
 
+		let runScope: CustomActionEntityScope | undefined
 		try {
-			// Built inside the try, so that the groups are removed again if building them fails
-			const lists = this.#buildCopyLists(caller, scope, customAction, groupIds, `${caller.id}@${runId}/`)
+			// Built inside the try, so that the run is forgotten again if building it fails
+			const scope = new CustomActionEntityScope(
+				customAction,
+				caller,
+				copy.controlId,
+				`${caller.id}@${runId}/`,
+				[...chain, customActionControlId],
+				this,
+				this.#renderClock,
+				this.#variableDependencies,
+				{ customActionControlId: customAction.controlId, inputValues, localValues: new Map() }
+			)
+			runScope = scope
+			caller.setCopy(copyKey, scope)
 
 			// When the run sees what the copy held by the caller sees, it can start with its values
 			if (copy.scope && isEqual(inputValues, copy.scope.values.inputValues)) {
-				const copyLists = getCopyLists(
-					caller,
-					CUSTOM_ACTION_COPY_ACTIONS_GROUP,
-					CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
-				)
-				if (copyLists) this.#copyRuntimeValues(lists, `${caller.id}@${runId}/`, copyLists, `${caller.id}/`)
+				this.#copyRuntimeValues(scope, `${caller.id}@${runId}/`, copy.scope, `${caller.id}/`)
 			}
 
 			// Where each local variable of the run is written as an output, resolved in the context of the caller
@@ -329,14 +308,14 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				// An output is a user value, so it is what the run has set it to, or else its startup value
 				const value = frame.localValues.has(variableName)
 					? frame.localValues.get(variableName)
-					: lists.localVariables.getDirectEntities().find((entity) => entity.rawLocalVariableName === variableName)
+					: scope.localVariables.getDirectEntities().find((entity) => entity.rawLocalVariableName === variableName)
 							?.feedbackValue
 				for (const target of targets) storeOutput(target, value)
 			}
 
 			const frame: CustomActionRunFrame = {
 				...scope.values,
-				getLocalVariableEntities: () => lists.localVariables.getDirectEntities(),
+				getLocalVariableEntities: () => scope.localVariables.getDirectEntities(),
 				localValueChanged: (name) => {
 					scope.localValueChanged(name)
 					// Outputs are written as they change, so that the caller can see the progress of a run
@@ -347,16 +326,15 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			// The caller sees where each output starts, then each change as the run sets it
 			for (const variableName of outputTargets.keys()) writeOutput(variableName)
 
-			await runActions(lists.actions.getDirectEntities(), { ...runExtras, frame })
+			await runActions(scope.actions.getDirectEntities(), { ...runExtras, frame })
 
 			return undefined
 		} finally {
 			this.#runs.delete(runId)
 			this.events.emit('usageChanged')
 
-			caller.removeTransientChildGroup(groupIds.actions)
-			caller.removeTransientChildGroup(groupIds.localVariables)
-			scope.destroy()
+			caller.removeCopy(copyKey)
+			runScope?.destroy()
 		}
 	}
 
@@ -440,7 +418,9 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 
 		const scope = new CustomActionEntityScope(
 			customAction,
+			caller,
 			copy.controlId,
+			`${caller.id}/`,
 			[...chain, customActionControlId],
 			this,
 			this.#renderClock,
@@ -448,66 +428,23 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			{ customActionControlId, inputValues, localValues: new Map() }
 		)
 		copy.scope = scope
-
-		this.#buildCopyLists(
-			caller,
-			scope,
-			customAction,
-			{ actions: CUSTOM_ACTION_COPY_ACTIONS_GROUP, localVariables: CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP },
-			`${caller.id}/`
-		)
-	}
-
-	/**
-	 * Build the lists of entities of a copy of a custom action, as transient child groups of the calling action
-	 * @param caller The action which calls the custom action
-	 * @param scope The scope of the copy
-	 * @param customAction The custom action to copy
-	 * @param groupIds The ids of the child groups to hold the copy
-	 * @param idPrefix The prefix for the ids of the copied entities, which must be unique within the control
-	 */
-	#buildCopyLists(
-		caller: ControlEntityInstance,
-		scope: CustomActionEntityScope,
-		customAction: ControlCustomAction,
-		groupIds: { actions: string; localVariables: string },
-		idPrefix: string
-	): CopyLists {
-		// The local variables are built first, so that they are available to the actions as they are subscribed
-		const localVariables = caller.setTransientChildGroup(
-			groupIds.localVariables,
-			scope,
-			{ type: EntityModelType.Feedback, feedbackListType: FeedbackEntitySubType.Value },
-			deriveEntityIds(
-				idPrefix,
-				customAction.entities.getLocalVariableEntities().map((entity) => entity.asEntityModel(true))
-			)
-		)
-		scope.setEntityLists(null, localVariables)
-
-		const actions = caller.setTransientChildGroup(
-			groupIds.actions,
-			scope,
-			{ type: EntityModelType.Action },
-			deriveEntityIds(
-				idPrefix,
-				customAction.entities.getActionEntities().map((entity) => entity.asEntityModel(true))
-			)
-		)
-		scope.setEntityLists(actions, localVariables)
-
-		return { actions, localVariables }
+		caller.setCopy(CUSTOM_ACTION_HELD_COPY, scope)
 	}
 
 	/**
 	 * Give the entities of a new copy the runtime values of an existing copy of the same custom action, including the
 	 * copies of any custom actions they call which have the same inputs
-	 * @param target The lists of the new copy
+	 * @param target The new copy
 	 * @param targetPrefix The prefix of the ids in the new copy
-	 * @param source The lists of the existing copy
+	 * @param source The existing copy
 	 * @param sourcePrefix The prefix of the ids in the existing copy
 	 */
-	#copyRuntimeValues(target: CopyLists, targetPrefix: string, source: CopyLists, sourcePrefix: string): void {
+	#copyRuntimeValues(
+		target: CustomActionEntityScope,
+		targetPrefix: string,
+		source: CustomActionEntityScope,
+		sourcePrefix: string
+	): void {
 		const sourceEntities = new Map<string, ControlEntityInstance>()
 		for (const entity of [...source.localVariables.getAllEntities(), ...source.actions.getAllEntities()]) {
 			sourceEntities.set(entity.id.slice(sourcePrefix.length), entity)
@@ -527,19 +464,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			if (!targetScope || !sourceScope || !isEqual(targetScope.values.inputValues, sourceScope.values.inputValues))
 				continue
 
-			const targetLists = getCopyLists(
-				entity,
-				CUSTOM_ACTION_COPY_ACTIONS_GROUP,
-				CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
-			)
-			const sourceLists = getCopyLists(
-				sourceEntity,
-				CUSTOM_ACTION_COPY_ACTIONS_GROUP,
-				CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP
-			)
-			if (targetLists && sourceLists) {
-				this.#copyRuntimeValues(targetLists, `${entity.id}/`, sourceLists, `${sourceEntity.id}/`)
-			}
+			this.#copyRuntimeValues(targetScope, `${entity.id}/`, sourceScope, `${sourceEntity.id}/`)
 		}
 	}
 
@@ -578,8 +503,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	 * Remove the entities and scope of a copy
 	 */
 	#clearCopy(caller: ControlEntityInstance, copy: PlacedCopy): void {
-		caller.removeTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
-		caller.removeTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+		caller.removeCopy(CUSTOM_ACTION_HELD_COPY)
 
 		copy.scope?.destroy()
 		copy.scope = null
@@ -595,39 +519,4 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		this.#clearCopy(caller, copy)
 		copy.inputVariables.dispose()
 	}
-}
-
-/**
- * Get the lists of a copy of a custom action held by a calling action
- */
-function getCopyLists(
-	caller: ControlEntityInstance,
-	actionsGroupId: string,
-	localVariablesGroupId: string
-): CopyLists | null {
-	const actions = caller.getTransientChildGroup(actionsGroupId)
-	const localVariables = caller.getTransientChildGroup(localVariablesGroupId)
-	if (!actions || !localVariables) return null
-	return { actions, localVariables }
-}
-
-/**
- * Prefix the ids of some entities and their children, so that copies of them have their own ids
- */
-function deriveEntityIds(prefix: string, models: SomeEntityModel[]): SomeEntityModel[] {
-	return models.map((model) => {
-		const children = model.children
-		return {
-			...model,
-			id: `${prefix}${model.id}`,
-			...(children && {
-				children: Object.fromEntries(
-					Object.entries(children).map(([groupId, entities]) => [
-						groupId,
-						entities ? deriveEntityIds(prefix, entities) : entities,
-					])
-				),
-			}),
-		}
-	})
 }

@@ -2117,10 +2117,11 @@ describe('transient child groups', () => {
 		res.connectionEntityUpdate.mockClear()
 
 		const transientScope = createTransientScope()
-		const group = callerEntity.setTransientChildGroup('instance', transientScope, { type: EntityModelType.Action }, [
+		const group = callerEntity.createTransientList('instance', transientScope, { type: EntityModelType.Action }, [
 			transientAction,
 			transientFeedback,
 		])
+		callerEntity.setCopy('instance', { lists: [group] })
 
 		return { ...res, callerEntity, transientScope, group }
 	}
@@ -2164,7 +2165,7 @@ describe('transient child groups', () => {
 			transientFeedback.id,
 		])
 		expect(list.findById(transientFeedback.id)?.id).toBe(transientFeedback.id)
-		expect(callerEntity.getTransientChildGroup('instance')?.getDirectEntities()).toHaveLength(2)
+		expect(callerEntity.getCopy('instance')?.lists[0].getDirectEntities()).toHaveLength(2)
 	})
 
 	test('entities can not be edited through the list', () => {
@@ -2192,11 +2193,11 @@ describe('transient child groups', () => {
 		expect(feedback.feedbackValue).toBe('abc')
 	})
 
-	test('replacing the group cleans up the old entities', () => {
+	test('replacing the copy cleans up the old entities', () => {
 		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
 		connectionEntityUpdate.mockClear()
 
-		const newGroup = callerEntity.setTransientChildGroup(
+		const newGroup = callerEntity.createTransientList(
 			'instance',
 			createTransientScope(),
 			{
@@ -2204,6 +2205,7 @@ describe('transient child groups', () => {
 			},
 			[transientAction]
 		)
+		callerEntity.setCopy('instance', { lists: [newGroup] })
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
 		expect(connectionEntityDelete).toHaveBeenCalledWith(
@@ -2211,20 +2213,20 @@ describe('transient child groups', () => {
 			CreateBankControlId('test01')
 		)
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(callerEntity.getTransientChildGroup('instance')).toBe(newGroup)
+		expect(callerEntity.getCopy('instance')?.lists).toEqual([newGroup])
 	})
 
-	test('removing the group cleans up its entities', () => {
+	test('removing the copy cleans up its entities', () => {
 		const { list, callerEntity, connectionEntityDelete } = setup()
 
-		callerEntity.removeTransientChildGroup('instance')
+		callerEntity.removeCopy('instance')
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
-		expect(callerEntity.getTransientChildGroup('instance')).toBeUndefined()
+		expect(callerEntity.getCopy('instance')).toBeUndefined()
 		expect(list.findById(transientAction.id)).toBeUndefined()
 
 		// Removing again does nothing
-		callerEntity.removeTransientChildGroup('instance')
+		callerEntity.removeCopy('instance')
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
 	})
 
@@ -2244,5 +2246,18 @@ describe('transient child groups', () => {
 		expect(callerEntity.disabled).toBe(true)
 
 		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a transient list is not subscribed until its copy is held', () => {
+		const { callerEntity, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		const list = callerEntity.createTransientList('other', createTransientScope(), { type: EntityModelType.Action }, [
+			{ ...transientAction, id: 'other:action' },
+		])
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+
+		callerEntity.setCopy('other', { lists: [list] })
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 	})
 })

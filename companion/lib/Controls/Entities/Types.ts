@@ -15,6 +15,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
+import type { ControlEntityList } from './EntityList.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 
 export type { FeedbackExecutionContext } from '../../Internal/Types.js'
@@ -61,6 +62,14 @@ export interface EntityScope {
 		overrideVariableValues: VariableValues | null,
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser
+}
+
+/**
+ * A copy of something held by an entity, such as of a custom action, which exists only while it is needed. Its lists
+ * are included with the entities of the one holding it, which subscribes them in order once it holds it
+ */
+export interface EntityCopy {
+	readonly lists: ReadonlyArray<ControlEntityList>
 }
 
 export interface NewFeedbackValue {

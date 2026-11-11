@@ -38,6 +38,7 @@ import type {
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	EntityCopy,
 	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
@@ -86,7 +87,8 @@ export class ControlEntityInstance {
 	 * Child groups which exist only while Companion is running (eg the copy of a custom action held by an action
 	 * which calls it). They are never persisted or shown in the ui, and parse their options in their own scope.
 	 */
-	#transientChildren = new Map<string, ControlEntityList>()
+	/** Copies of something this holds, such as of a custom action, by key */
+	#copies = new Map<string, EntityCopy>()
 
 	/** Whether this is a copy which exists only while running, such as of a custom action, so is never upgraded */
 	get isTransient(): boolean {
@@ -339,63 +341,75 @@ export class ControlEntityInstance {
 		for (const childGroup of this.#children.values()) {
 			childGroup.cleanup()
 		}
-		for (const childGroup of this.#transientChildren.values()) {
+		for (const childGroup of this.#copyLists()) {
 			childGroup.cleanup()
 		}
 	}
 
 	/**
-	 * Set the entities of a transient child group, replacing any existing group with the same id.
-	 * The group is never persisted or shown in the ui, and its entities parse their options in the given scope.
-	 * @param groupId Id of the group
-	 * @param scope The scope the entities of the group parse their options in
-	 * @param listDefinition The type of entities in the group
-	 * @param entities The entities of the group. Their ids are used as is, so must be unique within the control
-	 * @returns The new group
+	 * Create a list of entities for a copy held by this entity, such as of a custom action. It is never persisted or
+	 * shown in the ui, its entities parse their options in the given scope, and they are not subscribed until the copy
+	 * is held
+	 * @param listId Id of the list, unique among the lists of the copies held by this entity
+	 * @param scope The scope the entities of the list parse their options in
+	 * @param listDefinition The type of entities in the list
+	 * @param entities The entities of the list. Their ids are used as is, so must be unique within the control
 	 */
-	setTransientChildGroup(
-		groupId: string,
+	createTransientList(
+		listId: string,
 		scope: EntityScope,
 		listDefinition: ControlEntityListDefinition,
 		entities: SomeEntityModel[]
 	): ControlEntityList {
-		this.removeTransientChildGroup(groupId)
-
-		const childGroup = new ControlEntityList(
+		const list = new ControlEntityList(
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
 			scope,
 			this.#controlId,
-			{ parentId: this.id, childGroup: groupId },
+			{ parentId: this.id, childGroup: listId },
 			listDefinition
 		)
-		this.#transientChildren.set(groupId, childGroup)
-
-		// A disabled entity has nothing subscribed, so neither should its children
-		childGroup.loadStorage(entities, this.disabled, false)
-
-		return childGroup
+		list.loadStorage(entities, true, false)
+		return list
 	}
 
 	/**
-	 * Get a transient child group
-	 * @param groupId Id of the group
+	 * Hold a copy, replacing any held with the same key, so that it is included with the entities of this one, and
+	 * subscribe its lists in order
 	 */
-	getTransientChildGroup(groupId: string): ControlEntityList | undefined {
-		return this.#transientChildren.get(groupId)
+	setCopy(key: string, copy: EntityCopy): void {
+		this.removeCopy(key)
+		this.#copies.set(key, copy)
+
+		// Only once held, so that the values its entities are given as they subscribe reach them.
+		// A disabled entity has nothing subscribed, so neither should its copies
+		if (!this.disabled) {
+			for (const list of copy.lists) list.subscribe(true)
+		}
 	}
 
 	/**
-	 * Remove a transient child group, cleaning up its entities
-	 * @param groupId Id of the group
+	 * Get a copy held by this entity
 	 */
-	removeTransientChildGroup(groupId: string): void {
-		const childGroup = this.#transientChildren.get(groupId)
-		if (!childGroup) return
+	getCopy(key: string): EntityCopy | undefined {
+		return this.#copies.get(key)
+	}
 
-		this.#transientChildren.delete(groupId)
-		childGroup.cleanup()
+	/**
+	 * Stop holding a copy, cleaning up its entities
+	 */
+	removeCopy(key: string): void {
+		const copy = this.#copies.get(key)
+		if (!copy) return
+
+		this.#copies.delete(key)
+		for (const list of copy.lists) list.cleanup()
+	}
+
+	/** The lists of the copies held by this entity */
+	#copyLists(): ControlEntityList[] {
+		return [...this.#copies.values()].flatMap((copy) => copy.lists)
 	}
 
 	/**
@@ -439,7 +453,7 @@ export class ControlEntityInstance {
 			for (const childGroup of this.#children.values()) {
 				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
 			}
-			for (const childGroup of this.#transientChildren.values()) {
+			for (const childGroup of this.#copyLists()) {
 				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
 			}
 		}
@@ -691,7 +705,7 @@ export class ControlEntityInstance {
 			if (result) return result
 		}
 		// Transient children are included, so that they can be given values
-		for (const childGroup of this.#transientChildren.values()) {
+		for (const childGroup of this.#copyLists()) {
 			const result = childGroup.findById(id)
 			if (result) return result
 		}
@@ -802,7 +816,7 @@ export class ControlEntityInstance {
 				entities.push(...childGroup.getAllEntitiesWithTransient())
 			}
 		}
-		for (const childGroup of this.#transientChildren.values()) {
+		for (const childGroup of this.#copyLists()) {
 			entities.push(...childGroup.getAllEntitiesWithTransient())
 		}
 
@@ -823,7 +837,7 @@ export class ControlEntityInstance {
 			}
 		}
 		if (includeTransient) {
-			for (const childGroup of this.#transientChildren.values()) {
+			for (const childGroup of this.#copyLists()) {
 				entities.push(...childGroup.getAllEnabledEntities(includeTransient))
 			}
 		}
@@ -933,7 +947,7 @@ export class ControlEntityInstance {
 			changed = true
 		}
 
-		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
+		for (const childGroup of [...this.#children.values(), ...this.#copyLists()]) {
 			if (childGroup.clearCachedValueForConnectionId(connectionId).length > 0) {
 				changed = true
 			}
@@ -1065,7 +1079,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#transientChildren.values()) {
+		for (const childGroup of this.#copyLists()) {
 			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
 		}
 
@@ -1102,7 +1116,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#transientChildren.values()) {
+		for (const childGroup of this.#copyLists()) {
 			changed.push(...childGroup.updateIsInvertedValues(newValues))
 		}
 
@@ -1138,7 +1152,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
+		for (const childGroup of [...this.#children.values(), ...this.#copyLists()]) {
 			const childrenChanged = childGroup.updateStoreResultValues(newValues)
 			changed.push(...childrenChanged)
 		}
