@@ -21,16 +21,16 @@ import { ActionRunner } from '../../../lib/Controls/ActionRunner.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomAction } from '../../../lib/Controls/ControlTypes/CustomAction.js'
+import {
+	pruneCustomActionOutputTargetsInCallers,
+	removeCustomActionInputInCallers,
+	renameCustomActionInputInCallers,
+} from '../../../lib/Controls/CustomActions/CustomActionCallers.js'
 import type { CustomActionCopy } from '../../../lib/Controls/CustomActions/CustomActionCopy.js'
 import {
 	CUSTOM_ACTION_HELD_COPY,
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
-import {
-	pruneCustomActionOutputTargetsInCallers,
-	removeCustomActionInputInCallers,
-	renameCustomActionInputInCallers,
-} from '../../../lib/Controls/CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
