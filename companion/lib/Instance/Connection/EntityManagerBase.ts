@@ -1,24 +1,13 @@
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import {
-	EntityModelType,
-	type ActionEntityModel,
-	type FeedbackEntityModel,
-	type FeedbackValue,
-	type ReplaceableActionEntityModel,
-	type ReplaceableFeedbackEntityModel,
-	type SomeEntityModel,
-	type SomeReplaceableEntityModel,
-} from '@companion-app/shared/Model/EntityModel.js'
+import type { SomeEntityModel, SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
-import type { NewFeedbackValue } from '../../Controls/Entities/Types.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
-import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type {
 	VariableDependency,
@@ -42,7 +31,7 @@ enum EntityState {
 	PENDING_DELETE = 'PENDING_DELETE',
 }
 
-interface EntityWrapper {
+export interface EntityWrapper {
 	/** A unique id for this wrapper, so that we know if the entity was replaced/deleted */
 	readonly wrapperId: string
 	readonly entity: WeakRef<ControlEntityInstance>
@@ -60,8 +49,6 @@ interface EntityWrapper {
 	isNewInstance?: boolean
 	/** The variables referenced by the last parse of the options, created when it first references any */
 	variables: VariableDependency<EntityWrapper> | null
-	/** Whether the last parsed options for this feedback entity depended on the render clock */
-	lastClockSensitive?: boolean
 }
 
 /**
@@ -69,41 +56,55 @@ interface EntityWrapper {
  * subscription, so the module only sees it once. Its id is random, so that when its options change it can be
  * updated in place, letting the module see the change rather than a new subscription.
  */
-interface EntitySubscription {
+export interface EntitySubscription {
 	readonly controlId: SomeControlId
-	readonly type: EntityModelType
 	/** What makes this subscription unique, from `getEntitySubscriptionKey` */
 	key: string
 	/** The ids of the entities which share this subscription */
 	readonly memberIds: Set<string>
-	/** The last value the module reported for this subscription, for a member which joins later */
-	lastValue?: { value: FeedbackValue }
 }
 
-/**
- * A feedback value reported by the module, for a subscription
- */
-export interface EntityManagerFeedbackValue {
-	/** The id of the subscription */
-	id: string
-	/** The control id as the module reported it, so it is only trusted once matched to the subscription */
-	controlId: string
-	value: FeedbackValue
+/** Entities which have joined a subscription the module already knows about, so have missed what it reported */
+export interface EntitySubscriptionJoin {
+	readonly subscriptionId: string
+	readonly entityIds: readonly string[]
+}
+
+export interface EntityManagerEntity<TModel extends SomeEntityModel> {
+	controlId: SomeControlId
+	entity: TModel
+	parsedOptions: CompanionOptionValues
+}
+export type EntityManagerUpgradeEntity<TModel extends SomeEntityModel> = Omit<
+	EntityManagerEntity<TModel>,
+	'parsedOptions'
+>
+
+/** Sends the entities of one type to the module */
+export interface EntityManagerAdapter<TModel extends SomeEntityModel> {
+	/** Send changes to the subscriptions, keyed by the id of each subscription. `null` deletes a subscription */
+	update: (entities: Map<string, EntityManagerEntity<TModel> | null>) => Promise<void>
+
+	/** Send entities to the module to be upgraded */
+	upgrade: (
+		entities: EntityManagerUpgradeEntity<TModel>[],
+		currentUpgradeIndex: number
+	) => Promise<Extract<SomeReplaceableEntityModel, { type: TModel['type'] }>[]>
 }
 
 /**
  * Get the key of the module subscription for an entity, from what makes the subscription unique
  * @param controlId The control the entity belongs to
- * @param entityModel The entity
+ * @param definitionId The definition of the entity
  * @param parsedOptions The options of the entity, as parsed for the module
  */
 function getEntitySubscriptionKey(
 	controlId: SomeControlId,
-	entityModel: SomeEntityModel,
+	definitionId: string,
 	parsedOptions: CompanionOptionValues
 ): string {
 	// Inversion is not part of it, as Companion applies that to the value of each entity
-	return JSON.stringify([controlId, entityModel.type, entityModel.definitionId, createStableObjectHash(parsedOptions)])
+	return JSON.stringify([controlId, definitionId, createStableObjectHash(parsedOptions)])
 }
 
 /**
@@ -123,54 +124,31 @@ function splitIntoBatches<T>(payload: ReadonlyMap<string, T>): Map<string, T>[] 
 }
 
 /** An entity whose options no longer match its subscription, waiting to be placed in one */
-interface MovingEntity {
+interface MovingEntity<TModel extends SomeEntityModel> {
 	readonly entityId: string
 	readonly wrapper: EntityWrapper
 	readonly key: string
-	readonly payload: EntityManagerActionEntity | EntityManagerFeedbackEntity
+	readonly payload: EntityManagerEntity<TModel>
 	/** The subscription the entity has left, if any */
 	readonly fromSubscriptionId: string | undefined
 }
 
-export interface EntityManagerActionEntity {
-	controlId: SomeControlId
-	entity: ActionEntityModel
-	parsedOptions: CompanionOptionValues
-}
-export interface EntityManagerFeedbackEntity {
-	controlId: SomeControlId
-	entity: FeedbackEntityModel
-	parsedOptions: CompanionOptionValues
-}
-
-export interface EntityManagerAdapter {
-	/** Send changes to the subscriptions, keyed by the id of each subscription. `null` deletes a subscription */
-	updateActions: (actions: Map<string, EntityManagerActionEntity | null>) => Promise<void>
-	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
-
-	upgradeActions: (
-		actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[],
-		currentUpgradeIndex: number
-	) => Promise<ReplaceableActionEntityModel[]>
-
-	upgradeFeedbacks: (
-		feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[],
-		currentUpgradeIndex: number
-	) => Promise<ReplaceableFeedbackEntityModel[]>
-}
-
 /**
- * This class is responsible for managing the entities that are tracked by the module
- * With this, it will ensure that the entities are run through the upgrade scripts as needed, and also
- * have the options parsed (by as much as companion supports) before being sent to the module for subscription callbacks
+ * Manages the entities of one type that are tracked by a module.
+ * It ensures that the entities are run through the upgrade scripts as needed, and also have the options parsed
+ * (by as much as companion supports) before being sent to the module for subscription callbacks.
+ * Each type of entity extends it with what is particular to that type.
  */
-export class ConnectionEntityManager implements VariableDependencyListener<EntityWrapper> {
-	readonly #logger: Logger
+export abstract class EntityManagerBase<
+	TModel extends SomeEntityModel,
+> implements VariableDependencyListener<EntityWrapper> {
+	protected readonly logger: Logger
 
-	readonly #adapter: EntityManagerAdapter
-	readonly controlsStore: IControlStore
+	readonly entityType: TModel['type']
+	readonly #adapter: EntityManagerAdapter<TModel>
+	protected readonly controlsStore: IControlStore
+	protected readonly connectionId: string
 
-	readonly #connectionId: string
 	readonly #entities = new Map<string, EntityWrapper>()
 	readonly #variableDependencies: VariableDependencyRegistry
 	readonly #subscriptions = new Map<string, EntitySubscription>()
@@ -186,60 +164,46 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 	readonly #batchQueue: Array<() => Promise<void>> = []
 	#inflightBatches = 0
 
-	readonly #unsubscribeRenderClock: () => void
-
 	constructor(
-		adapter: EntityManagerAdapter,
+		entityType: TModel['type'],
+		adapter: EntityManagerAdapter<TModel>,
 		controlsStore: IControlStore,
 		connectionId: string,
-		renderClock: RenderClock,
 		variableDependencies: VariableDependencyRegistry
 	) {
-		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
-		this.#connectionId = connectionId
+		this.logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}/${entityType}`)
+		this.entityType = entityType
 		this.#adapter = adapter
+		this.connectionId = connectionId
 		this.controlsStore = controlsStore
 		this.#variableDependencies = variableDependencies
-		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
 	}
+
+	/** The options of an entity have been parsed */
+	protected abstract onOptionsParsed(wrapper: EntityWrapper, clockSensitive: boolean): void
+
+	/** Entities have joined subscriptions the module already knows about, in a run of processing */
+	protected abstract onSubscriptionsJoined(joins: EntitySubscriptionJoin[]): void
+
+	/** A subscription is being given new options or deleted, so what the module reported for it no longer applies */
+	protected abstract onSubscriptionReset(subscriptionId: string): void
 
 	readonly #debounceProcessPending = debounceFn(
 		() => {
 			if (!this.#ready) return
 
-			let actionIdsInThisBatch = new Map<string, string>()
-			let feedbackIdsInThisBatch = new Map<string, string>()
-			let upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[] = []
-			let upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[] = []
+			let entityIdsInThisBatch = new Map<string, string>()
+			let upgradeEntities: EntityManagerUpgradeEntity<TModel>[] = []
 
-			const updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
-			const updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
+			const updatePayload = new Map<string, EntityManagerEntity<TModel> | null>()
 
-			// Values of existing subscriptions, for entities which have joined them
-			const joinedFeedbackValues: NewFeedbackValue[] = []
-
-			const setSubscriptionPayload = (
-				subscriptionId: string,
-				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity | null,
-				type: EntityModelType
-			) => {
-				switch (type) {
-					case EntityModelType.Action:
-						updateActionsPayload.set(subscriptionId, payload as EntityManagerActionEntity | null)
-						break
-					case EntityModelType.Feedback:
-						updateFeedbacksPayload.set(subscriptionId, payload as EntityManagerFeedbackEntity | null)
-						break
-					default:
-						assertNever(type)
-						this.#logger.warn('Unknown entity type', type)
-				}
-			}
+			// Entities which have joined subscriptions the module already knows about
+			const joins: EntitySubscriptionJoin[] = []
 
 			// Subscriptions left empty by this run. Deleted at the end, unless reused for an entity whose options changed
 			const vacatedSubscriptionIds = new Set<string>()
 			// Placed once every entity has been processed, so that all those leaving a subscription are known
-			const movingEntities: MovingEntity[] = []
+			const movingEntities: MovingEntity<TModel>[] = []
 
 			/** Remove an entity from its subscription */
 			const leaveSubscription = (entityId: string, wrapper: EntityWrapper) => {
@@ -258,10 +222,10 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 			const subscribeEntity = (
 				entityId: string,
 				wrapper: EntityWrapper,
-				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity,
+				payload: EntityManagerEntity<TModel>,
 				resendRequested: boolean
 			) => {
-				const key = getEntitySubscriptionKey(wrapper.controlId, payload.entity, payload.parsedOptions)
+				const key = getEntitySubscriptionKey(wrapper.controlId, payload.entity.definitionId, payload.parsedOptions)
 
 				const isNewInstance = !!wrapper.isNewInstance
 				wrapper.isNewInstance = false
@@ -270,16 +234,10 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 				const subscription = subscriptionId !== undefined ? this.#subscriptions.get(subscriptionId) : undefined
 				if (subscriptionId !== undefined && subscription?.key === key) {
 					// Unchanged. The key covers everything the module is sent, so it only needs sending again if asked for
-					if (resendRequested) setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+					if (resendRequested) updatePayload.set(subscriptionId, payload)
 
-					// The module won't report the value again until it changes, so a new instance needs the current one
-					if (isNewInstance && subscription.lastValue) {
-						joinedFeedbackValues.push({
-							entityId,
-							controlId: subscription.controlId,
-							value: subscription.lastValue.value,
-						})
-					}
+					// The module won't report again until something changes, so a new instance has missed what it reported
+					if (isNewInstance) joins.push({ subscriptionId, entityIds: [entityId] })
 					return
 				}
 
@@ -287,7 +245,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 				movingEntities.push({ entityId, wrapper, key, payload, fromSubscriptionId: subscriptionId })
 			}
 
-			const addSubscriptionMembers = (subscriptionId: string, members: MovingEntity[]) => {
+			const addSubscriptionMembers = (subscriptionId: string, members: MovingEntity<TModel>[]) => {
 				const subscription = this.#subscriptions.get(subscriptionId)!
 				for (const member of members) {
 					subscription.memberIds.add(member.entityId)
@@ -311,17 +269,8 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 					addSubscriptionMembers(subscriptionId, members)
 					vacatedSubscriptionIds.delete(subscriptionId)
 
-					// The module already knows about this subscription, so the entities can use its current value
-					const subscription = this.#subscriptions.get(subscriptionId)!
-					if (subscription.lastValue) {
-						for (const member of members) {
-							joinedFeedbackValues.push({
-								entityId: member.entityId,
-								controlId: subscription.controlId,
-								value: subscription.lastValue.value,
-							})
-						}
-					}
+					// The module already knows about this subscription, so the entities have missed what it reported
+					joins.push({ subscriptionId, entityIds: members.map((member) => member.entityId) })
 				}
 
 				for (const key of keysWithoutSubscription) {
@@ -344,24 +293,22 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 							this.#subscriptionIdsByKey.delete(subscription.key)
 						}
 						subscription.key = key
-						// The module will report a value for the new options
-						subscription.lastValue = undefined
+						this.onSubscriptionReset(reusedId)
 						this.#subscriptionIdsByKey.set(key, reusedId)
 
 						addSubscriptionMembers(reusedId, members)
-						setSubscriptionPayload(reusedId, payload, payload.entity.type)
+						updatePayload.set(reusedId, payload)
 					} else {
 						const subscriptionId = nanoid()
 						this.#subscriptions.set(subscriptionId, {
 							controlId: payload.controlId,
-							type: payload.entity.type,
 							key,
 							memberIds: new Set(),
 						})
 						this.#subscriptionIdsByKey.set(key, subscriptionId)
 
 						addSubscriptionMembers(subscriptionId, members)
-						setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+						updatePayload.set(subscriptionId, payload)
 					}
 				}
 
@@ -373,53 +320,34 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 					if (this.#subscriptionIdsByKey.get(subscription.key) === subscriptionId) {
 						this.#subscriptionIdsByKey.delete(subscription.key)
 					}
-					setSubscriptionPayload(subscriptionId, null, subscription.type)
+					this.onSubscriptionReset(subscriptionId)
+					updatePayload.set(subscriptionId, null)
 				}
 			}
 
 			const pushEntityToUpgrade = (wrapper: EntityWrapper, entity: ControlEntityInstance) => {
-				this.#logger.silly(
+				this.logger.silly(
 					`Pushing entity ${entity.id} in control ${wrapper.controlId} for upgrade from ${entity.upgradeIndex} to ${this.#currentUpgradeIndex}`
 				)
 
-				const entityModel = entity.asEntityModel(false)
-				switch (entityModel.type) {
-					case EntityModelType.Action:
-						actionIdsInThisBatch.set(entity.id, wrapper.wrapperId)
-						upgradeActions.push({
-							controlId: wrapper.controlId,
-							entity: entityModel,
-						})
-						break
-					case EntityModelType.Feedback:
-						feedbackIdsInThisBatch.set(entity.id, wrapper.wrapperId)
-						upgradeFeedbacks.push({
-							controlId: wrapper.controlId,
-							entity: entityModel,
-						})
-						break
-					default:
-						assertNever(entityModel)
-						this.#logger.warn('Unknown entity type', entity.type)
-						return
-				}
+				const entityModel = this.#getOwnModel(entity)
+				if (!entityModel) return
+
+				entityIdsInThisBatch.set(entity.id, wrapper.wrapperId)
+				upgradeEntities.push({
+					controlId: wrapper.controlId,
+					entity: entityModel,
+				})
 
 				// If the payloads are getting large, send them now and reset
 				// We do this to avoid sending too much data in one go, which can cause issues with IPC
 				// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
-				if (actionIdsInThisBatch.size > MAX_UPDATE_PER_BATCH) {
-					this.#sendUpgradeActionsBatch(actionIdsInThisBatch, upgradeActions)
+				if (entityIdsInThisBatch.size > MAX_UPDATE_PER_BATCH) {
+					this.#sendUpgradeBatch(entityIdsInThisBatch, upgradeEntities)
 
 					// Start a new batch
-					actionIdsInThisBatch = new Map()
-					upgradeActions = []
-				}
-				if (feedbackIdsInThisBatch.size > MAX_UPDATE_PER_BATCH) {
-					this.#sendUpgradeFeedbacksBatch(feedbackIdsInThisBatch, upgradeFeedbacks)
-
-					// Start a new batch
-					feedbackIdsInThisBatch = new Map()
-					upgradeFeedbacks = []
+					entityIdsInThisBatch = new Map()
+					upgradeEntities = []
 				}
 			}
 
@@ -429,7 +357,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 					case EntityState.UNLOADED: {
 						const entity = wrapper.entity.deref()
 						if (!entity) {
-							this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, skipping upgrade`)
+							this.logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, skipping upgrade`)
 							this.#deleteEntity(entityId)
 							leaveSubscription(entityId, wrapper)
 							continue
@@ -454,7 +382,11 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 								continue
 							}
 
-							const entityModel = entity.asEntityModel(false)
+							const entityModel = this.#getOwnModel(entity)
+							if (!entityModel) {
+								leaveSubscription(entityId, wrapper)
+								continue
+							}
 
 							let updateOptions: CompanionOptionValues | undefined
 							try {
@@ -462,7 +394,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
 								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, wrapper.controlId)
 								if (!parseRes.ok) {
-									this.#logger.warn(
+									this.logger.warn(
 										`Failed to parse options for entity ${entity.id} in control ${wrapper.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
 									)
 								} else {
@@ -472,10 +404,9 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 									wrapper.variables = this.#variableDependencies.create(this, wrapper.controlId, wrapper)
 								}
 								wrapper.variables?.set(parseRes.referencedVariableIds)
-								wrapper.lastClockSensitive =
-									entityModel.type === EntityModelType.Feedback ? parseRes.clockSensitive : false
+								this.onOptionsParsed(wrapper, !!parseRes.clockSensitive)
 							} catch (e) {
-								this.#logger.warn(
+								this.logger.warn(
 									`Error parsing options for entity ${entity.id} in control ${wrapper.controlId}, marking as inactive: ${stringifyError(e, false)}`
 								)
 							}
@@ -488,7 +419,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 										controlId: wrapper.controlId,
 										entity: entityModel,
 										parsedOptions: updateOptions,
-									} as EntityManagerActionEntity | EntityManagerFeedbackEntity,
+									},
 									resendRequested
 								)
 							} else {
@@ -523,25 +454,17 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 
 			placeMovingEntities()
 
-			if (joinedFeedbackValues.length > 0) {
-				this.controlsStore.updateFeedbackValues(this.#connectionId, joinedFeedbackValues)
-			}
+			if (joins.length > 0) this.onSubscriptionsJoined(joins)
 
 			// Start by sending the simple payloads, split up to avoid sending too much data in one go, which can cause issues with IPC
 			// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
-			for (const batch of splitIntoBatches(updateActionsPayload)) {
-				this.#queueUpdateActionsBatch(batch)
-			}
-			for (const batch of splitIntoBatches(updateFeedbacksPayload)) {
-				this.#queueUpdateFeedbacksBatch(batch)
+			for (const batch of splitIntoBatches(updatePayload)) {
+				this.#queueUpdateBatch(batch)
 			}
 
 			// Now we need to send the upgrades
-			if (actionIdsInThisBatch.size > 0) {
-				this.#sendUpgradeActionsBatch(actionIdsInThisBatch, upgradeActions)
-			}
-			if (feedbackIdsInThisBatch.size > 0) {
-				this.#sendUpgradeFeedbacksBatch(feedbackIdsInThisBatch, upgradeFeedbacks)
+			if (entityIdsInThisBatch.size > 0) {
+				this.#sendUpgradeBatch(entityIdsInThisBatch, upgradeEntities)
 			}
 		},
 		{
@@ -551,6 +474,16 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 			wait: 10,
 		}
 	)
+
+	/** The model of an entity, if it is of the type this manages */
+	#getOwnModel(entity: ControlEntityInstance): TModel | undefined {
+		const entityModel = entity.asEntityModel(false)
+		if (entityModel.type !== this.entityType) {
+			this.logger.error(`Entity ${entity.id} is a ${entityModel.type}, not a ${this.entityType}`)
+			return undefined
+		}
+		return entityModel as TModel
+	}
 
 	/**
 	 * Add a batch to the send queue, and start it if there is capacity.
@@ -572,50 +505,26 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 		}
 	}
 
-	#queueUpdateActionsBatch(updateActionsPayload: Map<string, EntityManagerActionEntity | null>): void {
+	#queueUpdateBatch(updatePayload: Map<string, EntityManagerEntity<TModel> | null>): void {
 		this.#queueBatch(async () =>
-			this.#adapter.updateActions(updateActionsPayload).catch((e: unknown) => {
-				this.#logger.error('Error sending updateActions', e)
-			})
-		)
-	}
-	#queueUpdateFeedbacksBatch(updateFeedbacksPayload: Map<string, EntityManagerFeedbackEntity | null>): void {
-		this.#queueBatch(async () =>
-			this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e: unknown) => {
-				this.#logger.error('Error sending updateFeedbacks', e)
+			this.#adapter.update(updatePayload).catch((e: unknown) => {
+				this.logger.error(`Error sending ${this.entityType} updates`, e)
 			})
 		)
 	}
 
-	#sendUpgradeActionsBatch(
+	#sendUpgradeBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[]
+		upgradeEntities: EntityManagerUpgradeEntity<TModel>[]
 	): void {
 		this.#queueBatch(async () =>
 			this.#adapter
-				.upgradeActions(upgradeActions, this.#currentUpgradeIndex)
+				.upgrade(upgradeEntities, this.#currentUpgradeIndex)
 				.then((upgradedEntities) => {
 					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
 				})
 				.catch((e: unknown) => {
-					this.#logger.error('Error sending upgradeActions', e)
-
-					this.#upgradeBatchRetry(entityIdsInThisBatch)
-				})
-		)
-	}
-	#sendUpgradeFeedbacksBatch(
-		entityIdsInThisBatch: ReadonlyMap<string, string>,
-		upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[]
-	): void {
-		this.#queueBatch(async () =>
-			this.#adapter
-				.upgradeFeedbacks(upgradeFeedbacks, this.#currentUpgradeIndex)
-				.then((upgradedEntities) => {
-					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
-				})
-				.catch((e: unknown) => {
-					this.#logger.error('Error sending upgradeFeedbacks', e)
+					this.logger.error(`Error sending ${this.entityType} upgrades`, e)
 
 					this.#upgradeBatchRetry(entityIdsInThisBatch)
 				})
@@ -639,12 +548,12 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 
 			const entity = wrapper.entity.deref()
 			if (!entity) {
-				this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, terminating upgrade`)
+				this.logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, terminating upgrade`)
 				this.#deleteEntity(entityId)
 				continue
 			}
 
-			this.#logger.silly(`Processing entity ${entityId} in control ${wrapper.controlId} with state ${wrapper.state}`)
+			this.logger.silly(`Processing entity ${entityId} in control ${wrapper.controlId} with state ${wrapper.state}`)
 
 			switch (wrapper.state) {
 				case EntityState.UPGRADING_INVALIDATED:
@@ -657,7 +566,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 					// We need to do this via the EntityPool method, so that it gets persisted correctly
 					const control = this.controlsStore.getControl(wrapper.controlId)
 					if (!control || !control.supportsEntities) {
-						this.#logger.warn(`Control ${wrapper.controlId} not found`)
+						this.logger.warn(`Control ${wrapper.controlId} not found`)
 						continue
 					}
 
@@ -665,7 +574,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 					if (!upgradedEntity) continue
 
 					if (upgradedEntity.type !== entity.type) {
-						this.#logger.error(`Upgraded entity ${entity.id} in control ${wrapper.controlId} has mismatched type`)
+						this.logger.error(`Upgraded entity ${entity.id} in control ${wrapper.controlId} has mismatched type`)
 						continue
 					}
 
@@ -673,7 +582,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 						control.entities.entityReplaceForUpgrade(upgradedEntity)
 					} catch (e) {
 						// If we fail to replace the entity, we can just ignore it
-						this.#logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)
+						this.logger.error(`Error replacing entity ${entity.id} in control ${wrapper.controlId}`, e)
 					}
 
 					break
@@ -729,13 +638,15 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 	 * Cleanup is not performed, it is assumed that the module is no longer running.
 	 */
 	destroy(): void {
-		this.#unsubscribeRenderClock()
 		this.#debounceProcessPending.cancel()
 		this.#batchQueue.length = 0
 		for (const wrapper of this.#entities.values()) {
 			wrapper.variables?.dispose()
 		}
 		this.#entities.clear()
+		for (const subscriptionId of this.#subscriptions.keys()) {
+			this.onSubscriptionReset(subscriptionId)
+		}
 		this.#subscriptions.clear()
 		this.#subscriptionIdsByKey.clear()
 		this.#ready = false
@@ -762,7 +673,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 			isNewInstance: !!existing && (existing.isNewInstance || existing.entity.deref() !== entity),
 		})
 
-		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
+		this.logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
 
 		this.#debounceProcessPending()
 	}
@@ -777,28 +688,9 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 		return this.#entities.get(entityId)?.subscriptionId
 	}
 
-	/**
-	 * Handle feedback values reported by the module, passing each to every entity which shares the subscription
-	 * @param values The values for each subscription
-	 */
-	handleFeedbackValues(values: EntityManagerFeedbackValue[]): void {
-		const entityValues: NewFeedbackValue[] = []
-
-		for (const { id, controlId, value } of values) {
-			const subscription = this.#subscriptions.get(id)
-			// The subscription may have been removed while the value was in flight
-			if (!subscription || subscription.controlId !== controlId) continue
-			// Only a feedback has a value, so an action never holds one to give to the members which join it
-			if (subscription.type !== EntityModelType.Feedback) continue
-
-			subscription.lastValue = { value }
-
-			for (const entityId of subscription.memberIds) {
-				entityValues.push({ entityId, controlId: subscription.controlId, value })
-			}
-		}
-
-		if (entityValues.length > 0) this.controlsStore.updateFeedbackValues(this.#connectionId, entityValues)
+	/** Get a subscription, for reporting what the module said about it to its members */
+	protected getSubscription(subscriptionId: string): EntitySubscription | undefined {
+		return this.#subscriptions.get(subscriptionId)
 	}
 
 	/**
@@ -812,42 +704,7 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 		// mark as pending deletion
 		wrapper.state = EntityState.PENDING_DELETE
 
-		this.#logger.silly(`Queued entity ${entityId} in control ${wrapper.controlId} to be unloaded`)
-
-		this.#debounceProcessPending()
-	}
-
-	/**
-	 * Resend all tracked feedback entities to the module.
-	 * This will mark all feedbacks as unloaded, so that they are re-sent to the module.
-	 * This is intended to be used when the top-bar setting changes, as the dimensions reported to the module will change.
-	 */
-	resendFeedbacks(): void {
-		for (const entity of this.#entities.values()) {
-			if (entity.entity.deref()?.type !== EntityModelType.Feedback) continue
-
-			// The image size is not part of the subscription key, so it must be sent even though it looks unchanged
-			entity.resendRequested = true
-
-			switch (entity.state) {
-				case EntityState.UNLOADED:
-				case EntityState.UPGRADING_INVALIDATED:
-					// Nothing to do, already pending
-					break
-				case EntityState.READY:
-					entity.state = EntityState.UNLOADED
-					break
-				case EntityState.UPGRADING:
-					entity.state = EntityState.UPGRADING_INVALIDATED
-					break
-				case EntityState.PENDING_DELETE:
-					// This is about to be deleted, so we can ignore it
-					break
-				default:
-					assertNever(entity.state)
-					break
-			}
-		}
+		this.logger.silly(`Queued entity ${entityId} in control ${wrapper.controlId} to be unloaded`)
 
 		this.#debounceProcessPending()
 	}
@@ -887,16 +744,15 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 	}
 
 	/**
-	 * Inform the entity manager that the render clock has ticked.
-	 * This will cause any feedback entities whose options depend on the render clock to be re-parsed.
+	 * Re-parse the ready entities matching a predicate, sending them to the module only if they have changed
+	 * @param predicate Whether an entity needs re-parsing
 	 */
-	onRenderClockTick(): void {
+	protected reparseReadyEntities(predicate: (wrapper: EntityWrapper) => boolean): void {
 		let anyInvalidated = false
 
 		for (const wrapper of this.#entities.values()) {
 			if (wrapper.state !== EntityState.READY) continue
-			if (!wrapper.lastClockSensitive) continue
-			if (wrapper.entity.deref()?.type !== EntityModelType.Feedback) continue
+			if (!predicate(wrapper)) continue
 
 			wrapper.state = EntityState.UNLOADED
 			anyInvalidated = true
@@ -906,19 +762,13 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 	}
 
 	/**
-	 * Inform the entity manager that the entity definitions have changed.
-	 * This will cause all entities of the given type to be invalidated, so that they can be re-parsed with the new definitions.
-	 * Future: it would be better for this to do some diffing or be more granular, but for now this is sufficient.
+	 * Re-process every entity, sending each subscription to the module again even if it is unchanged
+	 * @returns Whether any entity was invalidated
 	 */
-	onEntityDefinitionsChanged(entityType: EntityModelType): void {
+	protected resendAllEntities(): boolean {
 		let anyInvalidated = false
 
-		// If the definitions change, we need to invalidate all entities of that type
 		for (const wrapper of this.#entities.values()) {
-			const entity = wrapper.entity.deref()
-			if (!entity || entity.type !== entityType) continue
-
-			// Send the subscriptions again even if they are unchanged, so the module sees them against its new definitions
 			wrapper.resendRequested = true
 
 			switch (wrapper.state) {
@@ -943,6 +793,21 @@ export class ConnectionEntityManager implements VariableDependencyListener<Entit
 			}
 		}
 
-		if (anyInvalidated) this.#debounceProcessPending()
+		return anyInvalidated
+	}
+
+	/** Process anything pending, on the usual debounce */
+	protected processPending(): void {
+		this.#debounceProcessPending()
+	}
+
+	/**
+	 * Inform the entity manager that the entity definitions have changed.
+	 * This will cause all entities to be invalidated, so that they can be re-parsed with the new definitions.
+	 * Future: it would be better for this to do some diffing or be more granular, but for now this is sufficient.
+	 */
+	onEntityDefinitionsChanged(): void {
+		// Send the subscriptions again even if they are unchanged, so the module sees them against its new definitions
+		if (this.resendAllEntities()) this.#debounceProcessPending()
 	}
 }
