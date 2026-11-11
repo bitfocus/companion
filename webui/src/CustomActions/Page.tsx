@@ -110,7 +110,7 @@ export const CustomActionsPage = observer(function CustomActionsPage() {
 
 	return (
 		<div className="page-shell">
-			<PageHeader icon={faCubes} title="Custom Actions" />
+			<PageHeader icon={faCubes} title="Custom Actions" beta />
 
 			<SplitPanels.Root
 				showing={selectedCustomActionId ? 'secondary' : 'primary'}
