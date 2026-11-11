@@ -1,4 +1,4 @@
-import { action, computed, makeObservable, observable } from 'mobx'
+import { action, computed, makeObservable, observable, observableRef } from 'mobx'
 import type {
 	ClientLinkTransportType,
 	LinkPeerInfo,
@@ -26,9 +26,9 @@ export class LinkStore {
 	constructor() {
 		makeObservable(this, {
 			transportsLoaded: observable,
-			peers: observable.ref,
+			peers: observableRef,
 			peersLoaded: observable,
-			self: observable.ref,
+			self: observableRef,
 			sortedTransports: computed,
 			addableTransportTypes: computed,
 			attentionSections: computed,

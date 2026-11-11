@@ -1803,8 +1803,8 @@ __metadata:
     lucide-react: "npm:^1.70.0"
     marked: "npm:^18.1.3"
     marked-base-url: "npm:^1.1.10"
-    mobx: "npm:^6.16.1"
-    mobx-react-lite: "npm:^4.1.1"
+    mobx: "npm:^7.1.5"
+    mobx-react-lite: "npm:^5.1.2"
     mobx-utils: "npm:^6.1.1"
     monaco-editor: "npm:^0.57.0"
     nanoid: "npm:^6.0.2"
@@ -17425,20 +17425,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mobx-react-lite@npm:^4.1.1":
-  version: 4.1.1
-  resolution: "mobx-react-lite@npm:4.1.1"
-  dependencies:
-    use-sync-external-store: "npm:^1.4.0"
+"mobx-react-lite@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "mobx-react-lite@npm:5.1.2"
   peerDependencies:
-    mobx: ^6.9.0
-    react: ^16.8.0 || ^17 || ^18 || ^19
-  peerDependenciesMeta:
-    react-dom:
-      optional: true
-    react-native:
-      optional: true
-  checksum: 10c0/296b29487dc9fae7b7dd8eb39454d980fcfe59bf4c160ac911faa55469f9ebe2953661efca588f6d7929a2b071f234c7c4d717beaf5819d548be9b58c39874f1
+    mobx: ^7.0.0
+    react: ^18 || ^19
+  checksum: 10c0/801f0a02758a0fa94fbe9c11685b5d0d4a4859a5e4eed21329f179b4b60babb171fe1e8292296e28a99218aac9db985f8c7cd3acff8379ca91a8ff7dcc0b430b
   languageName: node
   linkType: hard
 
@@ -17451,10 +17444,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mobx@npm:^6.16.1":
-  version: 6.16.1
-  resolution: "mobx@npm:6.16.1"
-  checksum: 10c0/8450dab51fa133c9dde9f6c9b42cdc9f16c70cf2b989acc25b2cf2c66948def053ad3f1fdfc3bc256ece394e607e9c15dbfe88792ffa81a041e2ec92ae268cdb
+"mobx@npm:^7.1.5":
+  version: 7.1.5
+  resolution: "mobx@npm:7.1.5"
+  checksum: 10c0/802105afe7655883881803e4b66f13351e1f33a5c433686a6b728833ee7dcbe5b5227066a848c07dc1afbd27757a01cebe9ef6e42bf673bce4531b1f1d5d37fd
   languageName: node
   linkType: hard
 
@@ -23248,7 +23241,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"use-sync-external-store@npm:^1.4.0, use-sync-external-store@npm:^1.5.0, use-sync-external-store@npm:^1.6.0, use-sync-external-store@npm:^1.7.0":
+"use-sync-external-store@npm:^1.5.0, use-sync-external-store@npm:^1.6.0, use-sync-external-store@npm:^1.7.0":
   version: 1.7.0
   resolution: "use-sync-external-store@npm:1.7.0"
   peerDependencies:

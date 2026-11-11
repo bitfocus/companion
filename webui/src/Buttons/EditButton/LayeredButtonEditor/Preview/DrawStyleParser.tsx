@@ -1,6 +1,5 @@
 import isEqual from 'fast-deep-equal'
-import { toJS } from 'mobx'
-import { useObserver } from 'mobx-react-lite'
+import { autorun, toJS } from 'mobx'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
@@ -402,7 +401,10 @@ export function useLayeredButtonDrawStyleParser(
 	}, [parser, canvas])
 
 	// Trigger the update whenever the style changes
-	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))
+	useEffect(() => {
+		if (!parser) return
+		return autorun(() => parser.updateStyle(toJS(styleStore.elements)))
+	}, [parser, styleStore])
 
 	return drawStyle
 }
