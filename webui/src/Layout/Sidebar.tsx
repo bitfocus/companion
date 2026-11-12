@@ -7,7 +7,6 @@ import {
 	faClipboardList,
 	faClock,
 	faCloud,
-	faCubes,
 	faDesktop,
 	faExternalLinkSquare,
 	faFileImport,
@@ -43,13 +42,20 @@ import type { MenuItemProps } from '~/Components/ActionMenu.js'
 import { Button } from '~/Components/Button.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { Popover } from '~/Components/Popover.js'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { Tooltip } from '~/Components/Tooltip.js'
 import { useContextMenuState } from '~/Components/useContextMenuProps'
 import { useMobileMode } from '~/Hooks/useLayoutMode'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { LinkTabNotifyIcon } from '~/Link/LinkNotifyIcon.js'
 import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
-import { matchedPageIdForPath, SETTINGS_SECTION, VARIABLES_SECTION, type NavSection } from './navRegistry.js'
+import {
+	BUILDING_BLOCKS_SECTION,
+	matchedPageIdForPath,
+	SETTINGS_SECTION,
+	VARIABLES_SECTION,
+	type NavSection,
+} from './navRegistry.js'
 import { SidebarFooter, SidebarHeader } from './SidebarHeader'
 
 function foldableIcon(foldable: boolean): ReactElement {
@@ -193,6 +199,21 @@ function SidebarSubMenuItem({ name, path, isActive }: SidebarSubMenuItemProps) {
 	)
 }
 
+/** A page of a section which is not there yet */
+function SidebarUpcomingSubMenuItem({ name }: { name: string }) {
+	return (
+		<li>
+			<span className="nav-link nav-sub-link disabled" aria-disabled="true">
+				<span className="nav-sub-dot" />
+				{name}
+				<StatusBadge tone="neutral" className="ms-auto">
+					Soon
+				</StatusBadge>
+			</span>
+		</li>
+	)
+}
+
 /** A nav group whose sub-items are a section of the shared nav registry. */
 function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 	const { pathname } = useLocation()
@@ -211,6 +232,9 @@ function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 					path={page.path}
 					isActive={page.id === activePageId}
 				/>
+			))}
+			{section.upcomingPages?.map((page) => (
+				<SidebarUpcomingSubMenuItem key={page.id} name={page.shortLabel ?? page.label} />
 			))}
 		</SidebarNavGroup>
 	)
@@ -371,10 +395,10 @@ export const MySidebar = memo(function MySidebar() {
 					<li className="nav-title">Program</li>
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
-					<SidebarMenuItem name="Custom Actions" icon={faCubes} path="/custom-actions" />
 					<SidebarSectionNavGroup section={VARIABLES_SECTION} />
-					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
+					<SidebarSectionNavGroup section={BUILDING_BLOCKS_SECTION} />
+					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 
 					{/* Category: Connect */}
 					<li className="nav-title">Connect</li>

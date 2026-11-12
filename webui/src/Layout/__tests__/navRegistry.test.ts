@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
 	activePageIdForPath,
+	ALL_NAV_PAGES,
 	matchedPageIdForPath,
 	navLocationForPath,
 	SETTINGS_SECTION,
@@ -51,6 +52,12 @@ describe('navLocationForPath', () => {
 		expect(location?.page.id).toBe('protocols')
 	})
 
+	test('a custom action is in the building blocks section', () => {
+		const location = navLocationForPath('/custom-actions/abc123/inputs')
+		expect(location?.section?.id).toBe('building-blocks')
+		expect(location?.page.id).toBe('actions')
+	})
+
 	test('a top-level page, including its child routes', () => {
 		const location = navLocationForPath('/connections/abc123')
 		expect(location?.section).toBe(null)
@@ -61,5 +68,12 @@ describe('navLocationForPath', () => {
 		expect(navLocationForPath('/getting-started')).toBe(null)
 		// A shared prefix is not a match
 		expect(navLocationForPath('/buttonsx')).toBe(null)
+	})
+})
+
+describe('ALL_NAV_PAGES', () => {
+	test('leaves out the pages still to come', () => {
+		expect(ALL_NAV_PAGES.map((page) => page.label)).toContain('Building Blocks: Custom Actions')
+		expect(ALL_NAV_PAGES.map((page) => page.label)).not.toContain('Building Blocks: Custom Feedbacks')
 	})
 })

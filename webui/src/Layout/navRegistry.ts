@@ -6,6 +6,7 @@ import {
 	faCog,
 	faCogs,
 	faCubes,
+	faCubesStacked,
 	faDollarSign,
 	faFileImport,
 	faFloppyDisk,
@@ -39,11 +40,21 @@ export interface NavPage {
 	alsoMatches?: readonly string[]
 }
 
+/** A page which is planned but not there yet, shown disabled in the sidebar so the menu doesn't move when it arrives */
+export interface NavUpcomingPage {
+	id: string
+	label: string
+	shortLabel?: string
+	icon: IconDefinition
+}
+
 export interface NavSection {
 	id: string
 	label: string
 	icon: IconDefinition
 	pages: readonly NavPage[]
+	/** Pages still to come, listed after `pages` in the sidebar only */
+	upcomingPages?: readonly NavUpcomingPage[]
 }
 
 /**
@@ -87,6 +98,14 @@ export const VARIABLES_SECTION: NavSection = {
 	],
 }
 
+export const BUILDING_BLOCKS_SECTION: NavSection = {
+	id: 'building-blocks',
+	label: 'Building Blocks',
+	icon: faCubes,
+	pages: [{ id: 'actions', label: 'Custom Actions', shortLabel: 'Actions', path: '/custom-actions', icon: faCubes }],
+	upcomingPages: [{ id: 'feedbacks', label: 'Custom Feedbacks', shortLabel: 'Feedbacks', icon: faCubesStacked }],
+}
+
 export const SURFACES_SECTION: NavSection = {
 	id: 'surfaces',
 	label: 'Surfaces',
@@ -118,7 +137,6 @@ export const LINK_SECTION: NavSection = {
 export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'buttons', label: 'Buttons', path: '/buttons', icon: faBorderAll },
 	{ id: 'triggers', label: 'Triggers', path: '/triggers', icon: faClock },
-	{ id: 'custom-actions', label: 'Custom Actions', path: '/custom-actions', icon: faCubes },
 	{ id: 'action-recorder', label: 'Action Recorder', path: '/action-recorder', icon: faVideoCamera },
 	{ id: 'connections', label: 'Connections', path: '/connections', icon: faPlug },
 	{ id: 'modules', label: 'Modules', path: '/modules', icon: faPuzzlePiece },
@@ -127,7 +145,13 @@ export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'import-export', label: 'Import / Export', path: '/import-export', icon: faFileImport },
 ]
 
-export const NAV_SECTIONS: readonly NavSection[] = [VARIABLES_SECTION, SURFACES_SECTION, LINK_SECTION, SETTINGS_SECTION]
+export const NAV_SECTIONS: readonly NavSection[] = [
+	VARIABLES_SECTION,
+	BUILDING_BLOCKS_SECTION,
+	SURFACES_SECTION,
+	LINK_SECTION,
+	SETTINGS_SECTION,
+]
 
 /** Every page reachable from the nav, flattened — what the command palette searches. */
 export const ALL_NAV_PAGES: readonly NavPage[] = [
