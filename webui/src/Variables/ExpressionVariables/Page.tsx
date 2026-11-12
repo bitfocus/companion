@@ -1,4 +1,4 @@
-import { faAdd, faLayerGroup, faList, faSquareRootVariable, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faBook, faLayerGroup, faList, faSquareRootVariable, faTrash } from '@fortawesome/free-solid-svg-icons'
 import '../../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -11,7 +11,7 @@ import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import { Button } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { CopyButton } from '~/Components/CopyButton'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
@@ -19,13 +19,13 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useComputed } from '~/Resources/util'
+import { makeAbsolutePath, useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { AddVariableModal, type AddVariableModalRef } from '../AddVariableModal'
 import { VariablesNav } from '../VariablesNav.js'
@@ -34,6 +34,8 @@ import {
 	ExpressionVariablesTableContextProvider,
 	useExpressionVariablesTableContext,
 } from './ExpressionVariablesTableContext'
+
+const expressionVariablesHelpPage = '/user-guide/config/variables#expression-variables'
 
 export const ExpressionVariablesPage = observer(function ExpressionVariablesPage() {
 	const { expressionVariablesList } = useContext(RootAppStoreContext)
@@ -127,13 +129,35 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		void navigate({ to: '/variables/expression' })
 	}, [navigate])
 
-	const emptyList: PanelEmptyListState | null =
-		expressionVariablesList.expressionVariables.size === 0
+	const empty: PageEmptyStateProps | null =
+		expressionVariablesList.expressionVariables.size === 0 &&
+		expressionVariablesList.collections.size === 0 &&
+		!selectedVariableId
 			? {
+					icon: faSquareRootVariable,
 					title: 'No expression variables yet',
-					description: 'Expression variables compute their value from an expression, updating as its inputs change.',
-					actionLabel: 'Add expression variable',
-					onAction: doAddNew,
+					description: (
+						<>
+							<p>
+								Expression variables compute their value from an expression, combining other variables with maths, text
+								and logic. They update by themselves whenever their inputs change.
+							</p>
+							<p>
+								Use them anywhere Companion accepts variables, as $(expression:name), so a calculation lives in one
+								place rather than on every button.
+							</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={doAddNew}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first expression variable
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(expressionVariablesHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
+					),
 				}
 			: null
 
@@ -148,16 +172,12 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				create={createVariable}
 			/>
 
-			<PageHeader
-				icon={faSquareRootVariable}
-				title="Expression Variables"
-				helpAction="/user-guide/config/variables#expression-variables"
-			/>
+			<PageHeader icon={faSquareRootVariable} title="Expression Variables" helpAction={expressionVariablesHelpPage} />
 
 			<VariablesNav activeTab="expression" />
 
 			<SplitPanels.Root
-				empty={null}
+				empty={empty}
 				showing={selectedVariableId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'expression-variables' }}
 			>
@@ -213,9 +233,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
-						<PanelEmptyListProvider value={emptyList}>
-							<Outlet />
-						</PanelEmptyListProvider>
+						<Outlet />
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
