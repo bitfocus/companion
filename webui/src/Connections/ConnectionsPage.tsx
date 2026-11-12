@@ -1,16 +1,21 @@
-import { faPlug } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faBook, faPlug } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
+import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { Modal } from '~/Components/Modal.js'
 import { AddConnectionsPanel } from '~/Connections/AddConnectionPanel.js'
 import { useEscapeToClose } from '~/Hooks/useEscapeToClose.js'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
+
+const connectionsHelpPage = '/user-guide/config/connections'
 
 export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.Element {
 	const navigate = useNavigate()
@@ -27,22 +32,39 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 	useEscapeToClose(!!selectedConnectionId && !addConnectionsMatch, handleCloseModal)
 
 	const { connections } = useContext(RootAppStoreContext)
-	const emptyList: PanelEmptyListState | null =
-		connections.count === 0
+	const empty: PageEmptyStateProps | null =
+		connections.count === 0 && connections.collections.size === 0 && !selectedConnectionId
 			? {
+					icon: faPlug,
 					title: 'No connections yet',
-					description: 'Connections link Companion to the devices and software you want to control.',
-					actionLabel: 'Add connection',
-					onAction: () => void navigate({ to: '/connections/add' }),
+					description: (
+						<>
+							<p>
+								Connections link Companion to the devices and software you want to control: video switchers, audio
+								consoles, media players, lighting desks, PTZ cameras and many more.
+							</p>
+							<p>Each one gives you actions to put on your buttons, and feedbacks and variables to show their state.</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={() => void navigate({ to: '/connections/add' })}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first connection
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(connectionsHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
+					),
 				}
 			: null
 
 	return (
 		<div className="page-shell">
-			<PageHeader icon={faPlug} title="Connections" helpAction="/user-guide/config/connections" />
+			<PageHeader icon={faPlug} title="Connections" helpAction={connectionsHelpPage} />
 
 			<SplitPanels.Root
-				empty={null}
+				empty={empty}
 				showing={selectedConnectionId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'connections' }}
 			>
@@ -53,9 +75,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						<MyErrorBoundary>
-							<PanelEmptyListProvider value={emptyList}>
-								<Outlet />
-							</PanelEmptyListProvider>
+							<Outlet />
 						</MyErrorBoundary>
 					</div>
 				</SplitPanels.Secondary>
