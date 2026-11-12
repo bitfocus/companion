@@ -92,49 +92,6 @@
 		flex-direction: column;
 	}
 
-	.image-library-dropzone {
-		margin: 1rem 0;
-		padding: 1.5rem 2rem;
-		border: 2px dashed var(--color-tile-border);
-		border-radius: 6px;
-		background-color: var(--color-surface-subtle);
-		transition: all 0.2s ease;
-
-		&.active {
-			border-color: var(--color-image-accent);
-			background-color: var(--color-image-accent-5);
-		}
-
-		&.uploading {
-			border-color: var(--color-upload-success);
-			background-color: var(--color-upload-success-5);
-		}
-
-		.dropzone-content {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			justify-content: center;
-			gap: 0.75rem;
-			color: var(--color-muted);
-
-			svg {
-				color: var(--color-image-accent);
-			}
-
-			span {
-				font-weight: 500;
-				color: var(--color-text-emphasis);
-			}
-		}
-
-		&.uploading .dropzone-content {
-			svg {
-				color: var(--color-upload-success);
-			}
-		}
-	}
-
 	.image-library-grid-content {
 		flex: 1;
 		overflow-y: auto;
@@ -143,6 +100,50 @@
 	/* The editor's preview sits in a section like any other panel's content, at a fixed stage height */
 	.image-library-editor .image-preview-full {
 		height: 240px;
+	}
+}
+
+/* Shown while dragging files over the page, in the grid or in the empty state */
+.image-library-dropzone {
+	margin: 1rem 0;
+	padding: 1.5rem 2rem;
+	border: 2px dashed var(--color-tile-border);
+	border-radius: 6px;
+	background-color: var(--color-surface-subtle);
+	transition: all 0.2s ease;
+
+	&.active {
+		border-color: var(--color-image-accent);
+		background-color: var(--color-image-accent-5);
+	}
+
+	&.uploading {
+		border-color: var(--color-upload-success);
+		background-color: var(--color-upload-success-5);
+	}
+
+	.dropzone-content {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		color: var(--color-muted);
+
+		svg {
+			color: var(--color-image-accent);
+		}
+
+		span {
+			font-weight: 500;
+			color: var(--color-text-emphasis);
+		}
+	}
+
+	&.uploading .dropzone-content {
+		svg {
+			color: var(--color-upload-success);
+		}
 	}
 }
 
