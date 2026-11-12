@@ -1,5 +1,22 @@
 # Bitfocus Companion
 
+## Companion v5.1.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- renaming a connection updates its variables in where an action stores its result and in a feedback's inversion
+- keep the button editor on a button after moving it
+- resolve symlinks before serving module help assets
+- list a device once in the Bonjour dropdown when it announces several service types
+- keep mDNS service types within the 15 characters RFC 6763 allows
+- keep the selection that page up/down moves to the new page
+- remap the connection id of composite elements on import
+- keep the ids of a button's actions when it is loaded
+- stop the running actions of a button or trigger when it is deleted
+- stop the running actions of a button when it is moved or swapped
+- hot abort from the button editor only aborts that button's delayed actions
+- grant the macOS audio-input entitlement so modules can read audio inputs
+
 ## Companion v5.1.2 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
