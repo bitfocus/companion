@@ -18,7 +18,11 @@ export const SettingsAdvancedPage = observer(function UserConfig() {
 
 			<SettingsNav activeTab="advanced" />
 
-			<SplitPanels.Root showing={selectedItemId ? 'secondary' : 'primary'} resize={{ storageKey: 'advanced' }}>
+			<SplitPanels.Root
+				empty={null}
+				showing={selectedItemId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'advanced' }}
+			>
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg shrink-0">

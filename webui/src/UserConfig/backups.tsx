@@ -65,7 +65,11 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 			<SettingsNav activeTab="backups" />
 
-			<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'} resize={{ storageKey: 'backups' }}>
+			<SplitPanels.Root
+				empty={null}
+				showing={selectedRuleId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'backups' }}
+			>
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
 						{/* Top Header Card: Toolbar */}

@@ -18,7 +18,11 @@ export const SettingsProtocolsPage = observer(function UserConfig() {
 
 			<SettingsNav activeTab="protocols" />
 
-			<SplitPanels.Root showing={selectedProtocolId ? 'secondary' : 'primary'} resize={{ storageKey: 'protocols' }}>
+			<SplitPanels.Root
+				empty={null}
+				showing={selectedProtocolId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'protocols' }}
+			>
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg shrink-0">

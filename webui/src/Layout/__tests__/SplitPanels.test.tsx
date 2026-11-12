@@ -1,3 +1,4 @@
+import { faClock } from '@fortawesome/free-solid-svg-icons'
 import { render } from '@testing-library/react'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clampFirstPercent } from '~/Hooks/useSplitResize.js'
@@ -56,7 +57,7 @@ const HIDE_BELOW_XL = 'max-xl:hidden'
 
 function renderPanels(showing: 'primary' | 'secondary' | null, resize: SplitPanelsResizeConfig | null = null) {
 	const { container } = render(
-		<SplitPanels.Root showing={showing} resize={resize}>
+		<SplitPanels.Root empty={null} showing={showing} resize={resize}>
 			<SplitPanels.Primary>primary</SplitPanels.Primary>
 			<SplitPanels.Secondary>secondary</SplitPanels.Secondary>
 		</SplitPanels.Root>
@@ -97,9 +98,27 @@ describe('SplitPanels', () => {
 		expect(primary.className).not.toMatch(/\b(block|flex|grid)\b/)
 	})
 
+	it('renders the empty state in place of both panels while `empty` is set', () => {
+		const { container, getByText } = render(
+			<SplitPanels.Root
+				empty={{ icon: faClock, title: 'Nothing yet', description: 'Add one', actions: <button>Add</button> }}
+				showing="primary"
+				resize={RESIZE}
+			>
+				<SplitPanels.Primary>primary</SplitPanels.Primary>
+				<SplitPanels.Secondary>secondary</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		)
+		expect(container.firstChild).toHaveClass('page-empty-state')
+		expect(container.querySelector('.split-panels')).toBeNull()
+		expect(container.textContent).not.toContain('primary')
+		expect(getByText('Nothing yet')).toBeInTheDocument()
+		expect(getByText('Add')).toBeInTheDocument()
+	})
+
 	it('merges className and passes through HTML attributes', () => {
 		const { container } = render(
-			<SplitPanels.Root showing={null} className="custom-page" data-testid="root" resize={null}>
+			<SplitPanels.Root empty={null} showing={null} className="custom-page" data-testid="root" resize={null}>
 				<SplitPanels.Primary className="custom-panel">primary</SplitPanels.Primary>
 			</SplitPanels.Root>
 		)

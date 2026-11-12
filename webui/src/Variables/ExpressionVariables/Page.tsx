@@ -157,6 +157,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 			<VariablesNav activeTab="expression" />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedVariableId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'expression-variables' }}
 			>

@@ -41,7 +41,11 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 		<div className="page-shell">
 			<PageHeader icon={faPlug} title="Connections" helpAction="/user-guide/config/connections" />
 
-			<SplitPanels.Root showing={selectedConnectionId ? 'secondary' : 'primary'} resize={{ storageKey: 'connections' }}>
+			<SplitPanels.Root
+				empty={null}
+				showing={selectedConnectionId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'connections' }}
+			>
 				<SplitPanels.Primary className="overflow-hidden">
 					<ConnectionsList selectedConnectionId={selectedConnectionId} />
 				</SplitPanels.Primary>

@@ -60,6 +60,7 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 			<PageHeader icon={faImages} title="Image Library" helpAction="/user-guide/config/image-library" />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedImageName ? 'secondary' : 'primary'}
 				className="image-library-page"
 				resize={{ storageKey: 'image-library' }}

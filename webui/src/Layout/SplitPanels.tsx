@@ -5,6 +5,7 @@ import { createContext, useContext, type HTMLAttributes } from 'react'
 import { ResizeHandle } from '~/Components/ResizeHandle.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode.js'
 import { useSplitResize } from '~/Hooks/useSplitResize.js'
+import { PageEmptyState, type PageEmptyStateProps } from './PageEmptyState.js'
 
 // The two-panel page layout: a list on the left and what it opens on the right, side by side once
 // there is room and one at a time below that. The CSS lives in layout.css (`.split-panels`) — the
@@ -46,16 +47,24 @@ const ShowingContext = createContext<SplitPanelsShowing>(null)
 export interface SplitPanelsRootProps extends HTMLAttributes<HTMLDivElement> {
 	showing: SplitPanelsShowing
 	resize: SplitPanelsResizeConfig | null
+	/**
+	 * Shown in place of both panels while the page's list is empty and nothing is open, inviting the user
+	 * to create the first item. `null` for the usual split.
+	 */
+	empty: PageEmptyStateProps | null
 }
 
 function SplitPanelsRoot({
 	showing,
 	resize,
+	empty,
 	className,
 	children,
 	style,
 	...rest
 }: SplitPanelsRootProps): React.JSX.Element {
+	if (empty) return <PageEmptyState {...empty} />
+
 	// A non-resizable view runs none of the resize hooks (media query, storage, observer): it stays as
 	// cheap as it always was, and only the opted-in views pay for the extra machinery.
 	if (resize) {

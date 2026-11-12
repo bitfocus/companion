@@ -79,6 +79,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 			<PageHeader icon={faVideoCamera} title="Action Recorder" />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={null}
 				className="action-recorder-split"
 				resize={{ storageKey: 'action-recorder', minPrimaryPx: 320, defaultPrimaryPercent: 35 }}

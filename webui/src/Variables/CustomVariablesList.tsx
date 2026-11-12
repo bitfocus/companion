@@ -148,6 +148,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 			<VariablesNav activeTab="custom" />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedVariableId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'custom-variables' }}
 			>

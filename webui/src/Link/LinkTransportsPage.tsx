@@ -24,6 +24,7 @@ export const LinkTransportsPage = observer(function LinkTransportsPage(): React.
 			<LinkNav />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedTransportId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'link-transports' }}
 			>
