@@ -8,13 +8,16 @@ export interface PageEmptyStateProps {
 	description: React.ReactNode
 	/** The buttons inviting the user to create the first item. */
 	actions: React.ReactNode
+	/** Alerts shown above the invitation, such as why nothing has been found. */
+	notices?: React.ReactNode
 }
 
 /** What a list page shows in place of its usual layout while it has nothing in it. */
-export function PageEmptyState({ icon, title, description, actions }: PageEmptyStateProps): React.JSX.Element {
+export function PageEmptyState({ icon, title, description, actions, notices }: PageEmptyStateProps): React.JSX.Element {
 	return (
 		<div className="page-empty-state">
 			<div className="page-empty-state-content">
+				{notices && <div className="page-empty-state-notices">{notices}</div>}
 				<div className="page-empty-state-icon">
 					<FontAwesomeIcon icon={icon} />
 				</div>

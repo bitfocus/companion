@@ -22,6 +22,20 @@
 		text-align: center;
 	}
 
+	.page-empty-state-notices {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		align-self: stretch;
+		margin-bottom: 1.5rem;
+		text-align: start;
+
+		/* Its alerts each decide for themselves whether to render */
+		&:empty {
+			display: none;
+		}
+	}
+
 	/* A larger take on the soft tile of PanelEmptyState and the lock/loading cards */
 	.page-empty-state-icon {
 		display: flex;
