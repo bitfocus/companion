@@ -1,5 +1,4 @@
 import type EventEmitter from 'node:events'
-import { setTimeout } from 'node:timers/promises'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
@@ -17,7 +16,7 @@ import {
 	type CustomActionUse,
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import { AuthorableInputFieldSchema } from '@companion-app/shared/Model/Options.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { publicProcedure, router, throttleIterator, toIterable } from '../UI/TRPC.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
@@ -105,31 +104,15 @@ export function createCustomActionTrpcRouter(
 		watchUsage: publicProcedure
 			.input(z.object({ controlId: zodControlIds['custom-action'] }))
 			.subscription(async function* ({ input, signal }) {
-				// Send the latest when something has changed, rather than every change
-				let changed = true
-				let wake: (() => void) | null = null
-				const onChange = () => {
-					changed = true
-					wake?.()
-				}
-				customActionInstances.events.on('usageChanged', onChange)
-				const onAbort = () => wake?.()
-				signal?.addEventListener('abort', onAbort)
+				const changes = throttleIterator(
+					toIterable(customActionInstances.events, 'usageChanged', signal),
+					USAGE_UPDATE_INTERVAL_MS
+				)
 
-				try {
-					while (!signal?.aborted) {
-						if (!changed) await new Promise<void>((resolve) => (wake = resolve))
-						wake = null
-						if (signal?.aborted) break
+				yield getCustomActionUsage(controlStore, customActionInstances, input.controlId)
 
-						changed = false
-						yield getCustomActionUsage(controlStore, customActionInstances, input.controlId)
-
-						await setTimeout(USAGE_UPDATE_INTERVAL_MS)
-					}
-				} finally {
-					customActionInstances.events.off('usageChanged', onChange)
-					signal?.removeEventListener('abort', onAbort)
+				for await (const _change of changes) {
+					yield getCustomActionUsage(controlStore, customActionInstances, input.controlId)
 				}
 			}),
 
