@@ -33,7 +33,10 @@ export type AddEntityGroup = {
 
 export interface EntityLeafItem {
 	key: string
+	/** `connectionId:definitionId`, as the recently used list stores it */
 	fullId: string
+	connectionId: string
+	definitionId: string
 	label: string
 	searchLabel: string
 	sortKey: string
@@ -161,6 +164,8 @@ export class EntityDefinitionsForTypeStore {
 				leaves.push({
 					key: `${connectionId}:${id}`,
 					fullId: `${connectionId}:${id}`,
+					connectionId,
+					definitionId: id,
 					label: info.label,
 					searchLabel: `${label}: ${info.label}`,
 					sortKey: String(info.sortKey ?? info.label),

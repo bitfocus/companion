@@ -1,14 +1,15 @@
 import { action, observable } from 'mobx'
-import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
+import { CreateCustomActionControlId, type CustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientCustomActionData,
 	CustomActionCollection,
 	CustomActionsUpdate,
 } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomEntityCollections } from '~/Controls/Components/useCustomEntitiesTreeNode.js'
 import { assertNever } from '~/Resources/util'
 
-export class CustomActionsListStore {
+export class CustomActionsListStore implements CustomEntityCollections {
 	readonly customActions = observable.map<CustomActionControlId, ClientCustomActionData>()
 	readonly collections = observable.map<string, CustomActionCollection>()
 
@@ -55,6 +56,10 @@ export class CustomActionsListStore {
 		collectCollectionIds(this.collections.values())
 
 		return collectionIds
+	}
+
+	public getCollectionId(definitionId: string): string | null {
+		return this.customActions.get(CreateCustomActionControlId(definitionId))?.collectionId || null
 	}
 
 	public rootCollections(): CustomActionCollection[] {
