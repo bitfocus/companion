@@ -6,7 +6,7 @@
 	/* Muted text (the `text-muted` utility reads this) uses the tablet's themed muted accent. */
 	--color-muted: var(--remote-accent-muted);
 
-	height: 100vh;
+	height: 100dvh;
 
 	.scroller {
 		height: 100%;
