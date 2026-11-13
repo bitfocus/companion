@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
@@ -87,7 +87,7 @@ function callAction(options: ActionEntityModel['options'] = {}, customActionId =
 	return {
 		type: EntityModelType.Action,
 		id: `call-${nextId++}`,
-		connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+		connectionId: CUSTOM_CONNECTION_ID,
 		definitionId: customActionId,
 		options,
 		upgradeIndex: undefined,

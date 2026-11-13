@@ -1,5 +1,5 @@
 import z from 'zod'
-import { CUSTOM_FEEDBACKS_CONNECTION_ID } from '../ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '../ConnectionId.js'
 import { ParseControlId, type CustomFeedbackControlId, type SomeControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
@@ -28,7 +28,7 @@ export function getCustomFeedbackCallDefinition(
 	const parsedId = ParseControlId(controlId)
 	if (parsedId?.type !== 'custom-feedback') return null
 
-	return { connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID, definitionId: parsedId.customFeedbackId }
+	return { connectionId: CUSTOM_CONNECTION_ID, definitionId: parsedId.customFeedbackId }
 }
 
 /**

@@ -8,7 +8,7 @@ import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import type { BuildOptions } from 'esbuild'
 import { nanoid } from 'nanoid'
 import supertest from 'supertest'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	isControlIdOfKind,
 	ParseControlId,
@@ -547,7 +547,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 			const entityModel: ActionEntityModel = {
 				type: EntityModelType.Action,
 				id: nanoid(),
-				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				definitionId: parsedId.customActionId,
 				options,
 				upgradeIndex: undefined,

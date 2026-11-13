@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
@@ -376,7 +376,7 @@ describe('importFull config gating', () => {
 			{
 				type: 'action',
 				id: 'call',
-				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				definitionId: 'ca1',
 				options: { flag: { isExpression: false, value: true } },
 			},
@@ -387,7 +387,7 @@ describe('importFull config gating', () => {
 		expect(controls.importTrigger).toHaveBeenCalledWith(
 			CreateTriggerControlId('t1'),
 			expect.objectContaining({
-				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID })],
+				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID })],
 			})
 		)
 	})

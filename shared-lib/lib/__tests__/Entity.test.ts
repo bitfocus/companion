@@ -143,6 +143,16 @@ describe('SomeEntityModelSchema', () => {
 		expect(SomeEntityModelSchema.parse(parent).children?.default?.[0]).toMatchObject({ connectionId: 'custom' })
 	})
 
+	test('a use of a custom feedback saved by a beta is given the connection id it has now', () => {
+		const use = { ...action, type: 'feedback', connectionId: '__custom-feedbacks__', definitionId: 'abc' }
+
+		expect(SomeEntityModelSchema.parse(use)).toMatchObject({ connectionId: 'custom', definitionId: 'abc' })
+		// Only for the kind of entity which had it
+		expect(SomeEntityModelSchema.parse({ ...use, type: 'action' })).toMatchObject({
+			connectionId: '__custom-feedbacks__',
+		})
+	})
+
 	test('action fields are not accepted on a feedback, and the reverse', () => {
 		expect(SomeEntityModelSchema.parse({ ...action, variableName: 'x' })).not.toHaveProperty('variableName')
 		expect(

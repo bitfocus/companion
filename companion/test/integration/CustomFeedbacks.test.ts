@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { CUSTOM_FEEDBACKS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { ParseControlId, type CustomFeedbackControlId } from '@companion-app/shared/ControlId.js'
 import type { CustomFeedbackUse } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -36,7 +36,7 @@ describe('custom feedbacks', () => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
 					EntityModelType.Feedback,
-					CUSTOM_FEEDBACKS_CONNECTION_ID,
+					CUSTOM_CONNECTION_ID,
 					parsedId.customFeedbackId
 				)
 			).toBeTruthy()
@@ -63,7 +63,7 @@ describe('custom feedbacks', () => {
 			controlId: buttonId,
 			entityLocation: 'feedbacks',
 			ownerId: null,
-			connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+			connectionId: CUSTOM_CONNECTION_ID,
 			entityType: EntityModelType.Feedback,
 			entityDefinition: customFeedbackId,
 		})
@@ -175,7 +175,7 @@ describe('custom feedbacks', () => {
 				controlId: buttonId,
 				entityLocation: downSet,
 				ownerId: { parentId: logicIfId, childGroup: 'condition' },
-				connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				entityType: EntityModelType.Feedback,
 				entityDefinition: customFeedbackId,
 			})
@@ -222,7 +222,7 @@ describe('custom feedbacks', () => {
 				expect(
 					app.registry.instance.definitions.getEntityDefinition(
 						EntityModelType.Feedback,
-						CUSTOM_FEEDBACKS_CONNECTION_ID,
+						CUSTOM_CONNECTION_ID,
 						idOf(usedControlId)
 					)
 				).toBeTruthy()
@@ -231,7 +231,7 @@ describe('custom feedbacks', () => {
 				controlId,
 				entityLocation: 'feedbacks',
 				ownerId: null,
-				connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				entityType: EntityModelType.Feedback,
 				entityDefinition: idOf(usedControlId),
 			})
@@ -243,7 +243,7 @@ describe('custom feedbacks', () => {
 		await vi.waitFor(() => {
 			const definition = app.registry.instance.definitions.getEntityDefinition(
 				EntityModelType.Feedback,
-				CUSTOM_FEEDBACKS_CONNECTION_ID,
+				CUSTOM_CONNECTION_ID,
 				idOf(first)
 			)
 			expect(definition?.warning).toBe('It uses itself through "Second". That use is always false.')
@@ -280,7 +280,7 @@ describe('custom feedbacks', () => {
 			controlId: outer,
 			entityLocation: 'feedbacks',
 			ownerId: null,
-			connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+			connectionId: CUSTOM_CONNECTION_ID,
 			entityType: EntityModelType.Feedback,
 			entityDefinition: customFeedbackId,
 		})
@@ -327,7 +327,7 @@ describe('custom feedbacks', () => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
 					EntityModelType.Feedback,
-					CUSTOM_FEEDBACKS_CONNECTION_ID,
+					CUSTOM_CONNECTION_ID,
 					parsedClone.customFeedbackId
 				)
 			).toBeTruthy()
@@ -356,7 +356,7 @@ describe('custom feedbacks', () => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
 					EntityModelType.Feedback,
-					CUSTOM_FEEDBACKS_CONNECTION_ID,
+					CUSTOM_CONNECTION_ID,
 					customFeedbackId
 				)
 			).toBeFalsy()
@@ -389,7 +389,7 @@ describe('custom feedbacks', () => {
 			controlId: customActionId,
 			entityLocation: 'custom_action_actions',
 			ownerId: { parentId: logicIfId, childGroup: 'condition' },
-			connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+			connectionId: CUSTOM_CONNECTION_ID,
 			entityType: EntityModelType.Feedback,
 			entityDefinition: customFeedbackId,
 		})

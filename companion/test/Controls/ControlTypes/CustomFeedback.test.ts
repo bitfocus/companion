@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
 import { mock } from 'vitest-mock-extended'
-import { CUSTOM_FEEDBACKS_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomFeedbackControlId,
 	type CustomFeedbackControlId,
@@ -61,7 +61,7 @@ function useFeedback(options: FeedbackEntityModel['options'] = {}, customFeedbac
 	return {
 		type: EntityModelType.Feedback,
 		id: `use-${nextId++}`,
-		connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+		connectionId: CUSTOM_CONNECTION_ID,
 		definitionId: customFeedbackId,
 		options,
 		upgradeIndex: undefined,
@@ -174,7 +174,7 @@ function createHarness(model: Partial<CustomFeedbackModel>) {
 		definitionId: string
 	): ClientEntityDefinition | undefined => {
 		if (entityType !== EntityModelType.Feedback) return undefined
-		if (connectionId === CUSTOM_FEEDBACKS_CONNECTION_ID) {
+		if (connectionId === CUSTOM_CONNECTION_ID) {
 			const control = controlStore.getControl(CreateCustomFeedbackControlId(definitionId))
 			return control instanceof ControlCustomFeedback ? control.toFeedbackDefinition() : undefined
 		}
@@ -361,7 +361,7 @@ describe('ControlCustomFeedback', () => {
 			const { callerEntity } = createCaller(useFeedback())
 
 			await vi.waitFor(() =>
-				expect(updateSpy).toHaveBeenCalledWith(CUSTOM_FEEDBACKS_CONNECTION_ID, [
+				expect(updateSpy).toHaveBeenCalledWith(CUSTOM_CONNECTION_ID, [
 					{ entityId: callerEntity.id, controlId: CALLER_CONTROL_ID, value: false },
 				])
 			)

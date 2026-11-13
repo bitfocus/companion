@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreatePageControlId,
 	type BankControlId,
@@ -46,7 +46,7 @@ function getEntity(app: TestApp, controlId: SomeControlId, entityId: string): Co
 function findCallId(app: TestApp, controlId: SomeControlId): string {
 	const control = app.registry.controls.getControl(controlId)
 	const calls = control?.supportsEntities
-		? control.entities.getAllEntities().filter((entity) => entity.connectionId === CUSTOM_ACTIONS_CONNECTION_ID)
+		? control.entities.getAllEntities().filter((entity) => entity.connectionId === CUSTOM_CONNECTION_ID)
 		: []
 	if (calls.length !== 1) throw new Error(`Expected one call on "${controlId}", found ${calls.length}`)
 	return calls[0].id
@@ -191,7 +191,7 @@ describe('custom actions', () => {
 				expect(
 					app.registry.instance.definitions.getEntityDefinition(
 						EntityModelType.Action,
-						CUSTOM_ACTIONS_CONNECTION_ID,
+						CUSTOM_CONNECTION_ID,
 						idOf(calledControlId)
 					)
 				).toBeTruthy()
@@ -200,7 +200,7 @@ describe('custom actions', () => {
 				controlId,
 				entityLocation: 'custom_action_actions',
 				ownerId: null,
-				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				entityType: EntityModelType.Action,
 				entityDefinition: idOf(calledControlId),
 			})
@@ -213,7 +213,7 @@ describe('custom actions', () => {
 		await vi.waitFor(() => {
 			const definition = app.registry.instance.definitions.getEntityDefinition(
 				EntityModelType.Action,
-				CUSTOM_ACTIONS_CONNECTION_ID,
+				CUSTOM_CONNECTION_ID,
 				idOf(first)
 			)
 			expect(definition?.warning).toBe('It calls back into itself through "Second". That call back does nothing.')
@@ -237,7 +237,7 @@ describe('custom actions', () => {
 		await vi.waitFor(() => {
 			const definition = app.registry.instance.definitions.getEntityDefinition(
 				EntityModelType.Action,
-				CUSTOM_ACTIONS_CONNECTION_ID,
+				CUSTOM_CONNECTION_ID,
 				idOf(first)
 			)
 			expect(definition?.warning).toBeNull()
@@ -321,7 +321,7 @@ describe('custom actions', () => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
 					EntityModelType.Action,
-					CUSTOM_ACTIONS_CONNECTION_ID,
+					CUSTOM_CONNECTION_ID,
 					definitionId
 				)
 			).toBeUndefined()
@@ -429,7 +429,7 @@ describe('custom actions', () => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
 					EntityModelType.Action,
-					CUSTOM_ACTIONS_CONNECTION_ID,
+					CUSTOM_CONNECTION_ID,
 					customActionId.slice('custom-action:'.length)
 				)
 			).toBeTruthy()
@@ -449,7 +449,7 @@ describe('custom actions', () => {
 			controlId: buttonId,
 			entityLocation: rotateRight,
 			ownerId: null,
-			connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+			connectionId: CUSTOM_CONNECTION_ID,
 			entityType: EntityModelType.Action,
 			entityDefinition: customActionId.slice('custom-action:'.length),
 		})
@@ -739,7 +739,7 @@ describe('long running custom actions', () => {
 			expect(
 				app.registry.instance.definitions.getEntityDefinition(
 					EntityModelType.Action,
-					CUSTOM_ACTIONS_CONNECTION_ID,
+					CUSTOM_CONNECTION_ID,
 					innerId.slice('custom-action:'.length)
 				)
 			).toBeTruthy()
@@ -2659,7 +2659,7 @@ describe('custom actions using a connection', () => {
 				expect(
 					app.registry.instance.definitions.getEntityDefinition(
 						EntityModelType.Action,
-						CUSTOM_ACTIONS_CONNECTION_ID,
+						CUSTOM_CONNECTION_ID,
 						customActionId.slice('custom-action:'.length)
 					)
 				).toBeTruthy()
@@ -2680,7 +2680,7 @@ describe('custom actions using a connection', () => {
 				controlId: buttonId,
 				entityLocation: { stepId, setId: 'down' },
 				ownerId: body,
-				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				entityType: EntityModelType.Action,
 				entityDefinition: customActionId.slice('custom-action:'.length),
 			})
