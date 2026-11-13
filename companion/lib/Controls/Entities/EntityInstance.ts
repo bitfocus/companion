@@ -323,6 +323,20 @@ export class ControlEntityInstance {
 	 * Inform the instance of a removed/disabled entity
 	 */
 	cleanup(): void {
+		this.#cleanupSelf()
+
+		for (const childGroup of this.#children.values()) {
+			childGroup.cleanup()
+		}
+		for (const childGroup of this.#transientCopyLists()) {
+			childGroup.cleanup()
+		}
+	}
+
+	/**
+	 * Inform the relevant module of a removed entity, without touching the entities inside it
+	 */
+	#cleanupSelf(): void {
 		// Inform relevant module
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
@@ -338,13 +352,6 @@ export class ControlEntityInstance {
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
-
-		for (const childGroup of this.#children.values()) {
-			childGroup.cleanup()
-		}
-		for (const childGroup of this.#transientCopyLists()) {
-			childGroup.cleanup()
-		}
 	}
 
 	/**
@@ -505,13 +512,19 @@ export class ControlEntityInstance {
 	/**
 	 * Set the connection of this entity
 	 */
-	setConnectionId(connectionId: string): void {
+	setConnectionId(connectionId: string): boolean {
+		// The definitions (and children) of the internal module and of custom actions mean nothing to a connection, and
+		// the reverse. So only a module entity, which has no children, can change connection
+		if (isVirtualConnectionId(this.#data.connectionId) || isVirtualConnectionId(connectionId)) return false
+
 		// first unsubscribe action from old connection
-		this.cleanup()
+		this.#cleanupSelf()
 		// next change connectionId
 		this.#data.connectionId = connectionId
 		// last subscribe to new connection
 		this.subscribe(false)
+
+		return true
 	}
 
 	/**
@@ -568,8 +581,9 @@ export class ControlEntityInstance {
 
 		const data = this.#data as ActionEntityModel
 
-		this.cleanup()
 		data.storeResult = target
+		// Only the storeResult expression of this entity changes, which trackEntity replaces. Nothing else needs to be
+		// cleaned up, least of all the entities inside it
 		this.subscribe(false)
 	}
 

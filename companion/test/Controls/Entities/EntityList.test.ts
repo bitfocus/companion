@@ -1241,6 +1241,63 @@ describe('duplicateEntity', () => {
 	})
 })
 
+describe('changes which leave the children alone', () => {
+	function setup() {
+		const ctx = createList(CreateBankControlId('test01'))
+		ctx.getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(ActionTree), true, false)
+		ctx.connectionEntityUpdate.mockClear()
+		ctx.internalEntityUpdate.mockClear()
+		ctx.connectionEntityDelete.mockClear()
+		ctx.internalEntityDelete.mockClear()
+		return ctx
+	}
+
+	function subscribedIds(ctx: ReturnType<typeof setup>): string[] {
+		return [
+			...ctx.internalEntityUpdate.mock.calls.map(([entity]) => entity.id),
+			...ctx.connectionEntityUpdate.mock.calls.map(([entity]) => entity.id),
+		].sort()
+	}
+
+	test('setRawStoreResult only re-subscribes the entity, without deleting anything', () => {
+		const ctx = setup()
+
+		ctx.list.findById('int0')!.setRawStoreResult(undefined)
+
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+		expect(ctx.internalEntityDelete).not.toHaveBeenCalled()
+		expect(subscribedIds(ctx)).toEqual(['int0'])
+	})
+
+	test('setConnectionId moves a module entity from its old connection to its new one', () => {
+		const ctx = setup()
+
+		expect(ctx.list.findById('01')!.setConnectionId('conn99')).toBe(true)
+
+		expect(ctx.connectionEntityDelete).toHaveBeenCalledTimes(1)
+		expect(ctx.connectionEntityDelete.mock.calls[0][0]).toMatchObject({ id: '01', connectionId: 'conn01' })
+		expect(ctx.connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(ctx.connectionEntityUpdate.mock.calls[0][0]).toMatchObject({ id: '01', connectionId: 'conn99' })
+	})
+
+	test.each([
+		['from internal', 'int0', 'conn99'],
+		['to internal', '01', 'internal'],
+	])('setConnectionId refuses a change %s', (_name, id, connectionId) => {
+		const ctx = setup()
+		const entity = ctx.list.findById(id)!
+		const before = entity.connectionId
+
+		expect(entity.setConnectionId(connectionId)).toBe(false)
+
+		expect(entity.connectionId).toBe(before)
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+		expect(ctx.internalEntityDelete).not.toHaveBeenCalled()
+		expect(subscribedIds(ctx)).toEqual([])
+	})
+})
+
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
