@@ -33,7 +33,6 @@ describe('ControlEntityListPoolTrigger', () => {
 					actions: [actionModel()],
 					localVariables: [feedbackModel(), feedbackModel(), feedbackModel()],
 				}),
-				true,
 				false
 			)
 
@@ -45,7 +44,7 @@ describe('ControlEntityListPoolTrigger', () => {
 		test('tolerates missing list properties', () => {
 			const { pool } = createTriggerPool()
 
-			expect(() => pool.loadStorage({} as TriggerModel, true, false)).not.toThrow()
+			expect(() => pool.loadStorage({} as TriggerModel, false)).not.toThrow()
 
 			expect(pool.getFeedbackEntities()).toHaveLength(0)
 			expect(pool.getActionEntities()).toHaveLength(0)
@@ -192,7 +191,7 @@ describe('ControlEntityListPoolTrigger', () => {
 
 		/** As at startup: loaded without subscribing, then ControlsController.subscribeAll resubscribes everything */
 		function loadAtStartup(pool: ReturnType<typeof createTriggerPool>['pool'], action: ActionEntityModel) {
-			pool.loadStorage(triggerStorage({ actions: [action] }), true, false)
+			pool.loadStorage(triggerStorage({ actions: [action] }), false)
 			pool.resubscribeEntities()
 			vi.runAllTimers()
 		}
@@ -243,7 +242,7 @@ describe('ControlEntityListPoolTrigger', () => {
 				},
 			})
 
-			pool.loadStorage(triggerStorage({ actions: [action] }), true, false)
+			pool.loadStorage(triggerStorage({ actions: [action] }), false)
 			vi.runAllTimers()
 
 			expect(pool.getActionEntities()[0].storeResult).toBeUndefined()

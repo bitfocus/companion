@@ -90,12 +90,12 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Initialise from storage
+	 * Initialise from storage, replacing (and cleaning up) any existing entities.
+	 * The new entities are not subscribed, the caller must call subscribe() when ready
 	 * @param entities
-	 * @param skipSubscribe Whether to skip calling subscribe for the new entities
 	 * @param newIds How the entities get their ids
 	 */
-	loadStorage(entities: SomeEntityModel[], skipSubscribe: boolean, newIds: NewEntityIds): void {
+	loadStorage(entities: SomeEntityModel[], newIds: NewEntityIds): void {
 		// Inform modules of entity cleanup
 		for (const entity of this.#entities) {
 			entity.cleanup()
@@ -121,10 +121,6 @@ export class ControlEntityList {
 						newIds
 					)
 			) || []
-
-		if (!skipSubscribe) {
-			this.subscribe()
-		}
 	}
 
 	/**

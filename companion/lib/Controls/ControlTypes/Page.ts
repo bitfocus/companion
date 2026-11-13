@@ -93,7 +93,7 @@ export class ControlPage
 		} else {
 			if (storage.type !== 'page') throw new Error(`Invalid type given to ControlPage: "${storage.type}"`)
 
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 
 			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()

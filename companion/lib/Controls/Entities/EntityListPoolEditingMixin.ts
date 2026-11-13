@@ -345,7 +345,8 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entityList = this.getEntityList(listId)
 			if (!entityList) return false
 
-			entityList.loadStorage(entities, false, false)
+			entityList.loadStorage(entities, false)
+			entityList.subscribe()
 
 			this.reportChange({
 				redraw: true,
@@ -535,7 +536,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 				.toArray()
 			if (existingKeys.length === 0) {
 				// add the default '1000' set
-				step.sets.set(1000, this.createActionEntityList([], false, false))
+				step.sets.set(1000, this.createActionEntityList([], false))
 
 				this.reportChange({ redraw: true })
 
@@ -545,7 +546,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 				const max = Math.max(...existingKeys)
 				const newIndex = Math.floor(max / 1000) * 1000 + 1000
 
-				step.sets.set(newIndex, this.createActionEntityList([], false, false))
+				step.sets.set(newIndex, this.createActionEntityList([], false))
 
 				this.reportChange({ redraw: false })
 
@@ -645,7 +646,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const stepId = existingKeys.length === 0 ? '0' : `${Math.max(...existingKeys) + 1}`
 
-			this.steps.set(stepId, this.getNewStepValue(null, null, false, false))
+			this.steps.set(stepId, this.getNewStepValue(null, null, false))
 
 			// Ensure current step is valid
 			this.stepCheckExpression(true)
@@ -670,7 +671,6 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 			const newStep = this.getNewStepValue(
 				structuredClone(this.stepAsActionSetsModel(stepToCopy)),
 				structuredClone(stepToCopy.options),
-				false,
 				true
 			)
 
@@ -679,6 +679,11 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const newStepId = `${max + 1}`
 			this.steps.set(newStepId, newStep)
+
+			// Inform relevant modules of the copied actions
+			for (const set of newStep.sets.values()) {
+				set.subscribe()
+			}
 
 			// Ensure current step is valid
 			this.stepCheckExpression(false)

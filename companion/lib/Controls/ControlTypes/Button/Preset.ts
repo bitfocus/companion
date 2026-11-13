@@ -211,7 +211,7 @@ export class ControlButtonPreset
 		this.#drawing.loadElements(structuredClone(storage.style.layers))
 
 		this.options = Object.assign(this.options, storage.options || {})
-		this.entities.loadStorage(storage, true, true)
+		this.entities.loadStorage(storage, true)
 		this.entities.stepExpressionUpdate(this.options)
 
 		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.

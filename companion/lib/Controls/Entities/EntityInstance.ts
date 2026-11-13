@@ -267,7 +267,7 @@ export class ControlEntityInstance {
 			for (const groupDefinition of supportedChildGroups) {
 				try {
 					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
-					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, newIds)
+					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], newIds)
 				} catch (e) {
 					this.#logger.error(`Error loading child entity group: ${stringifyError(e)}`)
 				}
@@ -383,7 +383,7 @@ export class ControlEntityInstance {
 			{ parentId: this.id, childGroup: listId },
 			listDefinition
 		)
-		list.loadStorage(entities, true, newIds)
+		list.loadStorage(entities, newIds)
 		return list
 	}
 
