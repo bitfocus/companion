@@ -111,6 +111,9 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 								<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} className="me-1.5" />
 								{rescanUsbMutation.isPending ? 'Rescanning USB...' : 'Rescan USB'}
 							</Button>
+							<Button color="secondary" onClick={addGroup}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add a group
+							</Button>
 						</>
 					),
 					notices,
