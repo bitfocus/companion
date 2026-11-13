@@ -123,7 +123,12 @@ export abstract class ButtonEntityListPoolBase
 		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
 		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
 
-		// Future:	cleanup the steps/sets
+		// Inform modules of the cleanup of the actions being replaced, as EntityList.loadStorage does for the other lists
+		for (const step of this.steps.values()) {
+			for (const set of step.sets.values()) {
+				set.cleanup()
+			}
+		}
 		this.steps.clear()
 
 		for (const [id, stepObj] of Object.entries(storage.steps ?? {})) {

@@ -633,6 +633,28 @@ describe('EntityListPool - storage round-trip (button)', () => {
 		expect(steps['0'].action_sets.down?.[0].definitionId).toBe('round-trip-action')
 	})
 
+	test('loadStorage cleans up the actions it replaces', () => {
+		const { pool, processManager } = createPool()
+		const oldAction = actionModel()
+		const steps = (action: ReturnType<typeof actionModel>) => ({
+			'0': {
+				action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
+				options: { runWhileHeld: [] },
+			},
+		})
+
+		pool.loadStorage(buttonStorage({ steps: steps(oldAction) }), true, false)
+		processManager.connectionEntityDelete.mockClear()
+
+		pool.loadStorage(buttonStorage({ steps: steps(actionModel()) }), true, false)
+
+		expect(processManager.connectionEntityDelete).toHaveBeenCalledTimes(1)
+		expect(processManager.connectionEntityDelete).toHaveBeenCalledWith(
+			expect.objectContaining({ id: oldAction.id }),
+			expect.anything()
+		)
+	})
+
 	test.each([
 		['loading keeps', false],
 		['importing replaces', true],
