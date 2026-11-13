@@ -19,15 +19,15 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	removeBuildingBlockInputInCallers,
+	renameBuildingBlockInputInCallers,
+} from '../../../lib/Controls/BuildingBlocks/BuildingBlockCallers.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomFeedback } from '../../../lib/Controls/ControlTypes/CustomFeedback.js'
 import { MAX_CUSTOM_ACTION_DEPTH } from '../../../lib/Controls/CustomActionRunFrame.js'
 import { CustomActionInstanceManager } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
-import {
-	removeCustomFeedbackInputInCallers,
-	renameCustomFeedbackInputInCallers,
-} from '../../../lib/Controls/CustomFeedbacks/CustomFeedbackCallers.js'
 import { CustomFeedbackInstanceManager } from '../../../lib/Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import type { FeedbackExecutionContext } from '../../../lib/Controls/Entities/Types.js'
@@ -634,7 +634,7 @@ describe('ControlCustomFeedback', () => {
 			await expectValue(callerEntity, true)
 
 			control.inputUpdate('n', { ...numberInput, id: 'renamed' })
-			renameCustomFeedbackInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n', 'renamed')
+			renameBuildingBlockInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n', 'renamed')
 
 			expect(callerEntity.rawOptions).toEqual({ renamed: exprVal(5) })
 			await expectValue(callerEntity, true)
@@ -646,7 +646,7 @@ describe('ControlCustomFeedback', () => {
 			const { callerEntity } = createCaller(useFeedback({ n: exprVal(5), other: exprVal(1) }))
 
 			expect(control.inputRemove('n')).toBe(true)
-			removeCustomFeedbackInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n')
+			removeBuildingBlockInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n')
 
 			expect(callerEntity.rawOptions).toEqual({ other: exprVal(1) })
 		})
@@ -658,8 +658,8 @@ describe('ControlCustomFeedback', () => {
 
 			const { callerEntity } = createCaller(useFeedback({ n: exprVal(5) }, 'other'))
 
-			renameCustomFeedbackInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n', 'renamed')
-			removeCustomFeedbackInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n')
+			renameBuildingBlockInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n', 'renamed')
+			removeBuildingBlockInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n')
 
 			expect(callerEntity.rawOptions).toEqual({ n: exprVal(5) })
 		})

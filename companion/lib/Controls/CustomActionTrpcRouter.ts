@@ -1,10 +1,8 @@
 import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomActionControlId,
-	ParseControlId,
 	zodControlIds,
 	type CustomActionControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -15,16 +13,14 @@ import {
 	type CustomActionUsage,
 	type CustomActionUse,
 } from '@companion-app/shared/Model/CustomActionModel.js'
-import { AuthorableInputFieldSchema } from '@companion-app/shared/Model/Options.js'
 import { publicProcedure, router, throttleIterator, toIterable } from '../UI/TRPC.js'
+import { getBuildingBlockUses } from './BuildingBlocks/BuildingBlockCallers.js'
+import { createBuildingBlockInputsTrpcRouter } from './BuildingBlocks/BuildingBlockInputsTrpcRouter.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
+import { moveControlInCollection } from './ControlOrder.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionCollections } from './CustomActionCollections.js'
-import {
-	removeCustomActionInputInCallers,
-	renameCustomActionInputInCallers,
-} from './CustomActions/CustomActionCallers.js'
 import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlsFactory } from './Factory.js'
 
@@ -42,27 +38,13 @@ function getCustomActionUsage(
 	customActionInstances: CustomActionInstanceManager,
 	customActionControlId: CustomActionControlId
 ): CustomActionUsage {
-	const parsedId = ParseControlId(customActionControlId)
-	if (parsedId?.type !== 'custom-action') return { uses: [], otherRuns: [] }
-
 	const runsByUse = Map.groupBy(customActionInstances.getRuns(customActionControlId), (run) => run.useEntityId)
 
-	const uses: CustomActionUse[] = []
-	for (const control of controlStore.controls.values()) {
-		if (!control.supportsEntities) continue
-
-		for (const entity of control.entities.getAllEntities()) {
-			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
-
-			uses.push({
-				controlId: control.controlId,
-				entityId: entity.id,
-				disabled: !!entity.disabled,
-				runs: (runsByUse.get(entity.id) ?? []).map(({ run }) => run),
-			})
-			runsByUse.delete(entity.id)
-		}
-	}
+	const uses: CustomActionUse[] = getBuildingBlockUses(controlStore, customActionControlId).map((use) => {
+		const runs = (runsByUse.get(use.entityId) ?? []).map(({ run }) => run)
+		runsByUse.delete(use.entityId)
+		return { ...use, runs }
+	})
 
 	return { uses, otherRuns: [...runsByUse.values()].flat().map(({ run }) => run) }
 }
@@ -189,56 +171,7 @@ export function createCustomActionTrpcRouter(
 			return true
 		}),
 
-		inputAdd: publicProcedure
-			.input(z.object({ controlId: zodControlIds['custom-action'], field: AuthorableInputFieldSchema }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				return control.inputAdd(input.field)
-			}),
-
-		inputRemove: publicProcedure
-			.input(z.object({ controlId: zodControlIds['custom-action'], inputId: z.string() }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				if (!control.inputRemove(input.inputId)) return false
-
-				removeCustomActionInputInCallers(controlStore, input.controlId, input.inputId)
-
-				return true
-			}),
-
-		inputMove: publicProcedure
-			.input(
-				z.object({ controlId: zodControlIds['custom-action'], inputId: z.string(), index: z.number().int().min(0) })
-			)
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				return control.inputMove(input.inputId, input.index)
-			}),
-
-		inputUpdate: publicProcedure
-			.input(
-				z.object({ controlId: zodControlIds['custom-action'], inputId: z.string(), field: AuthorableInputFieldSchema })
-			)
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				if (!control.inputUpdate(input.inputId, input.field)) return false
-
-				// Make sure the actions using the custom action keep their value for a renamed input
-				if (input.field.id !== input.inputId) {
-					renameCustomActionInputInCallers(controlStore, input.controlId, input.inputId, input.field.id)
-				}
-
-				return true
-			}),
+		inputs: createBuildingBlockInputsTrpcRouter(controlStore, zodControlIds['custom-action'], getCustomAction),
 
 		outputSet: publicProcedure
 			.input(
@@ -264,44 +197,16 @@ export function createCustomActionTrpcRouter(
 				})
 			)
 			.mutation(({ input }) => {
-				const { collectionId, controlId, dropIndex } = input
-
-				const thisCustomAction = getCustomAction(controlId)
+				const thisCustomAction = getCustomAction(input.controlId)
 				if (!thisCustomAction) return false
 
-				if (!customActionCollections.doesCollectionIdExist(collectionId)) return false
+				if (!customActionCollections.doesCollectionIdExist(input.collectionId)) return false
 
-				// update the collectionId of the custom action being moved if needed
-				if (thisCustomAction.options.collectionId !== (collectionId ?? undefined)) {
-					thisCustomAction.optionsSetField({ key: 'collectionId', value: collectionId ?? undefined }, true)
-				}
-
-				// find all the other custom actions with the matching collectionId
-				const sortedCustomActions = controlStore.controls
+				const allCustomActions = controlStore.controls
 					.values()
-					.filter(
-						(control): control is ControlCustomAction =>
-							control instanceof ControlCustomAction &&
-							control.controlId !== controlId &&
-							((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
-					)
+					.filter((control) => control instanceof ControlCustomAction)
 					.toArray()
-					.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
-
-				if (dropIndex < 0) {
-					// Push the custom action to the end of the array
-					sortedCustomActions.push(thisCustomAction)
-				} else {
-					// Insert the custom action at the drop index
-					sortedCustomActions.splice(dropIndex, 0, thisCustomAction)
-				}
-
-				// update the sort order of the custom actions in the store, tracking which ones changed
-				sortedCustomActions.forEach((customAction, index) => {
-					if (customAction.options.sortOrder === index) return // No change
-
-					customAction.optionsSetField({ key: 'sortOrder', value: index }, true)
-				})
+				moveControlInCollection(allCustomActions, thisCustomAction, input.collectionId, input.dropIndex)
 
 				return true
 			}),

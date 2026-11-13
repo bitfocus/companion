@@ -11,7 +11,7 @@ import { UseControlName } from '~/CustomActions/UsesEditor.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import './UsesEditor.css'
+import '~/Controls/BuildingBlockUses.css'
 
 interface CustomFeedbackUsesEditorProps {
 	controlId: CustomFeedbackControlId
@@ -42,7 +42,7 @@ export function CustomFeedbackUsesEditor({ controlId }: CustomFeedbackUsesEditor
 	)
 
 	return (
-		<div className="custom-feedback-uses">
+		<div className="building-block-uses">
 			<ListHeading
 				heading="Uses"
 				subheading={<p className="text-sm text-muted">The feedbacks which use this custom feedback.</p>}
@@ -56,7 +56,7 @@ export function CustomFeedbackUsesEditor({ controlId }: CustomFeedbackUsesEditor
 				(uses.length === 0 ? (
 					<NonIdealState icon={faLink} text="Nothing uses this custom feedback yet" />
 				) : (
-					<ul className="custom-feedback-uses-list">
+					<ul className="building-block-uses-list">
 						{uses.map((use) => (
 							<UseRow key={`${use.controlId}:${use.entityId}`} use={use} />
 						))}
@@ -71,12 +71,12 @@ const UseRow = observer(function UseRow({ use }: { use: CustomFeedbackUse }) {
 	const description = describeUseControl(use.controlId, stores)
 
 	return (
-		<li className="custom-feedback-use">
-			<div className="custom-feedback-use-name">
-				<span className="custom-feedback-use-kind">{description.kind}</span>
+		<li className="building-block-use">
+			<div className="building-block-use-name">
+				<span className="building-block-use-kind">{description.kind}</span>
 				<UseControlName name={description.name} link={description.link} />
 			</div>
-			{use.disabled && <div className="custom-feedback-use-status">Disabled</div>}
+			{use.disabled && <div className="building-block-use-status">Disabled</div>}
 		</li>
 	)
 })

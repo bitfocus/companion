@@ -19,7 +19,7 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { assertNever } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import './UsesEditor.css'
+import '~/Controls/BuildingBlockUses.css'
 import { describeUseControl, formatElapsed, type UseControlLink } from './UsesDescription.js'
 
 interface CustomActionUsesEditorProps {
@@ -63,7 +63,7 @@ export function CustomActionUsesEditor({ controlId, testRunning }: CustomActionU
 	const anyRunning = testRunning || !!usage?.otherRuns.length || !!usage?.uses.some((use) => use.runs.length > 0)
 
 	return (
-		<div className="custom-action-uses">
+		<div className="building-block-uses">
 			<ListHeading
 				heading="Uses"
 				subheading={
@@ -88,7 +88,7 @@ export function CustomActionUsesEditor({ controlId, testRunning }: CustomActionU
 					{usage.uses.length === 0 && !testRunning && usage.otherRuns.length === 0 ? (
 						<NonIdealState icon={faLink} text="Nothing calls this custom action yet" />
 					) : (
-						<ul className="custom-action-uses-list">
+						<ul className="building-block-uses-list">
 							{testRunning && <TestRunRow controlId={controlId} />}
 							{usage.uses.map((use) => (
 								<UseRow key={`${use.controlId}:${use.entityId}`} customActionId={controlId} use={use} />
@@ -111,12 +111,12 @@ function TestRunRow({ controlId }: { controlId: CustomActionControlId }) {
 	}, [abortMutation, controlId])
 
 	return (
-		<li className="custom-action-use">
-			<div className="custom-action-use-name">
-				<span className="custom-action-use-kind">Editor</span>
+		<li className="building-block-use">
+			<div className="building-block-use-name">
+				<span className="building-block-use-kind">Editor</span>
 				Test run
 			</div>
-			<div className="custom-action-use-status running">Running</div>
+			<div className="building-block-use-status running">Running</div>
 			<Button size="sm" color="danger" variant="outline" onClick={abort} title="Stop the test run">
 				Abort
 			</Button>
@@ -142,9 +142,9 @@ const UseRow = observer(function UseRow({
 	}, [abortMutation, customActionId, use.entityId])
 
 	return (
-		<li className="custom-action-use">
-			<div className="custom-action-use-name">
-				<span className="custom-action-use-kind">{description.kind}</span>
+		<li className="building-block-use">
+			<div className="building-block-use-name">
+				<span className="building-block-use-kind">{description.kind}</span>
 				<UseControlName name={description.name} link={description.link} />
 			</div>
 			<RunsStatus runs={use.runs} useControlId={use.controlId} disabled={use.disabled} />
@@ -207,13 +207,12 @@ export function UseControlName({ name, link }: { name: string; link: UseControlL
 
 function OtherRunsRow({ runs }: { runs: CustomActionRunInfo[] }) {
 	return (
-		<li className="custom-action-use">
-			<div className="custom-action-use-name">
-				<span className="custom-action-use-kind">Removed</span>
+		<li className="building-block-use">
+			<div className="building-block-use-name">
+				<span className="building-block-use-kind">Removed</span>
 				Actions which have since been removed
 			</div>
 			<RunsStatus runs={runs} useControlId={null} disabled={false} />
-			<div />
 		</li>
 	)
 }
@@ -232,7 +231,7 @@ const RunsStatus = observer(function RunsStatus({
 	const now = useNow(1000)
 
 	if (runs.length === 0) {
-		return <div className="custom-action-use-status">{disabled ? 'Disabled' : 'Not running'}</div>
+		return <div className="building-block-use-status">{disabled ? 'Disabled' : 'Not running'}</div>
 	}
 
 	const longest = Math.max(...runs.map((run) => now - run.startedAt))
@@ -240,10 +239,10 @@ const RunsStatus = observer(function RunsStatus({
 	const fromElsewhere = [...new Set(runs.filter((run) => run.controlId !== useControlId).map((run) => run.controlId))]
 
 	return (
-		<div className="custom-action-use-status running">
+		<div className="building-block-use-status running">
 			{runs.length === 1 ? 'Running' : `${runs.length} runs`} for {formatElapsed(longest)}
 			{fromElsewhere.length > 0 && (
-				<span className="custom-action-use-from">
+				<span className="building-block-use-from">
 					from{' '}
 					{fromElsewhere
 						.map((controlId) => {
