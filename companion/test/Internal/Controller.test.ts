@@ -287,6 +287,21 @@ describe('onVariablesChanged', () => {
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
 	})
 
+	test('a feedback updated as disabled is no longer re-evaluated', () => {
+		const { controller, controlStore, variableDependencies } = setup()
+
+		controller.entityUpdate({ ...makeFeedback('fb1'), disabled: true }, CreateBankControlId('control1'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
+		controller.onVariablesChanged(
+			new Set(['local:x']),
+			new Set([CreateBankControlId('control1'), CreateBankControlId('control2')])
+		)
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+		expect(variableDependencies.stats().dependencies).toBe(1)
+	})
+
 	test('stops tracking the variables of every feedback when destroyed', () => {
 		const { controller, controlStore, variableDependencies } = setup()
 

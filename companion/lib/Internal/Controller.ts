@@ -316,7 +316,11 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
-		if (feedback.disabled) return
+		if (feedback.disabled) {
+			// Drop any state from when it was enabled, rather than relying on the caller to have deleted it first
+			this.entityDelete(feedback)
+			return
+		}
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
