@@ -1,4 +1,4 @@
-import { faAdd, faCubes, faLayerGroup, faList, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faBook, faCubes, faLayerGroup, faList, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import classnames from 'classnames'
@@ -7,7 +7,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { CreateCustomActionControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientCustomActionData, CustomActionCollection } from '@companion-app/shared/Model/CustomActionModel.js'
-import { Button } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -15,13 +15,13 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useComputed } from '~/Resources/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useCustomActionCollectionsApi } from './CustomActionCollectionsApi'
 import { CustomActionsTableContextProvider, useCustomActionsTableContext } from './CustomActionsTableContext'
@@ -98,26 +98,44 @@ export const CustomActionsPage = observer(function CustomActionsPage() {
 		void navigate({ to: '/custom-actions' })
 	}, [navigate])
 
-	const emptyList: PanelEmptyListState | null =
-		customActionsList.customActions.size === 0
+	const empty: PageEmptyStateProps | null =
+		customActionsList.customActions.size === 0 && customActionsList.collections.size === 0 && !selectedCustomActionId
 			? {
+					icon: faCubes,
 					title: 'No custom actions yet',
-					description: 'Custom actions are lists of actions which can be reused, with inputs to customise each use.',
-					actionLabel: 'Add custom action',
-					onAction: doAddNew,
+					description: (
+						<>
+							<p>
+								Custom actions are lists of actions you build once and use anywhere, like any other action. Inputs let
+								each use customise what it does, and outputs hand results back to it.
+							</p>
+							<p>Use them to keep a sequence you repeat on many buttons or triggers in one place.</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={doAddNew}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first custom action
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(customActionsHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
+					),
 				}
 			: null
 
 	return (
 		<div className="page-shell">
-			<PageHeader icon={faCubes} title="Custom Actions" beta />
+			<PageHeader icon={faCubes} title="Custom Actions" helpAction={customActionsHelpPage} beta />
+
+			<GenericConfirmModal ref={confirmModalRef} />
 
 			<SplitPanels.Root
 				showing={selectedCustomActionId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'custom-actions' }}
+				empty={empty}
 			>
-				<GenericConfirmModal ref={confirmModalRef} />
-
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 shrink-0">
@@ -170,9 +188,7 @@ export const CustomActionsPage = observer(function CustomActionsPage() {
 								{!twoPanelMode && <CloseButton closeFn={doClose} />}
 							</PanelHeader>
 						)}
-						<PanelEmptyListProvider value={emptyList}>
-							<Outlet />
-						</PanelEmptyListProvider>
+						<Outlet />
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
@@ -184,6 +200,9 @@ export interface CustomActionDataWithId extends Omit<ClientCustomActionData, 'co
 	id: string
 	collectionId: string | null
 }
+
+// TODO: written in a follow-up, so this is a 404 until then
+const customActionsHelpPage = '/user-guide/config/custom-actions'
 
 function CustomActionListNoContent() {
 	return <NonIdealState icon={faList} text="No custom actions yet" />
