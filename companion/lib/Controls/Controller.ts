@@ -806,11 +806,11 @@ export class ControlsController {
 	 * There is exactly one per page, keyed by the page's stable id. Safe to call for a page that already
 	 * has one during reconciliation (it becomes a no-op unless a `storage` model is given to import).
 	 * @param pageId Stable id of the page
-	 * @param storage Persisted model to import, or null/undefined to create an empty one
+	 * @param storage Persisted model to import, or null to create an empty one
 	 * @param isImport Whether this is an import, and needs additional processing
 	 * @returns the page controlId
 	 */
-	createPageControl(pageId: string, storage?: PageControlModel | null, isImport = false): string {
+	createPageControl(pageId: string, storage: PageControlModel | null, isImport: boolean): string {
 		const controlId = CreatePageControlId(pageId)
 
 		const existing = this.#store.getControl(controlId)
