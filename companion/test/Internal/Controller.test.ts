@@ -215,6 +215,15 @@ describe('onVariablesChanged', () => {
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
 	})
 
+	test('a feedback updated as disabled is no longer re-evaluated', () => {
+		const { controller, controlStore } = setup()
+
+		controller.entityUpdate({ ...makeFeedback('fb1'), disabled: true }, 'control1')
+		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1', 'control2']))
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+	})
+
 	test('a feedback re-tracked on a different control follows it', () => {
 		const { controller, controlStore } = setup()
 
