@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
-import { isInternalConnectionId } from '../ConnectionId.js'
+import { CUSTOM_ACTIONS_CONNECTION_ID, isInternalConnectionId } from '../ConnectionId.js'
 import type { ActionSetId } from './ActionModel.js'
 import {
 	createExpressionOrValueSchema,
@@ -193,10 +193,19 @@ function entityChildrenSchema() {
 	return z.record(z.string(), z.array(SomeEntityModelSchema).optional()).optional()
 }
 
+/** The connection id custom actions had in the betas, before it became `custom` */
+const BETA_CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
+
 // Kept as object schemas for the discriminated union, and exported with the hand-written types below
 const actionEntityObjectSchema = z.object({
 	type: z.literal(EntityModelType.Action),
 	...entityBaseShape,
+	// Calls to custom actions saved by a beta are given the connection id they have now
+	connectionId: z
+		.string()
+		.transform((connectionId) =>
+			connectionId === BETA_CUSTOM_ACTIONS_CONNECTION_ID ? CUSTOM_ACTIONS_CONNECTION_ID : connectionId
+		),
 	get children() {
 		return entityChildrenSchema()
 	},

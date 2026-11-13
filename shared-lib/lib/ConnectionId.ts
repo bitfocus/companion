@@ -4,9 +4,9 @@
 export const INTERNAL_CONNECTION_ID = 'internal'
 
 /**
- * The connection id which provides each custom action as an action
+ * The connection id which provides each custom action as an action. A reserved label, as `internal` is
  */
-export const CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
+export const CUSTOM_ACTIONS_CONNECTION_ID = 'custom'
 
 /**
  * The connection id which provides each custom feedback as a feedback

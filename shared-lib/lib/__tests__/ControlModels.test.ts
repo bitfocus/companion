@@ -323,10 +323,10 @@ describe('getCustomActionCallsExcludedFrom', () => {
 
 	test('excludes the custom action itself, and any which call it', () => {
 		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('c'), customActions)).toEqual(
-			new Set(['__custom-actions__:c', '__custom-actions__:a', '__custom-actions__:b'])
+			new Set(['custom:c', 'custom:a', 'custom:b'])
 		)
 		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('a'), customActions)).toEqual(
-			new Set(['__custom-actions__:a'])
+			new Set(['custom:a'])
 		)
 	})
 
