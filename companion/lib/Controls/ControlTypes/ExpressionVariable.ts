@@ -124,7 +124,7 @@ export class ControlExpressionVariable
 				throw new Error(`Invalid type given to ControlExpressionVariable: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 
 			if (isImport) setImmediate(() => this.#postProcessImport())
 			else this.commitChange()

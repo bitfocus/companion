@@ -64,9 +64,9 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		return true
 	}
 
-	loadStorage(storage: CustomActionModel, skipSubscribe: boolean, isImport: boolean): void {
-		this.#actions.loadStorage(storage.actions || [], skipSubscribe, isImport)
-		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
+	loadStorage(storage: CustomActionModel, isImport: boolean): void {
+		this.#actions.loadStorage(storage.actions || [], isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], isImport)
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {

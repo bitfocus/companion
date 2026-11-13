@@ -26,7 +26,7 @@ describe('EntityListPoolExpressionVariable', () => {
 			const { pool } = createExpressionVariablePool()
 			const entity = feedbackModel()
 
-			pool.loadStorage(expressionVariableStorage({ entity }), true, false)
+			pool.loadStorage(expressionVariableStorage({ entity }), false)
 
 			expect(pool.getRootEntity()?.id).toBe(entity.id)
 		})
@@ -34,7 +34,7 @@ describe('EntityListPoolExpressionVariable', () => {
 		test('getRootEntity is undefined when there is no root entity', () => {
 			const { pool } = createExpressionVariablePool()
 
-			pool.loadStorage(expressionVariableStorage({ entity: null }), true, false)
+			pool.loadStorage(expressionVariableStorage({ entity: null }), false)
 
 			expect(pool.getRootEntity()).toBeUndefined()
 		})
@@ -42,7 +42,7 @@ describe('EntityListPoolExpressionVariable', () => {
 		test('loads local variables into their own list', () => {
 			const { pool } = createExpressionVariablePool()
 
-			pool.loadStorage(expressionVariableStorage({ localVariables: [feedbackModel(), feedbackModel()] }), true, false)
+			pool.loadStorage(expressionVariableStorage({ localVariables: [feedbackModel(), feedbackModel()] }), false)
 
 			expect(pool.getLocalVariableEntities()).toHaveLength(2)
 		})
@@ -64,7 +64,7 @@ describe('EntityListPoolExpressionVariable', () => {
 		test('reports a no-save redraw when the root value changes', () => {
 			const { pool, reportChange } = createExpressionVariablePool()
 			const entity = feedbackModel()
-			pool.loadStorage(expressionVariableStorage({ entity }), true, false)
+			pool.loadStorage(expressionVariableStorage({ entity }), false)
 			reportChange.mockClear()
 
 			pool.updateFeedbackValues('conn01', feedbackValues({ [entity.id]: 42 }))
@@ -74,7 +74,7 @@ describe('EntityListPoolExpressionVariable', () => {
 
 		test('is a no-op for values that match no entity', () => {
 			const { pool, reportChange } = createExpressionVariablePool()
-			pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), true, false)
+			pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), false)
 			reportChange.mockClear()
 
 			pool.updateFeedbackValues('conn01', feedbackValues({ 'unrelated-id': 1 }))
@@ -87,7 +87,7 @@ describe('EntityListPoolExpressionVariable', () => {
 		test('reports a no-save redraw when the root entity inversion changes', () => {
 			const { pool, reportChange } = createExpressionVariablePool()
 			const entity = feedbackModel()
-			pool.loadStorage(expressionVariableStorage({ entity }), true, false)
+			pool.loadStorage(expressionVariableStorage({ entity }), false)
 			reportChange.mockClear()
 
 			pool.updateIsInvertedValues(
@@ -99,7 +99,7 @@ describe('EntityListPoolExpressionVariable', () => {
 
 		test('is a no-op for inversion values that match no entity', () => {
 			const { pool, reportChange } = createExpressionVariablePool()
-			pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), true, false)
+			pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), false)
 			reportChange.mockClear()
 
 			pool.updateIsInvertedValues(
@@ -112,7 +112,7 @@ describe('EntityListPoolExpressionVariable', () => {
 
 	test('updateStoreResultValues is a no-op (lists hold feedbacks, not actions)', () => {
 		const { pool, reportChange } = createExpressionVariablePool()
-		pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), true, false)
+		pool.loadStorage(expressionVariableStorage({ entity: feedbackModel() }), false)
 		reportChange.mockClear()
 
 		expect(() => pool.updateStoreResultValues(new Map())).not.toThrow()

@@ -198,7 +198,7 @@ export class ControlTrigger
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 			this.events = storage.events || this.events
 
 			// Ensure control is stored before setup

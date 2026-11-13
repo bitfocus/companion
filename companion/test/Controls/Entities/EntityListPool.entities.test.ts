@@ -441,6 +441,16 @@ describe('EntityListPool - entityReplaceAll', () => {
 		expect(reportChange).toHaveBeenCalledWith({ redraw: true, invalidateAllElements: false })
 	})
 
+	test('subscribes each new entity once', () => {
+		const { pool, processManager } = createPool()
+		const a = actionModel()
+		const b = actionModel()
+
+		pool.entityReplaceAll(downSet(), [a, b])
+
+		expect(processManager.connectionEntityUpdate.mock.calls.map(([entity]: any[]) => entity.id)).toEqual([a.id, b.id])
+	})
+
 	test('returns false for an unknown list', () => {
 		const { pool } = createPool()
 
