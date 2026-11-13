@@ -1,6 +1,7 @@
 .page-empty-state {
 	display: flex;
-	align-items: center;
+	/* Safe, so content taller than a short window starts at the top rather than above the scroll origin */
+	align-items: safe center;
 	justify-content: center;
 	flex: 1;
 	min-height: 0;
