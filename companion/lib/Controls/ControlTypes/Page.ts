@@ -95,8 +95,8 @@ export class ControlPage
 
 			this.entities.loadStorage(storage, isImport)
 
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
+			// An import is saved by postProcessImport, once it has been stored
+			if (!isImport) this.commitChange()
 		}
 	}
 
@@ -172,7 +172,7 @@ export class ControlPage
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	#postProcessImport(): void {
+	override postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()

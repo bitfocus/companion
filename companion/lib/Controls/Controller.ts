@@ -521,8 +521,8 @@ export class ControlsController {
 			// It was made before it was placed, so anything relative to its location must be resolved again
 			newControl.triggerLocationHasChanged()
 
-			// Ensure it is stored to the db
-			newControl.commitChange(true)
+			// Saves it to the db
+			newControl.postProcessImport()
 
 			return newControlId
 		}
@@ -539,6 +539,8 @@ export class ControlsController {
 		const newControl = this.#factory.createClassForControl(controlId, 'trigger', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
+			// Saves it to the db
+			newControl.postProcessImport()
 
 			if (newControl instanceof ControlTrigger) {
 				setImmediate(() => {
@@ -546,9 +548,6 @@ export class ControlsController {
 					newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
 				})
 			}
-
-			// Ensure it is stored to the db
-			newControl.commitChange()
 
 			return true
 		}
@@ -569,12 +568,12 @@ export class ControlsController {
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
 
-			// Add to names map
+			// Add to names map before it is saved, as the saved client state includes whether it is active
 			const expressionVariableControl = newControl as ControlExpressionVariable
 			this.#expressionVariableNamesMap.addExpressionVariable(controlId, expressionVariableControl.options.variableName)
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			// Saves it to the db
+			newControl.postProcessImport()
 
 			return newControl as ControlExpressionVariable
 		}
@@ -591,9 +590,8 @@ export class ControlsController {
 		const newControl = this.#factory.createClassForControl(controlId, 'custom-action', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
-
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			// Saves it to the db
+			newControl.postProcessImport()
 
 			return true
 		}
@@ -837,6 +835,7 @@ export class ControlsController {
 		if (!newControl) throw new Error(`Failed to create page control for page "${pageId}"`)
 
 		this.#store.controls.set(controlId, newControl)
+		if (isImport) newControl.postProcessImport()
 
 		return controlId
 	}
@@ -893,6 +892,7 @@ export class ControlsController {
 		const newControl = this.#factory.createPresetControl(connectionId, presetId, variablesHash, presetModel)
 
 		this.#store.controls.set(controlId, newControl)
+		newControl.postProcessImport()
 
 		// Force a redraw
 		this.#controlEvents.emit('invalidateControlRender', controlId)

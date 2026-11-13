@@ -205,6 +205,7 @@ export class ControlButtonPreset
 		if (updatedPreset.checksum !== undefined && updatedPreset.checksum === this.#lastPresetChecksum) return
 
 		this.#applyPresetModel(updatedPreset)
+		this.postProcessImport()
 	}
 
 	#applyPresetModel(storage: PresetButtonModel): void {
@@ -216,15 +217,12 @@ export class ControlButtonPreset
 
 		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.
 		this.#lastPresetChecksum = storage.checksum ?? null
-
-		// Ensure control is stored before setup
-		setImmediate(() => this.postProcessImport())
 	}
 
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	protected postProcessImport(): void {
+	override postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()

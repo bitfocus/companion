@@ -87,12 +87,7 @@ export class ControlButtonReference
 		this.#drawing.invalidate()
 	}
 
-	constructor(
-		deps: ControlDependencies,
-		controlId: BankControlId,
-		storage: ButtonReferenceButtonModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: ButtonReferenceButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/Reference')
 
 		this.options = this.optionsSchema.parse({})
@@ -107,9 +102,14 @@ export class ControlButtonReference
 				throw new Error(`Invalid type given to ControlButtonReference: "${storage.type}"`)
 
 			this.options = { location: storage.options.location, notes: storage.options.notes }
-
-			if (isImport) this.commitChange()
 		}
+	}
+
+	/**
+	 * If this control was imported to a running system, save it
+	 */
+	override postProcessImport(): void {
+		this.commitChange()
 	}
 
 	destroy(): void {

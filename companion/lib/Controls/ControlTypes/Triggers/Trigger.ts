@@ -200,9 +200,6 @@ export class ControlTrigger
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, isImport)
 			this.events = storage.events || this.events
-
-			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.#postProcessImport())
 		}
 
 		// Ensure trigger is stored before setup
@@ -577,7 +574,7 @@ export class ControlTrigger
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	#postProcessImport(): void {
+	override postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()

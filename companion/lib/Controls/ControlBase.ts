@@ -80,6 +80,13 @@ export abstract class ControlBase<
 	}
 
 	/**
+	 * Called by whoever created this control from imported (or cloned) data, once it has been added to the
+	 * store. Everything an import needs beyond loading the data happens here, not in the constructor: saving
+	 * the control, and for a control with entities, subscribing them (constructing never does).
+	 */
+	abstract postProcessImport(): void
+
+	/**
 	 * Post-process a change to this control
 	 * This includes, redrawing, writing to the db and informing any interested clients
 	 * @param redraw - whether to redraw the control

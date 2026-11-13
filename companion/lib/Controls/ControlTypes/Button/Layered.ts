@@ -168,7 +168,6 @@ export class ControlButtonLayered
 			this.entities.stepExpressionUpdate(this.options)
 
 			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.postProcessImport())
 		}
 	}
 

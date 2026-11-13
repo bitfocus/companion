@@ -74,7 +74,7 @@ describe('ControlButtonReference', () => {
 	})
 
 	function createControl(location = plainLocation('4/0/0')) {
-		return new ControlButtonReference(deps, MY_CONTROL_ID, makeModel(location), false)
+		return new ControlButtonReference(deps, MY_CONTROL_ID, makeModel(location))
 	}
 
 	it('exposes the reference metadata and capability flags', () => {
@@ -88,13 +88,20 @@ describe('ControlButtonReference', () => {
 		expect(control.drawing).toBeTruthy()
 	})
 
+	it('is saved by postProcessImport, not by its constructor', () => {
+		const control = createControl()
+		expect(deps.dbTable.set).not.toHaveBeenCalled()
+
+		control.postProcessImport()
+		expect(deps.dbTable.set).toHaveBeenCalledTimes(1)
+		expect(deps.dbTable.set).toHaveBeenCalledWith(MY_CONTROL_ID, expect.objectContaining({ type: 'button-reference' }))
+	})
+
 	it('round-trips the stored location and notes', () => {
-		const control = new ControlButtonReference(
-			deps,
-			MY_CONTROL_ID,
-			{ type: 'button-reference', options: { location: plainLocation('2/1/1'), notes: 'hello' } },
-			false
-		)
+		const control = new ControlButtonReference(deps, MY_CONTROL_ID, {
+			type: 'button-reference',
+			options: { location: plainLocation('2/1/1'), notes: 'hello' },
+		})
 		const json = control.toJSON()
 		expect(json.type).toBe('button-reference')
 		expect(json.options.location).toEqual(plainLocation('2/1/1'))

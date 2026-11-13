@@ -159,9 +159,6 @@ export class ControlButtonPresetReference
 
 		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.
 		this.#lastPresetChecksum = storage.checksum ?? null
-
-		// Ensure control is stored before setup
-		if (isImport) setImmediate(() => this.postProcessImport())
 	}
 
 	/**

@@ -198,8 +198,8 @@ export class ControlCustomAction
 				if (variable) this.#outputLabels.set(variable.id, output.label)
 			}
 
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
+			// An import is saved by postProcessImport, once it has been stored
+			if (!isImport) this.commitChange()
 		}
 	}
 
@@ -614,7 +614,7 @@ export class ControlCustomAction
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	#postProcessImport(): void {
+	override postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()
