@@ -233,7 +233,13 @@ export class ControlsController {
 	)
 
 	createRestApiRouter(): express.Router {
-		return createControlsRestApiRouter(this.#store.controls, this.#deps.pageStore)
+		return createControlsRestApiRouter(
+			this.#store.controls,
+			this,
+			this.#deps.pageStore,
+			this.#deps.instance.definitions,
+			this.#deps.userconfig
+		)
 	}
 
 	createTrpcRouter() {
