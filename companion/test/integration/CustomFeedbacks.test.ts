@@ -22,7 +22,7 @@ describe('custom feedbacks', () => {
 	/** Create a custom feedback which is true when the custom variable `level` is above its `min` input */
 	async function createAboveCustomFeedback(): Promise<string> {
 		const controlId = await app.trpc().controls.customFeedbacks.create({ name: 'Above' })
-		await app.trpc().controls.customFeedbacks.inputAdd({
+		await app.trpc().controls.customFeedbacks.inputs.add({
 			controlId,
 			field: { type: 'number', id: 'min', label: 'Min', default: 0, min: 0, max: 100 },
 		})
@@ -370,7 +370,7 @@ describe('custom feedbacks', () => {
 		const customFeedbackId = await createAboveCustomFeedback()
 
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Check' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'number', id: 'limit', label: 'Limit', default: 0, min: 0, max: 100 },
 		})

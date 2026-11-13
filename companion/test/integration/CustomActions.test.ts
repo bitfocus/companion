@@ -71,7 +71,7 @@ describe('custom actions', () => {
 	/** Create a custom action which writes its `text` input, with a suffix, to the custom variable `out` */
 	async function createWritingCustomAction(): Promise<CustomActionControlId> {
 		const controlId = await app.trpc().controls.customActions.create({ name: 'Write' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId,
 			field: { type: 'textinput', id: 'text', label: 'Text', default: 'default' },
 		})
@@ -103,7 +103,7 @@ describe('custom actions', () => {
 	test('changing an input part way through a run does not affect that run', async () => {
 		app.createCustomVariable('out', '')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Slow' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'textinput', id: 'text', label: 'Text', default: '' },
 		})
@@ -136,7 +136,7 @@ describe('custom actions', () => {
 	test('an output of a custom action is written where the caller chooses', async () => {
 		app.createCustomVariable('res', '')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Double' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 100 },
 		})
@@ -386,7 +386,7 @@ describe('custom actions', () => {
 		const levels: CustomActionControlId[] = []
 		for (const name of ['Outer', 'Middle', 'Inner']) {
 			const controlId = await app.trpc().controls.customActions.create({ name })
-			await app.trpc().controls.customActions.inputAdd({
+			await app.trpc().controls.customActions.inputs.add({
 				controlId,
 				field: { type: 'textinput', id: 'text', label: 'Text', default: name },
 			})
@@ -416,7 +416,7 @@ describe('custom actions', () => {
 	test('an input given a variable of the execution, such as the delta of a rotation, is valid when the action runs', async () => {
 		app.createCustomVariable('out', 0)
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Turn' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'number', id: 'n', label: 'N', default: 0, min: -100, max: 100 },
 		})
@@ -470,7 +470,7 @@ describe('custom actions', () => {
 	test('a caller giving an input an invalid value runs nothing, until the value is fixed', async () => {
 		app.createCustomVariable('out', 0)
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Ranged' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 100 },
 		})
@@ -536,7 +536,7 @@ describe('long running custom actions', () => {
 		sleepMs: number
 	): Promise<{ controlId: CustomActionControlId; body: EntityOwner }> {
 		const controlId = await app.trpc().controls.customActions.create({ name })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId,
 			field: { type: 'number', id: 'step', label: 'Step', default: 1, min: -1000, max: 1000 },
 		})
@@ -797,7 +797,7 @@ describe('long running custom actions', () => {
 		const callId = findCallId(app, buttonId)
 		expect(getEntity(app, buttonId, callId).rawOptions).toEqual({ step: exprVal(7) })
 
-		await app.trpc().controls.customActions.inputRemove({ controlId: customActionId, inputId: 'step' })
+		await app.trpc().controls.customActions.inputs.remove({ controlId: customActionId, inputId: 'step' })
 
 		// Otherwise a new input of the same id would pick up a value given for the old one
 		expect(getEntity(app, buttonId, callId).rawOptions).toEqual({})
@@ -1187,7 +1187,7 @@ describe('custom action scope and copies', () => {
 	 */
 	async function createDoublingCustomAction(): Promise<CustomActionControlId> {
 		const controlId = await app.trpc().controls.customActions.create({ name: 'Double' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId,
 			field: { type: 'number', id: 'n', label: 'N', default: 1, min: -1000, max: 1000 },
 		})
@@ -1537,7 +1537,7 @@ describe('custom action scope and copies', () => {
 		const callId = app.addCustomActionCall(buttonId, customActionId, { n: exprVal(6) }, null)
 		await vi.waitFor(() => expect(getCopyValue(app, buttonId, callId, 'double')).toBe(12))
 
-		await app.trpc().controls.customActions.inputUpdate({
+		await app.trpc().controls.customActions.inputs.update({
 			controlId: customActionId,
 			inputId: 'n',
 			field: { type: 'number', id: 'count', label: 'Count', default: 1, min: -1000, max: 1000 },
@@ -1609,7 +1609,7 @@ describe('custom actions using a connection', () => {
 	async function createCheckingCustomAction(connectionId: string): Promise<CustomActionControlId> {
 		app.createCustomVariable('out', '')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Check' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'textinput', id: 'want', label: 'Want', default: '' },
 		})
@@ -1990,7 +1990,7 @@ describe('custom actions using a connection', () => {
 			const connectionId = await addConnection(moduleType)
 			const setLastValue = await addSetter(connectionId)
 			const customActionId = await app.trpc().controls.customActions.create({ name: 'Parsed' })
-			await app.trpc().controls.customActions.inputAdd({
+			await app.trpc().controls.customActions.inputs.add({
 				controlId: customActionId,
 				field: { type: 'textinput', id: 'want', label: 'Want', default: '' },
 			})
@@ -2272,7 +2272,7 @@ describe('custom actions using a connection', () => {
 	test('a connection action in a custom action runs with the inputs of each caller', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Send' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'textinput', id: 'text', label: 'Text', default: '' },
 		})
@@ -2313,7 +2313,7 @@ describe('custom actions using a connection', () => {
 		app.createCustomVariable('out', '')
 
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Wait for' })
-		await app.trpc().controls.customActions.inputAdd({
+		await app.trpc().controls.customActions.inputs.add({
 			controlId: customActionId,
 			field: { type: 'textinput', id: 'want', label: 'Want', default: '' },
 		})
@@ -2458,7 +2458,7 @@ describe('custom actions using a connection', () => {
 		/** Create a custom action with a few connection feedbacks, and an output `seen` which a run sets from one */
 		async function createBusyCustomAction(connectionId: string): Promise<CustomActionControlId> {
 			const customActionId = await app.trpc().controls.customActions.create({ name: 'Busy' })
-			await app.trpc().controls.customActions.inputAdd({
+			await app.trpc().controls.customActions.inputs.add({
 				controlId: customActionId,
 				field: { type: 'textinput', id: 'want', label: 'Want', default: '' },
 			})
