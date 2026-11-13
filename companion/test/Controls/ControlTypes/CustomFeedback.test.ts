@@ -728,6 +728,45 @@ describe('ControlCustomFeedback', () => {
 			expect(callerEntity.getBooleanFeedbackValue(context)).toBe(true)
 		})
 
+		test('an input which can only be parsed in the action is parsed there, though the feedback holds no copy', async () => {
+			const { deps, createCaller, customFeedbackInstances } = createHarness({
+				feedbacks: [check('$(options:n) > 4')],
+			})
+
+			// Outside of an action there is no delta, so the input is invalid and no copy is held
+			const { caller, callerEntity } = createCaller(useFeedback({ n: exprExpr('$(this:delta)') }))
+			await expectValue(callerEntity, false)
+			expect(customFeedbackInstances.getHeldCopy(callerEntity)).toBeUndefined()
+
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, {}, { 'this:delta': 5 }))).toBe(
+				true
+			)
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, {}, { 'this:delta': 2 }))).toBe(
+				false
+			)
+
+			// The copy made for the evaluation is gone again
+			expect(caller.entities.getAllEntitiesWithTransient().some((entity) => entity.id.includes('@'))).toBe(false)
+		})
+
+		test('without a held copy, a custom feedback it uses sees the inputs from the action too', async () => {
+			const { deps, controlStore, createCaller } = createHarness({
+				feedbacks: [useFeedback({ n: exprExpr('$(options:n) + 1') }, 'inner')],
+			})
+
+			const inner = new ControlCustomFeedback(deps, CreateCustomFeedbackControlId('inner'), null, false)
+			controlStore.controls.set(inner.controlId, inner)
+			inner.inputAdd(numberInput)
+			inner.entities.entityAdd('feedbacks', null, check('$(options:n) == 6'))
+
+			const { callerEntity } = createCaller(useFeedback({ n: exprExpr('$(this:delta)') }))
+			await expectValue(callerEntity, false)
+
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, {}, { 'this:delta': 5 }))).toBe(
+				true
+			)
+		})
+
 		test('sees the local variables of its copy, computed in the context', async () => {
 			const { deps, createCaller } = createHarness({
 				localVariables: [computedValue('double', '$(options:n) * 2')],
