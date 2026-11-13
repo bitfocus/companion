@@ -2096,7 +2096,7 @@ describe('transient child groups', () => {
 	const callerModel: ActionEntityModel = {
 		type: EntityModelType.Action,
 		id: 'caller',
-		connectionId: '__custom-actions__',
+		connectionId: 'custom',
 		definitionId: 'custom-action-1',
 		options: {},
 		upgradeIndex: undefined,
