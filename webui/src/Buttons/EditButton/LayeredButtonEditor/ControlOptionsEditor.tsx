@@ -8,6 +8,7 @@ import {
 	type LayeredButtonModel,
 	type LayeredButtonOptions,
 } from '@companion-app/shared/Model/ButtonModel.js'
+import type { CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
@@ -24,20 +25,23 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 
 interface ControlOptionsEditorProps {
 	controlId: SomeControlId
+	/** The type of the control, which is a button or a custom preset built like one */
+	controlType: LayeredButtonModel['type'] | CustomPresetModel['type']
 	options: LayeredButtonOptions
-	configRef: React.RefObject<LayeredButtonModel>
+	configRef: React.RefObject<LayeredButtonModel | CustomPresetModel>
 	localVariablesStore: LocalVariablesStore
 }
 
 export const ControlOptionsEditor = observer(function ControlOptionsEditor({
 	controlId,
+	controlType,
 	options,
 	configRef,
 	localVariablesStore,
 }: ControlOptionsEditorProps): React.JSX.Element | null {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
-	const setOption = useControlOptionsSetter(controlId, 'button-layered')
+	const setOption = useControlOptionsSetter(controlId, controlType)
 
 	const setValueInner = useCallback(
 		<K extends keyof LayeredButtonOptions>(key: K, value: LayeredButtonOptions[K]) => {

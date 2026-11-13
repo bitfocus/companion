@@ -2,7 +2,11 @@ import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import {
+	CUSTOM_PRESETS_CONNECTION_ID,
+	isCustomPresetsConnectionId,
+	isInternalConnectionId,
+} from '@companion-app/shared/ConnectionId.js'
 import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { diffObject, diffObjects } from '@companion-app/shared/Diff.js'
 import type {
@@ -456,8 +460,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const definition = this.#presetDefinitions[connectionId]?.get(presetId)
 		if (!definition || definition.type !== 'button') return null
 
-		const config = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
-		if (!config) return null
+		const moduleId = this.#getPresetModuleId(connectionId)
+		if (!moduleId) return null
 
 		const localVariables = structuredClone(definition.model.localVariables)
 		// Store the overrides that were actually applied, not the raw input.
@@ -474,12 +478,22 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			localVariables,
 			presetRef: {
 				connectionId,
-				moduleId: config.moduleId,
+				moduleId,
 				presetId,
 				variableValues: appliedVariableValues,
 			},
 			checksum: this.#getPresetChecksum(definition),
 		}
+	}
+
+	/**
+	 * The id of the module which provides the presets of a connection. The custom presets are provided by Companion
+	 * itself, so are given the id of their connection, as there is no other connection a reference could switch to
+	 */
+	#getPresetModuleId(connectionId: string): string | null {
+		if (isCustomPresetsConnectionId(connectionId)) return connectionId
+
+		return this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)?.moduleId ?? null
 	}
 
 	/**
@@ -578,6 +592,17 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			uiDefinitions,
 			supportsReferences
 		)
+	}
+
+	/**
+	 * Set the custom presets, which are offered as the presets of {@link CUSTOM_PRESETS_CONNECTION_ID}. They are built
+	 * in Companion, so the variables they use are already as they should be
+	 */
+	setCustomPresetDefinitions(
+		newPresets: ReadonlyMap<string, PresetDefinition>,
+		uiDefinitions: Record<string, UIPresetSection>
+	): void {
+		this.#storePresetDefinitions(CUSTOM_PRESETS_CONNECTION_ID, newPresets, uiDefinitions, true)
 	}
 
 	/**
@@ -768,7 +793,19 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			)
 		}
 
-		this.#presetDefinitions[connectionId] = structuredClone(presets)
+		this.#storePresetDefinitions(connectionId, structuredClone(presets), uiDefinitions, supportsReferences)
+	}
+
+	/**
+	 * Store the presets of a connection, and tell everything which uses them
+	 */
+	#storePresetDefinitions(
+		connectionId: string,
+		presets: ReadonlyMap<string, PresetDefinition>,
+		uiDefinitions: Record<string, UIPresetSection>,
+		supportsReferences: boolean
+	): void {
+		this.#presetDefinitions[connectionId] = presets
 		const lastPresetDefinitions = this.#uiPresetDefinitions[connectionId]
 		const newUiDefinitions: UIPresetSections = {
 			supportsReferences,

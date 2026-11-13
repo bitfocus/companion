@@ -1,6 +1,9 @@
 import { faLink, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { Link } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
+import { isCustomPresetsConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { CreateCustomPresetControlId } from '@companion-app/shared/ControlId.js'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -22,17 +25,70 @@ interface PresetReferenceEditorProps {
 
 /**
  * Read-only editor shown for a placed preset reference. It explains that the button is linked to a preset
- * (and whether the source connection is currently available), lets the user switch which connection it
- * references (matched by module), and lets the user edit only the templated variable values - the only
+ * (and whether its source, a connection or a custom preset, is currently available), lets the user switch which
+ * connection it references (matched by module), and lets the user edit only the templated variable values - the only
  * editable fields on a reference.
  */
 export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 	config,
 	location,
 }: PresetReferenceEditorProps) {
+	const { connectionId, moduleId, presetId, variableValues } = config.presetRef
+	const templateVariableNames = Object.keys(variableValues ?? {})
+
+	return (
+		<>
+			<Note tone="neutral" icon={faLink} actions={null} className="my-2">
+				This button is <strong>linked</strong> to a preset, and updates automatically when the preset changes. Use{' '}
+				<strong>Edit</strong> above to unlink it into a normal, fully editable button.
+			</Note>
+
+			{isCustomPresetsConnectionId(connectionId) ? (
+				<CustomPresetSource presetId={presetId} />
+			) : (
+				<ConnectionPresetSource connectionId={connectionId} moduleId={moduleId} location={location} />
+			)}
+
+			{templateVariableNames.length > 0 && (
+				<>
+					<h5 className="mt-4">Preset variables</h5>
+					<p className="text-muted small">
+						These values came from the preset template and can be customised. Other settings are managed by the preset.
+					</p>
+					<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
+						{templateVariableNames.map((variableName) => (
+							<PresetReferenceVariableRow
+								key={variableName}
+								location={location}
+								variableName={variableName}
+								headline={findLocalVariableHeadline(config.localVariables, variableName)}
+								value={variableValues?.[variableName]}
+							/>
+						))}
+					</Form>
+				</>
+			)}
+		</>
+	)
+})
+
+interface ConnectionPresetSourceProps {
+	connectionId: string
+	moduleId: string
+	location: ControlLocation
+}
+
+/**
+ * The connection a preset comes from, which is whether it is available, and which can be switched to another connection
+ * of the same module
+ */
+const ConnectionPresetSource = observer(function ConnectionPresetSource({
+	connectionId,
+	moduleId,
+	location,
+}: ConnectionPresetSourceProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const { connectionId, moduleId, variableValues } = config.presetRef
 	const connectionInfo = connections.getInfo(connectionId)
 	const sourceAvailable = !!connectionInfo && connectionInfo.enabled
 
@@ -55,15 +111,9 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 	)
 
 	const connectionFieldId = useId()
-	const templateVariableNames = Object.keys(variableValues ?? {})
 
 	return (
 		<>
-			<Note tone="neutral" icon={faLink} actions={null} className="my-2">
-				This button is <strong>linked</strong> to a preset, and updates automatically when the preset changes. Use{' '}
-				<strong>Edit</strong> above to unlink it into a normal, fully editable button.
-			</Note>
-
 			{!sourceAvailable && (
 				<Note tone="warning" icon={faTriangleExclamation} actions={null} className="my-2">
 					The source {connectionInfo ? 'connection is disabled' : 'connection no longer exists'}. This button is showing
@@ -86,27 +136,33 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 					/>
 				</Grid.Col>
 			</Form>
-
-			{templateVariableNames.length > 0 && (
-				<>
-					<h5 className="mt-4">Preset variables</h5>
-					<p className="text-muted small">
-						These values came from the preset template and can be customised. Other settings are managed by the preset.
-					</p>
-					<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
-						{templateVariableNames.map((variableName) => (
-							<PresetReferenceVariableRow
-								key={variableName}
-								location={location}
-								variableName={variableName}
-								headline={findLocalVariableHeadline(config.localVariables, variableName)}
-								value={variableValues?.[variableName]}
-							/>
-						))}
-					</Form>
-				</>
-			)}
 		</>
+	)
+})
+
+/**
+ * The custom preset a preset comes from, which is whether it still exists, with a link to edit it
+ */
+const CustomPresetSource = observer(function CustomPresetSource({ presetId }: { presetId: string }) {
+	const { customPresetsList } = useContext(RootAppStoreContext)
+
+	const customPreset = customPresetsList.customPresets.get(CreateCustomPresetControlId(presetId))
+
+	if (!customPreset) {
+		return (
+			<Note tone="warning" icon={faTriangleExclamation} actions={null} className="my-2">
+				The custom preset no longer exists. This button is showing its last known state.
+			</Note>
+		)
+	}
+
+	return (
+		<p className="my-2">
+			Custom preset:{' '}
+			<Link to="/custom-presets/$controlId" params={{ controlId: presetId }} title="Edit the custom preset">
+				{customPreset.name || 'Unnamed custom preset'}
+			</Link>
+		</p>
 	)
 })
 

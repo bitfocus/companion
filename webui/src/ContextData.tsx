@@ -21,6 +21,7 @@ import { useCompositeElementDefinitionsSubscription } from './Hooks/useComposite
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
 import { useCustomActionsListSubscription } from './Hooks/useCustomActionsListSubscription.js'
 import { useCustomFeedbacksListSubscription } from './Hooks/useCustomFeedbacksListSubscription.js'
+import { useCustomPresetsListSubscription } from './Hooks/useCustomPresetsListSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
 import { useEntityDefinitionsSubscription } from './Hooks/useEntityDefinitionsSubscription.js'
@@ -44,6 +45,7 @@ import { HelpModal, type HelpModalRef } from './Instances/HelpModal.js'
 import { trpc } from './Resources/TRPC.js'
 import { CustomActionsListStore } from './Stores/CustomActionsListStore.js'
 import { CustomFeedbacksListStore } from './Stores/CustomFeedbacksListStore.js'
+import { CustomPresetsListStore } from './Stores/CustomPresetsListStore.js'
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
 import { InstanceStatusesStore } from './Stores/InstanceStatusesStore.js'
 import { SurfaceInstancesStore } from './Stores/SurfaceInstancesStore.js'
@@ -102,6 +104,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			customActionsList: new CustomActionsListStore(),
 
 			customFeedbacksList: new CustomFeedbacksListStore(),
+
+			customPresetsList: new CustomPresetsListStore(),
 
 			userConfig: new UserConfigStore(),
 
@@ -164,6 +168,12 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		trpc.controls.customFeedbacks.collections.watchQuery,
 		undefined
 	)
+	const customPresetsListReady = useCustomPresetsListSubscription(rootStore.customPresetsList)
+	const customPresetCollectionsReady = useGenericCollectionsSubscription(
+		rootStore.customPresetsList,
+		trpc.controls.customPresets.collections.watchQuery,
+		undefined
+	)
 	const { ready: pagesReady } = usePagesInfoSubscription(rootStore.pages)
 	const { ready: userConfigReady } = useUserConfigSubscription(rootStore.userConfig)
 	const surfacesReady = useSurfacesSubscription(rootStore.surfaces)
@@ -222,6 +232,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		customActionCollectionsReady,
 		customFeedbacksListReady,
 		customFeedbackCollectionsReady,
+		customPresetsListReady,
+		customPresetCollectionsReady,
 		entityDefinitionsReady,
 		compositeElementDefinitionsReady,
 		activeLearnRequestsReady,

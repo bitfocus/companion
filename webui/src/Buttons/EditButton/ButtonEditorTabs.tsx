@@ -44,7 +44,7 @@ export function ButtonEditorTabBar({ tabs, activeTab, setActiveTab }: ButtonEdit
 
 interface ButtonEditorTabsProps {
 	controlId: SomeControlId
-	location: ControlLocation
+	location: ControlLocation | undefined
 	steps: NormalButtonSteps
 	disabledSetStep: boolean
 	runtimeProps: NormalButtonRuntimeProps

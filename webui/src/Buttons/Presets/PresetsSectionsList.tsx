@@ -2,6 +2,7 @@ import { faArrowLeft, faClone, faLink, faSearch } from '@fortawesome/free-solid-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
+import { getVirtualConnectionLabel } from '@companion-app/shared/ConnectionId.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection, UIPresetSections } from '@companion-app/shared/Model/Presets.js'
 import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
@@ -28,6 +29,9 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 	clearSelectedConnectionId,
 }: Readonly<PresetsSectionsListProps>): React.JSX.Element {
 	const [searchQuery, setSearchQuery] = useState('')
+
+	const connectionLabel =
+		connectionInfo?.label || getVirtualConnectionLabel(selectedConnectionId) || selectedConnectionId
 
 	// Preset references (linked presets) are only supported by newer (2.0+) modules. For older modules the
 	// toggle is disabled and presets are always placed as a copy.
@@ -138,9 +142,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 					<Button variant="ghost" size="sm" onClick={clearSelectedConnectionId}>
 						<FontAwesomeIcon icon={faArrowLeft} /> Back
 					</Button>
-					<span title={connectionInfo?.label || selectedConnectionId}>
-						{connectionInfo?.label || selectedConnectionId}
-					</span>
+					<span title={connectionLabel}>{connectionLabel}</span>
 				</div>
 				<SearchBox className="mb-3" placeholder="Search presets..." filter={searchQuery} setFilter={setSearchQuery} />
 				{allSections.length === 0 ? (

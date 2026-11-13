@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CUSTOM_PRESETS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
@@ -365,6 +366,44 @@ describe('InstanceDefinitions', () => {
 
 			expect(listener).toHaveBeenCalledWith('conn1')
 			expect(defs.convertPresetToControlModel('conn1', 'p1', null)).toBeNull()
+		})
+	})
+
+	// ── setCustomPresetDefinitions ───────────────────────────────────────
+
+	describe('setCustomPresetDefinitions', () => {
+		it('stores the custom presets as the presets of their connection, which can be placed as references', () => {
+			const { defs, mockConfigStore } = createInstanceDefinitions()
+			const updatePresetsListener = vi.fn()
+			defs.on('updatePresets', updatePresetsListener)
+
+			const preset = makeButtonPreset('cp1')
+			defs.setCustomPresetDefinitions(new Map([[preset.id, preset]]), generateUIDefinitions([preset]))
+
+			expect(updatePresetsListener).toHaveBeenCalledWith(CUSTOM_PRESETS_CONNECTION_ID)
+			expect(defs.doesConnectionSupportPresetReferences(CUSTOM_PRESETS_CONNECTION_ID)).toBe(true)
+			expect(defs.convertPresetToControlModel(CUSTOM_PRESETS_CONNECTION_ID, 'cp1', null)).toBeTruthy()
+
+			// There is no connection config to find the module of
+			const reference = defs.convertPresetToReferenceControlModel(CUSTOM_PRESETS_CONNECTION_ID, 'cp1', null)
+			expect(reference?.presetRef).toEqual({
+				connectionId: CUSTOM_PRESETS_CONNECTION_ID,
+				moduleId: CUSTOM_PRESETS_CONNECTION_ID,
+				presetId: 'cp1',
+				variableValues: null,
+			})
+			expect(mockConfigStore.getConfigOfTypeForId).not.toHaveBeenCalled()
+		})
+
+		it('keeps the variables the custom presets use as they are', () => {
+			const { defs } = createInstanceDefinitions()
+			const preset = makeButtonPreset('cp1', {
+				model: makeButtonPresetModel({ style: { layers: [makeTextLayer('text-1', '$(other:var)')] } }),
+			})
+			defs.setCustomPresetDefinitions(new Map([[preset.id, preset]]), {})
+
+			const stored = defs.convertPresetToControlModel(CUSTOM_PRESETS_CONNECTION_ID, 'cp1', null)
+			expect(stored?.style.layers).toEqual([makeTextLayer('text-1', '$(other:var)')])
 		})
 	})
 

@@ -3,11 +3,13 @@ import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
 	CreateCustomFeedbackControlId,
+	CreateCustomPresetControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
 import { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
+import { CustomPresetsListStore } from '~/Stores/CustomPresetsListStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
 import { describeUseControl, formatElapsed, type UseControlStores } from '../UsesDescription.js'
@@ -35,7 +37,10 @@ function createStores(): UseControlStores {
 	const customFeedbacksList = new CustomFeedbacksListStore()
 	customFeedbacksList.customFeedbacks.set(CreateCustomFeedbackControlId('inner'), { name: 'Inner' } as any)
 
-	return { pages, triggersList, customActionsList, customFeedbacksList }
+	const customPresetsList = new CustomPresetsListStore()
+	customPresetsList.customPresets.set(CreateCustomPresetControlId('preset'), { name: 'Preset' } as any)
+
+	return { pages, triggersList, customActionsList, customFeedbacksList, customPresetsList }
 }
 
 describe('describeUseControl', () => {
@@ -99,6 +104,14 @@ describe('describeUseControl', () => {
 			kind: 'Custom feedback',
 			name: 'Inner',
 			link: { type: 'custom-feedback', customFeedbackId: 'inner' },
+		})
+	})
+
+	test('a custom preset is described by its name', () => {
+		expect(describeUseControl(CreateCustomPresetControlId('preset'), createStores())).toEqual({
+			kind: 'Custom preset',
+			name: 'Preset',
+			link: { type: 'custom-preset', customPresetId: 'preset' },
 		})
 	})
 

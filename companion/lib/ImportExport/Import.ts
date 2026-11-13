@@ -3,6 +3,7 @@ import { getVirtualConnectionIds, INTERNAL_CONNECTION_ID } from '@companion-app/
 import {
 	CreateCustomActionControlId,
 	CreateCustomFeedbackControlId,
+	CreateCustomPresetControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -39,6 +40,7 @@ import {
 	fixupButtonReferenceControl,
 	fixupCustomActionControl,
 	fixupCustomFeedbackControl,
+	fixupCustomPresetControl,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
 	fixupLinkButtonControl,
@@ -233,6 +235,24 @@ export class ImportController {
 			}
 		}
 
+		// Import custom presets
+		if (isImporting(config.customPresets)) {
+			this.#controlsController.replaceCustomPresetCollections(data.customPresetCollections || [])
+
+			const referencesUpdater = this.#createReferencesUpdater(instanceIdMap, outboundSurfaceIdRemap)
+			for (const [id, customPresetDefinition] of Object.entries(data.customPresets || {})) {
+				const controlId = CreateCustomPresetControlId(id)
+				const fixedControlObj = fixupCustomPresetControl(
+					this.#logger,
+					customPresetDefinition,
+					referencesUpdater,
+					instanceIdMap
+				)
+
+				this.#controlsController.importCustomPreset(controlId, fixedControlObj)
+			}
+		}
+
 		// note data.pages is needed only to satisfy TypeScript, since config.buttons is false if pages is missing.
 		if (isImporting(config.buttons)) {
 			// Import pages
@@ -416,22 +436,7 @@ export class ImportController {
 		// Import the new page
 		this.#pagesController.setPageName(topage, pageInfo.name)
 
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
-		}
-		const referencesUpdater = new VisitorReferencesUpdater(
-			this.#internalModule,
-			connectionLabelRemap,
-			connectionIdRemap,
-			outboundSurfaceIdRemap
-		)
+		const referencesUpdater = this.#createReferencesUpdater(instanceIdMap, outboundSurfaceIdRemap)
 
 		// Import the controls
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
@@ -486,6 +491,31 @@ export class ImportController {
 				this.#controlsController.createPageControl(pageId, { type: 'page', localVariables }, true)
 			}
 		}
+	}
+
+	/**
+	 * Create the updater of the references to the connections and surfaces which were renamed or given new ids
+	 */
+	#createReferencesUpdater(
+		instanceIdMap: InstanceAppliedRemappings,
+		outboundSurfaceIdRemap: Record<string, string> | undefined
+	): VisitorReferencesUpdater {
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
+		for (const [oldId, info] of Object.entries(instanceIdMap)) {
+			if (info.oldLabel && info.label !== info.oldLabel) {
+				connectionLabelRemap[info.oldLabel] = info.label
+			}
+			if (info.id && info.id !== oldId) {
+				connectionIdRemap[oldId] = info.id
+			}
+		}
+		return new VisitorReferencesUpdater(
+			this.#internalModule,
+			connectionLabelRemap,
+			connectionIdRemap,
+			outboundSurfaceIdRemap
+		)
 	}
 
 	#importInstances(

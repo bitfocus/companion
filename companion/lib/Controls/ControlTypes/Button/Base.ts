@@ -1,5 +1,5 @@
 import type z from 'zod'
-import type { BankControlId } from '@companion-app/shared/ControlId.js'
+import type { BankControlId, CustomPresetControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	ButtonOptionsBase,
@@ -8,6 +8,7 @@ import type {
 	NormalButtonRuntimeProps,
 	PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
+import type { CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -40,12 +41,16 @@ import type { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
+/** The ids of the controls which are a button: those on the grid, and the custom presets which are built like one */
+export type ButtonControlId = BankControlId | CustomPresetControlId
+
 export abstract class ButtonControlRuntimeBase<
-	TJson extends LayeredButtonModel | PresetReferenceButtonModel,
+	TControlId extends ButtonControlId,
+	TJson extends LayeredButtonModel | PresetReferenceButtonModel | CustomPresetModel,
 	TOptions extends ButtonOptionsBase,
 	TPool extends SomeButtonEntityPool,
 >
-	extends ControlBase<BankControlId, TJson, NormalButtonRuntimeProps>
+	extends ControlBase<TControlId, TJson, NormalButtonRuntimeProps>
 	implements ControlWithEntities, ControlWithPushed
 {
 	readonly supportsEntities = true
@@ -86,7 +91,7 @@ export abstract class ButtonControlRuntimeBase<
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: BankControlId,
+		controlId: TControlId,
 		debugNamespace: string,
 		isLayered: boolean,
 		EntityPoolClass: ButtonEntityPoolConstructor<TPool>,
@@ -425,8 +430,12 @@ export abstract class ButtonControlRuntimeBase<
  * (e.g. a preset reference) extend {@link ButtonControlRuntimeBase} directly so they cannot inherit this -
  * or any future control-level mutator added here.
  */
-export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptions extends ButtonOptionsBase>
-	extends ButtonControlRuntimeBase<TJson, TOptions, EditableControlEntityListPoolButton>
+export abstract class ButtonControlBase<
+	TControlId extends ButtonControlId,
+	TJson extends LayeredButtonModel | CustomPresetModel,
+	TOptions extends ButtonOptionsBase,
+>
+	extends ButtonControlRuntimeBase<TControlId, TJson, TOptions, EditableControlEntityListPoolButton>
 	implements ControlWithOptions<TOptions>
 {
 	readonly supportsConvert = false
@@ -434,7 +443,7 @@ export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptio
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: BankControlId,
+		controlId: TControlId,
 		debugNamespace: string,
 		isLayered: boolean,
 		optionsSchema: z.ZodType<TOptions>

@@ -132,6 +132,8 @@ function createExportController() {
 	controls.exportCustomActionCollections.mockReturnValue([])
 	controls.getAllCustomFeedbacks.mockReturnValue([makeCustomFeedback('cf-1', 'My Custom Feedback')])
 	controls.exportCustomFeedbackCollections.mockReturnValue([])
+	controls.getAllCustomPresets.mockReturnValue([])
+	controls.exportCustomPresetCollections.mockReturnValue([])
 
 	instance.exportAllConnections.mockReturnValue({
 		'conn-1': {

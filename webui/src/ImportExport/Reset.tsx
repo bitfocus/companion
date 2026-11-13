@@ -29,6 +29,7 @@ const defaultFullResetConfig: ClientImportOrResetSelection = {
 	expressionVariables: 'reset',
 	customActions: 'reset',
 	customFeedbacks: 'reset',
+	customPresets: 'reset',
 	userconfig: 'reset',
 	imageLibrary: 'reset',
 }
@@ -452,6 +453,10 @@ const ResetApplyStep = withForm({
 
 					if (config.customFeedbacks !== 'unchanged') {
 						changes.push(<li key="custom-feedbacks">All custom feedbacks.</li>)
+					}
+
+					if (config.customPresets !== 'unchanged') {
+						changes.push(<li key="custom-presets">All custom presets.</li>)
 					}
 
 					if (config.imageLibrary !== 'unchanged') {

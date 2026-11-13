@@ -15,7 +15,7 @@ import { EditActionsRelease } from './EditActionsRelease.js'
 export interface ControlActionStepTabProps {
 	service: IControlActionStepsAndSetsService
 	controlId: SomeControlId
-	location: ControlLocation
+	location: ControlLocation | undefined
 	rotaryActions: boolean
 	stepKeys: string[]
 	selectedIndex: number

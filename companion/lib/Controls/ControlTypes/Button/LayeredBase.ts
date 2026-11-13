@@ -1,0 +1,264 @@
+import type { JsonValue } from 'type-fest'
+import type z from 'zod'
+import type {
+	LayeredButtonModel,
+	LayeredButtonOptions,
+	NormalButtonRuntimeProps,
+} from '@companion-app/shared/Model/ButtonModel.js'
+import type { CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
+import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
+import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
+import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
+import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ControlActionSetAndStepsEditor } from '../../Entities/ControlActionSetAndStepsManager.js'
+import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
+import type {
+	ControlWithActions,
+	ControlWithActionSets,
+	ControlWithLayeredStyle,
+	ControlWithoutEvents,
+} from '../../IControlFragments.js'
+import { ButtonControlBase, type ButtonControlId } from './Base.js'
+import { LayeredButtonStyleEditor } from './LayeredButtonStyleEditor.js'
+
+/**
+ * Abstract class for an editable button with layer based rendering: a button on the grid, or a custom preset, which is
+ * built the same way but not placed anywhere.
+ *
+ * The layered rendering (and its editing) lives in a composed {@link LayeredButtonStyleEditor} (`drawing`);
+ * this control wires it into the runtime/entity machinery and the existing control event flows.
+ *
+ * @author Julian Waller <me@julusian.co.uk>
+ * @since 4.0.0
+ * @copyright 2025 Bitfocus AS
+ * @license
+ * This program is free software.
+ * You should have received a copy of the MIT licence as well as the Bitfocus
+ * Individual Contributor License Agreement for Companion along with
+ * this program.
+ *
+ * You can be released from the requirements of the license by purchasing
+ * a commercial license. Buying such a license is mandatory as soon as you
+ * develop commercial activities involving the Companion software without
+ * disclosing the source code of your own applications.
+ */
+export abstract class LayeredButtonControlBase<
+	TControlId extends ButtonControlId,
+	TJson extends LayeredButtonModel | CustomPresetModel,
+	TOptions extends LayeredButtonOptions,
+>
+	extends ButtonControlBase<TControlId, TJson, TOptions>
+	implements ControlWithLayeredStyle, ControlWithActions, ControlWithoutEvents, ControlWithActionSets
+{
+	readonly supportsActions = true
+	readonly supportsEvents = false
+	readonly supportsActionSets = true
+	readonly supportsLayeredStyle = true
+
+	/**
+	 * The composed layered rendering + editing. Exposed (as the base `drawing`) so callers can reach the
+	 * drawing surface directly.
+	 */
+	readonly #drawing: LayeredButtonStyleEditor
+	override get drawing(): LayeredButtonStyleEditor {
+		return this.#drawing
+	}
+
+	get actionSets(): ControlActionSetAndStepsEditor {
+		return this.entities
+	}
+
+	constructor(
+		deps: ControlDependencies,
+		controlId: TControlId,
+		debugNamespace: string,
+		optionsSchema: z.ZodType<TOptions>
+	) {
+		super(deps, controlId, debugNamespace, true, optionsSchema)
+
+		this.options = this.optionsSchema.parse({})
+
+		this.#drawing = new LayeredButtonStyleEditor(deps, controlId, {
+			getButtonStateProps: () => this.getDrawStyleButtonStateProps(),
+			entities: this.entities,
+			commitChange: (redraw) => this.commitChange(redraw),
+			emitElementChanged: (id) => this.#emitStyleElementsChanged([id]),
+		})
+	}
+
+	/**
+	 * Load the stored button into this control
+	 */
+	protected loadButtonStorage(storage: TJson, isImport: boolean): void {
+		this.drawing.loadElements(structuredClone(storage.style.layers))
+		this.options = Object.assign(this.options, storage.options || {})
+		this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
+		this.entities.loadStorage(storage, true, isImport)
+		this.entities.stepExpressionUpdate(this.options)
+
+		// Ensure control is stored before setup
+		if (isImport) setImmediate(() => this.postProcessImport())
+	}
+
+	protected override entityListReportChange(options: ControlEntityListChangeProps): void {
+		if (!options.noSave) {
+			this.commitChange(false)
+		}
+		if (options.invalidateAllElements) {
+			this.drawing.clearCache()
+			// A changed feedback's style overrides can target any element, so re-resolve them all.
+			this.#emitStyleElementsChanged(this.drawing.getAllElementIds())
+		} else if (options.changedElementIds) {
+			for (const elementId of options.changedElementIds) {
+				this.drawing.invalidateElement(elementId)
+			}
+			this.#emitStyleElementsChanged(options.changedElementIds)
+		}
+
+		if (options.redraw || options.changedElementIds || options.invalidateAllElements) {
+			this.triggerInvalidation()
+		}
+	}
+
+	/**
+	 * Notify any open style editor that these elements must be re-resolved. Feedback value/override changes
+	 * redraw the button but emit no config patch (`noSave`), so without this the editor's per-element streams
+	 * would keep resolving the feedback state that was current when the editor was opened.
+	 */
+	#emitStyleElementsChanged(elementIds: Iterable<string>): void {
+		for (const elementId of elementIds) {
+			this.deps.events.emit('layeredStyleElementChanged', this.controlId, elementId)
+		}
+	}
+
+	/**
+	 * Collect the instance ids, labels, and variables referenced by this control
+	 */
+	collectReferencedConnectionsAndVariables(
+		foundConnectionIds: Set<string>,
+		foundConnectionLabels: Set<string>,
+		foundVariables: Set<string>
+	): void {
+		const collector = new VisitorReferencesCollector(
+			this.deps.internalModule,
+			foundConnectionIds,
+			foundConnectionLabels,
+			foundVariables,
+			undefined
+		)
+		collector.visitEntities(this.entities.getAllEntities(), [])
+		this.drawing.visit(collector)
+	}
+
+	layeredStyleAddElement(type: string, afterElementId: string | null): string {
+		return this.drawing.addElement(type, afterElementId)
+	}
+
+	layeredStyleRemoveElement(id: string): boolean {
+		return this.drawing.removeElement(id)
+	}
+
+	layeredStyleDuplicateElement(id: string): string | false {
+		return this.drawing.duplicateElement(id)
+	}
+
+	layeredStyleSetElementName(id: string, name: string): boolean {
+		return this.drawing.setElementName(id, name)
+	}
+
+	layeredStyleSetElementUsage(id: string, usage: ButtonGraphicsElementUsage): boolean {
+		return this.drawing.setElementUsage(id, usage)
+	}
+
+	layeredStyleSetElementPropertyPinned(id: string, property: string, pinned: boolean): boolean {
+		return this.drawing.setElementPropertyPinned(id, property, pinned)
+	}
+
+	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined {
+		return this.drawing.getElementById(id)
+	}
+
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[] {
+		return this.drawing.drawElements
+	}
+
+	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
+		return this.drawing.selectedElementIds()
+	}
+
+	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean {
+		return this.drawing.moveElement(id, parentElementId, newIndex)
+	}
+
+	layeredStyleUpdateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
+		return this.drawing.updateOption(id, key, newVal)
+	}
+
+	layeredStyleUpdateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
+		return this.drawing.updateOptions(id, values)
+	}
+
+	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean {
+		return this.drawing.updateFromLegacyProperties(diff, this.options.canModifyStyleInApis)
+	}
+
+	/**
+	 * Rename a connection for variables used in this control
+	 */
+	renameVariables(labelFrom: string, labelTo: string): void {
+		const updater = new VisitorReferencesUpdater(
+			this.deps.internalModule,
+			{ [labelFrom]: labelTo },
+			undefined,
+			undefined
+		)
+		updater.visitEntities(this.entities.getAllEntities(), [])
+		this.drawing.visit(updater)
+		const changed = updater.recheckChangedFeedbacks().hasChanges()
+
+		if (changed) {
+			// Purge all cache, as we don't know what could have changed
+			this.drawing.clearCache()
+		}
+
+		// redraw if needed and save changes
+		this.commitChange(changed)
+	}
+
+	/**
+	 * Update an option field of this control
+	 */
+	optionsSetField(change: KeyValueChange<TOptions>): boolean {
+		const changed = super.optionsSetField(change)
+
+		if (change.key === 'stepProgression' || change.key === 'stepExpression') {
+			this.entities.stepExpressionUpdate(this.options)
+		}
+
+		return changed
+	}
+
+	/**
+	 * The stored button, without the type and options which differ between the kinds of layered button
+	 */
+	protected buttonBodyToJSON(): Pick<LayeredButtonModel, 'style' | 'feedbacks' | 'steps' | 'localVariables'> {
+		return {
+			style: { layers: [...this.drawing.drawElements] },
+			feedbacks: this.entities.getFeedbackEntities(),
+			steps: this.entities.asNormalButtonSteps(),
+			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
+		}
+	}
+
+	/**
+	 * Get any volatile properties for the control
+	 */
+	override toRuntimeJSON(): NormalButtonRuntimeProps {
+		return {
+			current_step_id: this.entities.currentStepId,
+		}
+	}
+}

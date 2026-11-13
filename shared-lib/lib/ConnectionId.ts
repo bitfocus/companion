@@ -14,6 +14,11 @@ export const CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
 export const CUSTOM_FEEDBACKS_CONNECTION_ID = '__custom-feedbacks__'
 
 /**
+ * The connection id which provides each custom preset as a preset
+ */
+export const CUSTOM_PRESETS_CONNECTION_ID = '__custom-presets__'
+
+/**
  * Connection ids which are provided by Companion itself, rather than by a user created connection.
  * Entities referencing these are always valid, even though there is no connection with this id.
  */
@@ -21,6 +26,7 @@ const VIRTUAL_CONNECTION_IDS: ReadonlySet<string> = new Set([
 	INTERNAL_CONNECTION_ID,
 	CUSTOM_ACTIONS_CONNECTION_ID,
 	CUSTOM_FEEDBACKS_CONNECTION_ID,
+	CUSTOM_PRESETS_CONNECTION_ID,
 ])
 
 /**
@@ -45,6 +51,13 @@ export function isCustomFeedbacksConnectionId(connectionId: string | null | unde
 }
 
 /**
+ * Check if a connection id refers to the custom presets
+ */
+export function isCustomPresetsConnectionId(connectionId: string | null | undefined): boolean {
+	return connectionId === CUSTOM_PRESETS_CONNECTION_ID
+}
+
+/**
  * Check if a connection id refers to something provided by Companion itself (eg the internal module), rather than a user created connection
  */
 export function isVirtualConnectionId(connectionId: string | null | undefined): boolean {
@@ -62,6 +75,8 @@ export function getVirtualConnectionLabel(connectionId: string): string | undefi
 			return 'Custom action'
 		case CUSTOM_FEEDBACKS_CONNECTION_ID:
 			return 'Custom feedback'
+		case CUSTOM_PRESETS_CONNECTION_ID:
+			return 'Custom presets'
 		default:
 			return undefined
 	}

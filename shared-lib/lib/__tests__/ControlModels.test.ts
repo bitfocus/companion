@@ -19,6 +19,7 @@ import {
 import { isControlModelForId, SomeControlModelSchema, zodStoredControlId } from '../Model/Controls.js'
 import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
 import { CustomFeedbackModelSchema, getCustomFeedbackCallsExcludedFrom } from '../Model/CustomFeedbackModel.js'
+import { convertCustomPresetToButtonModel, CustomPresetModelSchema } from '../Model/CustomPresetModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -386,6 +387,47 @@ describe('PageControlModelSchema', () => {
 	})
 })
 
+describe('CustomPresetModelSchema', () => {
+	test('a minimal custom preset is an empty button with the listing defaults', () => {
+		const model = CustomPresetModelSchema.parse({ type: 'custom-preset' })
+		expect(model.options).toEqual({
+			name: 'New custom preset',
+			description: '',
+			sortOrder: 0,
+			stepProgression: 'auto',
+			stepExpression: '',
+			rotaryActions: false,
+			canModifyStyleInApis: false,
+			notes: '',
+		})
+		expect(model.style).toEqual({ layers: [] })
+	})
+})
+
+describe('convertCustomPresetToButtonModel', () => {
+	test('the button keeps everything but the options which list the preset', () => {
+		const model = CustomPresetModelSchema.parse({
+			type: 'custom-preset',
+			options: { name: 'Mine', description: 'Desc', sortOrder: 4, collectionId: 'col', rotaryActions: true },
+		})
+
+		expect(convertCustomPresetToButtonModel(model)).toEqual({
+			type: 'button-layered',
+			options: {
+				stepProgression: 'auto',
+				stepExpression: '',
+				rotaryActions: true,
+				canModifyStyleInApis: false,
+				notes: '',
+			},
+			style: model.style,
+			feedbacks: model.feedbacks,
+			steps: model.steps,
+			localVariables: model.localVariables,
+		})
+	})
+})
+
 describe('SomeControlModelSchema', () => {
 	test.each([
 		['button-layered', { type: 'button-layered' }],
@@ -393,6 +435,7 @@ describe('SomeControlModelSchema', () => {
 		['expression-variable', { type: 'expression-variable' }],
 		['custom-action', { type: 'custom-action' }],
 		['custom-feedback', { type: 'custom-feedback' }],
+		['custom-preset', { type: 'custom-preset' }],
 		['page', { type: 'page' }],
 		['pageup', { type: 'pageup' }],
 	])('parses a %s control', (type, control) => {

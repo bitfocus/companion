@@ -7,6 +7,7 @@ import {
 import { assertNever } from '~/Resources/util.js'
 import type { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
 import type { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
+import type { CustomPresetsListStore } from '~/Stores/CustomPresetsListStore.js'
 import type { PagesStore } from '~/Stores/PagesStore.js'
 import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
 
@@ -15,6 +16,7 @@ export interface UseControlStores {
 	readonly triggersList: TriggersListStore
 	readonly customActionsList: CustomActionsListStore
 	readonly customFeedbacksList: CustomFeedbacksListStore
+	readonly customPresetsList: CustomPresetsListStore
 }
 
 /** Where to go to find a control which uses a custom action or feedback */
@@ -23,6 +25,7 @@ export type UseControlLink =
 	| { readonly type: 'trigger'; readonly triggerId: string }
 	| { readonly type: 'custom-action'; readonly customActionId: string }
 	| { readonly type: 'custom-feedback'; readonly customFeedbackId: string }
+	| { readonly type: 'custom-preset'; readonly customPresetId: string }
 
 /** What a control which uses a custom action or feedback is, for showing in a list of its uses */
 export interface UseControlDescription {
@@ -81,6 +84,20 @@ export function describeUseControl(controlId: SomeControlId, stores: UseControlS
 				link:
 					parsedId?.type === 'custom-feedback'
 						? { type: 'custom-feedback', customFeedbackId: parsedId.customFeedbackId }
+						: null,
+			}
+		}
+		case 'custom-preset': {
+			const customPreset = isControlIdOfKind(controlId, 'custom-preset')
+				? stores.customPresetsList.customPresets.get(controlId)
+				: undefined
+			const parsedId = ParseControlId(controlId)
+			return {
+				kind: 'Custom preset',
+				name: customPreset?.name || 'Unnamed custom preset',
+				link:
+					parsedId?.type === 'custom-preset'
+						? { type: 'custom-preset', customPresetId: parsedId.customPresetId }
 						: null,
 			}
 		}

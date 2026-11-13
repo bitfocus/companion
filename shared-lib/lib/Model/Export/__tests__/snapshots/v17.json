@@ -970,6 +970,176 @@
 						"$ref": "#/$defs/EmptyCollection"
 					}
 				},
+				"customPresets": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {
+						"type": "object",
+						"properties": {
+							"type": {
+								"type": "string",
+								"const": "custom-preset"
+							},
+							"feedbacks": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/EntityModel"
+								}
+							},
+							"steps": {
+								"type": "object",
+								"propertyNames": {
+									"type": "string"
+								},
+								"additionalProperties": {
+									"type": "object",
+									"properties": {
+										"action_sets": {
+											"type": "object",
+											"properties": {
+												"down": {
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/EntityModel"
+													}
+												},
+												"up": {
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/EntityModel"
+													}
+												},
+												"rotate_left": {
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/EntityModel"
+													}
+												},
+												"rotate_right": {
+													"type": "array",
+													"items": {
+														"$ref": "#/$defs/EntityModel"
+													}
+												}
+											},
+											"additionalProperties": {
+												"type": "array",
+												"items": {
+													"$ref": "#/$defs/EntityModel"
+												}
+											}
+										},
+										"options": {
+											"default": {
+												"runWhileHeld": []
+											},
+											"type": "object",
+											"properties": {
+												"runWhileHeld": {
+													"default": [],
+													"type": "array",
+													"items": {
+														"type": "number"
+													}
+												},
+												"name": {
+													"type": "string"
+												}
+											}
+										}
+									}
+								}
+							},
+							"localVariables": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/EntityModel"
+								}
+							},
+							"options": {
+								"default": {
+									"stepProgression": "auto",
+									"stepExpression": "",
+									"rotaryActions": false,
+									"canModifyStyleInApis": false,
+									"notes": "",
+									"name": "New custom preset",
+									"description": "",
+									"sortOrder": 0
+								},
+								"type": "object",
+								"properties": {
+									"stepProgression": {
+										"default": "auto",
+										"type": "string",
+										"enum": [
+											"auto",
+											"manual",
+											"expression"
+										]
+									},
+									"stepExpression": {
+										"default": "",
+										"type": "string"
+									},
+									"rotaryActions": {
+										"default": false,
+										"type": "boolean"
+									},
+									"canModifyStyleInApis": {
+										"default": false,
+										"type": "boolean"
+									},
+									"notes": {
+										"default": "",
+										"type": "string"
+									},
+									"name": {
+										"default": "New custom preset",
+										"type": "string"
+									},
+									"description": {
+										"default": "",
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"collectionId": {
+										"type": "string"
+									}
+								}
+							},
+							"style": {
+								"default": {
+									"layers": []
+								},
+								"type": "object",
+								"properties": {
+									"layers": {
+										"default": [],
+										"type": "array",
+										"items": {
+											"$ref": "#/$defs/ButtonGraphicsElement"
+										}
+									}
+								}
+							}
+						},
+						"required": [
+							"type"
+						]
+					}
+				},
+				"customPresetCollections": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/EmptyCollection"
+					}
+				},
 				"instances": {
 					"type": "object",
 					"propertyNames": {

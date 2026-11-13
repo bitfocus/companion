@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import { getDefaultPinnedProperties } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -15,6 +14,7 @@ import { ButtonGraphicsElementUsage, type ButtonStyleProperties } from '@compani
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 import { lazy } from '../../../Resources/Util.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ButtonControlId } from './Base.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { LayeredButtonDrawer, type LayeredButtonDrawerHost } from './LayeredButtonDrawer.js'
 import { cloneElementWithNewIds } from './LayerUtils.js'
@@ -39,7 +39,7 @@ export interface LayeredButtonStyleEditorHost extends LayeredButtonDrawerHost {
 export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 	readonly #host: LayeredButtonStyleEditorHost
 
-	constructor(deps: ControlDependencies, controlId: BankControlId, host: LayeredButtonStyleEditorHost) {
+	constructor(deps: ControlDependencies, controlId: ButtonControlId, host: LayeredButtonStyleEditorHost) {
 		super(deps, controlId, host)
 		this.#host = host
 	}

@@ -692,6 +692,26 @@ export class ExportController {
 			}
 		}
 
+		if (!config || config.customPresets) {
+			exp.customPresets = {}
+			exp.customPresetCollections = this.#controlsController.exportCustomPresetCollections()
+
+			for (const control of this.#controlsController.getAllCustomPresets()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-preset') {
+					exp.customPresets[parsedId.customPresetId] = control.toJSON()
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom preset control!`)
+				}
+			}
+		}
+
 		if (!config || config.connections) {
 			exp.instances = this.#instancesController.exportAllConnections(!config || config.includeSecrets)
 			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData

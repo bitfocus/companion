@@ -1,5 +1,5 @@
 import debounceFn from 'debounce-fn'
-import { formatLocation, type BankControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type PresetControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -25,6 +25,7 @@ import type { VariableDependency, VariableDependencyListener } from '../../../Va
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
+import type { ButtonControlId } from './Base.js'
 
 /** Anything that can visit the draw elements (e.g. the reference collector/updater visitors). */
 export interface DrawElementsVisitor {
@@ -118,7 +119,7 @@ class DrawDependency<T> {
 export class LayeredButtonDrawer implements IButtonDrawer, VariableDependencyListener<null> {
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
-	protected readonly controlId: BankControlId | PresetControlId
+	protected readonly controlId: ButtonControlId | PresetControlId
 	readonly #host: LayeredButtonDrawerHost
 
 	protected drawElementsList: SomeButtonGraphicsElement[] = []
@@ -162,7 +163,7 @@ export class LayeredButtonDrawer implements IButtonDrawer, VariableDependencyLis
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: BankControlId | PresetControlId,
+		controlId: ButtonControlId | PresetControlId,
 		host: LayeredButtonDrawerHost,
 		drawType: DrawStyleLayeredButtonModel['drawType'] = 'button'
 	) {

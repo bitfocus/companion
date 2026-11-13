@@ -8,6 +8,7 @@ import type { CompositeElementDefinitionsStore } from './CompositeElementDefinit
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { CustomActionsListStore } from './CustomActionsListStore.js'
 import type { CustomFeedbacksListStore } from './CustomFeedbacksListStore.js'
+import type { CustomPresetsListStore } from './CustomPresetsListStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
@@ -52,6 +53,8 @@ export interface RootAppStore {
 	readonly customActionsList: CustomActionsListStore
 
 	readonly customFeedbacksList: CustomFeedbacksListStore
+
+	readonly customPresetsList: CustomPresetsListStore
 
 	readonly userConfig: UserConfigStore
 

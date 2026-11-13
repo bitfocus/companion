@@ -3,6 +3,7 @@ import type {
 	BankControlId,
 	CustomActionControlId,
 	CustomFeedbackControlId,
+	CustomPresetControlId,
 	PresetControlId,
 	SomeControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -10,6 +11,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomFeedbacksUpdate } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import type { CustomPresetsUpdate } from '@companion-app/shared/Model/CustomPresetModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -106,6 +108,8 @@ export interface ControlCommonEvents {
 	customActionOutputRenamed: [controlId: CustomActionControlId, fromId: string, toId: string]
 	/** Emitted when a custom feedback is changed or deleted, so that its feedback definition can be updated */
 	customFeedbackDefinitionChanged: [controlId: CustomFeedbackControlId]
+	/** Emitted when a custom preset is changed or deleted, so that its preset definition can be updated */
+	customPresetDefinitionChanged: [controlId: CustomPresetControlId]
 	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
 	presetDrawn: [controlId: PresetControlId, render: ImageResult]
@@ -131,4 +135,5 @@ export type ControlChangeEvents = {
 	expressionVariableChange: [controlId: SomeControlId, diff: ExpressionVariableUpdate]
 	customActionChange: [controlId: CustomActionControlId, diff: CustomActionsUpdate]
 	customFeedbackChange: [controlId: CustomFeedbackControlId, diff: CustomFeedbacksUpdate]
+	customPresetChange: [controlId: CustomPresetControlId, diff: CustomPresetsUpdate]
 }

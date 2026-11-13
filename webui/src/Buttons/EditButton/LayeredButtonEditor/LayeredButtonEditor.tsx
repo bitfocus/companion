@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel, NormalButtonRuntimeProps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ResizeHandle } from '~/Components/ResizeHandle.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
@@ -27,13 +28,14 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	location,
 	activeMainTab,
 }: {
-	config: LayeredButtonModel
+	/** A button, or a custom preset which is built like one */
+	config: LayeredButtonModel | CustomPresetModel
 	controlId: SomeControlId
 	runtimeProps: NormalButtonRuntimeProps
-	location: ControlLocation
+	location: ControlLocation | undefined
 	activeMainTab: string
 }) {
-	const configRef = useRef<LayeredButtonModel>(config)
+	const configRef = useRef<LayeredButtonModel | CustomPresetModel>(config)
 	configRef.current = config // update the ref every render
 
 	const [styleStore] = useState(() => {
@@ -49,7 +51,12 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 		styleStore.updateOverridesData(config.feedbacks || [])
 	}, [styleStore, config.feedbacks])
 
-	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, location.pageNumber, null)
+	const localVariablesStore = useLocalVariablesStore(
+		controlId,
+		config.localVariables,
+		location?.pageNumber ?? null,
+		null
+	)
 
 	return (
 		<div className="grow flex flex-col min-h-0">
@@ -120,6 +127,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 									{/* Wrap the entity-category, for :first-child to work */}
 									<MyErrorBoundary>
 										<ControlOptionsEditor
+											controlType={config.type}
 											options={config.options}
 											configRef={configRef}
 											controlId={controlId}
@@ -140,7 +148,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 interface LayeredButtonEditorStyleProps {
 	controlId: SomeControlId
-	location: ControlLocation
+	location: ControlLocation | undefined
 	styleStore: LayeredStyleStore
 	// previewImage: string | null
 	localVariablesStore: LocalVariablesStore

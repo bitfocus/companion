@@ -2,6 +2,7 @@ import { faArrowRight, faLifeRing } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { createContext, memo, useCallback, useContext } from 'react'
+import { CUSTOM_PRESETS_CONNECTION_ID, getVirtualConnectionLabel } from '@companion-app/shared/ConnectionId.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
@@ -88,7 +89,22 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	const { nodes, ungroupedLeaves, allNodeIds } = useConnectionLeafTree(filterConnection)
 	const collapseHelper = usePanelCollapseHelper('presets-connections', allNodeIds)
 
-	const hasAnyConnections = nodes.length > 0 || ungroupedLeaves.length > 0
+	// The custom presets are listed above the connections, when there are any
+	const staticLeaves = useComputed((): ConnectionLeafItem[] => {
+		const customPresets = presetsDefinitionsStore.presets.get(CUSTOM_PRESETS_CONNECTION_ID)
+		if (!customPresets || Object.keys(customPresets.sections).length === 0) return []
+
+		return [
+			{
+				key: CUSTOM_PRESETS_CONNECTION_ID,
+				connectionId: CUSTOM_PRESETS_CONNECTION_ID,
+				connectionLabel: getVirtualConnectionLabel(CUSTOM_PRESETS_CONNECTION_ID) ?? CUSTOM_PRESETS_CONNECTION_ID,
+				moduleDisplayName: undefined,
+			},
+		]
+	}, [presetsDefinitionsStore.presets])
+
+	const hasAnyConnections = nodes.length > 0 || ungroupedLeaves.length > 0 || staticLeaves.length > 0
 
 	return (
 		<PresetsStoreContext.Provider value={presetsDefinitionsStore}>
@@ -104,6 +120,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 					<CollapsibleTree
 						className="presets-connection-tree"
 						nodes={nodes}
+						staticLeaves={staticLeaves}
 						ungroupedLeaves={ungroupedLeaves}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}

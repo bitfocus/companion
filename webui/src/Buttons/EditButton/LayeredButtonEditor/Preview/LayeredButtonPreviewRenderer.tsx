@@ -36,7 +36,7 @@ import { SelectionOverlay } from './SelectionOverlay.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: SomeControlId
-	location: ControlLocation
+	location: ControlLocation | undefined
 	styleStore: LayeredStyleStore
 }
 export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPreviewRenderer({
@@ -233,7 +233,7 @@ const ElementQuickActions = observer(function ElementQuickActions({
 interface LayeredButtonCanvasProps {
 	width: number
 	height: number
-	location: ControlLocation
+	location: ControlLocation | undefined
 	drawStyle: RendererButtonStyle | null
 	hiddenElements: ReadonlySet<string>
 	selectedElementId: string | null
