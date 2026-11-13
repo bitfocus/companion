@@ -45,6 +45,8 @@ function controlIdKindForType(type: SomeControlModel['type']): ControlIdKind {
 			return 'expression-variable'
 		case 'custom-action':
 			return 'custom-action'
+		case 'custom-feedback':
+			return 'custom-feedback'
 		case 'page':
 			return 'page'
 		default:

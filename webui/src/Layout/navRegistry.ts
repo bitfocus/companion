@@ -40,21 +40,11 @@ export interface NavPage {
 	alsoMatches?: readonly string[]
 }
 
-/** A page which is planned but not there yet, shown disabled in the sidebar so the menu doesn't move when it arrives */
-export interface NavUpcomingPage {
-	id: string
-	label: string
-	shortLabel?: string
-	icon: IconDefinition
-}
-
 export interface NavSection {
 	id: string
 	label: string
 	icon: IconDefinition
 	pages: readonly NavPage[]
-	/** Pages still to come, listed after `pages` in the sidebar only */
-	upcomingPages?: readonly NavUpcomingPage[]
 }
 
 /**
@@ -102,8 +92,16 @@ export const BUILDING_BLOCKS_SECTION: NavSection = {
 	id: 'building-blocks',
 	label: 'Building Blocks',
 	icon: faCubes,
-	pages: [{ id: 'actions', label: 'Custom Actions', shortLabel: 'Actions', path: '/custom-actions', icon: faCubes }],
-	upcomingPages: [{ id: 'feedbacks', label: 'Custom Feedbacks', shortLabel: 'Feedbacks', icon: faCubesStacked }],
+	pages: [
+		{ id: 'actions', label: 'Custom Actions', shortLabel: 'Actions', path: '/custom-actions', icon: faCubes },
+		{
+			id: 'feedbacks',
+			label: 'Custom Feedbacks',
+			shortLabel: 'Feedbacks',
+			path: '/custom-feedbacks',
+			icon: faCubesStacked,
+		},
+	],
 }
 
 export const SURFACES_SECTION: NavSection = {

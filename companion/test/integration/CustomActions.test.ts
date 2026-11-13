@@ -269,6 +269,7 @@ describe('custom actions', () => {
 				customVariables: 'reset-and-import',
 				expressionVariables: 'unchanged',
 				customActions: 'reset-and-import',
+				customFeedbacks: 'unchanged',
 				connections: 'unchanged',
 				userconfig: 'unchanged',
 				imageLibrary: 'unchanged',
@@ -296,6 +297,7 @@ describe('custom actions', () => {
 				customVariables: 'unchanged',
 				expressionVariables: 'unchanged',
 				customActions,
+				customFeedbacks: 'unchanged',
 				connections: 'unchanged',
 				userconfig: 'unchanged',
 				imageLibrary: 'unchanged',
@@ -369,6 +371,7 @@ describe('custom actions', () => {
 				customVariables: 'unchanged',
 				expressionVariables: 'unchanged',
 				customActions: 'reset',
+				customFeedbacks: 'unchanged',
 				connections: 'unchanged',
 				userconfig: 'unchanged',
 				imageLibrary: 'unchanged',
@@ -1678,6 +1681,65 @@ describe('custom actions using a connection', () => {
 		}
 	}
 
+	test('a connection feedback whose option uses a local variable fed by a connection follows it', async () => {
+		const connectionId = await addConnection('test-module-2-1-3')
+		app.createCustomVariable('out', '')
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Chain' })
+
+		/** Add a local variable, which is whether the last value of the connection is `value` */
+		const addLocal = async (name: string, value: ExpressionOrValue<string>) => {
+			const id = await app.trpc().controls.entities.add({
+				controlId: customActionId,
+				entityLocation: 'local-variables',
+				ownerId: null,
+				connectionId,
+				entityType: EntityModelType.Feedback,
+				entityDefinition: 'last_value_is',
+			})
+			if (!id) throw new Error('Failed to add the local variable')
+			await app.trpc().controls.entities.setVariableName({
+				controlId: customActionId,
+				entityLocation: 'local-variables',
+				entityId: id,
+				name,
+			})
+			await app.trpc().controls.entities.setOption({
+				controlId: customActionId,
+				entityLocation: 'local-variables',
+				entityId: id,
+				key: 'value',
+				value,
+			})
+		}
+		await addLocal('a', exprVal('true'))
+		// `b` depends on `a`, so is only true once the connection has given `a` its value and `b` has been re-parsed
+		await addLocal('b', exprExpr("$(local:a) ? 'true' : 'nope'"))
+		app.addCustomActionAction(customActionId, null, 'custom_variable_set_value', {
+			name: exprVal('out'),
+			create: exprVal(false),
+			value: exprExpr('$(local:b)'),
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(location), customActionId, {}, null)
+		const setLastValue = await addSetter(connectionId)
+
+		/** Press the button until the custom action reports the expected value, as the connection updates asynchronously */
+		const pressUntil = async (expected: boolean) => {
+			await vi.waitFor(async () => {
+				app.pressButton(location, true)
+				app.pressButton(location, false)
+				await new Promise((resolve) => setTimeout(resolve, 50))
+				expect(app.getCustomVariableValue('out')).toBe(expected)
+			}, 10_000)
+		}
+
+		await setLastValue('other')
+		await pressUntil(false)
+		await setLastValue('true')
+		await pressUntil(true)
+	})
+
 	test('a connection feedback in a custom action sees the inputs of each caller', async () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const customActionId = await createCheckingCustomAction(connectionId)
@@ -1841,6 +1903,7 @@ describe('custom actions using a connection', () => {
 					customVariables: 'unchanged',
 					expressionVariables: 'unchanged',
 					customActions: 'reset-and-import',
+					customFeedbacks: 'unchanged',
 					connections: 'unchanged',
 					userconfig: 'unchanged',
 					imageLibrary: 'unchanged',

@@ -50,6 +50,7 @@ import type {
 	VariableDependencyRegistry,
 } from '../Variables/DependencyRegistry.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
+import { buildExecutionThisVariables } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -603,6 +604,8 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
 				parser: this.#controlsStore.createActionExecutionParser(extras),
+				executionVariables: buildExecutionThisVariables(extras),
+				parserOptions: { allowClockSensitive: false },
 			})
 
 			let parsedOptions: CompanionOptionValues

@@ -56,11 +56,13 @@ function createList(
 		forgetEntity: vi.fn(),
 	} as any
 	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
+	const customFeedbackInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() }
 	const scope: EntityScope = {
 		isTransient: false,
 		specialExpressionManager,
 		customActionChain: [],
 		customActionInstances,
+		customFeedbackInstances,
 		localVariablesChanged: vi.fn(),
 		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 	}
@@ -1503,7 +1505,11 @@ describe('getChildBooleanFeedbackValues', () => {
 })
 
 describe('lazy feedback evaluation (with context)', () => {
-	const booleanContext = (): FeedbackExecutionContext => ({ parser: { marker: 'the-parser' } as any })
+	const booleanContext = (): FeedbackExecutionContext => ({
+		parser: { marker: 'the-parser' } as any,
+		executionVariables: {},
+		parserOptions: {},
+	})
 
 	/** A boolean feedback list, exercised via the lazy (non-null context) read path. */
 	function createBooleanFeedbackList(showInvert = false) {
@@ -2118,6 +2124,7 @@ describe('transient child groups', () => {
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
 			customActionChain: ['custom-action:1'],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
 			localVariablesChanged: vi.fn(),
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
@@ -2137,9 +2144,10 @@ describe('transient child groups', () => {
 			[transientAction, transientFeedback],
 			false
 		)
-		callerEntity.setTransientCopy('instance', { lists: [group] })
+		const copy = { lists: [group], valuesChanged: vi.fn() }
+		callerEntity.setTransientCopy('instance', copy)
 
-		return { ...res, callerEntity, transientScope, group }
+		return { ...res, callerEntity, transientScope, group, copy }
 	}
 
 	test('the enabled entities include those of a transient group only when asked', () => {
@@ -2209,6 +2217,32 @@ describe('transient child groups', () => {
 		expect(feedback.feedbackValue).toBe('abc')
 	})
 
+	test('the copy is told when the values of its entities change, and only then', () => {
+		const { list, copy } = setup()
+		const newValue = (value: string) =>
+			new Map<string, NewFeedbackValue>([
+				[transientFeedback.id, { entityId: transientFeedback.id, controlId: CreateBankControlId('test01'), value }],
+			])
+
+		list.updateFeedbackValues('conn01', newValue('abc'))
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(1)
+
+		// The same value again changes nothing
+		list.updateFeedbackValues('conn01', newValue('abc'))
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(1)
+
+		// Nor does a value for another connection
+		list.updateFeedbackValues('conn02', newValue('def'))
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(1)
+
+		// Clearing the values of the connection does
+		list.clearCachedValueForConnectionId('conn01')
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(2)
+		expect(copy.valuesChanged.mock.lastCall?.[0].map((entity: ControlEntityInstance) => entity.id)).toContain(
+			transientFeedback.id
+		)
+	})
+
 	test('replacing the copy cleans up the old entities', () => {
 		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
 		connectionEntityUpdate.mockClear()
@@ -2222,7 +2256,7 @@ describe('transient child groups', () => {
 			[transientAction],
 			false
 		)
-		callerEntity.setTransientCopy('instance', { lists: [newGroup] })
+		callerEntity.setTransientCopy('instance', { lists: [newGroup], valuesChanged: vi.fn() })
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
 		expect(connectionEntityDelete).toHaveBeenCalledWith(
@@ -2278,7 +2312,7 @@ describe('transient child groups', () => {
 		)
 		expect(connectionEntityUpdate).not.toHaveBeenCalled()
 
-		callerEntity.setTransientCopy('other', { lists: [list] })
+		callerEntity.setTransientCopy('other', { lists: [list], valuesChanged: vi.fn() })
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 	})
 })

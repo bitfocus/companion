@@ -9,10 +9,19 @@ export const INTERNAL_CONNECTION_ID = 'internal'
 export const CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
 
 /**
+ * The connection id which provides each custom feedback as a feedback
+ */
+export const CUSTOM_FEEDBACKS_CONNECTION_ID = '__custom-feedbacks__'
+
+/**
  * Connection ids which are provided by Companion itself, rather than by a user created connection.
  * Entities referencing these are always valid, even though there is no connection with this id.
  */
-const VIRTUAL_CONNECTION_IDS: ReadonlySet<string> = new Set([INTERNAL_CONNECTION_ID, CUSTOM_ACTIONS_CONNECTION_ID])
+const VIRTUAL_CONNECTION_IDS: ReadonlySet<string> = new Set([
+	INTERNAL_CONNECTION_ID,
+	CUSTOM_ACTIONS_CONNECTION_ID,
+	CUSTOM_FEEDBACKS_CONNECTION_ID,
+])
 
 /**
  * Check if a connection id refers to the internal module
@@ -26,6 +35,13 @@ export function isInternalConnectionId(connectionId: string | null | undefined):
  */
 export function isCustomActionsConnectionId(connectionId: string | null | undefined): boolean {
 	return connectionId === CUSTOM_ACTIONS_CONNECTION_ID
+}
+
+/**
+ * Check if a connection id refers to the custom feedbacks
+ */
+export function isCustomFeedbacksConnectionId(connectionId: string | null | undefined): boolean {
+	return connectionId === CUSTOM_FEEDBACKS_CONNECTION_ID
 }
 
 /**
@@ -44,6 +60,8 @@ export function getVirtualConnectionLabel(connectionId: string): string | undefi
 			return 'internal'
 		case CUSTOM_ACTIONS_CONNECTION_ID:
 			return 'Custom action'
+		case CUSTOM_FEEDBACKS_CONNECTION_ID:
+			return 'Custom feedback'
 		default:
 			return undefined
 	}

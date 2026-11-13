@@ -525,6 +525,17 @@ export function injectOverriddenLocalVariableValues(
 }
 
 /**
+ * The `$(this:*)` variables which only exist while an action is executing, such as the surface which pressed the
+ * button. Unlike the other overrides of an execution, these are passed on into a custom feedback evaluated by it.
+ */
+export function buildExecutionThisVariables(extras: RunActionExtras): VariableValues {
+	return {
+		'this:surface_id': extras.surfaceId,
+		'this:delta': extras.rotationDelta ?? undefined,
+	}
+}
+
+/**
  * The overrides derived from an action's execution context: the `$(this:*)` variables, and the `$(options:*)` of
  * the custom action being run. Used when parsing the options of internal and connection actions, and of an
  * internal action's child feedbacks.
@@ -532,7 +543,6 @@ export function injectOverriddenLocalVariableValues(
 export function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
 	return {
 		...(extras.frame ? buildCustomActionInputVariables(extras.frame.inputValues) : {}),
-		'this:surface_id': extras.surfaceId,
-		'this:delta': extras.rotationDelta ?? undefined,
+		...buildExecutionThisVariables(extras),
 	}
 }

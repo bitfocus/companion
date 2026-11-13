@@ -332,6 +332,7 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
 			customActionChain: [],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
 			localVariablesChanged: vi.fn(),
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
@@ -343,7 +344,7 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			[copy],
 			false
 		)
-		callerEntity.setTransientCopy('copy', { lists: [copyList] })
+		callerEntity.setTransientCopy('copy', { lists: [copyList], valuesChanged: vi.fn() })
 
 		const result = pool.entityReplaceForUpgrade({
 			id: copy.id,
