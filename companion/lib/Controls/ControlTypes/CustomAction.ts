@@ -482,7 +482,7 @@ export class ControlCustomAction
 	 */
 	#renameInputReferences(fromId: string, toId: string): void {
 		const changed = new VisitorVariableRenamer(this.deps.internalModule, `options:${fromId}`, `options:${toId}`)
-			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEntityInstances(this.entities.getAllEntities())
 			.recheckChangedFeedbacks()
 			.hasChanges()
 
@@ -507,7 +507,7 @@ export class ControlCustomAction
 			foundConnectionLabels,
 			foundVariables,
 			undefined
-		).visitEntities(this.entities.getAllEntities(), [])
+		).visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -580,7 +580,7 @@ export class ControlCustomAction
 			undefined,
 			undefined
 		)
-			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEntityInstances(this.entities.getAllEntities())
 			.recheckChangedFeedbacks()
 			.hasChanges()
 

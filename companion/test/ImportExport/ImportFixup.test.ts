@@ -413,11 +413,6 @@ describe('fixupExpressionVariableControl', () => {
 })
 
 describe('fixupCustomActionControl', () => {
-	let internalModule: InternalController
-	beforeEach(() => {
-		internalModule = mockInternalModule()
-	})
-
 	function makeCustomAction(overrides: Partial<CustomActionModel> = {}): CustomActionModel {
 		return {
 			type: 'custom-action',
@@ -436,7 +431,7 @@ describe('fixupCustomActionControl', () => {
 			localVariables: [makeFeedback({ id: 'lv', connectionId: 'conn-old', upgradeIndex: 0 })],
 		})
 
-		const result = fixupCustomActionControl(internalModule, control, standardMap(), {})
+		const result = fixupCustomActionControl(control, makeUpdater(standardMap()))
 
 		expect(result.actions[0].connectionId).toBe('conn-new')
 		expect((result.actions[0].options.msg as any).value).toBe('$(NewLabel:x)')
@@ -455,7 +450,7 @@ describe('fixupCustomActionControl', () => {
 			],
 		})
 
-		const result = fixupCustomActionControl(internalModule, control, standardMap(), {})
+		const result = fixupCustomActionControl(control, makeUpdater(standardMap()))
 
 		expect(result.inputs.map((input) => [input.id, input.label])).toEqual([
 			['text', 'First'],
@@ -470,7 +465,7 @@ describe('fixupCustomActionControl', () => {
 
 		// As the import maps each connection provided by Companion itself to itself
 		const map = { ...standardMap(), [CUSTOM_ACTIONS_CONNECTION_ID]: { id: CUSTOM_ACTIONS_CONNECTION_ID, label: '' } }
-		const result = fixupCustomActionControl(internalModule, control, map, {})
+		const result = fixupCustomActionControl(control, makeUpdater(map))
 
 		expect(result.actions).toEqual([
 			expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' }),

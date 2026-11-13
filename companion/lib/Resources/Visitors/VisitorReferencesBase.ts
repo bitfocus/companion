@@ -19,29 +19,43 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 		this.visitor = visitor
 	}
 
-	visitEntities(entities: ControlEntityInstance[], rawEntities: SomeEntityModel[]): this {
-		const flatRawEntities: SomeEntityModel[] = []
-		const pluckRawEntities = (entities: SomeEntityModel[]) => {
+	/**
+	 * Visit live entity instances. This does not recurse into children: pass an already flattened list, such as
+	 * from `getAllEntities()`.
+	 */
+	visitEntityInstances(entities: ControlEntityInstance[]): this {
+		// Apply any updates to the internal actions/feedbacks
+		this.internalModule.visitReferences(this.visitor, [], entities)
+
+		for (const entity of entities) {
+			entity.visitReferences(this.visitor)
+		}
+
+		return this
+	}
+
+	/**
+	 * Visit entity models, recursing into the children of internal entities
+	 */
+	visitEntityModels(entities: SomeEntityModel[]): this {
+		const flatEntities: SomeEntityModel[] = []
+		const pluckEntities = (entities: SomeEntityModel[]) => {
 			for (const entity of entities) {
-				flatRawEntities.push(entity)
+				flatEntities.push(entity)
 				if (isInternalConnectionId(entity.connectionId) && entity.children) {
 					for (const children of Object.values(entity.children)) {
-						if (children) pluckRawEntities(children)
+						if (children) pluckEntities(children)
 					}
 				}
 			}
 		}
-		pluckRawEntities(rawEntities)
+		pluckEntities(entities)
 
 		// Apply any updates to the internal actions/feedbacks
-		this.internalModule.visitReferences(this.visitor, flatRawEntities, entities)
+		this.internalModule.visitReferences(this.visitor, flatEntities, [])
 
-		for (const entity of flatRawEntities) {
+		for (const entity of flatEntities) {
 			visitEntityModel(this.visitor, entity)
-		}
-
-		for (const entity of entities) {
-			entity.visitReferences(this.visitor)
 		}
 
 		return this

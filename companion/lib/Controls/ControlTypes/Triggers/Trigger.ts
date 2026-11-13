@@ -303,7 +303,7 @@ export class ControlTrigger
 			foundVariables,
 			undefined
 		)
-			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEntityInstances(this.entities.getAllEntities())
 			.visitEvents(this.events)
 	}
 
@@ -438,7 +438,7 @@ export class ControlTrigger
 			undefined,
 			undefined
 		)
-			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEntityInstances(this.entities.getAllEntities())
 			.visitEvents(this.events)
 			.recheckChangedFeedbacks()
 			.hasChanges()

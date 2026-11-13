@@ -247,7 +247,7 @@ export class ControlButtonPreset
 			undefined
 		)
 		this.#drawing.visit(collector)
-		collector.visitEntities(this.entities.getAllEntities(), [])
+		collector.visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -261,7 +261,7 @@ export class ControlButtonPreset
 			undefined
 		)
 		this.#drawing.visit(updater)
-		const changed = updater.visitEntities(this.entities.getAllEntities(), []).recheckChangedFeedbacks().hasChanges()
+		const changed = updater.visitEntityInstances(this.entities.getAllEntities()).recheckChangedFeedbacks().hasChanges()
 
 		if (changed) {
 			// Purge all cache, as we don't know what could have changed

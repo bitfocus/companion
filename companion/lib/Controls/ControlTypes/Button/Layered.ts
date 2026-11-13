@@ -218,7 +218,7 @@ export class ControlButtonLayered
 			foundVariables,
 			undefined
 		)
-		collector.visitEntities(this.entities.getAllEntities(), [])
+		collector.visitEntityInstances(this.entities.getAllEntities())
 		this.drawing.visit(collector)
 	}
 
@@ -284,7 +284,7 @@ export class ControlButtonLayered
 			undefined,
 			undefined
 		)
-		updater.visitEntities(this.entities.getAllEntities(), [])
+		updater.visitEntityInstances(this.entities.getAllEntities())
 		this.drawing.visit(updater)
 		const changed = updater.recheckChangedFeedbacks().hasChanges()
 

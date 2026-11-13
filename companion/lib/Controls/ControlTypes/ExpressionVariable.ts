@@ -173,7 +173,7 @@ export class ControlExpressionVariable
 			foundConnectionLabels,
 			foundVariables,
 			undefined
-		).visitEntities(this.entities.getAllEntities(), [])
+		).visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -224,7 +224,7 @@ export class ControlExpressionVariable
 			undefined,
 			undefined
 		)
-			.visitEntities(allEntities, [])
+			.visitEntityInstances(allEntities)
 			.recheckChangedFeedbacks()
 			.hasChanges()
 

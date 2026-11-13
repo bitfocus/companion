@@ -203,12 +203,7 @@ export class ImportController {
 
 			for (const [id, customActionDefinition] of Object.entries(data.customActions || {})) {
 				const controlId = CreateCustomActionControlId(id)
-				const fixedControlObj = fixupCustomActionControl(
-					this.#internalModule,
-					customActionDefinition,
-					instanceIdMap,
-					outboundSurfaceIdRemap
-				)
+				const fixedControlObj = fixupCustomActionControl(customActionDefinition, referencesUpdater)
 
 				this.#controlsController.importCustomAction(controlId, fixedControlObj)
 			}

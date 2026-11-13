@@ -83,7 +83,7 @@ export function fixupTriggerControl(
 	}
 
 	referencesUpdater
-		.visitEntities([], [...result.localVariables, ...result.condition, ...result.actions])
+		.visitEntityModels([...result.localVariables, ...result.condition, ...result.actions])
 		.visitEvents(result.events || [])
 
 	return result
@@ -113,30 +113,17 @@ export function fixupExpressionVariableControl(
 		)
 	}
 
-	referencesUpdater.visitEntities([], result.localVariables)
-	if (result.entity) referencesUpdater.visitEntities([], [result.entity])
+	referencesUpdater.visitEntityModels(result.localVariables)
+	if (result.entity) referencesUpdater.visitEntityModels([result.entity])
 
 	return result
 }
 
 export function fixupCustomActionControl(
-	internalModule: InternalController,
 	control: CustomActionModel,
-	instanceIdMap: InstanceAppliedRemappings,
-	outboundSurfaceIdRemap: Record<string, string>
+	referencesUpdater: ImportReferencesUpdater
 ): CustomActionModel {
 	// Future: this does not feel durable
-
-	const connectionLabelRemap: Record<string, string> = {}
-	const connectionIdRemap: Record<string, string> = {}
-	for (const [oldId, info] of Object.entries(instanceIdMap)) {
-		if (info.oldLabel && info.label !== info.oldLabel) {
-			connectionLabelRemap[info.oldLabel] = info.label
-		}
-		if (info.id && info.id !== oldId) {
-			connectionIdRemap[oldId] = info.id
-		}
-	}
 
 	const result: CustomActionModel = {
 		type: 'custom-action',
@@ -147,17 +134,15 @@ export function fixupCustomActionControl(
 				(input, index, inputs) => inputs.findIndex((other) => other.id === input.id) === index
 			)
 		),
-		actions: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.actions || [])),
-		localVariables: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables || [])),
+		actions: fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(control.actions || [])),
+		localVariables: fixupEntitiesRecursive(
+			referencesUpdater.instanceIdMap,
+			structuredClone(control.localVariables || [])
+		),
 		outputs: structuredClone(control.outputs),
 	}
 
-	new VisitorReferencesUpdater(
-		internalModule,
-		connectionLabelRemap,
-		connectionIdRemap,
-		outboundSurfaceIdRemap
-	).visitEntities([], [...result.localVariables, ...result.actions])
+	referencesUpdater.visitEntityModels([...result.localVariables, ...result.actions])
 
 	return result
 }
@@ -172,7 +157,7 @@ export function fixupPageVariables(
 		? fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(localVariables))
 		: []
 
-	referencesUpdater.visitEntities([], result)
+	referencesUpdater.visitEntityModels(result)
 
 	return result
 }
@@ -311,7 +296,7 @@ function fixupButtonControlBase(
 		}
 	}
 
-	referencesUpdater.visitEntities([], allEntities)
+	referencesUpdater.visitEntityModels(allEntities)
 
 	return result
 }

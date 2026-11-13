@@ -121,7 +121,7 @@ export class ControlPage
 			foundConnectionLabels,
 			foundVariables,
 			undefined
-		).visitEntities(this.entities.getAllEntities(), [])
+		).visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -161,7 +161,7 @@ export class ControlPage
 			undefined,
 			undefined
 		)
-			.visitEntities(allEntities, [])
+			.visitEntityInstances(allEntities)
 			.recheckChangedFeedbacks()
 			.hasChanges()
 
