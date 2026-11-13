@@ -81,7 +81,9 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	const executeExpression = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 	const variableValues = {
 		emit: vi.fn<(event: 'variablesChanged', ...args: VariablesValuesEvents['variablesChanged']) => boolean>(),
-		createVariablesAndExpressionParser: vi.fn(() => ({ executeExpression }) as any),
+		createVariablesAndExpressionParser: vi.fn(
+			() => ({ executeExpression, parseVariables: (text: string) => ({ text, variableIds: new Set<string>() }) }) as any
+		),
 	}
 	const pageStore = {
 		getLocationOfControlId: vi.fn(() => null),

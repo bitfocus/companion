@@ -188,6 +188,44 @@ describe('ControlEntityListPoolTrigger', () => {
 			).not.toThrow()
 			expect(reportChange).not.toHaveBeenCalled()
 		})
+
+		test('computes storeResult for module actions loaded from storage without subscribing', () => {
+			const { pool } = createTriggerPool()
+			const action = actionModel({
+				connectionId: 'obs',
+				storeResult: {
+					type: 'custom-variable',
+					variableName: { isExpression: false, value: 'stream_settings' },
+					createIfNotExists: false,
+				},
+			})
+
+			pool.loadStorage(triggerStorage({ actions: [action] }), true, false)
+			vi.runAllTimers()
+
+			expect(pool.getActionEntities()[0].storeResult).toEqual({
+				type: 'custom-variable',
+				variableName: 'stream_settings',
+				createIfNotExists: false,
+			})
+		})
+
+		test('does not compute storeResult for disabled actions loaded from storage', () => {
+			const { pool } = createTriggerPool()
+			const action = actionModel({
+				disabled: true,
+				storeResult: {
+					type: 'custom-variable',
+					variableName: { isExpression: false, value: 'stream_settings' },
+					createIfNotExists: false,
+				},
+			})
+
+			pool.loadStorage(triggerStorage({ actions: [action] }), true, false)
+			vi.runAllTimers()
+
+			expect(pool.getActionEntities()[0].storeResult).toBeUndefined()
+		})
 	})
 
 	test('getFeedbackStyleOverrides returns an empty map', () => {

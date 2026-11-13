@@ -28,7 +28,7 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
 import { ControlEntityList } from './EntityList.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
-import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
+import type { NewSpecialExpressionValue, SpecialExpression } from './SpecialExpressions.js'
 import type {
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
@@ -244,6 +244,15 @@ export class ControlEntityInstance {
 		this.#cachedFeedbackValue = this.#getStartupValue()
 		this.#cachedIsInverted = this.#getStartupIsInverted()
 		this.#cachedStoreResult = undefined
+
+		// Entities loaded from storage aren't subscribed (only internal ones are, on startup), so track here
+		if (!this.#data.disabled) {
+			this.#specialExpressionManager.trackEntity(this, this.#specialExpressionType())
+		}
+	}
+
+	#specialExpressionType(): SpecialExpression {
+		return this.#data.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
 	}
 
 	#getOrCreateChildGroupFromDefinition(listDefinition: EntitySupportedChildGroupDefinition): ControlEntityList {
@@ -337,8 +346,7 @@ export class ControlEntityInstance {
 			if (thisData.disabled) {
 				this.#specialExpressionManager.forgetEntity(this.id)
 			} else {
-				const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
-				this.#specialExpressionManager.trackEntity(this, specialExpression)
+				this.#specialExpressionManager.trackEntity(this, this.#specialExpressionType())
 			}
 		}
 

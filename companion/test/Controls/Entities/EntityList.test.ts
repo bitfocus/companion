@@ -1932,10 +1932,17 @@ describe('updateIsInvertedValues', () => {
 			upgradeIndex: undefined,
 		}
 
-		// loadStorage calls subscribe(true) if skipSubscribe is false
+		vi.mocked(specialExpressionManager.trackEntity).mockClear()
+
+		// Tracked on construction, then again by subscribe(true) as skipSubscribe is false
 		list.loadStorage([newFeedback], false, false)
 
-		expect(specialExpressionManager.trackEntity).toHaveBeenCalledTimes(1)
+		expect(
+			vi.mocked(specialExpressionManager.trackEntity).mock.calls.map(([entity, type]) => [entity.id, type])
+		).toEqual([
+			['new01', 'isInverted'],
+			['new01', 'isInverted'],
+		])
 
 		list.cleanup()
 		expect(specialExpressionManager.forgetEntity).toHaveBeenCalledTimes(1)
