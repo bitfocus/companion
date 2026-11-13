@@ -4,17 +4,18 @@ import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseExpression } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import {
 	SomeButtonGraphicsElementSchema,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
-import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import type { CompositeElementDefinition, InstanceDefinitions } from '../Instance/Definitions.js'
 import type { IPageStore } from '../Page/Store.js'
 import { RestApiError } from '../Service/RestApi/errors.js'
 import {
@@ -77,6 +78,7 @@ export const ButtonLocationSchema = z
 
 export interface ActionResponse {
 	id: string
+	type: 'action' | 'feedback'
 	connectionId: string
 	definitionId: string
 	enabled: boolean
@@ -88,6 +90,12 @@ export interface ActionResponse {
 export const ActionResponseSchema: z.ZodType<ActionResponse> = z
 	.object({
 		id: z.string().describe('Unique action id within the button.').meta({ example: 'Ys0bqVZ1kKUlH2hSmmT6m' }),
+		type: z
+			.enum(['action', 'feedback'])
+			.describe(
+				'"action", or "feedback" for a condition inside an action, such as the "When True" group of "Logic: If statement".'
+			)
+			.meta({ example: 'action' }),
 		connectionId: z
 			.string()
 			.describe('Id of the connection that runs the action, or "internal" for a built-in action.')
@@ -105,7 +113,9 @@ export const ActionResponseSchema: z.ZodType<ActionResponse> = z
 		children: z
 			.record(z.string(), z.array(z.lazy(() => ActionResponseSchema)))
 			.nullable()
-			.describe('Child actions by group, for the internal actions that contain other actions.'),
+			.describe(
+				'Child entities by group, for the internal actions that contain others. A group of conditions holds feedbacks.'
+			),
 	})
 	.meta({ id: 'ButtonAction' })
 
@@ -190,6 +200,7 @@ const ButtonResponseExample = {
 					actions: [
 						{
 							id: 'Ys0bqVZ1kKUlH2hSmmT6m',
+							type: 'action' as const,
 							connectionId: 'KJA1isEECHRDBTFjx-7tf',
 							definitionId: 'program',
 							enabled: true,
@@ -255,6 +266,7 @@ function buildActionResponse(entity: SomeEntityModel): ActionResponse {
 
 	return {
 		id: entity.id,
+		type: entity.type === EntityModelType.Feedback ? 'feedback' : 'action',
 		connectionId: entity.connectionId,
 		definitionId: entity.definitionId,
 		enabled: !entity.disabled,
@@ -352,24 +364,47 @@ function parseActionSetId(setId: string): ActionSetId | null {
 	return null
 }
 
+/** Whether a string is a valid expression */
+function isValidExpression(expression: string): boolean {
+	try {
+		ParseExpression(expression)
+		return true
+	} catch (_e) {
+		return false
+	}
+}
+
 /**
- * Check option values against the option fields of an action definition, as the web UI does when it shows them.
- * The web UI only offers valid values, so this is where values from the API get the same checks.
+ * Check option values against the option fields of a definition (an action, a feedback or a composite element), as
+ * the web UI does when it shows them. The web UI only offers valid values, so this is where values from the API get
+ * the same checks. Errors are keyed by the option id.
  */
-export function validateActionOptionValues(
-	definition: ClientEntityDefinition,
+export function validateOptionValues(
+	fields: readonly SomeCompanionInputField[],
 	values: Record<string, ExpressionOrValue<JsonValue | undefined>>
 ): Record<string, string> {
 	const errors: Record<string, string> = {}
 	for (const [key, value] of Object.entries(values)) {
-		const field = definition.options.find((option) => option.id === key)
+		const field = fields.find((option) => option.id === key)
 		if (!field || field.type === 'static-text') {
-			errors[`options.${key}`] = `Unknown option: "${key}"`
+			errors[key] = `Unknown option: "${key}"`
 			continue
 		}
 
 		if (value.isExpression) {
-			if (field.disableAutoExpression) errors[`options.${key}`] = `Option "${key}" can not be an expression`
+			if (field.disableAutoExpression) {
+				errors[key] = `Option "${key}" can not be an expression`
+			} else if (!isValidExpression(value.value)) {
+				errors[key] = `Option "${key}" is not a valid expression`
+			}
+			continue
+		}
+
+		// An expression field is parsed even when it allows invalid values, as those are about what it evaluates to
+		if (field.type === 'expression') {
+			if (typeof value.value !== 'string' || !isValidExpression(value.value)) {
+				errors[key] = `Option "${key}" is not a valid expression`
+			}
 			continue
 		}
 
@@ -377,33 +412,68 @@ export function validateActionOptionValues(
 
 		const result = validateInputValue(field, value.value)
 		if (result.validationError) {
-			errors[`options.${key}`] = result.validationError
+			errors[key] = result.validationError
 		} else if (value.value !== undefined && !isEqual(result.sanitisedValue, value.value)) {
 			// The web UI only produces values of the right type. Coercing them here would store a value the client
 			// did not send, so a value of the wrong type is refused instead
-			errors[`options.${key}`] = `Invalid value for "${key}": expected ${JSON.stringify(result.sanitisedValue)}`
+			errors[key] = `Invalid value for "${key}": expected ${JSON.stringify(result.sanitisedValue)}`
 		}
 	}
 	return errors
 }
 
+/** Check option values of an action or feedback, with errors keyed as `options.<id>` */
+export function validateEntityOptionValues(
+	definition: ClientEntityDefinition,
+	values: Record<string, ExpressionOrValue<JsonValue | undefined>>
+): Record<string, string> {
+	return Object.fromEntries(
+		Object.entries(validateOptionValues(definition.options, values)).map(([key, message]) => [
+			`options.${key}`,
+			message,
+		])
+	)
+}
+
+/** The prefix of the keys of a composite element's own options, as defined by its connection */
+const COMPOSITE_OPTION_PREFIX = 'opt:'
+
 /**
  * Check new values for the properties of a style element, using the same schema the button is loaded with.
  * That schema replaces a bad value with a default rather than failing, so a value that does not come back
  * unchanged is invalid.
+ *
+ * A composite element also has options defined by its connection, stored as `opt:<id>`. The schema accepts any key
+ * for those, so they are checked against the composite definition instead, which must be given for a composite.
  */
 export function validateStyleElementValues(
 	element: SomeButtonGraphicsElement,
+	compositeDefinition: CompositeElementDefinition | null,
 	values: Record<string, ExpressionOrValue<JsonValue | undefined>>
 ): Record<string, string> {
 	const errors: Record<string, string> = {}
 
 	const settableValues: Record<string, ExpressionOrValue<JsonValue | undefined>> = {}
+	const compositeValues: Record<string, ExpressionOrValue<JsonValue | undefined>> = {}
 	for (const [key, value] of Object.entries(values)) {
 		if (isStructuralStyleElementKey(key)) {
 			errors[`options.${key}`] = `Unknown property: "${key}"`
+		} else if (element.type === 'composite' && key.startsWith(COMPOSITE_OPTION_PREFIX)) {
+			compositeValues[key.slice(COMPOSITE_OPTION_PREFIX.length)] = value
+		} else if (element.type === 'composite' && !(key in element)) {
+			// The composite schema accepts any extra key, so only the ones it always has are known
+			errors[`options.${key}`] = `Unknown property: "${key}"`
+		} else if (value.isExpression && !isValidExpression(value.value)) {
+			errors[`options.${key}`] = `Property "${key}" is not a valid expression`
 		} else {
 			settableValues[key] = value
+		}
+	}
+
+	if (Object.keys(compositeValues).length > 0) {
+		if (!compositeDefinition) throw new Error('Composite element definition is required to check its options')
+		for (const [key, message] of Object.entries(validateOptionValues(compositeDefinition.options, compositeValues))) {
+			errors[`options.${COMPOSITE_OPTION_PREFIX}${key}`] = message
 		}
 	}
 
@@ -501,7 +571,7 @@ function checkNewAction(definitions: InstanceDefinitions, body: ActionCreateBody
 			definitionId: `Unknown action "${body.definitionId}" for connection "${body.connectionId}". The connection must be running.`,
 		}
 	}
-	return validateActionOptionValues(definition, asOptionValues(body.options))
+	return validateEntityOptionValues(definition, asOptionValues(body.options))
 }
 
 /** Build the model of a checked action, as the web UI does when one is added, with the given values applied */
@@ -648,7 +718,7 @@ const buttonEndpointSpecs: RestEndpointSpec<ButtonsRestContext>[] = [
 			extraResponses: { ...conflictResponse, ...unprocessableResponse },
 			errorResponses,
 		},
-		({ controls }) => {
+		({ controls, definitions }) => {
 			return ({ params, body }) => {
 				const control = controls.get(params.controlId)
 				if (!control) throw RestApiError.notFound('Button not found')
@@ -662,8 +732,19 @@ const buttonEndpointSpecs: RestEndpointSpec<ButtonsRestContext>[] = [
 				const element = control.layeredStyleGetElementById(params.elementId)
 				if (!element) throw RestApiError.notFound('Style element not found')
 
+				let compositeDefinition: CompositeElementDefinition | null = null
+				if (element.type === 'composite') {
+					compositeDefinition =
+						definitions.getCompositeElementDefinition(element.connectionId, element.elementId) ?? null
+					if (!compositeDefinition) {
+						throw RestApiError.conflict(
+							`Definition of composite element "${element.elementId}" is not available. The connection must be running.`
+						)
+					}
+				}
+
 				const values = asOptionValues(body.options)
-				const errors = validateStyleElementValues(element, values)
+				const errors = validateStyleElementValues(element, compositeDefinition, values)
 				if (Object.keys(errors).length > 0) throw RestApiError.unprocessable('Invalid element properties', errors)
 
 				if (!control.layeredStyleUpdateOptions(params.elementId, values)) {
@@ -808,18 +889,15 @@ const buttonEndpointSpecs: RestEndpointSpec<ButtonsRestContext>[] = [
 
 				const values = body.options ? asOptionValues(body.options) : {}
 				if (Object.keys(values).length > 0) {
-					const definition = definitions.getEntityDefinition(
-						EntityModelType.Action,
-						action.connectionId,
-						action.definitionId
-					)
+					// A condition inside an action is a feedback, so its definition is found by the entity's own type
+					const definition = definitions.getEntityDefinition(action.type, action.connectionId, action.definitionId)
 					if (!definition) {
 						throw RestApiError.conflict(
-							`Definition of action "${action.definitionId}" is not available. The connection must be running.`
+							`Definition of ${action.type} "${action.definitionId}" is not available. The connection must be running.`
 						)
 					}
 
-					const errors = validateActionOptionValues(definition, values)
+					const errors = validateEntityOptionValues(definition, values)
 					if (Object.keys(errors).length > 0) throw RestApiError.unprocessable('Invalid option values', errors)
 				}
 

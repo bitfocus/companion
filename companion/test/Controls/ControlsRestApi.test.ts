@@ -13,7 +13,7 @@ import { BUTTONS_API_BASE_PATH } from '../../lib/Controls/ButtonsRestApi.js'
 import type { SomeControl } from '../../lib/Controls/IControlFragments.js'
 import { PAGES_API_BASE_PATH } from '../../lib/Controls/PagesRestApi.js'
 import { createControlsRestApiRouter } from '../../lib/Controls/RestApi.js'
-import type { InstanceDefinitions } from '../../lib/Instance/Definitions.js'
+import type { CompositeElementDefinition, InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import { REST_API_BASE_PATH } from '../../lib/Service/RestApi/constants.js'
 import { createRestApiRouter } from '../../lib/Service/RestApi/RestApiRouter.js'
@@ -65,6 +65,42 @@ const programDefinition = {
 	actionHasResult: false,
 } as unknown as ClientEntityDefinition
 
+/** Like the built-in "wait": an expression field that allows invalid values */
+const waitDefinition = {
+	entityType: EntityModelType.Action,
+	label: 'Wait',
+	description: undefined,
+	options: [
+		{
+			id: 'time',
+			type: 'expression',
+			label: 'Time expression (ms)',
+			default: '1000',
+			disableAutoExpression: true,
+			allowInvalidValues: true,
+		},
+	],
+	hasLearn: false,
+	actionHasResult: false,
+} as unknown as ClientEntityDefinition
+
+const conditionDefinition = {
+	entityType: EntityModelType.Feedback,
+	label: 'Input is on program',
+	description: undefined,
+	options: [{ id: 'input', type: 'number', label: 'Input', default: 1, min: 1, max: 8 }],
+	hasLearn: false,
+} as unknown as ClientEntityDefinition
+
+const meterDefinition = {
+	id: 'meter',
+	name: 'Meter',
+	sortKey: null,
+	description: undefined,
+	options: [{ id: 'level', type: 'number', label: 'Level', default: 0, min: 0, max: 100 }],
+	elements: [],
+} as unknown as CompositeElementDefinition
+
 function makeAction(id: string, input: number): SomeEntityModel {
 	return {
 		type: EntityModelType.Action,
@@ -76,6 +112,22 @@ function makeAction(id: string, input: number): SomeEntityModel {
 	}
 }
 
+/** Make an action hold a condition, as the "When True" group of "Logic: If statement" does */
+function addCondition(action: SomeEntityModel): void {
+	action.children = {
+		condition: [
+			{
+				type: EntityModelType.Feedback,
+				id: 'cond1',
+				connectionId: CONNECTION_ID,
+				definitionId: 'on_program',
+				options: { input: { isExpression: false, value: 1 } },
+				upgradeIndex: undefined,
+			},
+		],
+	}
+}
+
 /**
  * A layered button kept in memory. The mutators change the same model the REST API reads back, so a test can see
  * the effect of a request the way the web UI would.
@@ -84,9 +136,26 @@ function createFakeButton(editable = true, allowStyleChanges = true) {
 	const elements: SomeButtonGraphicsElement[] = [
 		SomeButtonGraphicsElementSchema.parse({ type: 'canvas', id: 'canvas' }),
 		SomeButtonGraphicsElementSchema.parse({ type: 'text', id: 'text1', text: { isExpression: false, value: 'CAM 1' } }),
+		SomeButtonGraphicsElementSchema.parse({
+			type: 'composite',
+			id: 'meter1',
+			connectionId: CONNECTION_ID,
+			elementId: 'meter',
+			'opt:level': { isExpression: false, value: 10 },
+		}),
 	]
 	const down: SomeEntityModel[] = [makeAction('action1', 1)]
-	const findAction = (id: string) => down.find((a) => a.id === id)
+	const findIn = (list: SomeEntityModel[], id: string): SomeEntityModel | undefined => {
+		for (const entity of list) {
+			if (entity.id === id) return entity
+			for (const children of Object.values(entity.children ?? {})) {
+				const found = findIn(children ?? [], id)
+				if (found) return found
+			}
+		}
+		return undefined
+	}
+	const findAction = (id: string) => findIn(down, id)
 
 	const entities = {
 		isEditable: editable,
@@ -183,8 +252,15 @@ function createService(editable = true, allowStyleChanges = true): TestService {
 		location.row === 0 && location.column === 1 ? CONTROL_ID : null
 	)
 
-	definitions.getEntityDefinition.mockImplementation((_type, connectionId, definitionId) =>
-		connectionId === CONNECTION_ID && definitionId === 'program' ? programDefinition : undefined
+	definitions.getEntityDefinition.mockImplementation((type, connectionId, definitionId) => {
+		if (connectionId !== CONNECTION_ID) return undefined
+		if (type === EntityModelType.Action && definitionId === 'program') return programDefinition
+		if (type === EntityModelType.Action && definitionId === 'wait') return waitDefinition
+		if (type === EntityModelType.Feedback && definitionId === 'on_program') return conditionDefinition
+		return undefined
+	})
+	definitions.getCompositeElementDefinition.mockImplementation((connectionId, elementId) =>
+		connectionId === CONNECTION_ID && elementId === 'meter' ? meterDefinition : undefined
 	)
 	let created = 0
 	definitions.createEntityItem.mockImplementation(() => {
@@ -362,7 +438,7 @@ describe('REST API buttons', () => {
 		expect(button.editable).toBe(true)
 		expect(button.allowStyleChanges).toBe(true)
 		expect(button.location).toEqual({ pageId: PAGE_ID, pageNumber: 1, row: 0, column: 1 })
-		expect(button.style.elements.map((e: any) => e.id)).toEqual(['canvas', 'text1'])
+		expect(button.style.elements.map((e: any) => e.id)).toEqual(['canvas', 'text1', 'meter1'])
 		expect(button.style.elements[1].options.text).toEqual({ isExpression: false, value: 'CAM 1' })
 		expect(button.style.elements[1].options.pinnedProperties).toBeUndefined()
 		expect(button.steps).toEqual([
@@ -374,6 +450,7 @@ describe('REST API buttons', () => {
 						actions: [
 							{
 								id: 'action1',
+								type: 'action',
 								connectionId: CONNECTION_ID,
 								definitionId: 'program',
 								enabled: true,
@@ -490,6 +567,66 @@ describe('REST API buttons', () => {
 
 			expect(res.status).toBe(409)
 			expect(res.body.error.message).toBe('Style changes from APIs are not allowed for this button')
+			expect(button.updateStyleOptions).not.toHaveBeenCalled()
+		})
+
+		test('refuses a style expression that does not parse', async () => {
+			const { app, button } = createService()
+			const res = await supertest(app)
+				.patch(`${BUTTONS_PATH}/${CONTROL_ID}/style/elements/text1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({ options: { text: { isExpression: true, value: '(' } } })
+
+			expect(res.status).toBe(422)
+			expect(res.body.error.details).toEqual({ 'options.text': 'Property "text" is not a valid expression' })
+			expect(button.updateStyleOptions).not.toHaveBeenCalled()
+		})
+
+		test('changes an option of a composite element', async () => {
+			const { app, button } = createService()
+			const res = await supertest(app)
+				.patch(`${BUTTONS_PATH}/${CONTROL_ID}/style/elements/meter1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({ options: { 'opt:level': { isExpression: false, value: 50 }, x: { isExpression: false, value: 10 } } })
+
+			expect(res.status).toBe(200)
+			expect(button.updateStyleOptions).toHaveBeenCalledWith('meter1', {
+				'opt:level': { isExpression: false, value: 50 },
+				x: { isExpression: false, value: 10 },
+			})
+		})
+
+		test('checks composite options against the composite definition', async () => {
+			const { app, button } = createService()
+			const res = await supertest(app)
+				.patch(`${BUTTONS_PATH}/${CONTROL_ID}/style/elements/meter1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({
+					options: {
+						'opt:level': { isExpression: false, value: 500 },
+						'opt:nope': { isExpression: false, value: 1 },
+						nope: { isExpression: false, value: 1 },
+					},
+				})
+
+			expect(res.status).toBe(422)
+			expect(Object.keys(res.body.error.details).sort()).toEqual([
+				'options.nope',
+				'options.opt:level',
+				'options.opt:nope',
+			])
+			expect(button.updateStyleOptions).not.toHaveBeenCalled()
+		})
+
+		test('a composite whose definition is not loaded is 409', async () => {
+			const { app, button, definitions } = createService()
+			definitions.getCompositeElementDefinition.mockReturnValue(undefined)
+			const res = await supertest(app)
+				.patch(`${BUTTONS_PATH}/${CONTROL_ID}/style/elements/meter1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({ options: { 'opt:level': { isExpression: false, value: 50 } } })
+
+			expect(res.status).toBe(409)
 			expect(button.updateStyleOptions).not.toHaveBeenCalled()
 		})
 
@@ -679,6 +816,7 @@ describe('REST API buttons', () => {
 			expect(res.body.data).toEqual([
 				{
 					id: 'new-action',
+					type: 'action',
 					connectionId: CONNECTION_ID,
 					definitionId: 'program',
 					enabled: true,
@@ -688,6 +826,7 @@ describe('REST API buttons', () => {
 				},
 				{
 					id: 'new-action-2',
+					type: 'action',
 					connectionId: CONNECTION_ID,
 					definitionId: 'program',
 					enabled: false,
@@ -744,6 +883,90 @@ describe('REST API buttons', () => {
 
 			expect(res.status).toBe(409)
 			expect(button.entities.entityReplaceAll).not.toHaveBeenCalled()
+		})
+
+		test('reads a condition inside an action as a feedback', async () => {
+			const { app, button } = createService()
+			addCondition(button.down[0])
+			const res = await supertest(app)
+				.get(`${BUTTONS_PATH}/${CONTROL_ID}`)
+				.set('Authorization', `Bearer ${tokens.read}`)
+
+			expect(res.status).toBe(200)
+			const action = res.body.data.steps[0].actionSets[0].actions[0]
+			expect(action.type).toBe('action')
+			expect(action.children.condition[0]).toMatchObject({ id: 'cond1', type: 'feedback', definitionId: 'on_program' })
+		})
+
+		test('changes an option of a condition, checked against its feedback definition', async () => {
+			const { app, button, definitions } = createService()
+			addCondition(button.down[0])
+			const res = await supertest(app)
+				.patch(`${DOWN_PATH}/cond1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({ options: { input: { isExpression: false, value: 3 } } })
+
+			expect(res.status).toBe(200)
+			expect(res.body.data).toMatchObject({ id: 'cond1', type: 'feedback', options: { input: { value: 3 } } })
+			expect(definitions.getEntityDefinition).toHaveBeenCalledWith(
+				EntityModelType.Feedback,
+				CONNECTION_ID,
+				'on_program'
+			)
+			expect(button.entities.entitySetOption).toHaveBeenCalledWith({ stepId: '0', setId: 'down' }, 'cond1', 'input', {
+				isExpression: false,
+				value: 3,
+			})
+		})
+
+		test('refuses an invalid option of a condition', async () => {
+			const { app, button } = createService()
+			addCondition(button.down[0])
+			const res = await supertest(app)
+				.patch(`${DOWN_PATH}/cond1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({ options: { input: { isExpression: false, value: 99 } } })
+
+			expect(res.status).toBe(422)
+			expect(button.entities.entitySetOption).not.toHaveBeenCalled()
+		})
+
+		test('refuses an expression that does not parse', async () => {
+			const { app, button } = createService()
+			const res = await supertest(app)
+				.patch(`${DOWN_PATH}/action1`)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({ options: { wide: { isExpression: true, value: '(' } } })
+
+			expect(res.status).toBe(422)
+			expect(res.body.error.details).toEqual({ 'options.wide': 'Option "wide" is not a valid expression' })
+			expect(button.entities.entitySetOption).not.toHaveBeenCalled()
+		})
+
+		test('parses an expression field even when it allows invalid values', async () => {
+			const { app, button } = createService()
+			const bad = await supertest(app)
+				.post(DOWN_PATH)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({
+					connectionId: CONNECTION_ID,
+					definitionId: 'wait',
+					options: { time: { isExpression: false, value: '(' } },
+				})
+
+			expect(bad.status).toBe(422)
+			expect(bad.body.error.details).toEqual({ 'options.time': 'Option "time" is not a valid expression' })
+			expect(button.entities.entityAdd).not.toHaveBeenCalled()
+
+			const good = await supertest(app)
+				.post(DOWN_PATH)
+				.set('Authorization', `Bearer ${tokens.write}`)
+				.send({
+					connectionId: CONNECTION_ID,
+					definitionId: 'wait',
+					options: { time: { isExpression: false, value: '$(internal:time_s) * 1000' } },
+				})
+			expect(good.status).toBe(201)
 		})
 
 		test('removes an action', async () => {
