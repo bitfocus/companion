@@ -257,7 +257,8 @@ export class ControlEntityInstance {
 			// If we do this later, then any children will end up discarded
 			const newProps = this.#internalModule.entityUpgrade(this.#data, this.#controlId)
 			if (newProps) {
-				this.replaceProps(newProps, false)
+				// Constructing never subscribes, the creator does that once this is fully set up
+				this.replaceProps(newProps, true)
 
 				children = { ...children, ...newProps.children }
 			}
