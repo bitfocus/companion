@@ -1,4 +1,4 @@
-import { faAdd, faDollarSign, faLayerGroup, faList } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faBook, faDollarSign, faLayerGroup, faList } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -6,7 +6,7 @@ import { useCallback, useContext, useRef, useState } from 'react'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { INVALID_LABEL_MESSAGE } from '@companion-app/shared/Label.js'
 import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
-import { Button } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import type {
 	CollectionsNestingTableCollection,
@@ -16,13 +16,13 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useComputed } from '~/Resources/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { AddVariableModal, type AddVariableModalRef } from './AddVariableModal'
 import { useCustomVariablesApi } from './CustomVariablesApi'
@@ -34,6 +34,8 @@ import { VariablesNav } from './VariablesNav.js'
 
 export type CustomVariableDefinitionExt = Omit<CustomVariableDefinition, 'collectionId'> & CollectionsNestingTableItem
 type CustomVariableCollectionExt = CollectionsNestingTableCollection
+
+const customVariablesHelpPage = '/user-guide/config/variables#custom-variables'
 
 export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
@@ -118,13 +120,35 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 		[createMutation, selectCustomVariable]
 	)
 
-	const emptyList: PanelEmptyListState | null =
-		customVariables.customVariables.size === 0
+	const empty: PageEmptyStateProps | null =
+		customVariables.customVariables.size === 0 &&
+		customVariables.customVariableCollections.size === 0 &&
+		!selectedVariableId
 			? {
+					icon: faDollarSign,
 					title: 'No custom variables yet',
-					description: 'Custom variables hold values you can set from actions and use anywhere in Companion.',
-					actionLabel: 'Add custom variable',
-					onAction: doAddNew,
+					description: (
+						<>
+							<p>
+								Custom variables hold values that you set: from actions on your buttons, from triggers, or from a remote
+								control protocol.
+							</p>
+							<p>
+								Use them anywhere Companion accepts variables, as $(custom:name), to share state between buttons and
+								pages.
+							</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={doAddNew}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first custom variable
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(customVariablesHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
+					),
 				}
 			: null
 
@@ -139,15 +163,12 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 				create={createVariable}
 			/>
 
-			<PageHeader
-				icon={faDollarSign}
-				title="Custom Variables"
-				helpAction="/user-guide/config/variables#custom-variables"
-			/>
+			<PageHeader icon={faDollarSign} title="Custom Variables" helpAction={customVariablesHelpPage} />
 
 			<VariablesNav activeTab="custom" />
 
 			<SplitPanels.Root
+				empty={empty}
 				showing={selectedVariableId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'custom-variables' }}
 			>
@@ -204,9 +225,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						{!!selectedVariableId && <CustomVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
-						<PanelEmptyListProvider value={emptyList}>
-							<Outlet />
-						</PanelEmptyListProvider>
+						<Outlet />
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>

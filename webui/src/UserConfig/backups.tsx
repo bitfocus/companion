@@ -1,6 +1,6 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faAdd, faCog, faGripVertical, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faBook, faCog, faGripVertical, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
@@ -8,18 +8,21 @@ import dayjs from 'dayjs'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
-import { Button } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { makeAbsolutePath } from '~/Resources/util.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
 import { RootAppStoreContext } from '../Stores/RootAppStore.js'
 import { backupTypes } from './BackupConstants.js'
 import { SettingsNav } from './SettingsNav.js'
+
+const backupsHelpPage = '/user-guide/config/settings#backups'
 
 export const SettingsBackupsPage = observer(function UserConfig() {
 	const navigate = useNavigate({ from: '/settings/backups' })
@@ -49,23 +52,44 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
 
 	const { userConfig } = useContext(RootAppStoreContext)
-	const emptyList: PanelEmptyListState | null =
-		(userConfig.properties?.backups ?? []).length === 0
+	const empty: PageEmptyStateProps | null =
+		!!userConfig.properties && userConfig.properties.backups.length === 0 && !selectedRuleId
 			? {
+					icon: faCog,
 					title: 'No backup rules yet',
-					description: 'Backup rules save a copy of your configuration automatically, on a schedule.',
-					actionLabel: 'Add backup rule',
-					onAction: doAddNew,
+					description: (
+						<>
+							<p>
+								Backup rules save a copy of your configuration automatically, on a schedule you choose, so you can roll
+								back after a mistake or recover from a failed machine.
+							</p>
+							<p>Each rule sets when to run, where to save the backups, and how many to keep.</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={doAddNew}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first backup rule
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(backupsHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
+					),
 				}
 			: null
 
 	return (
 		<div className="page-shell">
-			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings#backups" />
+			<PageHeader icon={faCog} title="Settings" helpAction={backupsHelpPage} />
 
 			<SettingsNav activeTab="backups" />
 
-			<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'} resize={{ storageKey: 'backups' }}>
+			<SplitPanels.Root
+				empty={empty}
+				showing={selectedRuleId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'backups' }}
+			>
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
 						{/* Top Header Card: Toolbar */}
@@ -88,9 +112,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
-						<PanelEmptyListProvider value={emptyList}>
-							<Outlet />
-						</PanelEmptyListProvider>
+						<Outlet />
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>

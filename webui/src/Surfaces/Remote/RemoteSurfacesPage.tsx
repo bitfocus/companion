@@ -19,7 +19,11 @@ export const RemoteSurfacesPage = observer(function RemoteSurfacesPage(): React.
 
 			<SurfacesNav />
 
-			<SplitPanels.Root showing={routeMatch ? 'secondary' : 'primary'} resize={{ storageKey: 'surfaces-remote' }}>
+			<SplitPanels.Root
+				empty={null}
+				showing={routeMatch ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'surfaces-remote' }}
+			>
 				<SplitPanels.Primary>
 					<MyErrorBoundary>
 						<RemoteSurfacesList selectedRemoteConnectionId={selectedRemoteConnectionId} />

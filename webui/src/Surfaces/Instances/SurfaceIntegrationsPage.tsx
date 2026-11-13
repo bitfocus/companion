@@ -28,6 +28,7 @@ export const SurfaceIntegrationsPage = observer(function SurfaceIntegrationsPage
 			<SurfacesNav />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedInstanceId ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'surfaces-integrations' }}
 			>
