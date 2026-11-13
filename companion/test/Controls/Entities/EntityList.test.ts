@@ -1347,6 +1347,56 @@ describe('disabling an entity with children', () => {
 	})
 })
 
+describe('internal entity upgrades', () => {
+	test('constructing an entity that needs an upgrade does not subscribe it', () => {
+		const { list, internalEntityUpgrade, internalEntityUpdate, specialExpressionManager } = createList(
+			CreateBankControlId('test01'),
+			null,
+			{ type: EntityModelType.Feedback }
+		)
+		// createList constructs an entity of its own
+		internalEntityUpgrade.mockClear()
+		internalEntityUpgrade.mockReturnValueOnce({
+			type: EntityModelType.Feedback,
+			definitionId: 'upgraded',
+			options: { a: { isExpression: false, value: 'new' } },
+			upgradeIndex: undefined,
+		} as any)
+
+		list.loadStorage(
+			[
+				{
+					type: EntityModelType.Feedback,
+					id: 'old',
+					connectionId: 'internal',
+					definitionId: 'legacy',
+					options: {},
+					upgradeIndex: undefined,
+				},
+			],
+			true,
+			false
+		)
+
+		expect(internalEntityUpgrade).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).not.toHaveBeenCalled()
+		expect(specialExpressionManager.trackEntity).not.toHaveBeenCalled()
+
+		list.subscribe()
+
+		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).toHaveBeenCalledWith(
+			expect.objectContaining({
+				id: 'old',
+				definitionId: 'upgraded',
+				options: { a: { isExpression: false, value: 'new' } },
+			}),
+			CreateBankControlId('test01'),
+			expect.any(Function)
+		)
+	})
+})
+
 describe('setEnabled', () => {
 	test('a user value feedback restarts from its startup value when re-enabled', () => {
 		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
