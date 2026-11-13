@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
+import { nanoid } from 'nanoid'
 import { CUSTOM_FEEDBACKS_CONNECTION_ID, isCustomFeedbacksConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomFeedbackControlId,
@@ -152,25 +153,59 @@ export class CustomFeedbackInstanceManager implements VariableDependencyListener
 	 */
 	evaluateLive(caller: ControlEntityInstance, context: FeedbackExecutionContext): boolean {
 		const state = this.#callers.get(caller)
-		const heldCopy = state?.heldCopy
-		if (!heldCopy) return false
+		if (!state) return false
 
-		const customFeedback = this.#controlStore.getControl(heldCopy.values.customFeedbackControlId)
+		// Not only the copy held by the caller, as its inputs are parsed outside of any execution, so may be invalid where
+		// they are not here (eg using $(this:delta))
+		const customFeedbackControlId = CreateCustomFeedbackControlId(caller.definitionId)
+		const customFeedback = this.#controlStore.getControl(customFeedbackControlId)
 		if (!(customFeedback instanceof ControlCustomFeedback)) return false
+
+		const chain = state.callerScope.customActionChain
+		if (chain.includes(customFeedbackControlId) || chain.length >= MAX_CUSTOM_ACTION_DEPTH) return false
 
 		// Invalid inputs make it inactive, as they do the copy
 		const parseRes = customFeedback.parseCallInputs(caller.rawOptions, context.parser, state.controlId)
 		if (!parseRes.ok) return false
 
-		const parser = customFeedback.createCopyParser(
-			{ ...heldCopy.values, inputValues: parseRes.inputValues },
-			heldCopy.localVariables.getDirectEntities(),
-			state.controlId,
-			context.executionVariables,
-			context.parserOptions
-		)
+		const evaluateCopy = (copy: CustomFeedbackCopy): boolean => {
+			const parser = customFeedback.createCopyParser(
+				{ ...copy.values, inputValues: parseRes.inputValues },
+				copy.localVariables.getDirectEntities(),
+				state.controlId,
+				context.executionVariables,
+				context.parserOptions
+			)
+			return isAllTrue(copy.feedbacks.getChildBooleanFeedbackValues({ ...context, parser }))
+		}
 
-		return isAllTrue(heldCopy.feedbacks.getChildBooleanFeedbackValues({ ...context, parser }))
+		if (state.heldCopy) return evaluateCopy(state.heldCopy)
+
+		// The caller holds no copy, such as when its inputs can only be parsed in an execution, so hold one for just this
+		// evaluation, as a run of a custom action does. Holding it builds the copies of any custom feedbacks it uses
+		const evaluationId = nanoid()
+		const copyKey = `custom-feedback-evaluation:${evaluationId}`
+		const copy = new CustomFeedbackCopy(
+			customFeedback,
+			caller,
+			state.controlId,
+			`${caller.id}@${evaluationId}/`,
+			[...chain, customFeedbackControlId],
+			state.callerScope.customActionInstances,
+			this,
+			this.#renderClock,
+			this.#variableDependencies,
+			{ customFeedbackControlId, inputValues: parseRes.inputValues, localValues: new Map() },
+			// Its values are only read now, so nothing needs telling when they change
+			() => undefined
+		)
+		try {
+			caller.setTransientCopy(copyKey, copy)
+			return evaluateCopy(copy)
+		} finally {
+			caller.removeTransientCopy(copyKey)
+			copy.destroy()
+		}
 	}
 
 	/**
