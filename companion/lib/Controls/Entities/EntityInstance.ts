@@ -496,15 +496,16 @@ export class ControlEntityInstance {
 	setEnabled(enabled: boolean): void {
 		this.#data.disabled = !enabled
 
-		// Remove from cached feedback values
-		this.#cachedFeedbackValue = this.#getStartupValue()
-
 		// Only this entity is enabled or disabled. The entities inside it keep their own state and stay subscribed: a
 		// disabled entity doesn't run or evaluate them, so that is only wasted work, and it keeps every entity's
 		// subscription down to its own enabled state, however it is moved around or subscribed
 		if (!this.#data.disabled) {
+			// Start again from the startup value
+			this.#cachedFeedbackValue = this.#getStartupValue()
+
 			this.#subscribeSelf()
 		} else {
+			// This clears the cached feedback value
 			this.#cleanupSelf()
 		}
 	}
