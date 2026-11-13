@@ -162,8 +162,8 @@ const UseRow = observer(function UseRow({
 	)
 })
 
-/** The name of a control which calls the custom action, linking to roughly where it is */
-function UseControlName({ name, link }: { name: string; link: UseControlLink | null }): React.JSX.Element {
+/** The name of a control which uses a custom action or feedback, linking to roughly where it is */
+export function UseControlName({ name, link }: { name: string; link: UseControlLink | null }): React.JSX.Element {
 	if (!link) return <>{name}</>
 
 	switch (link.type) {
@@ -185,6 +185,16 @@ function UseControlName({ name, link }: { name: string; link: UseControlLink | n
 					to="/custom-actions/$controlId"
 					params={{ controlId: link.customActionId }}
 					title="Edit the custom action"
+				>
+					{name}
+				</Link>
+			)
+		case 'custom-feedback':
+			return (
+				<Link
+					to="/custom-feedbacks/$controlId"
+					params={{ controlId: link.customFeedbackId }}
+					title="Edit the custom feedback"
 				>
 					{name}
 				</Link>

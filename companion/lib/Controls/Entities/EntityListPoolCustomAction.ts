@@ -136,7 +136,11 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 				values[`local:${name}`] = entity.getResolvedFeedbackValue(null)
 			} else {
 				// A computed variable is evaluated for this run, so that it sees the inputs and variables of the run
-				values[`local:${name}`] = entity.getResolvedFeedbackValue({ parser: createParser(values) })
+				values[`local:${name}`] = entity.getResolvedFeedbackValue({
+					parser: createParser(values),
+					executionVariables: {},
+					parserOptions: options,
+				})
 			}
 		}
 

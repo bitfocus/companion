@@ -2,10 +2,12 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomFeedbackControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
+import { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
 import { describeUseControl, formatElapsed, type UseControlStores } from '../UsesDescription.js'
@@ -30,7 +32,10 @@ function createStores(): UseControlStores {
 	const customActionsList = new CustomActionsListStore()
 	customActionsList.customActions.set(CreateCustomActionControlId('outer'), { name: 'Outer' } as any)
 
-	return { pages, triggersList, customActionsList }
+	const customFeedbacksList = new CustomFeedbacksListStore()
+	customFeedbacksList.customFeedbacks.set(CreateCustomFeedbackControlId('inner'), { name: 'Inner' } as any)
+
+	return { pages, triggersList, customActionsList, customFeedbacksList }
 }
 
 describe('describeUseControl', () => {
@@ -86,6 +91,14 @@ describe('describeUseControl', () => {
 			kind: 'Custom action',
 			name: 'Outer',
 			link: { type: 'custom-action', customActionId: 'outer' },
+		})
+	})
+
+	test('a custom feedback is described by its name', () => {
+		expect(describeUseControl(CreateCustomFeedbackControlId('inner'), createStores())).toEqual({
+			kind: 'Custom feedback',
+			name: 'Inner',
+			link: { type: 'custom-feedback', customFeedbackId: 'inner' },
 		})
 	})
 

@@ -175,6 +175,7 @@ export class ControlTrigger
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
 		this.#eventBus = eventBus

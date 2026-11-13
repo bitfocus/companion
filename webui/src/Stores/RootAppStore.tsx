@@ -7,6 +7,7 @@ import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
 import type { CompositeElementDefinitionsStore } from './CompositeElementDefinitionsStore.js'
 import type { ConnectionsStore } from './ConnectionsStore.js'
 import type { CustomActionsListStore } from './CustomActionsListStore.js'
+import type { CustomFeedbacksListStore } from './CustomFeedbacksListStore.js'
 import type { EntityDefinitionsStore } from './EntityDefinitionsStore.js'
 import type { EventDefinitionsStore } from './EventDefinitionsStore.js'
 import type { ExpressionVariablesListStore } from './ExpressionVariablesListStore.js'
@@ -49,6 +50,8 @@ export interface RootAppStore {
 	readonly triggersList: TriggersListStore
 
 	readonly customActionsList: CustomActionsListStore
+
+	readonly customFeedbacksList: CustomFeedbacksListStore
 
 	readonly userConfig: UserConfigStore
 

@@ -10,6 +10,7 @@ import {
 	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -143,6 +144,33 @@ export function fixupCustomActionControl(
 	}
 
 	referencesUpdater.visitEntityModels([...result.localVariables, ...result.actions])
+
+	return result
+}
+
+export function fixupCustomFeedbackControl(
+	control: CustomFeedbackModel,
+	referencesUpdater: ImportReferencesUpdater
+): CustomFeedbackModel {
+	// Future: this does not feel durable
+
+	const result: CustomFeedbackModel = {
+		type: 'custom-feedback',
+		options: structuredClone(control.options),
+		// Inputs of the same id would share one value from each caller, so only the first is kept
+		inputs: structuredClone(
+			(control.inputs || []).filter(
+				(input, index, inputs) => inputs.findIndex((other) => other.id === input.id) === index
+			)
+		),
+		feedbacks: fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(control.feedbacks || [])),
+		localVariables: fixupEntitiesRecursive(
+			referencesUpdater.instanceIdMap,
+			structuredClone(control.localVariables || [])
+		),
+	}
+
+	referencesUpdater.visitEntityModels([...result.localVariables, ...result.feedbacks])
 
 	return result
 }

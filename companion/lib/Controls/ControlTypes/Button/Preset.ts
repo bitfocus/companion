@@ -128,6 +128,7 @@ export class ControlButtonPreset
 				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
 				customActionInstances: deps.customActionInstances,
+				customFeedbackInstances: deps.customFeedbackInstances,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			false

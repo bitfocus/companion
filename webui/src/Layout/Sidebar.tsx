@@ -42,7 +42,6 @@ import type { MenuItemProps } from '~/Components/ActionMenu.js'
 import { Button } from '~/Components/Button.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { Popover } from '~/Components/Popover.js'
-import { StatusBadge } from '~/Components/StatusBadge.js'
 import { Tooltip } from '~/Components/Tooltip.js'
 import { useContextMenuState } from '~/Components/useContextMenuProps'
 import { useMobileMode } from '~/Hooks/useLayoutMode'
@@ -199,21 +198,6 @@ function SidebarSubMenuItem({ name, path, isActive }: SidebarSubMenuItemProps) {
 	)
 }
 
-/** A page of a section which is not there yet */
-function SidebarUpcomingSubMenuItem({ name }: { name: string }) {
-	return (
-		<li>
-			<span className="nav-link nav-sub-link disabled" aria-disabled="true">
-				<span className="nav-sub-dot" />
-				{name}
-				<StatusBadge tone="neutral" className="ms-auto">
-					Soon
-				</StatusBadge>
-			</span>
-		</li>
-	)
-}
-
 /** A nav group whose sub-items are a section of the shared nav registry. */
 function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 	const { pathname } = useLocation()
@@ -232,9 +216,6 @@ function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 					path={page.path}
 					isActive={page.id === activePageId}
 				/>
-			))}
-			{section.upcomingPages?.map((page) => (
-				<SidebarUpcomingSubMenuItem key={page.id} name={page.shortLabel ?? page.label} />
 			))}
 		</SidebarNavGroup>
 	)

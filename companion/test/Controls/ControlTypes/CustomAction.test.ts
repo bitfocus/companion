@@ -31,6 +31,7 @@ import {
 	CUSTOM_ACTION_HELD_COPY,
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
+import { CustomFeedbackInstanceManager } from '../../../lib/Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
@@ -164,7 +165,13 @@ function createHarness(model: Partial<CustomActionModel>) {
 
 	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
 	const variableDependencies = new VariableDependencyRegistry()
-	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock, variableDependencies)
+	const customFeedbackInstances = new CustomFeedbackInstanceManager(controlStore, renderClock, variableDependencies)
+	const customActionInstances = new CustomActionInstanceManager(
+		controlStore,
+		renderClock,
+		variableDependencies,
+		customFeedbackInstances
+	)
 
 	const actionRunner = new ActionRunner(
 		instanceController,
@@ -199,6 +206,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		linkButtons: null as any,
 		referencedLocations: new ReferencedLocationsIndex(),
 		customActionInstances,
+		customFeedbackInstances,
 	}
 
 	// As the app does, keep the copies held by calling actions up to date
