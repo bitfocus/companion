@@ -4,12 +4,14 @@ import {
 	CreateCustomActionControlId,
 	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
+	CreateCustomPresetControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
 import { CustomElementsListStore } from '~/Stores/CustomElementsListStore.js'
 import { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
+import { CustomPresetsListStore } from '~/Stores/CustomPresetsListStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
 import { describeUseControl, type UseControlStores } from '../BuildingBlockUses.js'
@@ -40,7 +42,10 @@ function createStores(): UseControlStores {
 	const customElementsList = new CustomElementsListStore()
 	customElementsList.customElements.set(CreateCustomElementControlId('badge'), { name: 'Badge' } as any)
 
-	return { pages, triggersList, customActionsList, customFeedbacksList, customElementsList }
+	const customPresetsList = new CustomPresetsListStore()
+	customPresetsList.customPresets.set(CreateCustomPresetControlId('preset'), { name: 'Preset' } as any)
+
+	return { pages, triggersList, customActionsList, customFeedbacksList, customElementsList, customPresetsList }
 }
 
 describe('describeUseControl', () => {
@@ -112,6 +117,14 @@ describe('describeUseControl', () => {
 			kind: 'Custom element',
 			name: 'Badge',
 			link: { type: 'custom-element', customElementId: 'badge' },
+		})
+	})
+
+	test('a custom preset is described by its name', () => {
+		expect(describeUseControl(CreateCustomPresetControlId('preset'), createStores())).toEqual({
+			kind: 'Custom preset',
+			name: 'Preset',
+			link: { type: 'custom-preset', customPresetId: 'preset' },
 		})
 	})
 

@@ -4,6 +4,7 @@ import {
 	CreateCustomActionControlId,
 	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
+	CreateCustomPresetControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -40,6 +41,7 @@ import {
 	fixupCustomActionControl,
 	fixupCustomElementControl,
 	fixupCustomFeedbackControl,
+	fixupCustomPresetControl,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
 	fixupLinkButtonControl,
@@ -234,6 +236,18 @@ export class ImportController {
 				const fixedControlObj = fixupCustomElementControl(customElementDefinition, referencesUpdater)
 
 				this.#controlsController.importCustomElement(controlId, fixedControlObj)
+			}
+		}
+
+		// Import custom presets
+		if (isImporting(config.customPresets)) {
+			this.#controlsController.replaceCustomPresetCollections(data.customPresetCollections || [])
+
+			for (const [id, customPresetDefinition] of Object.entries(data.customPresets || {})) {
+				const controlId = CreateCustomPresetControlId(id)
+				const fixedControlObj = fixupCustomPresetControl(this.#logger, customPresetDefinition, referencesUpdater)
+
+				this.#controlsController.importCustomPreset(controlId, fixedControlObj)
 			}
 		}
 

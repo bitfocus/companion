@@ -3,6 +3,7 @@ import {
 	type CustomActionControlId,
 	type CustomElementControlId,
 	type CustomFeedbackControlId,
+	type CustomPresetControlId,
 	type ExpressionVariableControlId,
 	type SomeControlId,
 	type TriggerControlId,
@@ -12,6 +13,7 @@ import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomElementModel } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import type { CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import LogController from '../Log/Controller.js'
@@ -24,6 +26,7 @@ import { ControlButtonReference } from './ControlTypes/Button/Reference.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import { ControlCustomElement } from './ControlTypes/CustomElement.js'
 import { ControlCustomFeedback } from './ControlTypes/CustomFeedback.js'
+import { ControlCustomPreset } from './ControlTypes/CustomPreset.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
@@ -51,14 +54,21 @@ export class ControlsFactory {
 	/**
 	 * Create a new control class instance
 	 * @param controlId Id of the control. Its kind must match the type of the control
-	 * @param category 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'custom-feedback' | 'custom-element' | 'all'
+	 * @param category 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'custom-feedback' | 'custom-element' | 'custom-preset' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	createClassForControl(
 		controlId: SomeControlId,
 		category:
-			'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'custom-feedback' | 'custom-element' | 'all',
+			| 'button'
+			| 'trigger'
+			| 'expression-variable'
+			| 'custom-action'
+			| 'custom-feedback'
+			| 'custom-element'
+			| 'custom-preset'
+			| 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl | null {
@@ -115,6 +125,12 @@ export class ControlsFactory {
 			}
 		}
 
+		if ((category === 'all' || category === 'custom-preset') && isControlIdOfKind(controlId, 'custom-preset')) {
+			if (controlObj2?.type === 'custom-preset' || (controlType === 'custom-preset' && !controlObj2)) {
+				return new ControlCustomPreset(this.#controlDeps, controlId, controlObj2, isImport)
+			}
+		}
+
 		if (category === 'all' && isControlIdOfKind(controlId, 'page')) {
 			if (controlObj2?.type === 'page' || (controlType === 'page' && !controlObj2)) {
 				return new ControlPage(this.#controlDeps, controlId, controlObj2, isImport)
@@ -153,6 +169,10 @@ export class ControlsFactory {
 		storage: CustomElementModel | null = null
 	): ControlCustomElement {
 		return new ControlCustomElement(this.#controlDeps, controlId, storage)
+	}
+
+	createCustomPreset(controlId: CustomPresetControlId, storage: CustomPresetModel | null): ControlCustomPreset {
+		return new ControlCustomPreset(this.#controlDeps, controlId, storage, !!storage)
 	}
 
 	createPresetControl(

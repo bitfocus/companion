@@ -43,6 +43,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 		customActions: true,
 		customFeedbacks: true,
 		customElements: true,
+		customPresets: true,
 		includeSecrets: true,
 		imageLibrary: true,
 		// userconfig: true,

@@ -1,0 +1,31 @@
+.custom-preset-edit-panel {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+
+	/* The editor of the button fills the rest of the panel, scrolling the tabs which are taller than it */
+	.custom-preset-editor {
+		flex: 1;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+		padding: 0 0.75rem 0.75rem;
+
+		/* The style tab lays out its own preview and properties, so is given the height of the panel to share between
+		   them, rather than growing to fit them */
+		.edit-sticky-body {
+			flex: 1;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.button-editor-tab-content {
+			flex: 1;
+			min-height: 0;
+		}
+	}
+}

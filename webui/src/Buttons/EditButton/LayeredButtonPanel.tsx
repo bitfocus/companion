@@ -6,6 +6,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { EditButtonLayout } from './EditButtonLayout.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 import { LiveStepLabel } from './LiveStep.js'
+import { SaveAsCustomPresetButton } from './SaveAsCustomPresetButton.js'
 import { LayeredButtonExtraTabs, useButtonEditorMainTab } from './useButtonEditorMainTab.js'
 
 interface LayeredButtonPanelProps {
@@ -32,7 +33,7 @@ export function LayeredButtonPanel({
 			typeLabel="Regular button"
 			liveStep={<LiveStepLabel steps={config.steps} currentStepId={runtimeProps.current_step_id} />}
 			testControls={<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />}
-			actions={null}
+			actions={<SaveAsCustomPresetButton location={location} />}
 			notesState={notesState}
 			editorTabs={editorTabs}
 		>

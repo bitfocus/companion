@@ -16,6 +16,7 @@ import {
 	faPlug,
 	faPuzzlePiece,
 	faShapes,
+	faSwatchbook,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -93,6 +94,7 @@ export const CONFIG_OPTION_META = {
 	customActions: { icon: faCubes, label: 'Custom Actions' },
 	customFeedbacks: { icon: faCubesStacked, label: 'Custom Feedbacks' },
 	customElements: { icon: faShapes, label: 'Custom Elements' },
+	customPresets: { icon: faSwatchbook, label: 'Custom Presets' },
 	imageLibrary: { icon: faImages, label: 'Image Library' },
 	surfaces: { icon: faGamepad, label: 'Surfaces' },
 	userconfig: { icon: faGear, label: 'Settings' },
@@ -107,6 +109,7 @@ export const CONTENT_OPTION_KEYS = [
 	'customActions',
 	'customFeedbacks',
 	'customElements',
+	'customPresets',
 	'imageLibrary',
 ] as const
 

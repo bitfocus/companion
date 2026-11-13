@@ -49,6 +49,8 @@ function controlIdKindForType(type: SomeControlModel['type']): ControlIdKind {
 			return 'custom-feedback'
 		case 'custom-element':
 			return 'custom-element'
+		case 'custom-preset':
+			return 'custom-preset'
 		case 'page':
 			return 'page'
 		default:

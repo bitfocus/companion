@@ -29,6 +29,9 @@ _Here is an example of the presets of an ATEM_
 
 Drag the preset buttons onto a page's button when in the Button Layout view.
 
+You can also build your own presets, which are listed as **Custom** in the same tab. See
+[custom presets](../../building-blocks/custom-presets.md).
+
 :::tip
 Click on a group heading to expand or collapse it. Hold **Alt** while clicking to expand or collapse every
 group at the same level at once.

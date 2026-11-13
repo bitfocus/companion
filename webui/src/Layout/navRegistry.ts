@@ -20,6 +20,7 @@ import {
 	faServer,
 	faShapes,
 	faSquareRootVariable,
+	faSwatchbook,
 	faTh,
 	faVideoCamera,
 	faWarning,
@@ -108,6 +109,13 @@ export const BUILDING_BLOCKS_SECTION: NavSection = {
 			shortLabel: 'Elements',
 			path: '/custom-elements',
 			icon: faShapes,
+		},
+		{
+			id: 'presets',
+			label: 'Custom Presets',
+			shortLabel: 'Presets',
+			path: '/custom-presets',
+			icon: faSwatchbook,
 		},
 	],
 }

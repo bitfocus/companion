@@ -46,7 +46,12 @@ import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * this program.
  */
 export class ControlButtonPresetReference
-	extends ButtonControlRuntimeBase<PresetReferenceButtonModel, LayeredButtonOptions, ControlEntityListPoolButton>
+	extends ButtonControlRuntimeBase<
+		BankControlId,
+		PresetReferenceButtonModel,
+		LayeredButtonOptions,
+		ControlEntityListPoolButton
+	>
 	implements
 		ControlWithoutLayeredStyle,
 		ControlWithActions,

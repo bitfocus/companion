@@ -4,6 +4,7 @@ import {
 	CreateCustomActionControlId,
 	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
+	CreateCustomPresetControlId,
 	CreateExpressionVariableControlId,
 	CreatePageControlId,
 	CreatePresetControlId,
@@ -167,6 +168,12 @@ describe('CreateCustomActionControlId', () => {
 	})
 })
 
+describe('CreateCustomPresetControlId', () => {
+	test('prefixes id with "custom-preset:"', () => {
+		expect(CreateCustomPresetControlId('abc')).toBe('custom-preset:abc')
+	})
+})
+
 describe('CreateCustomFeedbackControlId', () => {
 	test('prefixes id with "custom-feedback:"', () => {
 		expect(CreateCustomFeedbackControlId('abc')).toBe('custom-feedback:abc')
@@ -216,6 +223,10 @@ describe('ParseControlId', () => {
 
 	test('parses a custom-action control id', () => {
 		expect(ParseControlId('custom-action:abc')).toEqual({ type: 'custom-action', customActionId: 'abc' })
+	})
+
+	test('parses a custom-preset control id', () => {
+		expect(ParseControlId('custom-preset:abc')).toEqual({ type: 'custom-preset', customPresetId: 'abc' })
 	})
 
 	test('parses a custom-feedback control id', () => {

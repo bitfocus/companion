@@ -11,6 +11,7 @@ import {
 	faRotate,
 	faSearch,
 	faShapes,
+	faSwatchbook,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -75,6 +76,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 		customActionsList,
 		customFeedbacksList,
 		customElementsList,
+		customPresetsList,
 		variablesStore,
 		notifier,
 	} = useContext(RootAppStoreContext)
@@ -272,7 +274,25 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			})
 		}
 
-		// 8. Pages
+		// 8. Custom presets
+		for (const [controlId, customPreset] of customPresetsList.customPresets.entries()) {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'custom-preset') continue
+
+			items.push({
+				id: controlId,
+				category: 'Quick Actions',
+				title: customPreset.name || 'Custom preset',
+				subtitle: customPreset.description || 'Custom preset',
+				icon: faSwatchbook,
+				onSelect: () => {
+					void navigate({ to: '/custom-presets/$controlId', params: { controlId: parsedId.customPresetId } })
+					closePalette()
+				},
+			})
+		}
+
+		// 9. Pages
 		if (pages?.data) {
 			pages.data.forEach((page, index) => {
 				const pageNumber = index + 1
@@ -322,6 +342,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 		customActionsList,
 		customFeedbacksList,
 		customElementsList,
+		customPresetsList,
 		variablesStore,
 		navigate,
 		closePalette,

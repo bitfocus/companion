@@ -143,6 +143,8 @@ function createExportController() {
 	controls.exportCustomFeedbackCollections.mockReturnValue([])
 	controls.getAllCustomElements.mockReturnValue([makeCustomElement('ce-1', 'My Custom Element')])
 	controls.exportCustomElementCollections.mockReturnValue([])
+	controls.getAllCustomPresets.mockReturnValue([])
+	controls.exportCustomPresetCollections.mockReturnValue([])
 
 	instance.exportAllConnections.mockReturnValue({
 		'conn-1': {

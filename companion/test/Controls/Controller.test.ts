@@ -4,6 +4,7 @@ import { mockDeep } from 'vitest-mock-extended'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomPresetControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -105,6 +106,18 @@ describe('creating controls', () => {
 		const control = fakeCreatedControl(controls, controlId)
 
 		controller.importCustomAction(controlId, {} as any)
+
+		expect(control.start).toHaveBeenCalledTimes(1)
+		expect(control.start).toHaveBeenCalledWith(true)
+		expect(control.storedWhenStarted).toBe(true)
+	})
+
+	test('importCustomPreset starts and saves the control once it is stored', () => {
+		const { controller, controls } = createController()
+		const controlId = CreateCustomPresetControlId('p1')
+		const control = fakeCreatedControl(controls, controlId)
+
+		controller.importCustomPreset(controlId, {} as any)
 
 		expect(control.start).toHaveBeenCalledTimes(1)
 		expect(control.start).toHaveBeenCalledWith(true)

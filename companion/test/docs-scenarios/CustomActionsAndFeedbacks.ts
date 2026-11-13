@@ -1,14 +1,16 @@
+import isEqual from 'fast-deep-equal'
 import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, type CustomPresetControlId } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import { ControlCustomPreset } from '../../lib/Controls/ControlTypes/CustomPreset.js'
 import type { TestApp } from '../integration/TestApp.js'
-import { addElement, createButtonWithText, prepareDocsApp, waitFor } from './Helpers.js'
+import { addElement, addEntity, createButtonWithText, firstStepDown, prepareDocsApp, waitFor } from './Helpers.js'
 
 /**
- * The examples of the custom actions, custom feedbacks and custom elements pages of the user guide
- * (docs/user-guide/3_config/program/building-blocks/custom-actions.md, custom-feedbacks.md and custom-elements.md), for
- * their screenshots.
+ * The examples of the building blocks pages of the user guide (docs/user-guide/3_config/program/building-blocks/:
+ * custom-actions.md, custom-feedbacks.md, custom-elements.md and custom-presets.md), for their screenshots.
  *
  * - "Select camera" sets `selected_camera` to its `camera` input, and `selected_from` to where it was called from
  * - "Ramp value" counts its `level` up to `target` in a loop, a `step` at a time, with `level` as an output
@@ -18,6 +20,10 @@ import { addElement, createButtonWithText, prepareDocsApp, waitFor } from './Hel
  *   ramp slowly, so that their runs are still in progress while a screenshot is taken
  * - "Channel label" is a custom element drawing its `name` input over a bar of its `color` input
  * - Buttons 1/2/0 to 1/2/2 (CH 1-3) each use "Channel label" along their bottom, with their own name and colour
+ * - "Record" and "Talkback" are custom presets in the "Studio" collection. "Record" toggles `recording`, and is red
+ *   while it is on. "Talkback" sets `talkback` while it is held, and is blue while it is on
+ * - Button 1/3/0 is "Record" placed as a linked preset, 1/3/1 is "Talkback" placed as a linked preset, and 1/3/2 is a
+ *   copy of "Record"
  *
  * The http api is enabled, for the screenshots to press buttons and set variables.
  */
@@ -152,6 +158,7 @@ export async function seed(app: TestApp): Promise<void> {
 	)
 
 	await seedCustomElements(app)
+	await seedCustomPresets(app)
 }
 
 /** "Channel label", and the buttons which use it */
@@ -206,4 +213,107 @@ async function seedCustomElements(app: TestApp): Promise<void> {
 			'opt:color': exprVal(channel.color),
 		})
 	}
+}
+
+/** "Record" and "Talkback", in their collection, and the buttons placed from them */
+async function seedCustomPresets(app: TestApp): Promise<void> {
+	app.createCustomVariable('recording', false)
+	app.createCustomVariable('talkback', false)
+
+	const collectionId = await app.trpc().controls.customPresets.collections.add({ collectionName: 'Studio' })
+
+	/** A custom preset in the collection, showing some text, which is a colour while a variable is true */
+	const createCustomPreset = async (
+		name: string,
+		description: string,
+		text: string,
+		variableName: string,
+		onColor: number
+	) => {
+		const controlId = await app.trpc().controls.customPresets.create({ name })
+		await app.trpc().controls.setOptionsField({
+			controlId,
+			change: { controlType: 'custom-preset', key: 'description', value: description },
+		})
+		await app.trpc().controls.customPresets.reorder({ collectionId, controlId, dropIndex: -1 })
+		await app.trpc().controls.styles.updateOption({ controlId, elementId: 'text0', key: 'text', value: exprVal(text) })
+		await app.trpc().controls.styles.updateOption({
+			controlId,
+			elementId: 'box0',
+			key: 'color',
+			value: exprVal(0x333333),
+		})
+
+		const feedbackId = app.addInternalFeedback(controlId, 'check_expression', {
+			expression: exprVal(`$(custom:${variableName})`),
+		})
+		await app.trpc().controls.entities.replaceStyleOverride({
+			controlId,
+			entityLocation: 'feedbacks',
+			entityId: feedbackId,
+			override: { overrideId: 'on', elementId: 'box0', elementProperty: 'color', override: exprVal(onColor) },
+		})
+
+		const parsedId = ParseControlId(controlId)
+		if (parsedId?.type !== 'custom-preset') throw new Error(`"${controlId}" is not a custom preset`)
+		return { controlId, presetId: parsedId.customPresetId }
+	}
+
+	const record = await createCustomPreset('Record', 'Start or stop the recording', 'REC', 'recording', 0xcc0000)
+	app.addInternalAction(record.controlId, 'custom_variable_set_value', {
+		name: exprVal('recording'),
+		create: exprVal(false),
+		value: exprExpr('!$(custom:recording)'),
+	})
+
+	const talkback = await createCustomPreset('Talkback', 'Talk to the studio while held', 'TALK', 'talkback', 0x1f5fbf)
+	app.addInternalAction(talkback.controlId, 'custom_variable_set_value', {
+		name: exprVal('talkback'),
+		create: exprVal(false),
+		value: exprExpr('true'),
+	})
+	const talkbackDown = firstStepDown(app, talkback.controlId)
+	if (typeof talkbackDown !== 'object') throw new Error('Talkback has no steps')
+	await addEntity(
+		app,
+		talkback.controlId,
+		// Released, rather than pressed
+		{ stepId: talkbackDown.stepId, setId: 'up' },
+		null,
+		'internal',
+		EntityModelType.Action,
+		'custom_variable_set_value',
+		{ name: exprVal('talkback'), create: exprVal(false), value: exprExpr('false') }
+	)
+
+	const place = async (
+		customPreset: { controlId: CustomPresetControlId; presetId: string },
+		location: ControlLocation,
+		mode: 'reference' | 'copy'
+	) => {
+		// The preset is updated once the changes to the custom preset have been processed
+		const control = app.registry.controls.getControl(customPreset.controlId)
+		if (!(control instanceof ControlCustomPreset)) throw new Error(`"${customPreset.controlId}" is not a custom preset`)
+		await waitFor(() =>
+			isEqual(
+				app.registry.instance.definitions.convertPresetToControlModel(
+					CUSTOM_CONNECTION_ID,
+					customPreset.presetId,
+					null
+				),
+				control.toButtonModel()
+			)
+		)
+
+		await app.trpc().controls.importPreset({
+			connectionId: CUSTOM_CONNECTION_ID,
+			presetId: customPreset.presetId,
+			location,
+			variableValues: null,
+			mode,
+		})
+	}
+	await place(record, { pageNumber: 1, row: 3, column: 0 }, 'reference')
+	await place(talkback, { pageNumber: 1, row: 3, column: 1 }, 'reference')
+	await place(record, { pageNumber: 1, row: 3, column: 2 }, 'copy')
 }

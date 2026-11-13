@@ -99,6 +99,8 @@ describe('ExportController', () => {
 		controls.exportCustomFeedbackCollections.mockReturnValue([])
 		controls.getAllCustomElements.mockReturnValue([])
 		controls.exportCustomElementCollections.mockReturnValue([])
+		controls.getAllCustomPresets.mockReturnValue([])
+		controls.exportCustomPresetCollections.mockReturnValue([])
 
 		graphics.imageLibrary.exportImageLibraryData.mockReturnValue([])
 		graphics.imageLibrary.exportCollections.mockReturnValue([])
@@ -509,6 +511,7 @@ describe('ExportController', () => {
 			customActions: true,
 			customFeedbacks: true,
 			customElements: true,
+			customPresets: true,
 			includeSecrets: true,
 			imageLibrary: true,
 			surfaces: { known: true, instances: true, remote: true },
@@ -539,6 +542,7 @@ describe('ExportController', () => {
 					customActions: false,
 					customFeedbacks: false,
 					customElements: false,
+					customPresets: false,
 					includeSecrets: false,
 					imageLibrary: false,
 					surfaces: null,

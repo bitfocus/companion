@@ -4,6 +4,7 @@ import { EmptyCollectionSchema, EnabledCollectionSchema } from '../Collections.j
 import { CustomActionModelSchema } from '../CustomActionModel.js'
 import { CustomElementModelSchema } from '../CustomElementModel.js'
 import { CustomFeedbackModelSchema } from '../CustomFeedbackModel.js'
+import { CustomPresetModelSchema } from '../CustomPresetModel.js'
 import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
 import { SomeEntityModelSchema } from '../EntityModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
@@ -120,6 +121,8 @@ export const ExportV17FullSchema = z.object({
 	customFeedbackCollections: ExportV17EmptyCollectionsSchema.optional(),
 	customElements: z.record(z.string(), CustomElementModelSchema).optional(),
 	customElementCollections: ExportV17EmptyCollectionsSchema.optional(),
+	customPresets: z.record(z.string(), CustomPresetModelSchema).optional(),
+	customPresetCollections: ExportV17EmptyCollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
 	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),
 	surfaces: z.record(z.string(), ExportV17SurfaceSchema).optional(),

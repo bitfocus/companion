@@ -6,6 +6,7 @@ import {
 	CreateCustomActionControlId,
 	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
+	CreateCustomPresetControlId,
 	CreateTriggerControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -68,6 +69,8 @@ function createImportController() {
 	controls.replaceCustomFeedbackCollections.mockReturnValue(undefined)
 	controls.importCustomElement.mockReturnValue(true)
 	controls.replaceCustomElementCollections.mockReturnValue(undefined)
+	controls.importCustomPreset.mockReturnValue(true)
+	controls.replaceCustomPresetCollections.mockReturnValue(undefined)
 	controls.replaceTriggerCollections.mockReturnValue(undefined)
 
 	graphics.clearAllForPage.mockReturnValue(undefined)
@@ -275,6 +278,7 @@ function fullConfig(overrides: Partial<ClientImportOrResetSelection> = {}): Clie
 		customActions: all,
 		customFeedbacks: all,
 		customElements: all,
+		customPresets: all,
 		userconfig: 'reset',
 		imageLibrary: all,
 		...overrides,
@@ -345,6 +349,34 @@ describe('importFull config gating', () => {
 				},
 			},
 			customElementCollections: [{ id: 'ecol', label: 'ECol', sortOrder: 0, children: [], metaData: null }],
+			customPresets: {
+				cp1: {
+					type: 'custom-preset',
+					options: { name: 'CP', description: '', sortOrder: 0 },
+					style: { layers: [] },
+					feedbacks: [],
+					steps: {
+						0: {
+							action_sets: {
+								down: [
+									{
+										type: 'action',
+										id: 'pa1',
+										connectionId: 'internal',
+										definitionId: 'wait',
+										options: {},
+										upgradeIndex: undefined,
+									},
+								],
+								up: [],
+							},
+							options: { runWhileHeld: [] },
+						},
+					},
+					localVariables: [],
+				},
+			},
+			customPresetCollections: [{ id: 'pcol', label: 'PCol', sortOrder: 0, children: [], metaData: null }],
 			imageLibrary: [{ info: { name: 'i' } }],
 			imageLibraryCollections: [],
 		}
@@ -392,6 +424,23 @@ describe('importFull config gating', () => {
 				type: 'custom-element',
 				inputs: [{ type: 'textinput', id: 'label', label: 'Label', default: '' }],
 				elements: [expect.objectContaining({ id: 'g1', type: 'group' })],
+			})
+		)
+		expect(controls.replaceCustomPresetCollections).toHaveBeenCalledWith([
+			{ id: 'pcol', label: 'PCol', sortOrder: 0, children: [], metaData: null },
+		])
+		expect(controls.importCustomPreset).toHaveBeenCalledWith(
+			CreateCustomPresetControlId('cp1'),
+			expect.objectContaining({
+				type: 'custom-preset',
+				options: expect.objectContaining({ name: 'CP' }),
+				steps: {
+					0: expect.objectContaining({
+						action_sets: expect.objectContaining({
+							down: [expect.objectContaining({ id: 'pa1', connectionId: 'internal', definitionId: 'wait' })],
+						}),
+					}),
+				},
 			})
 		)
 	})
@@ -489,6 +538,7 @@ describe('importFull config gating', () => {
 			customActions: 'unchanged',
 			customFeedbacks: 'unchanged',
 			customElements: 'unchanged',
+			customPresets: 'unchanged',
 			imageLibrary: 'unchanged',
 			surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'unchanged' },
 		})
@@ -497,6 +547,7 @@ describe('importFull config gating', () => {
 
 		expect(controls.importCustomAction).not.toHaveBeenCalled()
 		expect(controls.importCustomFeedback).not.toHaveBeenCalled()
+		expect(controls.importCustomPreset).not.toHaveBeenCalled()
 
 		expect(controls.importControl).not.toHaveBeenCalled()
 		expect(controls.importTrigger).not.toHaveBeenCalled()

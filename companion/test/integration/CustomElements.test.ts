@@ -267,6 +267,7 @@ describe('custom elements', () => {
 				customActions: 'unchanged',
 				customFeedbacks: 'unchanged',
 				customElements: 'reset-and-import',
+				customPresets: 'unchanged',
 				connections: 'unchanged',
 				userconfig: 'unchanged',
 				imageLibrary: 'unchanged',

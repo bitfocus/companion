@@ -15,6 +15,7 @@ const KINDS = [
 	{ path: '/custom-actions', nounTitle: 'Custom Action', noun: 'custom action' },
 	{ path: '/custom-feedbacks', nounTitle: 'Custom Feedback', noun: 'custom feedback' },
 	{ path: '/custom-elements', nounTitle: 'Custom Element', noun: 'custom element' },
+	{ path: '/custom-presets', nounTitle: 'Custom Preset', noun: 'custom preset' },
 ] as const
 
 function listRow(page: Page, name: string): Locator {
@@ -94,4 +95,8 @@ test('the tabs move between the kinds of building block', async ({ page }) => {
 	await tabs.getByRole('link', { name: 'Custom Elements' }).click()
 	await expect(page).toHaveURL(/\/custom-elements$/)
 	await expect(tabs.locator('.page-tab.active')).toHaveText('Custom Elements')
+
+	await tabs.getByRole('link', { name: 'Custom Presets' }).click()
+	await expect(page).toHaveURL(/\/custom-presets$/)
+	await expect(tabs.locator('.page-tab.active')).toHaveText('Custom Presets')
 })

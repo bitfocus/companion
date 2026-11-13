@@ -1,4 +1,3 @@
-import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsElementBase,
@@ -10,6 +9,7 @@ import { ButtonGraphicsElementUsage, type ButtonStyleProperties } from '@compani
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 import { lazy } from '../../../Resources/Util.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
+import type { ButtonControlId } from './Base.js'
 import { ElementTreeEditor } from './ElementTreeEditor.js'
 import { LayeredButtonDrawer, type LayeredButtonDrawerHost } from './LayeredButtonDrawer.js'
 
@@ -36,7 +36,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 	/** The editing operations shared with the other editable trees of elements */
 	readonly tree: ElementTreeEditor
 
-	constructor(deps: ControlDependencies, controlId: BankControlId, host: LayeredButtonStyleEditorHost) {
+	constructor(deps: ControlDependencies, controlId: ButtonControlId, host: LayeredButtonStyleEditorHost) {
 		super(deps, controlId, host)
 		this.#host = host
 

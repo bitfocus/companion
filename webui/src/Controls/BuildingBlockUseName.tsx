@@ -70,6 +70,16 @@ function UseControlName({ name, link }: { name: string; link: UseControlLink | n
 					{name}
 				</Link>
 			)
+		case 'custom-preset':
+			return (
+				<Link
+					to="/custom-presets/$controlId"
+					params={{ controlId: link.customPresetId }}
+					title="Edit the custom preset"
+				>
+					{name}
+				</Link>
+			)
 		default:
 			assertNever(link)
 			return <>{name}</>

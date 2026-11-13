@@ -197,6 +197,7 @@ export class ImportExportController {
 			customActions: importContainsKey('customActions'),
 			customFeedbacks: importContainsKey('customFeedbacks'),
 			customElements: importContainsKey('customElements'),
+			customPresets: importContainsKey('customPresets'),
 			surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
 			surfacesInstances: importContainsKey('surfaceInstances'),
 			surfacesRemote: importContainsKey('surfacesRemote'),
@@ -685,6 +686,11 @@ export class ImportExportController {
 		if (shouldReset(config.customElements)) {
 			this.#controlsController.replaceCustomElementCollections([])
 			await this.#controlsController.deleteAllControlsOfType('custom-element')
+		}
+
+		if (shouldReset(config.customPresets)) {
+			this.#controlsController.replaceCustomPresetCollections([])
+			await this.#controlsController.deleteAllControlsOfType('custom-preset')
 		}
 
 		if (shouldReset(config.userconfig)) {

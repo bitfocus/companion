@@ -22,19 +22,27 @@ export interface ButtonEditorMainTabState {
 }
 
 /** The editor's top level tabs: Actions plus the extra tabs */
-export function useButtonEditorMainTab(
+export function useButtonEditorTabs(
 	steps: NormalButtonSteps,
 	extraTabs: ButtonEditorExtraTabs[]
-): ButtonEditorMainTabState {
+): ButtonEditorMainTab[] {
 	const stepCount = GetStepIds(steps).length
 
-	const tabs = useMemo(() => {
+	return useMemo(() => {
 		return [
 			...extraTabs.filter((tab) => tab.position === 'start').map((tab) => ({ id: tab.id, name: tab.name })),
 			{ id: 'actions', name: 'Actions', count: stepCount > 1 ? stepCount : undefined },
 			...extraTabs.filter((tab) => tab.position === 'end').map((tab) => ({ id: tab.id, name: tab.name })),
 		]
 	}, [stepCount, extraTabs])
+}
+
+/** The editor's top level tabs, with the selected one remembered by the browser */
+export function useButtonEditorMainTab(
+	steps: NormalButtonSteps,
+	extraTabs: ButtonEditorExtraTabs[]
+): ButtonEditorMainTabState {
+	const tabs = useButtonEditorTabs(steps, extraTabs)
 
 	const [activeTab, setActiveTab] = useLocalStorage('buttonEditor.activeMainTab', 'actions')
 

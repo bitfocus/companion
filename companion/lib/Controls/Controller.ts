@@ -15,6 +15,7 @@ import {
 	type CustomActionControlId,
 	type CustomElementControlId,
 	type CustomFeedbackControlId,
+	type CustomPresetControlId,
 	type ExpressionVariableControlId,
 	type ParsedControlIdType,
 	type SomeControlId,
@@ -26,6 +27,7 @@ import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@
 import type { CustomActionCollection, CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomElementCollection, CustomElementModel } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { CustomFeedbackCollection, CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import type { CustomPresetCollection, CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type {
 	ExpressionVariableCollection,
@@ -59,6 +61,7 @@ import { ControlButtonPresetReference } from './ControlTypes/Button/PresetRefere
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import { ControlCustomElement } from './ControlTypes/CustomElement.js'
 import { ControlCustomFeedback } from './ControlTypes/CustomFeedback.js'
+import { ControlCustomPreset } from './ControlTypes/CustomPreset.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
@@ -81,6 +84,9 @@ import { CustomElementCollections } from './CustomElementCollections.js'
 import { createCustomElementTrpcRouter } from './CustomElementTrpcRouter.js'
 import { CustomFeedbackCollections } from './CustomFeedbackCollections.js'
 import { createCustomFeedbackTrpcRouter } from './CustomFeedbackTrpcRouter.js'
+import { CustomPresetCollections } from './CustomPresetCollections.js'
+import { buildCustomPresetDefinitions, type CustomPresetSource } from './CustomPresets/CustomPresetDefinitions.js'
+import { createCustomPresetTrpcRouter } from './CustomPresetTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
@@ -154,6 +160,11 @@ export class ControlsController {
 	 * The custom element collections
 	 */
 	readonly #customElementCollections: CustomElementCollections
+
+	/**
+	 * The custom preset collections
+	 */
+	readonly #customPresetCollections: CustomPresetCollections
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
@@ -234,6 +245,14 @@ export class ControlsController {
 		)
 
 		this.#controlEvents.on('customElementDefinitionChanged', () => this.#publishCustomElementDefinitions())
+
+		this.#customPresetCollections = new CustomPresetCollections(
+			db,
+			(validCollectionIds) => this.#cleanUnknownCustomPresetCollectionIds(validCollectionIds),
+			() => this.#publishCustomPresetDefinitions()
+		)
+
+		this.#controlEvents.on('customPresetDefinitionChanged', () => this.#publishCustomPresetDefinitions())
 	}
 
 	#cleanUnknownCustomElementCollectionIds(validCollectionIds: ReadonlySet<string>): void {
@@ -277,6 +296,48 @@ export class ControlsController {
 			after: true,
 			wait: 10,
 			maxWait: 50,
+		}
+	)
+
+	#cleanUnknownCustomPresetCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomPreset) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	/**
+	 * Publish each custom preset as a preset, so that it can be placed like the presets of a connection
+	 */
+	#publishCustomPresetDefinitions = debounceFn(
+		(): void => {
+			const customPresets: CustomPresetSource[] = []
+			for (const control of this.#store.controls.values()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (!(control instanceof ControlCustomPreset) || parsedId?.type !== 'custom-preset') continue
+
+				customPresets.push({
+					id: parsedId.customPresetId,
+					name: control.options.name,
+					description: control.options.description,
+					sortOrder: control.options.sortOrder,
+					collectionId: control.options.collectionId,
+					model: structuredClone(control.toButtonModel()),
+				})
+			}
+
+			const { presets, sections } = buildCustomPresetDefinitions(
+				customPresets,
+				this.#customPresetCollections.collectionData
+			)
+			this.#deps.instance.definitions.setCustomPresetDefinitions(presets, sections)
+		},
+		{
+			before: false,
+			after: true,
+			wait: 50,
+			maxWait: 200,
 		}
 	)
 
@@ -479,6 +540,14 @@ export class ControlsController {
 				this.#store,
 				this.#factory
 			),
+			customPresets: createCustomPresetTrpcRouter(
+				this.#controlChangeEvents,
+				this.#controlEvents,
+				this.#customPresetCollections,
+				this.#store,
+				this.#factory,
+				this.#deps.pageStore
+			),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,
@@ -630,6 +699,19 @@ export class ControlsController {
 			}
 		}
 		return customElements
+	}
+
+	/**
+	 * Get all of the custom preset controls
+	 */
+	getAllCustomPresets(): ControlCustomPreset[] {
+		const customPresets: ControlCustomPreset[] = []
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomPreset) {
+				customPresets.push(control)
+			}
+		}
+		return customPresets
 	}
 
 	/**
@@ -802,6 +884,23 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import a custom preset
+	 */
+	importCustomPreset(controlId: CustomPresetControlId, definition: CustomPresetModel): boolean {
+		if (this.#store.controls.has(controlId)) throw new Error(`Custom preset ${controlId} already exists`)
+
+		const newControl = this.#factory.createClassForControl(controlId, 'custom-preset', definition, true)
+		if (newControl) {
+			this.#store.controls.set(controlId, newControl)
+			newControl.start(true)
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -832,9 +931,12 @@ export class ControlsController {
 
 		this.#cleanUnknownCustomElementCollectionIds(this.#customElementCollections.collectAllCollectionIds())
 
+		this.#cleanUnknownCustomPresetCollectionIds(this.#customPresetCollections.collectAllCollectionIds())
+
 		this.#publishCustomActionDefinitions()
 		this.#publishCustomFeedbackDefinitions()
 		this.#publishCustomElementDefinitions()
+		this.#publishCustomPresetDefinitions()
 
 		// Initialize expression variable names map
 		this.#expressionVariableNamesMap.rebuildMap()
@@ -999,6 +1101,14 @@ export class ControlsController {
 
 	replaceCustomElementCollections(collections: CustomElementCollection[]): void {
 		this.#customElementCollections.replaceCollections(collections)
+	}
+
+	exportCustomPresetCollections(): CustomPresetCollection[] {
+		return this.#customPresetCollections.collectionData
+	}
+
+	replaceCustomPresetCollections(collections: CustomPresetCollection[]): void {
+		this.#customPresetCollections.replaceCollections(collections)
 	}
 
 	/**

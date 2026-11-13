@@ -4,6 +4,7 @@ import type {
 	CustomActionControlId,
 	CustomElementControlId,
 	CustomFeedbackControlId,
+	CustomPresetControlId,
 	PresetControlId,
 	SomeControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -12,6 +13,7 @@ import type { SomeControlModelSchema } from '@companion-app/shared/Model/Control
 import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomElementsUpdate } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { CustomFeedbacksUpdate } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import type { CustomPresetsUpdate } from '@companion-app/shared/Model/CustomPresetModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -110,6 +112,8 @@ export interface ControlCommonEvents {
 	customFeedbackDefinitionChanged: [controlId: CustomFeedbackControlId]
 	/** Emitted when a custom element is changed or deleted, so that its composite element definition can be updated */
 	customElementDefinitionChanged: [controlId: CustomElementControlId]
+	/** Emitted when a custom preset is changed or deleted, so that its preset definition can be updated */
+	customPresetDefinitionChanged: [controlId: CustomPresetControlId]
 	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
 	presetDrawn: [controlId: PresetControlId, render: ImageResult]
@@ -136,4 +140,5 @@ export type ControlChangeEvents = {
 	customActionChange: [controlId: CustomActionControlId, diff: CustomActionsUpdate]
 	customFeedbackChange: [controlId: CustomFeedbackControlId, diff: CustomFeedbacksUpdate]
 	customElementChange: [controlId: CustomElementControlId, diff: CustomElementsUpdate]
+	customPresetChange: [controlId: CustomPresetControlId, diff: CustomPresetsUpdate]
 }

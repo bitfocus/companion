@@ -12,6 +12,7 @@ import {
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomElementModel } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import type { CustomPresetModel } from '@companion-app/shared/Model/CustomPresetModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -220,6 +221,23 @@ export function fixupLayeredButtonControl(
 ): LayeredButtonModel {
 	const result: LayeredButtonModel = {
 		type: 'button-layered',
+		options: structuredClone(control.options),
+		style: structuredClone(control.style),
+		...fixupButtonControlBase(logger, control, referencesUpdater),
+	}
+
+	referencesUpdater.visitDrawElements(result.style.layers)
+
+	return result
+}
+
+export function fixupCustomPresetControl(
+	logger: Logger,
+	control: CustomPresetModel,
+	referencesUpdater: ImportReferencesUpdater
+): CustomPresetModel {
+	const result: CustomPresetModel = {
+		type: 'custom-preset',
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
 		...fixupButtonControlBase(logger, control, referencesUpdater),
