@@ -638,6 +638,23 @@ export class ControlsController {
 	}
 
 	/**
+	 * Clear the button at a location, optionally recreating it as a given type.
+	 * This is what the web UI does to reset a button, so the REST API shares it.
+	 * @param location Location in the grid
+	 * @param newType The type of the new control to create, or null to leave the location empty
+	 * @returns the id of the new control, or null if none was created
+	 */
+	resetControlAt(location: ControlLocation, newType: string | null): BankControlId | null {
+		const controlId = this.#deps.pageStore.getControlIdAt(location)
+		if (controlId) {
+			this.deleteControl(controlId)
+		}
+
+		if (!newType) return null
+		return this.createButtonControl(location, newType)
+	}
+
+	/**
 	 * Create a control
 	 * Danger: This will not delete an existing control from the specified location
 	 * @param location Location to place in the grid

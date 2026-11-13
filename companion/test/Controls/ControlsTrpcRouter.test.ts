@@ -63,6 +63,7 @@ function setup(options: { cells?: Cell[]; validPages?: number[]; gridSize?: User
 		deleteControl: vi.fn(),
 		importControl: vi.fn(),
 		createButtonControl: vi.fn(),
+		resetControlAt: vi.fn(),
 		notifyControlMovedPage: vi.fn(),
 		pressControl: vi.fn(),
 		rotateControl: vi.fn(),
@@ -308,9 +309,9 @@ describe('createControlsTrpcRouter', () => {
 			})
 
 			expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('off the grid'))
-			// Only the on-grid location is created
-			expect(controlsController.createButtonControl).toHaveBeenCalledTimes(1)
-			expect(controlsController.createButtonControl).toHaveBeenCalledWith(loc(1, 0, 0), 'button')
+			// Only the on-grid location is reset
+			expect(controlsController.resetControlAt).toHaveBeenCalledTimes(1)
+			expect(controlsController.resetControlAt).toHaveBeenCalledWith(loc(1, 0, 0), 'button')
 		})
 
 		it('replaces an existing control when a newType is given', async () => {
@@ -320,8 +321,7 @@ describe('createControlsTrpcRouter', () => {
 
 			await caller.resetControls({ locations: [loc(1, 0, 0)], newType: 'button' })
 
-			expect(controlsController.deleteControl).toHaveBeenCalledWith(CreateBankControlId('ctrlA'))
-			expect(controlsController.createButtonControl).toHaveBeenCalledWith(loc(1, 0, 0), 'button')
+			expect(controlsController.resetControlAt).toHaveBeenCalledWith(loc(1, 0, 0), 'button')
 		})
 
 		it('clears a control without recreating when newType is null, ignoring the grid bounds', async () => {
@@ -331,8 +331,7 @@ describe('createControlsTrpcRouter', () => {
 
 			await caller.resetControls({ locations: [loc(1, 0, 99)], newType: null })
 
-			expect(controlsController.deleteControl).toHaveBeenCalledWith(CreateBankControlId('ctrlOff'))
-			expect(controlsController.createButtonControl).not.toHaveBeenCalled()
+			expect(controlsController.resetControlAt).toHaveBeenCalledWith(loc(1, 0, 99), null)
 		})
 	})
 
