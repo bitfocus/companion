@@ -304,14 +304,7 @@ export function createControlsTrpcRouter(
 						continue
 					}
 
-					const controlId = pageStore.getControlIdAt(location)
-					if (controlId) {
-						controlsController.deleteControl(controlId)
-					}
-
-					if (input.newType) {
-						controlsController.createButtonControl(location, input.newType)
-					}
+					controlsController.resetControlAt(location, input.newType)
 				}
 			}),
 
