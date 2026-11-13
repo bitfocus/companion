@@ -172,18 +172,10 @@ export class InternalController {
 	}
 
 	/**
-	 * Trigger the first update after launch of each action and feedback
+	 * Compute the initial values of the internal variables after launch
 	 */
-	firstUpdate(): void {
+	initVariables(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		// Find all the feedbacks on controls
-		const allControls = this.#controlsStore.getAllControls()
-		for (const control of allControls.values()) {
-			if (!control.supportsEntities) continue
-
-			control.entities.resubscribeEntities(undefined, 'internal')
-		}
 
 		// Make all variables values
 		for (const fragment of this.#fragments) {

@@ -140,6 +140,19 @@ describe('evaluateFeedbackValue', () => {
 	})
 })
 
+describe('initVariables', () => {
+	test('does not subscribe any entities', () => {
+		const { controller, controlStore } = createController()
+		const control = { supportsEntities: true, entities: { resubscribeEntities: vi.fn() } }
+		controlStore.getAllControls.mockReturnValue(new Map([['a', control as any]]))
+
+		controller.initVariables()
+
+		// Subscribing entities at startup is owned by ControlsController.subscribeAll
+		expect(control.entities.resubscribeEntities).not.toHaveBeenCalled()
+	})
+})
+
 describe('onVariablesChanged', () => {
 	function makeFeedback(id: string): FeedbackEntityModel {
 		return {

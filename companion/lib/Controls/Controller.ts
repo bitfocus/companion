@@ -511,6 +511,20 @@ export class ControlsController {
 	}
 
 	/**
+	 * Subscribe the entities of every control, applying their side effects (internal module, special
+	 * expressions, module notify). Controls are loaded without subscribing, so this must be called once at startup
+	 * after everything they depend on (eg custom variables) has been loaded.
+	 * Connections that start later pick up their entities themselves.
+	 */
+	subscribeAll(): void {
+		for (const control of this.#store.controls.values()) {
+			if (!control.supportsEntities) continue
+
+			control.entities.resubscribeEntities()
+		}
+	}
+
+	/**
 	 * Propagate variable changes to the controls and triggers. `controlIdFilter` is null for a global
 	 * change, or the set of controls the change is scoped to.
 	 */

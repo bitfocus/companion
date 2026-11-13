@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { actionModel, createTriggerPool, feedbackModel, feedbackValues } from './EntityListPoolTestHelpers.js'
 
@@ -180,6 +181,65 @@ describe('ControlEntityListPoolTrigger', () => {
 				pool.updateStoreResultValues(new Map([[action.id, { entityId: action.id, controlId: '', value: undefined }]]))
 			).not.toThrow()
 			expect(reportChange).not.toHaveBeenCalled()
+		})
+
+		/** As at startup: loaded without subscribing, then ControlsController.subscribeAll resubscribes everything */
+		function loadAtStartup(pool: ReturnType<typeof createTriggerPool>['pool'], action: ActionEntityModel) {
+			pool.loadStorage(triggerStorage({ actions: [action] }), true, false)
+			pool.resubscribeEntities()
+			vi.runAllTimers()
+		}
+
+		test('computes storeResult for module actions subscribed at startup', () => {
+			const { pool } = createTriggerPool()
+			const action = actionModel({
+				connectionId: 'obs',
+				storeResult: {
+					type: 'custom-variable',
+					variableName: { isExpression: false, value: 'stream_settings' },
+					createIfNotExists: false,
+				},
+			})
+
+			loadAtStartup(pool, action)
+
+			expect(pool.getActionEntities()[0].storeResult).toEqual({
+				type: 'custom-variable',
+				variableName: 'stream_settings',
+				createIfNotExists: false,
+			})
+		})
+
+		test('does not compute storeResult for disabled actions subscribed at startup', () => {
+			const { pool } = createTriggerPool()
+			const action = actionModel({
+				disabled: true,
+				storeResult: {
+					type: 'custom-variable',
+					variableName: { isExpression: false, value: 'stream_settings' },
+					createIfNotExists: false,
+				},
+			})
+
+			loadAtStartup(pool, action)
+
+			expect(pool.getActionEntities()[0].storeResult).toBeUndefined()
+		})
+
+		test('loading alone does not compute storeResult', () => {
+			const { pool } = createTriggerPool()
+			const action = actionModel({
+				storeResult: {
+					type: 'custom-variable',
+					variableName: { isExpression: false, value: 'stream_settings' },
+					createIfNotExists: false,
+				},
+			})
+
+			pool.loadStorage(triggerStorage({ actions: [action] }), true, false)
+			vi.runAllTimers()
+
+			expect(pool.getActionEntities()[0].storeResult).toBeUndefined()
 		})
 	})
 
