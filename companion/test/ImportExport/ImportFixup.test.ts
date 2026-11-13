@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import {
@@ -471,15 +471,15 @@ describe('fixupCustomActionControl', () => {
 
 	test('keeps the calls to other custom actions', () => {
 		const control = makeCustomAction({
-			actions: [makeAction({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' })],
+			actions: [makeAction({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'other' })],
 		})
 
 		// As the import maps each connection provided by Companion itself to itself
-		const map = { ...standardMap(), [CUSTOM_ACTIONS_CONNECTION_ID]: { id: CUSTOM_ACTIONS_CONNECTION_ID, label: '' } }
+		const map = { ...standardMap(), [CUSTOM_CONNECTION_ID]: { id: CUSTOM_CONNECTION_ID, label: '' } }
 		const result = fixupCustomActionControl(internalModule, control, map, {})
 
 		expect(result.actions).toEqual([
-			expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' }),
+			expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'other' }),
 		])
 	})
 })

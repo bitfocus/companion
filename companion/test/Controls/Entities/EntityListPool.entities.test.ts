@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { CUSTOM_ACTIONS_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
@@ -186,7 +186,7 @@ describe('EntityListPool - entitySetConnection', () => {
 		expect(pool.entitySetConnection(downSet(), 'nope', 'conn')).toBe(false)
 	})
 
-	test.each([INTERNAL_CONNECTION_ID, CUSTOM_ACTIONS_CONNECTION_ID])(
+	test.each([INTERNAL_CONNECTION_ID, CUSTOM_CONNECTION_ID])(
 		'does not change an action to or from the %s connection',
 		(virtualConnectionId) => {
 			const { pool } = createPool()

@@ -1,5 +1,4 @@
 import type z from 'zod'
-import { isCustomActionsConnectionId, isCustomFeedbacksConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -13,7 +12,7 @@ import {
 	type CustomActionRuntimeProps,
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	AuthorableInputFieldSchema,
 	toCompanionInputField,
@@ -551,7 +550,7 @@ export class ControlCustomAction
 		// A disabled call, or one inside a disabled group, doesn't run, so can't make a loop
 		const ids = new Set<string>()
 		for (const entity of this.entities.getAllEnabledEntities(false)) {
-			if (isCustomActionsConnectionId(entity.connectionId)) ids.add(entity.definitionId)
+			if (isCustomActionCall(entity)) ids.add(entity.definitionId)
 		}
 		return ids
 	}
@@ -563,7 +562,7 @@ export class ControlCustomAction
 		// A disabled use, or one inside a disabled group, isn't evaluated, so doesn't nest
 		const ids = new Set<string>()
 		for (const entity of this.entities.getAllEnabledEntities(false)) {
-			if (isCustomFeedbacksConnectionId(entity.connectionId)) ids.add(entity.definitionId)
+			if (isCustomFeedbackUse(entity)) ids.add(entity.definitionId)
 		}
 		return ids
 	}

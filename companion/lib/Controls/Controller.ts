@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import { CUSTOM_ACTIONS_CONNECTION_ID, CUSTOM_FEEDBACKS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreatePageControlId,
@@ -238,7 +238,7 @@ export class ControlsController {
 				definitions[id] = control.toFeedbackDefinition()
 			}
 
-			this.#deps.instance.definitions.setFeedbackDefinitions(CUSTOM_FEEDBACKS_CONNECTION_ID, definitions)
+			this.#deps.instance.definitions.setFeedbackDefinitions(CUSTOM_CONNECTION_ID, definitions)
 		},
 		{
 			before: false,
@@ -307,7 +307,7 @@ export class ControlsController {
 				definitions[id] = control.toActionDefinition()
 			}
 
-			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_ACTIONS_CONNECTION_ID, definitions)
+			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_CONNECTION_ID, definitions)
 		},
 		{
 			before: false,
@@ -753,8 +753,7 @@ export class ControlsController {
 		// Their connection entities are tracked by each connection when it starts
 		for (const control of this.#store.controls.values()) {
 			if (!control.supportsEntities) continue
-			control.entities.resubscribeEntities(undefined, CUSTOM_ACTIONS_CONNECTION_ID)
-			control.entities.resubscribeEntities(undefined, CUSTOM_FEEDBACKS_CONNECTION_ID)
+			control.entities.resubscribeEntities(undefined, CUSTOM_CONNECTION_ID)
 		}
 
 		// Initialize expression variable names map

@@ -1,12 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import {
-	isCustomActionsConnectionId,
-	isCustomFeedbacksConnectionId,
-	isInternalConnectionId,
-	isVirtualConnectionId,
-} from '@companion-app/shared/ConnectionId.js'
+import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
@@ -14,6 +9,8 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	isCustomActionCall,
+	isCustomFeedbackUse,
 	isInternalUserValueFeedback as libIsInternalUserValueFeedback,
 	type ActionEntityModel,
 	type EntitySupportedChildGroupDefinition,
@@ -327,9 +324,9 @@ export class ControlEntityInstance {
 		// Inform relevant module
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
-		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
+		} else if (isCustomActionCall(this.#data)) {
 			this.#scope.customActionInstances.entityDelete(this)
-		} else if (isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+		} else if (isCustomFeedbackUse(this.#data)) {
 			this.#scope.customFeedbackInstances.entityDelete(this)
 		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e: unknown) => {
@@ -436,10 +433,10 @@ export class ControlEntityInstance {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
 					this.createVariablesAndExpressionParser(null)
 				)
-			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
+			} else if (isCustomActionCall(thisData)) {
 				// Build or update the copy of the custom action held by this action
 				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
-			} else if (isCustomFeedbacksConnectionId(thisData.connectionId)) {
+			} else if (isCustomFeedbackUse(thisData)) {
 				// Build or update the copy of the custom feedback held by this feedback
 				this.#scope.customFeedbackInstances.entityUpdate(this, this.#controlId, this.#scope)
 			} else if (!isVirtualConnectionId(thisData.connectionId)) {
@@ -1044,7 +1041,7 @@ export class ControlEntityInstance {
 			return false
 
 		// A custom feedback is evaluated live too, so that its inputs and feedbacks see the execution
-		if (context && isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+		if (context && isCustomFeedbackUse(this.#data)) {
 			const value = this.#scope.customFeedbackInstances.evaluateLive(this, context)
 			if (definition.showInvert && this.#cachedIsInverted) return !value
 			return value

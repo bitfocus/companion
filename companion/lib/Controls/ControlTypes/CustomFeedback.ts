@@ -1,5 +1,4 @@
 import type z from 'zod'
-import { isCustomFeedbacksConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { CustomFeedbackControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
@@ -10,7 +9,7 @@ import {
 	type CustomFeedbackOptions,
 } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	AuthorableInputFieldSchema,
 	toCompanionInputField,
@@ -415,7 +414,7 @@ export class ControlCustomFeedback
 		// A disabled use, or one inside a disabled group, isn't evaluated, so can't make a loop
 		const ids = new Set<string>()
 		for (const entity of this.entities.getAllEnabledEntities(false)) {
-			if (isCustomFeedbacksConnectionId(entity.connectionId)) ids.add(entity.definitionId)
+			if (isCustomFeedbackUse(entity)) ids.add(entity.definitionId)
 		}
 		return ids
 	}

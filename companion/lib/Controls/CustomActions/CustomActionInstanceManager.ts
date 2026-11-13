@@ -3,13 +3,13 @@ import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isCustomActionsConnectionId, isCustomFeedbacksConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomActionControlId,
 	type CustomActionControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { CustomActionRunInfo } from '@companion-app/shared/Model/CustomActionModel.js'
+import { isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type {
@@ -468,12 +468,12 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 
 			entity.copyRuntimeValuesFrom(sourceEntity)
 
-			if (isCustomFeedbacksConnectionId(entity.connectionId)) {
+			if (isCustomFeedbackUse(entity)) {
 				// The custom feedback this uses has its own copy, which can also start from the existing one
 				this.#customFeedbackInstances.copyRuntimeValues(entity, sourceEntity)
 				continue
 			}
-			if (!isCustomActionsConnectionId(entity.connectionId)) continue
+			if (!isCustomActionCall(entity)) continue
 
 			// The custom action this calls has its own copy, which can start from the existing one if it sees the same
 			const targetHeld = this.getHeldCopy(entity)

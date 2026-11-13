@@ -2,12 +2,13 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
-import { CUSTOM_FEEDBACKS_CONNECTION_ID, isCustomFeedbacksConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomFeedbackControlId,
 	type CustomFeedbackControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
+import { isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type {
 	VariableDependency,
@@ -234,7 +235,7 @@ export class CustomFeedbackInstanceManager implements VariableDependencyListener
 
 			entity.copyRuntimeValuesFrom(sourceEntity)
 
-			if (isCustomFeedbacksConnectionId(entity.connectionId)) this.copyRuntimeValues(entity, sourceEntity)
+			if (isCustomFeedbackUse(entity)) this.copyRuntimeValues(entity, sourceEntity)
 		}
 
 		this.#queueValueUpdate(target)
@@ -414,7 +415,7 @@ export class CustomFeedbackInstanceManager implements VariableDependencyListener
 			newValues.push({ entityId: caller.id, controlId: state.controlId, value })
 		}
 
-		if (newValues.length > 0) this.#controlStore.updateFeedbackValues(CUSTOM_FEEDBACKS_CONNECTION_ID, newValues)
+		if (newValues.length > 0) this.#controlStore.updateFeedbackValues(CUSTOM_CONNECTION_ID, newValues)
 	}
 }
 

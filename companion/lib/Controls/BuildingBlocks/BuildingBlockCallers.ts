@@ -1,6 +1,7 @@
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { getCustomActionCallDefinition } from '@companion-app/shared/Model/CustomActionModel.js'
 import { getCustomFeedbackCallDefinition } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import { isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlStore } from '../ControlStore.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
@@ -16,16 +17,21 @@ export function updateBuildingBlockCallers(
 	buildingBlockControlId: SomeControlId,
 	update: (entity: ControlEntityInstance, controlId: SomeControlId) => boolean
 ): void {
-	const call =
-		getCustomActionCallDefinition(buildingBlockControlId) ?? getCustomFeedbackCallDefinition(buildingBlockControlId)
-	if (!call) return
+	// Custom actions and custom feedbacks share a connection, so are told apart by whether they are used as an action
+	const actionCall = getCustomActionCallDefinition(buildingBlockControlId)
+	const feedbackCall = getCustomFeedbackCallDefinition(buildingBlockControlId)
+	if (!actionCall && !feedbackCall) return
+	const isCall = (entity: ControlEntityInstance): boolean =>
+		actionCall
+			? isCustomActionCall(entity) && entity.definitionId === actionCall.definitionId
+			: !!feedbackCall && isCustomFeedbackUse(entity) && entity.definitionId === feedbackCall.definitionId
 
 	for (const control of controlStore.controls.values()) {
 		if (!control.supportsEntities) continue
 
 		let changed = false
 		for (const entity of control.entities.getAllEntities()) {
-			if (entity.connectionId !== call.connectionId || entity.definitionId !== call.definitionId) continue
+			if (!isCall(entity)) continue
 			if (update(entity, control.controlId)) changed = true
 		}
 

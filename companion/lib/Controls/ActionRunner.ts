@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
-import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, isCustomActionCall } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -70,7 +70,7 @@ export class ActionRunner {
 		let result: JsonValue | undefined
 		if (isInternalConnectionId(action.connectionId)) {
 			result = await this.#internalModule.executeAction(action, extras)
-		} else if (isCustomActionsConnectionId(action.connectionId)) {
+		} else if (isCustomActionCall(action)) {
 			result = await this.#runCustomAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)

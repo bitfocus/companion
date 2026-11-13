@@ -1,5 +1,5 @@
 import z from 'zod'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '../ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '../ConnectionId.js'
 import { ParseControlId, type CustomActionControlId, type SomeControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
@@ -28,7 +28,7 @@ export function getCustomActionCallDefinition(
 	const parsedId = ParseControlId(controlId)
 	if (parsedId?.type !== 'custom-action') return null
 
-	return { connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: parsedId.customActionId }
+	return { connectionId: CUSTOM_CONNECTION_ID, definitionId: parsedId.customActionId }
 }
 
 /**

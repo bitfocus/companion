@@ -368,10 +368,10 @@ describe('getCustomFeedbackCallsExcludedFrom', () => {
 
 	test('excludes the custom feedback itself, and any which use it', () => {
 		expect(getCustomFeedbackCallsExcludedFrom(CreateCustomFeedbackControlId('c'), customFeedbacks)).toEqual(
-			new Set(['__custom-feedbacks__:c', '__custom-feedbacks__:a', '__custom-feedbacks__:b'])
+			new Set(['custom:c', 'custom:a', 'custom:b'])
 		)
 		expect(getCustomFeedbackCallsExcludedFrom(CreateCustomFeedbackControlId('a'), customFeedbacks)).toEqual(
-			new Set(['__custom-feedbacks__:a'])
+			new Set(['custom:a'])
 		)
 	})
 

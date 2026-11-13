@@ -7,6 +7,7 @@ import {
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	isCustomFeedbackUse,
 	type EntityOwner,
 	type ResolvedFeedbackStyleOverride,
 	type SomeEntityModel,
@@ -171,7 +172,7 @@ export class ControlEntityListPoolCustomFeedback extends WithEntityEditing(Contr
 
 		return entityModels.some(
 			(entity) =>
-				(entity.connectionId === selfCall.connectionId && entity.definitionId === selfCall.definitionId) ||
+				(isCustomFeedbackUse(entity) && entity.definitionId === selfCall.definitionId) ||
 				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
 		)
 	}

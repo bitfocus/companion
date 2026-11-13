@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
-import { CUSTOM_ACTIONS_CONNECTION_ID, isInternalConnectionId } from '../ConnectionId.js'
+import { CUSTOM_CONNECTION_ID, isCustomConnectionId, isInternalConnectionId } from '../ConnectionId.js'
 import type { ActionSetId } from './ActionModel.js'
 import {
 	createExpressionOrValueSchema,
@@ -193,8 +193,9 @@ function entityChildrenSchema() {
 	return z.record(z.string(), z.array(SomeEntityModelSchema).optional()).optional()
 }
 
-/** The connection id custom actions had in the betas, before it became `custom` */
+/** The connection ids custom actions and feedbacks had in the betas, before they became `custom` */
 const BETA_CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
+const BETA_CUSTOM_FEEDBACKS_CONNECTION_ID = '__custom-feedbacks__'
 
 // Kept as object schemas for the discriminated union, and exported with the hand-written types below
 const actionEntityObjectSchema = z.object({
@@ -204,7 +205,7 @@ const actionEntityObjectSchema = z.object({
 	connectionId: z
 		.string()
 		.transform((connectionId) =>
-			connectionId === BETA_CUSTOM_ACTIONS_CONNECTION_ID ? CUSTOM_ACTIONS_CONNECTION_ID : connectionId
+			connectionId === BETA_CUSTOM_ACTIONS_CONNECTION_ID ? CUSTOM_CONNECTION_ID : connectionId
 		),
 	get children() {
 		return entityChildrenSchema()
@@ -216,6 +217,12 @@ const actionEntityObjectSchema = z.object({
 const feedbackEntityObjectSchema = z.object({
 	type: z.literal(EntityModelType.Feedback),
 	...entityBaseShape,
+	// Uses of custom feedbacks saved by a beta are given the connection id they have now
+	connectionId: z
+		.string()
+		.transform((connectionId) =>
+			connectionId === BETA_CUSTOM_FEEDBACKS_CONNECTION_ID ? CUSTOM_CONNECTION_ID : connectionId
+		),
 	get children() {
 		return entityChildrenSchema()
 	},
@@ -230,6 +237,19 @@ export const FeedbackEntityModelSchema: z.ZodType<FeedbackEntityModel> = feedbac
 export const SomeEntityModelSchema: z.ZodType<SomeEntityModel> = z
 	.discriminatedUnion('type', [actionEntityObjectSchema, feedbackEntityObjectSchema])
 	.meta({ id: 'EntityModel' })
+
+/** Whether an entity is an action which calls a custom action */
+export function isCustomActionCall(entity: { readonly type: EntityModelType; readonly connectionId: string }): boolean {
+	return entity.type === EntityModelType.Action && isCustomConnectionId(entity.connectionId)
+}
+
+/** Whether an entity is a feedback which uses a custom feedback */
+export function isCustomFeedbackUse(entity: {
+	readonly type: EntityModelType
+	readonly connectionId: string
+}): boolean {
+	return entity.type === EntityModelType.Feedback && isCustomConnectionId(entity.connectionId)
+}
 
 export interface EntityOwner {
 	parentId: string

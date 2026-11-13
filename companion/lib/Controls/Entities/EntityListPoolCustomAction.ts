@@ -4,6 +4,7 @@ import { getCustomActionCallDefinition, type CustomActionModel } from '@companio
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	isCustomActionCall,
 	type EntityOwner,
 	type ResolvedFeedbackStyleOverride,
 	type SomeEntityModel,
@@ -173,7 +174,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 
 		return entityModels.some(
 			(entity) =>
-				(entity.connectionId === selfCall.connectionId && entity.definitionId === selfCall.definitionId) ||
+				(isCustomActionCall(entity) && entity.definitionId === selfCall.definitionId) ||
 				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
 		)
 	}
