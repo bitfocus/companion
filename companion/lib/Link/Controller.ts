@@ -157,7 +157,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				getCachedRenderOrGeneratePlaceholder: (location) =>
 					deps.graphics.getCachedRenderOrGeneratePlaceholder(location),
 				getControlIdAt: (location) => deps.pageStore.getControlIdAt(location),
-				pressControl: (controlId, pressed, surfaceId) => deps.controls.pressControl(controlId, pressed, surfaceId),
+				pressControl: (controlId, pressed, surfaceId) =>
+					deps.controls.pressControl(controlId, pressed, surfaceId, null),
 				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
 				abortControl: (controlId, unlatch, hops) =>
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),

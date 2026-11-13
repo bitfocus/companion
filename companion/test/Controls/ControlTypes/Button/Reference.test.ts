@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ButtonReferenceButtonModel, LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ButtonPressEvents } from '../../../../lib/Controls/ButtonPressEvents.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonReference } from '../../../../lib/Controls/ControlTypes/Button/Reference.js'
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
@@ -147,13 +148,15 @@ describe('ControlButtonReference', () => {
 		it('forwards to the resolved target with a mangled surfaceId', () => {
 			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			const control = createControl(plainLocation('4/0/0'))
+			const pressEvents = new ButtonPressEvents(vi.fn())
 
-			control.pressControl(true, 'surface1', false)
+			control.pressControl(true, 'surface1', pressEvents, false)
 
 			expect(controlsAccessor.pressControl).toHaveBeenCalledWith(
 				CreateBankControlId('target'),
 				true,
 				mangleReferenceSurfaceId('surface1', MY_CONTROL_ID),
+				pressEvents,
 				false
 			)
 		})
@@ -162,14 +165,14 @@ describe('ControlButtonReference', () => {
 			getControlIdAt.mockReturnValue(undefined)
 			const control = createControl(plainLocation('4/0/0'))
 
-			control.pressControl(true, 'surface1')
+			control.pressControl(true, 'surface1', null)
 			expect(controlsAccessor.pressControl).not.toHaveBeenCalled()
 		})
 
 		it('does nothing when the location is empty', () => {
 			const control = createControl(plainLocation(''))
 
-			control.pressControl(true, 'surface1')
+			control.pressControl(true, 'surface1', null)
 			expect(controlsAccessor.pressControl).not.toHaveBeenCalled()
 		})
 
@@ -177,7 +180,7 @@ describe('ControlButtonReference', () => {
 			getControlIdAt.mockReturnValue(MY_CONTROL_ID)
 			const control = createControl(plainLocation('1/2/3'))
 
-			control.pressControl(true, 'surface1')
+			control.pressControl(true, 'surface1', null)
 			expect(controlsAccessor.pressControl).not.toHaveBeenCalled()
 		})
 
@@ -190,7 +193,7 @@ describe('ControlButtonReference', () => {
 				deepSurfaceId = mangleReferenceSurfaceId(deepSurfaceId, CreateBankControlId('hop'))
 			}
 
-			control.pressControl(true, deepSurfaceId)
+			control.pressControl(true, deepSurfaceId, null)
 			expect(controlsAccessor.pressControl).not.toHaveBeenCalled()
 		})
 	})

@@ -4,6 +4,7 @@ import type {
 	DiscoveredRemoteSurfaceInfo,
 	RemoteSurfaceConnectionInfo,
 	SurfaceAppearanceDefinition,
+	SurfaceControlEvent,
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-surface/base'
 import type {
@@ -65,6 +66,7 @@ export interface HostToSurfaceModuleEvents {
 	updateConfig: (msg: UpdateConfigMessage) => void
 
 	setBrightness: (msg: SetBrightnessMessage) => void
+	controlEvent: (msg: ControlEventMessage) => void
 	drawControls: (msg: DrawControlMessage) => void
 	blankSurface: (msg: BlankSurfaceMessage) => void
 	setLocked: (msg: SetLockedMessage) => void
@@ -215,6 +217,14 @@ export interface FirmwareUpdateInfoMessage {
 export interface SetBrightnessMessage {
 	surfaceId: string
 	brightness: number
+}
+
+export interface ControlEventMessage {
+	surfaceId: string
+	/** Captured from the open result; a reconnect must not receive a previous connection's event. */
+	connectionId: string
+	controlId: string
+	event: SurfaceControlEvent
 }
 export interface DrawControlMessage {
 	surfaceId: string

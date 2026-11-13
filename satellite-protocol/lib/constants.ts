@@ -36,8 +36,12 @@
  *          BITMAP-EVICT from Companion, and BITMAP_ID on KEY-STATE and SUB-STATE.
  *          Add ENCODING to SET-VARIABLE-VALUE and VARIABLE-VALUE, so a VALUE can be JSON instead of a string.
  *          A surface opts in to receiving JSON values with VARIABLE_ENCODING=json on ADD-DEVICE
+ * 1.17.0 - Add CONTROL-EVENT message, sent to a surface that sets CONTROL_EVENTS on ADD-DEVICE. It carries KEY or
+ *          CONTROLID and EVENT when a press of that control ran actions (EVENT=press) or a group set to run while
+ *          held fired (EVENT=hold). How to show it is up to the surface. Clients must ignore unknown EVENT values,
+ *          as more may be added. Support is advertised via CONTROL_EVENTS in CAPS.
  */
-export const API_VERSION = '1.16.0'
+export const API_VERSION = '1.17.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the

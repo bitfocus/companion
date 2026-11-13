@@ -237,6 +237,7 @@ export class ServiceSatelliteApi {
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
 		const canChangePage =
 			typeof params.CAN_CHANGE_PAGE === 'string' && params.CAN_CHANGE_PAGE ? params.CAN_CHANGE_PAGE : undefined
+		const supportsControlEvents = params.CONTROL_EVENTS !== undefined && isTruthy(params.CONTROL_EVENTS)
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
@@ -283,6 +284,7 @@ export class ServiceSatelliteApi {
 			canChangePage,
 			bitmapFormat,
 			variableEncoding,
+			supportsControlEvents,
 		})
 
 		this.#devices.set(id, {
@@ -415,6 +417,7 @@ export class ServiceSatelliteApi {
 			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
 			ROTARY_AMOUNT: true,
 			BITMAP_CACHE: true,
+			CONTROL_EVENTS: true,
 		})
 
 		// Register the per-socket state only once the handshake has been sent, so a failure while

@@ -27,6 +27,7 @@ import {
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
+	controlEventsDisabledSets: undefined,
 	name: undefined,
 }
 

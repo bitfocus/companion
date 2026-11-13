@@ -31,6 +31,11 @@ export interface ControlStepsRuntimeManager {
 	 * @param stepId The step id to make the next
 	 */
 	stepSelectCurrent(stepId: string): boolean
+
+	/**
+	 * Whether automatic surface cues (control events) are enabled for an action-set
+	 */
+	isActionSetControlEventsEnabled(stepId: string, setId: ActionSetId): boolean
 }
 
 /**
@@ -60,6 +65,11 @@ export interface ControlActionSetAndStepsEditor extends Omit<ControlStepsRuntime
 	 * Set whether an action-set should run while the button is held
 	 */
 	actionSetRunWhileHeld(stepId: string, setId: ActionSetId, runWhileHeld: boolean): boolean
+
+	/**
+	 * Set whether automatic surface cues (control events) are enabled for an action-set
+	 */
+	actionSetControlEvents(stepId: string, setId: ActionSetId, enabled: boolean): boolean
 
 	/**
 	 * Add a step to this control

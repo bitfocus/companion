@@ -13,6 +13,7 @@ import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/Styl
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
+import type { ButtonPressEvents } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
@@ -122,6 +123,7 @@ export abstract class ButtonControlRuntimeBase<
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
 	override abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
+		this.#finishPressEvents()
 		if (skip_up) {
 			this.setPushed(false)
 		}
@@ -130,11 +132,16 @@ export abstract class ButtonControlRuntimeBase<
 	}
 
 	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void {
+		this.#finishPressEvents()
 		if (skip_up) {
 			this.setPushed(false)
 		}
 
 		this.actionRunner.abortSingle(exceptSignal)
+	}
+
+	#finishPressEvents(): void {
+		for (const state of this.#surfaceHoldState.values()) state.pressEvents?.finish()
 	}
 
 	/**
@@ -205,6 +212,7 @@ export abstract class ButtonControlRuntimeBase<
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.#finishPressEvents()
 		this.actionRunner.abortAll(null)
 		this.abortRunningHoldTimers(undefined)
 
@@ -243,9 +251,15 @@ export abstract class ButtonControlRuntimeBase<
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
 	 * @param surfaceId The surface that initiated this press
+	 * @param pressEvents Control events for a physical press, or null for any other press
 	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
+	pressControl(
+		pressed: boolean,
+		surfaceId: string | undefined,
+		pressEvents: ButtonPressEvents | null,
+		force: boolean
+	): void {
 		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNextProgression()
 
 		let pressedDuration = 0
@@ -254,12 +268,14 @@ export abstract class ButtonControlRuntimeBase<
 		if (surfaceId) {
 			// Calculate the press duration, or track when the press started
 			if (pressed) {
+				this.#surfaceHoldState.get(surfaceId)?.pressEvents?.finish()
 				this.abortRunningHoldTimers(surfaceId)
 
 				holdState = {
 					pressed: Date.now(),
 					step: thisStepId,
 					timers: [],
+					pressEvents,
 				}
 				this.#surfaceHoldState.set(surfaceId, holdState)
 			} else {
@@ -323,6 +339,20 @@ export abstract class ButtonControlRuntimeBase<
 						.catch((e: unknown) => {
 							this.logger.error(`action execution failed: ${stringifyError(e)}`)
 						})
+
+					if (
+						pressEvents &&
+						pressedStep &&
+						this.entities.isActionSetControlEventsEnabled(pressedStep, setId) &&
+						actions.some((action) => action.type === EntityModelType.Action && !action.disabled)
+					) {
+						if (typeof setId === 'number') {
+							// Release-selected duration feedback needs a timing decision before this draft ships.
+							if (pressed) pressEvents.request('held')
+						} else if (setId === 'down' || setId === 'up') {
+							pressEvents.request(setId)
+						}
+					}
 				}
 
 				if (pressed && holdState && holdState.timers.length === 0) {
@@ -462,4 +492,5 @@ interface SurfaceHoldState {
 	pressed: number
 	step: string | null
 	timers: NodeJS.Timeout[]
+	pressEvents: ButtonPressEvents | null
 }

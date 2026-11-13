@@ -3,6 +3,13 @@ import { SomeEntityModelSchema, type SomeEntityModel } from './EntityModel.js'
 
 export const ActionStepOptionsSchema = z.object({
 	runWhileHeld: z.array(z.number()).default(() => []),
+	// Action sets whose control events are turned off. An unreadable list is dropped, which leaves them on
+	controlEventsDisabledSets: z
+		.array(
+			z.union([z.literal('down'), z.literal('up'), z.literal('rotate_left'), z.literal('rotate_right'), z.number()])
+		)
+		.optional()
+		.catch(undefined),
 	name: z.string().optional(),
 })
 

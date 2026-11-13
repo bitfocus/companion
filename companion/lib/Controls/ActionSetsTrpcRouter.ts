@@ -77,5 +77,21 @@ export function createActionSetsTrpcRouter(controlsMap: Map<SomeControlId, SomeC
 
 				return getEditableActionSets(control).actionSetRunWhileHeld(input.stepId, input.setId, input.runWhileHeld)
 			}),
+
+		setControlEvents: publicProcedure
+			.input(
+				z.object({
+					controlId: zodSomeControlId,
+					stepId: z.string(),
+					setId: z.union([z.literal('down'), z.literal('up'), z.number().finite()]),
+					enabled: z.boolean(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				return getEditableActionSets(control).actionSetControlEvents(input.stepId, input.setId, input.enabled)
+			}),
 	})
 }

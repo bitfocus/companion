@@ -180,7 +180,7 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		expect(b.controller.buttonClient.rotate('remote', -1, 'surface')).toBe(true)
 		b.controller.buttonClient.abort('remote', true, 0)
 		await vi.waitFor(() => {
-			expect(a.controls.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
+			expect(a.controls.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`, null)
 			expect(a.controls.rotateControl).toHaveBeenCalledWith('control-1/0/0', -1, `link:${bId}:surface`)
 			expect(a.abortControl).toHaveBeenCalledWith('control-1/0/0', true, 1)
 		})
@@ -273,11 +273,11 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await vi.waitFor(() => expect(button.state()?.status).toBe('ok'))
 		b.controller.buttonClient.press('remote', true, 'surface')
 		await vi.waitFor(() =>
-			expect(a.controls.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
+			expect(a.controls.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`, null)
 		)
 
 		await shareButtons(a, bId, false)
-		expect(a.controls.pressControl).toHaveBeenLastCalledWith('control-1/0/0', false, `link:${bId}:surface`)
+		expect(a.controls.pressControl).toHaveBeenLastCalledWith('control-1/0/0', false, `link:${bId}:surface`, null)
 		await vi.waitFor(() => expect(button.state()?.status).toBe('denied'))
 		expect((await a.api.peerUsage({ peerId: bId })).buttons.oursUsedThere).toBe(0)
 	})

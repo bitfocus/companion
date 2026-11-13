@@ -264,17 +264,17 @@ describe('ControlStore', () => {
 			const pressListener = vi.fn()
 			store.triggerEvents.on('control_press', pressListener)
 
-			expect(store.pressControl(CreateBankControlId('1'), true, 'surface1', true)).toBe(true)
+			expect(store.pressControl(CreateBankControlId('1'), true, 'surface1', null, true)).toBe(true)
 
 			expect(pressListener).toHaveBeenCalledWith(CreateBankControlId('1'), true, 'surface1')
-			expect(control.pressControl).toHaveBeenCalledWith(true, 'surface1', true)
+			expect(control.pressControl).toHaveBeenCalledWith(true, 'surface1', null, true)
 		})
 
 		it('returns false and does not emit for a missing control', () => {
 			const pressListener = vi.fn()
 			store.triggerEvents.on('control_press', pressListener)
 
-			expect(store.pressControl(CreateBankControlId('missing'), true, 'surface1')).toBe(false)
+			expect(store.pressControl(CreateBankControlId('missing'), true, 'surface1', null)).toBe(false)
 			expect(pressListener).not.toHaveBeenCalled()
 		})
 	})

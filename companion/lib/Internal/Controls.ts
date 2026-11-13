@@ -609,7 +609,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (theControlId) {
 					const forcePress = !!action.options.force
 
-					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
+					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, null, forcePress)
 
 					const duration = Number(action.options.duration)
 					if (Number.isFinite(duration) && duration > 0 && !extras.abortDelayed.aborted) {
@@ -617,26 +617,26 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						return setTimeout(duration, undefined, { signal: extras.abortDelayed })
 							.catch(() => undefined)
 							.then(() => {
-								this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
+								this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, null, forcePress)
 								return { result: undefined }
 							})
 					}
 
-					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
+					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, null, forcePress)
 				}
 				break
 			}
 			case 'button_press': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
+					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, null, !!action.options.force)
 				}
 				break
 			}
 			case 'button_release': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
+					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, null, !!action.options.force)
 				}
 				break
 			}

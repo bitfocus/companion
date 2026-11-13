@@ -165,6 +165,11 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 
 			await plugin.setBrightness(msg.surfaceId, msg.brightness)
 		},
+		controlEvent: async (msg) => {
+			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
+
+			await plugin.controlEvent(msg.surfaceId, msg.connectionId, msg.controlId, msg.event)
+		},
 		drawControls: async (msg) => {
 			if (!plugin || !pluginInitialized) throw new Error('Not initialized')
 

@@ -15,6 +15,7 @@ import type {
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { SurfaceControlEvent } from '@companion-surface/base'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -33,6 +34,8 @@ export interface SurfacePanelInfo {
 	isRemote: boolean
 	hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 	canChangePage?: boolean
+	/** Whether this opened device wants control events, such as a press running actions */
+	supportsControlEvents?: boolean
 }
 
 export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
@@ -51,6 +54,11 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	setConfig(config: any, force?: boolean): void
 	onVariablesChanged?: (allChangedVariables: ReadonlySet<string>) => void
 	quit(): void
+	/**
+	 * Tell the device about an event on the control(s) at this position, in panel coordinates.
+	 * Only called when info.supportsControlEvents is set. Best-effort: errors are contained and nothing is replayed.
+	 */
+	controlEvent?: (x: number, y: number, event: SurfaceControlEvent) => void
 
 	/**
 	 * If the surface will handle locking display of the locking state itself, this method should be implemented.

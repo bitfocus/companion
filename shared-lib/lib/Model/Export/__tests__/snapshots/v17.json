@@ -153,6 +153,32 @@
 																				"type": "number"
 																			}
 																		},
+																		"controlEventsDisabledSets": {
+																			"type": "array",
+																			"items": {
+																				"anyOf": [
+																					{
+																						"type": "string",
+																						"const": "down"
+																					},
+																					{
+																						"type": "string",
+																						"const": "up"
+																					},
+																					{
+																						"type": "string",
+																						"const": "rotate_left"
+																					},
+																					{
+																						"type": "string",
+																						"const": "rotate_right"
+																					},
+																					{
+																						"type": "number"
+																					}
+																				]
+																			}
+																		},
 																		"name": {
 																			"type": "string"
 																		}
@@ -291,6 +317,32 @@
 																			"type": "array",
 																			"items": {
 																				"type": "number"
+																			}
+																		},
+																		"controlEventsDisabledSets": {
+																			"type": "array",
+																			"items": {
+																				"anyOf": [
+																					{
+																						"type": "string",
+																						"const": "down"
+																					},
+																					{
+																						"type": "string",
+																						"const": "up"
+																					},
+																					{
+																						"type": "string",
+																						"const": "rotate_left"
+																					},
+																					{
+																						"type": "string",
+																						"const": "rotate_right"
+																					},
+																					{
+																						"type": "number"
+																					}
+																				]
 																			}
 																		},
 																		"name": {
@@ -1468,6 +1520,32 @@
 																			"type": "number"
 																		}
 																	},
+																	"controlEventsDisabledSets": {
+																		"type": "array",
+																		"items": {
+																			"anyOf": [
+																				{
+																					"type": "string",
+																					"const": "down"
+																				},
+																				{
+																					"type": "string",
+																					"const": "up"
+																				},
+																				{
+																					"type": "string",
+																					"const": "rotate_left"
+																				},
+																				{
+																					"type": "string",
+																					"const": "rotate_right"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			]
+																		}
+																	},
 																	"name": {
 																		"type": "string"
 																	}
@@ -1606,6 +1684,32 @@
 																		"type": "array",
 																		"items": {
 																			"type": "number"
+																		}
+																	},
+																	"controlEventsDisabledSets": {
+																		"type": "array",
+																		"items": {
+																			"anyOf": [
+																				{
+																					"type": "string",
+																					"const": "down"
+																				},
+																				{
+																					"type": "string",
+																					"const": "up"
+																				},
+																				{
+																					"type": "string",
+																					"const": "rotate_left"
+																				},
+																				{
+																					"type": "string",
+																					"const": "rotate_right"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			]
 																		}
 																	},
 																	"name": {
