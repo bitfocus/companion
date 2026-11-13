@@ -1279,6 +1279,34 @@ describe('disabling an entity with children', () => {
 	})
 })
 
+describe('setEnabled', () => {
+	test('a user value feedback restarts from its startup value when re-enabled', () => {
+		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		list.loadStorage(
+			[
+				{
+					type: EntityModelType.Feedback,
+					id: 'uv',
+					connectionId: 'internal',
+					definitionId: 'user_value',
+					options: { startup_value: { isExpression: false, value: 'start' } },
+					upgradeIndex: undefined,
+				},
+			],
+			true,
+			false
+		)
+		const entity = list.findById('uv')!
+		entity.setUserValue('changed')
+
+		entity.setEnabled(false)
+		expect(entity.feedbackValue).toBeUndefined()
+
+		entity.setEnabled(true)
+		expect(entity.feedbackValue).toBe('start')
+	})
+})
+
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList('test01')
