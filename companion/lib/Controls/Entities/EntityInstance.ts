@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import {
 	isCustomActionsConnectionId,
+	isCustomFeedbacksConnectionId,
 	isInternalConnectionId,
 	isVirtualConnectionId,
 } from '@companion-app/shared/ConnectionId.js'
@@ -328,6 +329,8 @@ export class ControlEntityInstance {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
 			this.#scope.customActionInstances.entityDelete(this)
+		} else if (isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+			this.#scope.customFeedbackInstances.entityDelete(this)
 		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e: unknown) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
@@ -436,6 +439,9 @@ export class ControlEntityInstance {
 			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
 				// Build or update the copy of the custom action held by this action
 				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
+			} else if (isCustomFeedbacksConnectionId(thisData.connectionId)) {
+				// Build or update the copy of the custom feedback held by this feedback
+				this.#scope.customFeedbackInstances.entityUpdate(this, this.#controlId, this.#scope)
 			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
@@ -950,9 +956,16 @@ export class ControlEntityInstance {
 			changed = true
 		}
 
-		for (const childGroup of [...this.#children.values(), ...this.#transientCopyLists()]) {
+		for (const childGroup of this.#children.values()) {
 			if (childGroup.clearCachedValueForConnectionId(connectionId).length > 0) {
 				changed = true
+			}
+		}
+		for (const copy of this.#transientCopies.values()) {
+			const copyChanged = copy.lists.flatMap((list) => list.clearCachedValueForConnectionId(connectionId))
+			if (copyChanged.length > 0) {
+				changed = true
+				copy.valuesChanged(copyChanged)
 			}
 		}
 
@@ -994,8 +1007,8 @@ export class ControlEntityInstance {
 	 * Get the value of this feedback as a boolean.
 	 *
 	 * `context` null → cached value. Non-null → evaluate live with its parser so the running action's
-	 * `$(this:*)` are visible; internal feedbacks only, module feedbacks fall back to the cache. `isInverted`
-	 * always comes from the cache.
+	 * `$(this:*)` are visible; internal and custom feedbacks only, module feedbacks fall back to the cache.
+	 * `isInverted` always comes from the cache.
 	 *
 	 * A child-of-action internal feedback is therefore evaluated twice - eagerly cached, and live here (only
 	 * the live value sees the execution context). Skipping the eager caching for these (tracking whether a
@@ -1029,6 +1042,13 @@ export class ControlEntityInstance {
 			definition.feedbackType !== FeedbackEntitySubType.Boolean
 		)
 			return false
+
+		// A custom feedback is evaluated live too, so that its inputs and feedbacks see the execution
+		if (context && isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+			const value = this.#scope.customFeedbackInstances.evaluateLive(this, context)
+			if (definition.showInvert && this.#cachedIsInverted) return !value
+			return value
+		}
 
 		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
 		if (context && isInternalConnectionId(this.#data.connectionId)) {
@@ -1082,8 +1102,10 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#transientCopyLists()) {
-			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
+		for (const copy of this.#transientCopies.values()) {
+			const copyChanged = copy.lists.flatMap((list) => list.updateFeedbackValues(connectionId, newValues))
+			changed.push(...copyChanged)
+			if (copyChanged.length > 0) copy.valuesChanged(copyChanged)
 		}
 
 		for (const childGroup of this.#children.values()) {
@@ -1119,8 +1141,10 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#transientCopyLists()) {
-			changed.push(...childGroup.updateIsInvertedValues(newValues))
+		for (const copy of this.#transientCopies.values()) {
+			const copyChanged = copy.lists.flatMap((list) => list.updateIsInvertedValues(newValues))
+			changed.push(...copyChanged)
+			if (copyChanged.length > 0) copy.valuesChanged(copyChanged)
 		}
 
 		for (const childGroup of this.#children.values()) {

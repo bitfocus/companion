@@ -2,12 +2,14 @@ import type { EventEmitter } from 'node:events'
 import type {
 	BankControlId,
 	CustomActionControlId,
+	CustomFeedbackControlId,
 	PresetControlId,
 	SomeControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbacksUpdate } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -27,6 +29,7 @@ import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
 import type { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
+import type { CustomFeedbackInstanceManager } from './CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -64,6 +67,9 @@ export interface ControlExternalDependencies {
 
 	/** Builds and runs the copies of custom actions held by the actions which call them */
 	readonly customActionInstances: CustomActionInstanceManager
+
+	/** Builds the copies of custom feedbacks held by the feedbacks which use them, and gives those their values */
+	readonly customFeedbackInstances: CustomFeedbackInstanceManager
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
@@ -98,6 +104,8 @@ export interface ControlCommonEvents {
 	customActionDefinitionChanged: [controlId: CustomActionControlId, customAction: ControlCustomAction | null]
 	/** Emitted when the local variable of an output of a custom action is renamed, as callers know the output by it */
 	customActionOutputRenamed: [controlId: CustomActionControlId, fromId: string, toId: string]
+	/** Emitted when a custom feedback is changed or deleted, so that its feedback definition can be updated */
+	customFeedbackDefinitionChanged: [controlId: CustomFeedbackControlId]
 	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
 	presetDrawn: [controlId: PresetControlId, render: ImageResult]
@@ -122,4 +130,5 @@ export type ControlChangeEvents = {
 	triggerChange: [controlId: SomeControlId, diff: TriggersUpdate]
 	expressionVariableChange: [controlId: SomeControlId, diff: ExpressionVariableUpdate]
 	customActionChange: [controlId: CustomActionControlId, diff: CustomActionsUpdate]
+	customFeedbackChange: [controlId: CustomFeedbackControlId, diff: CustomFeedbacksUpdate]
 }

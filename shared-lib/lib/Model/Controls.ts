@@ -14,6 +14,7 @@ import {
 	CustomActionOptionsSchema,
 	type CustomActionRuntimeProps,
 } from './CustomActionModel.js'
+import { CustomFeedbackModelSchema, CustomFeedbackOptionsSchema } from './CustomFeedbackModel.js'
 import { ExpressionVariableModelSchema, ExpressionVariableOptionsSchema } from './ExpressionVariableModel.js'
 import type { LinkButtonRuntimeProps } from './Link.js'
 import { PageControlModelSchema } from './PageControlModel.js'
@@ -24,6 +25,7 @@ export const SomeControlModelSchema = z.discriminatedUnion('type', [
 	TriggerModelSchema,
 	ExpressionVariableModelSchema,
 	CustomActionModelSchema,
+	CustomFeedbackModelSchema,
 	PageControlModelSchema,
 ])
 
@@ -41,6 +43,7 @@ const CONTROL_ID_KIND_FOR_TYPE = {
 	trigger: 'trigger',
 	'expression-variable': 'expression-variable',
 	'custom-action': 'custom-action',
+	'custom-feedback': 'custom-feedback',
 	page: 'page',
 } as const satisfies Record<SomeControlModel['type'], ControlIdKind>
 
@@ -53,6 +56,7 @@ export const zodStoredControlId = z.union([
 	zodControlIds.trigger,
 	zodControlIds['expression-variable'],
 	zodControlIds['custom-action'],
+	zodControlIds['custom-feedback'],
 	zodControlIds.page,
 ]) satisfies z.ZodType<StoredControlId>
 
@@ -95,6 +99,7 @@ export type ControlRuntimePropsByType = AllControlTypes<{
 	trigger: NoRuntimeProps
 	'expression-variable': NoRuntimeProps
 	'custom-action': CustomActionRuntimeProps
+	'custom-feedback': NoRuntimeProps
 	page: NoRuntimeProps
 }>
 
@@ -143,6 +148,7 @@ const CONTROL_OPTIONS_SCHEMAS = {
 	trigger: TriggerOptionsSchema,
 	'expression-variable': ExpressionVariableOptionsSchema,
 	'custom-action': CustomActionOptionsSchema,
+	'custom-feedback': CustomFeedbackOptionsSchema,
 } as const satisfies Partial<Record<SomeControlModel['type'], z.ZodObject>>
 
 export type ControlTypeWithOptions = keyof typeof CONTROL_OPTIONS_SCHEMAS

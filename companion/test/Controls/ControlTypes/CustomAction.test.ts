@@ -18,19 +18,20 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
 import { ActionRunner } from '../../../lib/Controls/ActionRunner.js'
+import {
+	removeBuildingBlockInputInCallers,
+	renameBuildingBlockInputInCallers,
+} from '../../../lib/Controls/BuildingBlocks/BuildingBlockCallers.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomAction } from '../../../lib/Controls/ControlTypes/CustomAction.js'
-import {
-	pruneCustomActionOutputTargetsInCallers,
-	removeCustomActionInputInCallers,
-	renameCustomActionInputInCallers,
-} from '../../../lib/Controls/CustomActions/CustomActionCallers.js'
+import { pruneCustomActionOutputTargetsInCallers } from '../../../lib/Controls/CustomActions/CustomActionCallers.js'
 import type { CustomActionCopy } from '../../../lib/Controls/CustomActions/CustomActionCopy.js'
 import {
 	CUSTOM_ACTION_HELD_COPY,
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
+import { CustomFeedbackInstanceManager } from '../../../lib/Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
@@ -164,7 +165,13 @@ function createHarness(model: Partial<CustomActionModel>) {
 
 	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
 	const variableDependencies = new VariableDependencyRegistry()
-	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock, variableDependencies)
+	const customFeedbackInstances = new CustomFeedbackInstanceManager(controlStore, renderClock, variableDependencies)
+	const customActionInstances = new CustomActionInstanceManager(
+		controlStore,
+		renderClock,
+		variableDependencies,
+		customFeedbackInstances
+	)
 
 	const actionRunner = new ActionRunner(
 		instanceController,
@@ -199,6 +206,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		linkButtons: null as any,
 		referencedLocations: new ReferencedLocationsIndex(),
 		customActionInstances,
+		customFeedbackInstances,
 	}
 
 	// As the app does, keep the copies held by calling actions up to date
@@ -426,7 +434,7 @@ describe('ControlCustomAction', () => {
 			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(6) }, 'other'))
 			controlStore.controls.set(CALLER_CONTROL_ID, caller)
 
-			renameCustomActionInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n', 'count')
+			renameBuildingBlockInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n', 'count')
 
 			const [renamed, untouched] = caller.entities.getActionEntities()
 			expect(renamed.rawOptions).toEqual({ count: exprVal(5) })
@@ -540,7 +548,7 @@ describe('ControlCustomAction', () => {
 			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(6) }, 'other'))
 			controlStore.controls.set(CALLER_CONTROL_ID, caller)
 
-			removeCustomActionInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n')
+			removeBuildingBlockInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n')
 
 			const [removed, untouched] = caller.entities.getActionEntities()
 			expect(removed.rawOptions).toEqual({ m: exprVal(1) })

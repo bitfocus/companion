@@ -21,6 +21,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
+import type { CustomFeedbackInstancesForEntity } from '../CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { RenderClock } from '../RenderClock.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
@@ -52,6 +53,8 @@ export interface ControlEntityListPoolProps {
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 	/** Builds the copy of a custom action held by an action which calls it */
 	customActionInstances: CustomActionInstancesForEntity
+	/** Builds the copy of a custom feedback held by a feedback which uses it */
+	customFeedbackInstances: CustomFeedbackInstancesForEntity
 }
 
 /**
@@ -128,6 +131,7 @@ export abstract class ControlEntityListPoolBase {
 			specialExpressionManager,
 			customActionChain,
 			customActionInstances: props.customActionInstances,
+			customFeedbackInstances: props.customFeedbackInstances,
 			// The pool reports the changes of its own local variables, in tryTriggerLocalVariablesChanged
 			localVariablesChanged: () => undefined,
 			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),

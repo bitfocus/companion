@@ -4,6 +4,7 @@ import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomFeedbackControlId,
 	CreateTriggerControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -62,6 +63,8 @@ function createImportController() {
 	controls.replaceExpressionVariableCollections.mockReturnValue(undefined)
 	controls.importCustomAction.mockReturnValue(true)
 	controls.replaceCustomActionCollections.mockReturnValue(undefined)
+	controls.importCustomFeedback.mockReturnValue(true)
+	controls.replaceCustomFeedbackCollections.mockReturnValue(undefined)
 	controls.replaceTriggerCollections.mockReturnValue(undefined)
 
 	graphics.clearAllForPage.mockReturnValue(undefined)
@@ -267,6 +270,7 @@ function fullConfig(overrides: Partial<ClientImportOrResetSelection> = {}): Clie
 		customVariables: all,
 		expressionVariables: all,
 		customActions: all,
+		customFeedbacks: all,
 		userconfig: 'reset',
 		imageLibrary: all,
 		...overrides,
@@ -306,6 +310,25 @@ describe('importFull config gating', () => {
 				},
 			},
 			customActionCollections: [{ id: 'col', label: 'Col', sortOrder: 0, children: [], metaData: null }],
+			customFeedbacks: {
+				cf1: {
+					type: 'custom-feedback',
+					options: { name: 'CF', description: '', sortOrder: 0 },
+					inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
+					feedbacks: [
+						{
+							type: 'feedback',
+							id: 'f1',
+							connectionId: 'internal',
+							definitionId: 'check_expression',
+							options: {},
+							upgradeIndex: undefined,
+						},
+					],
+					localVariables: [],
+				},
+			},
+			customFeedbackCollections: [{ id: 'fcol', label: 'FCol', sortOrder: 0, children: [], metaData: null }],
 			imageLibrary: [{ info: { name: 'i' } }],
 			imageLibraryCollections: [],
 		}
@@ -330,6 +353,17 @@ describe('importFull config gating', () => {
 				type: 'custom-action',
 				inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
 				actions: [expect.objectContaining({ id: 'a1', connectionId: 'internal', definitionId: 'wait' })],
+			})
+		)
+		expect(controls.replaceCustomFeedbackCollections).toHaveBeenCalledWith([
+			{ id: 'fcol', label: 'FCol', sortOrder: 0, children: [], metaData: null },
+		])
+		expect(controls.importCustomFeedback).toHaveBeenCalledWith(
+			CreateCustomFeedbackControlId('cf1'),
+			expect.objectContaining({
+				type: 'custom-feedback',
+				inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
+				feedbacks: [expect.objectContaining({ id: 'f1', connectionId: 'internal', definitionId: 'check_expression' })],
 			})
 		)
 	})
@@ -367,6 +401,7 @@ describe('importFull config gating', () => {
 			customVariables: 'unchanged',
 			expressionVariables: 'unchanged',
 			customActions: 'unchanged',
+			customFeedbacks: 'unchanged',
 			imageLibrary: 'unchanged',
 			surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'unchanged' },
 		})
@@ -374,6 +409,7 @@ describe('importFull config gating', () => {
 		await controller.importFull(baseData(), config)
 
 		expect(controls.importCustomAction).not.toHaveBeenCalled()
+		expect(controls.importCustomFeedback).not.toHaveBeenCalled()
 
 		expect(controls.importControl).not.toHaveBeenCalled()
 		expect(controls.importTrigger).not.toHaveBeenCalled()

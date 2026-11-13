@@ -99,6 +99,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		variableDependencies: new VariableDependencyRegistry(),
 		getPageVariableEntities: () => null,
 		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+		customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
 	}
 
 	return {

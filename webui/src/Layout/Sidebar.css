@@ -632,10 +632,6 @@
 			background-color: var(--color-surface-muted-hover);
 		}
 
-		&.disabled {
-			color: var(--color-text-faint);
-		}
-
 		&.active {
 			color: var(--color-text-strong);
 			background-color: var(--sidebar-nav-link-active-bg);

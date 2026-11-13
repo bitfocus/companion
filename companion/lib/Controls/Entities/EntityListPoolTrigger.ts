@@ -56,8 +56,9 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 	 * expressions which don't depend on variables (eg randomInt()) are sampled fresh
 	 */
 	checkConditionValue(evaluateLive: boolean): boolean {
+		const parserOptions = { allowClockSensitive: true }
 		const context: FeedbackExecutionContext | null = evaluateLive
-			? { parser: this.createVariablesAndExpressionParser(null, { allowClockSensitive: true }) }
+			? { parser: this.createVariablesAndExpressionParser(null, parserOptions), executionVariables: {}, parserOptions }
 			: null
 		return this.#feedbacks.getBooleanFeedbackValue(context)
 	}

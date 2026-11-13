@@ -2,7 +2,7 @@ import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_ACTIONS_CONNECTION_ID, CUSTOM_FEEDBACKS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
@@ -137,7 +137,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	excludedIds,
 	disabled,
 }: AddEntitiesModalProps) {
-	const { entityDefinitions, customActionsList } = useContext(RootAppStoreContext)
+	const { entityDefinitions, customActionsList, customFeedbacksList } = useContext(RootAppStoreContext)
 
 	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 	const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
@@ -174,6 +174,13 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		getEntityLeaves
 	)
 
+	const customFeedbacksNode = useCustomEntitiesTreeNode(
+		CUSTOM_FEEDBACKS_CONNECTION_ID,
+		'Custom feedbacks',
+		customFeedbacksList,
+		getEntityLeaves
+	)
+
 	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType)
 	const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
 		if (internalLeaves.length === 0) return null
@@ -197,7 +204,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	const collapseHelper = usePanelCollapseHelper(`add_entities_${entityType}`, null, defaultCollapsedFn)
 
 	const browseNodes = useComputed(() => {
-		const rawNodes = [internalNode, customActionsNode, ...nodes].filter((node) => !!node)
+		const rawNodes = [internalNode, customActionsNode, customFeedbacksNode, ...nodes].filter((node) => !!node)
 
 		// If there are no collections visible, merge ungrouped nodes into the main list
 		// This hides the "Ungrouped Connections" header
@@ -210,7 +217,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		}
 
 		return { nodes: rawNodes, ungroupedNodes }
-	}, [nodes, ungroupedNodes, internalNode, customActionsNode])
+	}, [nodes, ungroupedNodes, internalNode, customActionsNode, customFeedbacksNode])
 
 	const allEntityResults = useComputed(() => {
 		const results: EntitySearchResult[] = []

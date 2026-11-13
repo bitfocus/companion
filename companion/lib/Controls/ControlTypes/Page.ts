@@ -85,6 +85,7 @@ export class ControlPage
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
 		if (!storage) {

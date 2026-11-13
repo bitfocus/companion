@@ -108,6 +108,7 @@ export class ControlExpressionVariable
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
 		this.options = this.optionsSchema.parse({})

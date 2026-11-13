@@ -51,6 +51,7 @@ describe('export and import', () => {
 				customVariables: 'reset-and-import',
 				expressionVariables: 'reset-and-import',
 				customActions: 'reset-and-import',
+				customFeedbacks: 'reset-and-import',
 				connections: 'reset',
 				// Keep the userconfig - a reset would restore the defaults and undo the harness overrides
 				// (usb hotplug, mdns, usage statistics)
