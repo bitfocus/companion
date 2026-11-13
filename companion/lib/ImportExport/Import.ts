@@ -31,7 +31,6 @@ import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import { yieldToEventLoop } from '../Resources/Util.js'
-import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import {
@@ -43,6 +42,7 @@ import {
 	fixupPageVariables,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
+	ImportReferencesUpdater,
 	type InstanceAppliedRemappings,
 } from './ImportFixup.js'
 import { find_smallest_grid_for_page } from './Util.js'
@@ -95,7 +95,8 @@ export class ImportController {
 		}
 		this.#graphicsController.clearAllForPage(topage)
 
-		await this.#performPageImport(pageInfo, topage, instanceIdMap, undefined)
+		const referencesUpdater = new ImportReferencesUpdater(this.#internalModule, instanceIdMap, undefined)
+		await this.#performPageImport(pageInfo, topage, referencesUpdater)
 
 		// Report the used remap to the ui, for future imports
 		const instanceRemap2: ConnectionRemappings = {}
@@ -126,6 +127,8 @@ export class ImportController {
 		// Setup the new instances
 		const instanceIdMap = this.#importInstances(instances, connectionIdRemapping)
 
+		const referencesUpdater = new ImportReferencesUpdater(this.#internalModule, instanceIdMap, undefined)
+
 		const idsToImport = new Set(selectedTriggerIds)
 		for (const id of idsToImport) {
 			const trigger = triggers[id]
@@ -134,7 +137,7 @@ export class ImportController {
 			// If trigger already exists, generate a new id
 			if (this.#controlsController.getControl(controlId)) controlId = CreateTriggerControlId(nanoid())
 
-			const fixedControlObj = fixupTriggerControl(this.#internalModule, trigger, instanceIdMap, undefined)
+			const fixedControlObj = fixupTriggerControl(trigger, referencesUpdater)
 			this.#controlsController.importTrigger(controlId, fixedControlObj)
 		}
 
@@ -174,6 +177,8 @@ export class ImportController {
 			}
 		}
 
+		const referencesUpdater = new ImportReferencesUpdater(this.#internalModule, instanceIdMap, outboundSurfaceIdRemap)
+
 		// import custom variables
 		if (isImporting(config.customVariables)) {
 			this.#variablesController.custom.replaceCollections(data.customVariablesCollections || [])
@@ -186,12 +191,7 @@ export class ImportController {
 
 			for (const [id, variableDefinition] of Object.entries(data.expressionVariables || {})) {
 				const controlId = CreateExpressionVariableControlId(id)
-				const fixedControlObj = fixupExpressionVariableControl(
-					this.#internalModule,
-					variableDefinition,
-					instanceIdMap,
-					outboundSurfaceIdRemap
-				)
+				const fixedControlObj = fixupExpressionVariableControl(variableDefinition, referencesUpdater)
 
 				this.#controlsController.importExpressionVariable(controlId, fixedControlObj)
 			}
@@ -235,7 +235,7 @@ export class ImportController {
 					)
 				}
 
-				await this.#performPageImport(pageInfo, pageNumber, instanceIdMap, outboundSurfaceIdRemap)
+				await this.#performPageImport(pageInfo, pageNumber, referencesUpdater)
 
 				// Yield between pages so a large import doesn't block the event loop for its whole duration
 				await yieldToEventLoop()
@@ -351,12 +351,7 @@ export class ImportController {
 
 			for (const [id, trigger] of Object.entries(data.triggers || {})) {
 				const controlId = CreateTriggerControlId(id)
-				const fixedControlObj = fixupTriggerControl(
-					this.#internalModule,
-					trigger,
-					instanceIdMap,
-					outboundSurfaceIdRemap
-				)
+				const fixedControlObj = fixupTriggerControl(trigger, referencesUpdater)
 				this.#controlsController.importTrigger(controlId, fixedControlObj)
 			}
 		}
@@ -373,8 +368,7 @@ export class ImportController {
 	#performPageImport = async (
 		pageInfo: ExportPageContent,
 		topage: number,
-		instanceIdMap: InstanceAppliedRemappings,
-		outboundSurfaceIdRemap: Record<string, string> | undefined
+		referencesUpdater: ImportReferencesUpdater
 	): Promise<void> => {
 		{
 			// Ensure the configured grid size is large enough for the import
@@ -397,23 +391,6 @@ export class ImportController {
 		// Import the new page
 		this.#pagesController.setPageName(topage, pageInfo.name)
 
-		const connectionLabelRemap: Record<string, string> = {}
-		const connectionIdRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(instanceIdMap)) {
-			if (info.oldLabel && info.label !== info.oldLabel) {
-				connectionLabelRemap[info.oldLabel] = info.label
-			}
-			if (info.id && info.id !== oldId) {
-				connectionIdRemap[oldId] = info.id
-			}
-		}
-		const referencesUpdater = new VisitorReferencesUpdater(
-			this.#internalModule,
-			connectionLabelRemap,
-			connectionIdRemap,
-			outboundSurfaceIdRemap
-		)
-
 		// Import the controls
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			for (const [column, control] of Object.entries(rowObj)) {
@@ -425,11 +402,11 @@ export class ImportController {
 							type: control.type,
 						}
 					} else if (control.type === 'button-layered') {
-						fixedControlObj = fixupLayeredButtonControl(this.#logger, control, referencesUpdater, instanceIdMap)
+						fixedControlObj = fixupLayeredButtonControl(this.#logger, control, referencesUpdater)
 					} else if (control.type === 'preset-reference') {
 						// Keep it a live reference: remap the referenced connection id the same way entity references
 						// are remapped during import, so it re-links to the re-created connection.
-						fixedControlObj = fixupPresetReferenceControl(this.#logger, control, referencesUpdater, instanceIdMap)
+						fixedControlObj = fixupPresetReferenceControl(this.#logger, control, referencesUpdater)
 					} else if (control.type === 'button-reference') {
 						// Keep it a live mirror: remap any connection labels used in the location expression.
 						fixedControlObj = fixupButtonReferenceControl(control, referencesUpdater)
@@ -458,12 +435,7 @@ export class ImportController {
 		if (pageInfo.pageVariables) {
 			const pageId = this.#pagesController.store.getPageId(Number(topage))
 			if (pageId) {
-				const localVariables = fixupPageVariables(
-					this.#internalModule,
-					pageInfo.pageVariables,
-					instanceIdMap,
-					outboundSurfaceIdRemap
-				)
+				const localVariables = fixupPageVariables(pageInfo.pageVariables, referencesUpdater)
 				this.#controlsController.createPageControl(pageId, { type: 'page', localVariables }, true)
 			}
 		}

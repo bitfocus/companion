@@ -24,24 +24,39 @@ export type InstanceAppliedRemappings = Record<
 	{ id: string; label: string; lastUpgradeIndex?: number; oldLabel?: string }
 >
 
+/**
+ * The references updater for an import, shared by every control it fixes up
+ */
+export class ImportReferencesUpdater extends VisitorReferencesUpdater {
+	readonly instanceIdMap: InstanceAppliedRemappings
+
+	constructor(
+		internalModule: InternalController,
+		instanceIdMap: InstanceAppliedRemappings,
+		outboundSurfaceIdRemap: Record<string, string> | undefined
+	) {
+		const connectionLabelRemap: Record<string, string> = {}
+		const connectionIdRemap: Record<string, string> = {}
+		for (const [oldId, info] of Object.entries(instanceIdMap)) {
+			if (info.oldLabel && info.label !== info.oldLabel) {
+				connectionLabelRemap[info.oldLabel] = info.label
+			}
+			if (info.id && info.id !== oldId) {
+				connectionIdRemap[oldId] = info.id
+			}
+		}
+
+		super(internalModule, connectionLabelRemap, connectionIdRemap, outboundSurfaceIdRemap)
+
+		this.instanceIdMap = instanceIdMap
+	}
+}
+
 export function fixupTriggerControl(
-	internalModule: InternalController,
 	control: ExportTriggerContent,
-	instanceIdMap: InstanceAppliedRemappings,
-	outboundSurfaceIdRemap: Record<string, string> | undefined
+	referencesUpdater: ImportReferencesUpdater
 ): TriggerModel {
 	// Future: this does not feel durable
-
-	const connectionLabelRemap: Record<string, string> = {}
-	const connectionIdRemap: Record<string, string> = {}
-	for (const [oldId, info] of Object.entries(instanceIdMap)) {
-		if (info.oldLabel && info.label !== info.oldLabel) {
-			connectionLabelRemap[info.oldLabel] = info.label
-		}
-		if (info.id && info.id !== oldId) {
-			connectionIdRemap[oldId] = info.id
-		}
-	}
 
 	const result: TriggerModel = {
 		type: 'trigger',
@@ -53,18 +68,21 @@ export function fixupTriggerControl(
 	}
 
 	if (control.condition) {
-		result.condition = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.condition))
+		result.condition = fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(control.condition))
 	}
 
 	if (control.actions) {
-		result.actions = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.actions))
+		result.actions = fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(control.actions))
 	}
 
 	if (control.localVariables) {
-		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
+		result.localVariables = fixupEntitiesRecursive(
+			referencesUpdater.instanceIdMap,
+			structuredClone(control.localVariables)
+		)
 	}
 
-	new VisitorReferencesUpdater(internalModule, connectionLabelRemap, connectionIdRemap, outboundSurfaceIdRemap)
+	referencesUpdater
 		.visitEntities([], [...result.localVariables, ...result.condition, ...result.actions])
 		.visitEvents(result.events || [])
 
@@ -72,23 +90,10 @@ export function fixupTriggerControl(
 }
 
 export function fixupExpressionVariableControl(
-	internalModule: InternalController,
 	control: ExpressionVariableModel,
-	instanceIdMap: InstanceAppliedRemappings,
-	outboundSurfaceIdRemap: Record<string, string>
+	referencesUpdater: ImportReferencesUpdater
 ): ExpressionVariableModel {
 	// Future: this does not feel durable
-
-	const connectionLabelRemap: Record<string, string> = {}
-	const connectionIdRemap: Record<string, string> = {}
-	for (const [oldId, info] of Object.entries(instanceIdMap)) {
-		if (info.oldLabel && info.label !== info.oldLabel) {
-			connectionLabelRemap[info.oldLabel] = info.label
-		}
-		if (info.id && info.id !== oldId) {
-			connectionIdRemap[oldId] = info.id
-		}
-	}
 
 	const result: ExpressionVariableModel = {
 		type: 'expression-variable',
@@ -98,20 +103,18 @@ export function fixupExpressionVariableControl(
 	}
 
 	if (control.entity) {
-		result.entity = fixupEntitiesRecursive(instanceIdMap, [structuredClone(control.entity)])[0]
+		result.entity = fixupEntitiesRecursive(referencesUpdater.instanceIdMap, [structuredClone(control.entity)])[0]
 	}
 
 	if (control.localVariables) {
-		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
+		result.localVariables = fixupEntitiesRecursive(
+			referencesUpdater.instanceIdMap,
+			structuredClone(control.localVariables)
+		)
 	}
 
-	const visitor = new VisitorReferencesUpdater(
-		internalModule,
-		connectionLabelRemap,
-		connectionIdRemap,
-		outboundSurfaceIdRemap
-	).visitEntities([], result.localVariables)
-	if (result.entity) visitor.visitEntities([], [result.entity])
+	referencesUpdater.visitEntities([], result.localVariables)
+	if (result.entity) referencesUpdater.visitEntities([], [result.entity])
 
 	return result
 }
@@ -160,32 +163,16 @@ export function fixupCustomActionControl(
 }
 
 export function fixupPageVariables(
-	internalModule: InternalController,
 	localVariables: SomeEntityModel[] | undefined,
-	instanceIdMap: InstanceAppliedRemappings,
-	outboundSurfaceIdRemap: Record<string, string> | undefined
+	referencesUpdater: ImportReferencesUpdater
 ): SomeEntityModel[] {
 	// Future: this does not feel durable
 
-	const connectionLabelRemap: Record<string, string> = {}
-	const connectionIdRemap: Record<string, string> = {}
-	for (const [oldId, info] of Object.entries(instanceIdMap)) {
-		if (info.oldLabel && info.label !== info.oldLabel) {
-			connectionLabelRemap[info.oldLabel] = info.label
-		}
-		if (info.id && info.id !== oldId) {
-			connectionIdRemap[oldId] = info.id
-		}
-	}
+	const result = localVariables
+		? fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(localVariables))
+		: []
 
-	const result = localVariables ? fixupEntitiesRecursive(instanceIdMap, structuredClone(localVariables)) : []
-
-	new VisitorReferencesUpdater(
-		internalModule,
-		connectionLabelRemap,
-		connectionIdRemap,
-		outboundSurfaceIdRemap
-	).visitEntities([], result)
+	referencesUpdater.visitEntities([], result)
 
 	return result
 }
@@ -193,14 +180,13 @@ export function fixupPageVariables(
 export function fixupLayeredButtonControl(
 	logger: Logger,
 	control: LayeredButtonModel,
-	referencesUpdater: VisitorReferencesUpdater,
-	instanceIdMap: InstanceAppliedRemappings
+	referencesUpdater: ImportReferencesUpdater
 ): LayeredButtonModel {
 	const result: LayeredButtonModel = {
 		type: 'button-layered',
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
-		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
+		...fixupButtonControlBase(logger, control, referencesUpdater),
 	}
 
 	referencesUpdater.visitDrawElements(result.style.layers)
@@ -211,19 +197,18 @@ export function fixupLayeredButtonControl(
 export function fixupPresetReferenceControl(
 	logger: Logger,
 	control: PresetReferenceButtonModel,
-	referencesUpdater: VisitorReferencesUpdater,
-	instanceIdMap: InstanceAppliedRemappings
+	referencesUpdater: ImportReferencesUpdater
 ): PresetReferenceButtonModel {
 	const oldConnectionId: string = control.presetRef?.connectionId
 	// Remap the referenced connection id the same way entity references are remapped, so the imported button
 	// stays a live reference to the (re-created) connection rather than a detached copy.
-	const newConnectionId = instanceIdMap[oldConnectionId]?.id ?? oldConnectionId
+	const newConnectionId = referencesUpdater.instanceIdMap[oldConnectionId]?.id ?? oldConnectionId
 
 	const result: PresetReferenceButtonModel = {
 		type: 'preset-reference',
 		options: structuredClone(control.options),
 		style: structuredClone(control.style),
-		...fixupButtonControlBase(logger, control, referencesUpdater, instanceIdMap),
+		...fixupButtonControlBase(logger, control, referencesUpdater),
 		presetRef: {
 			connectionId: newConnectionId,
 			moduleId: control.presetRef?.moduleId,
@@ -276,8 +261,7 @@ export function fixupLinkButtonControl(
 function fixupButtonControlBase(
 	logger: Logger,
 	control: ButtonModelBase,
-	referencesUpdater: VisitorReferencesUpdater,
-	instanceIdMap: InstanceAppliedRemappings
+	referencesUpdater: ImportReferencesUpdater
 ): ButtonModelBase {
 	// Future: this does not feel durable
 
@@ -288,11 +272,14 @@ function fixupButtonControlBase(
 	}
 
 	if (control.feedbacks) {
-		result.feedbacks = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.feedbacks))
+		result.feedbacks = fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(control.feedbacks))
 	}
 
 	if (control.localVariables) {
-		result.localVariables = fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables))
+		result.localVariables = fixupEntitiesRecursive(
+			referencesUpdater.instanceIdMap,
+			structuredClone(control.localVariables)
+		)
 	}
 
 	const allEntities: SomeEntityModel[] = [...result.feedbacks, ...result.localVariables]
@@ -316,7 +303,7 @@ function fixupButtonControlBase(
 					continue
 				}
 
-				const newActions = fixupEntitiesRecursive(instanceIdMap, structuredClone(action_set))
+				const newActions = fixupEntitiesRecursive(referencesUpdater.instanceIdMap, structuredClone(action_set))
 
 				newStepSets[setIdSafe] = newActions
 				allEntities.push(...newActions)
