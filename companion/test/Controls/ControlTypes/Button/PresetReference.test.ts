@@ -413,8 +413,8 @@ describe('ControlButtonPresetReference', () => {
 
 			// The preset changed, so the reference rebuilt: the imageBuffer is cleared until refetched...
 			expect(control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')).toBeUndefined()
-			// ...and the refreshed feedback was re-subscribed so the module provides it again
-			expect(processManager.connectionEntityUpdate).toHaveBeenCalled()
+			// ...and the refreshed feedback was re-subscribed (once) so the module provides it again
+			expect(processManager.connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		})
 	})
 
