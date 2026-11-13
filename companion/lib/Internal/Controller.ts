@@ -21,7 +21,10 @@ import {
 	type FeedbackValue,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
+import {
+	convertExpressionOptionsWithoutParsing,
+	type ExpressionableOptionsObject,
+} from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -42,6 +45,7 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
+import { visitInputFieldReferences } from '../Resources/Visitors/InputFieldVisitor.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type {
@@ -66,10 +70,8 @@ import { InternalTime } from './Time.js'
 import { InternalTriggers } from './Triggers.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackExecutionContext,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
@@ -516,66 +518,22 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	}
 
 	/**
-	 * Visit any references in some inactive internal actions and feedbacks
+	 * Visit the references in the options of an internal action or feedback, as described by its definition
 	 */
-	visitReferences(visitor: InternalVisitor, rawEntities: SomeEntityModel[], entities: ControlEntityInstance[]): void {
+	visitEntityReferences(
+		visitor: InternalVisitor,
+		entityType: EntityModelType,
+		definitionId: string,
+		entityId: string,
+		options: ExpressionableOptionsObject
+	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
-		const simpleInternalActions: ActionForVisitor[] = []
+		const definition = this.#instanceDefinitions.getEntityDefinition(entityType, INTERNAL_CONNECTION_ID, definitionId)
+		if (!definition) return
 
-		for (const entity of rawEntities) {
-			if (!isInternalConnectionId(entity.connectionId)) continue
-
-			switch (entity.type) {
-				case EntityModelType.Feedback:
-					simpleInternalFeedbacks.push({
-						id: entity.id,
-						type: entity.definitionId,
-						options: entity.options,
-					})
-					break
-				case EntityModelType.Action:
-					simpleInternalActions.push({
-						id: entity.id,
-						action: entity.definitionId,
-						options: entity.options,
-					})
-					break
-				default:
-					assertNever(entity)
-					break
-			}
-		}
-		for (const entity of entities) {
-			if (!isInternalConnectionId(entity.connectionId)) continue
-
-			switch (entity.type) {
-				case EntityModelType.Feedback:
-					simpleInternalFeedbacks.push({
-						id: entity.id,
-						type: entity.definitionId,
-						options: entity.rawOptions, // Ensure the options is not a copy/clone
-					})
-					break
-				case EntityModelType.Action:
-					simpleInternalActions.push({
-						id: entity.id,
-						action: entity.definitionId,
-						options: entity.rawOptions, // Ensure the options is not a copy/clone
-					})
-					break
-				default:
-					assertNever(entity.type)
-					break
-			}
-		}
-
-		for (const fragment of this.#fragments) {
-			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
-				fragment.visitReferences(visitor, simpleInternalActions, simpleInternalFeedbacks)
-			}
-		}
+		const feedbackId = entityType === EntityModelType.Feedback ? entityId : undefined
+		visitInputFieldReferences(visitor, definition.options, options, feedbackId)
 	}
 
 	/**

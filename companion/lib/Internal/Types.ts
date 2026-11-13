@@ -4,7 +4,6 @@ import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import type { JsonValue } from '@companion-module/host'
@@ -48,24 +47,6 @@ export interface FeedbackExecutionContext {
 
 export type InternalVisitor =
 	VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor | VisitorVariableRenamerVisitor
-
-/**
- * A minimal representation of a feedback, for visiting internal feedbacks.
- */
-export interface FeedbackForVisitor {
-	id: string
-	type: string
-	options: ExpressionableOptionsObject
-}
-
-/**
- * A minimal representation of a action, for visiting internal actions.
- */
-export interface ActionForVisitor {
-	id: string
-	action: string
-	options: ExpressionableOptionsObject
-}
 
 export interface InternalModuleFragmentEvents {
 	checkFeedbacks: [...feedbackType: string[]]
@@ -127,11 +108,6 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 	feedbackUpgrade?: (feedback: FeedbackEntityModel, controlId: SomeControlId) => FeedbackEntityModel | void
 
 	forgetFeedback?: (feedback: FeedbackEntityModel) => void
-
-	/**
-	 *
-	 */
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void
 
 	getVariableDefinitions?: () => VariableDefinition[]
 	updateVariables?: () => void

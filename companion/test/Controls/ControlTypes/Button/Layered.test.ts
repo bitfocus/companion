@@ -123,7 +123,7 @@ describe('ControlButtonLayered', () => {
 			getPageVariableEntities: () => null,
 			triggerEvents: null as any,
 			expressionVariableNamesMap: null as any,
-			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
+			internalModule: { entityUpgrade: vi.fn(() => undefined), visitEntityReferences: vi.fn() } as any,
 			instance: {
 				definitions,
 				processManager: {

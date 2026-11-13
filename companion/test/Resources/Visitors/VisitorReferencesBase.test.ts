@@ -17,7 +17,7 @@ import { VisitorReferencesUpdater } from '../../../lib/Resources/Visitors/Refere
 
 function mockInternalModule() {
 	return {
-		visitReferences: vi.fn(),
+		visitEntityReferences: vi.fn(),
 		checkFeedbacksById: vi.fn(),
 	}
 }
@@ -70,8 +70,15 @@ function makeFeedback(overrides: Partial<FeedbackEntityModel> = {}): FeedbackEnt
 	}
 }
 
-function makeInstance(id: string): ControlEntityInstance {
-	return { id, visitReferences: vi.fn() } as unknown as ControlEntityInstance
+function makeInstance(id: string, connectionId: string): ControlEntityInstance {
+	return {
+		id,
+		type: EntityModelType.Feedback,
+		definitionId: `def-${id}`,
+		connectionId,
+		rawOptions: { opt: exprVal(id) },
+		visitReferences: vi.fn(),
+	} as unknown as ControlEntityInstance
 }
 
 function elements(...els: any[]): SomeButtonGraphicsElement[] {
@@ -81,19 +88,26 @@ function elements(...els: any[]): SomeButtonGraphicsElement[] {
 // ─── visitEntityInstances ───────────────────────────────────────────────────
 
 describe('VisitorReferencesBase – visitEntityInstances', () => {
-	it('passes the instances to the internal module, with no models', () => {
+	it('passes only the internal instances to the internal module, with their raw options', () => {
 		const { collector, internalModule } = makeCollector()
-		const instances = [makeInstance('a'), makeInstance('b')]
+		const internal = makeInstance('a', 'internal')
+		const instances = [internal, makeInstance('b', 'conn-1')]
 
 		collector.visitEntityInstances(instances)
 
-		expect(internalModule.visitReferences).toHaveBeenCalledTimes(1)
-		expect(internalModule.visitReferences).toHaveBeenCalledWith(collector['visitor'], [], instances)
+		expect(internalModule.visitEntityReferences).toHaveBeenCalledTimes(1)
+		expect(internalModule.visitEntityReferences).toHaveBeenCalledWith(
+			collector['visitor'],
+			EntityModelType.Feedback,
+			'def-a',
+			'a',
+			internal.rawOptions
+		)
 	})
 
 	it('asks each instance to visit itself, without recursing', () => {
 		const { collector } = makeCollector()
-		const instances = [makeInstance('a'), makeInstance('b')]
+		const instances = [makeInstance('a', 'internal'), makeInstance('b', 'conn-1')]
 
 		collector.visitEntityInstances(instances)
 
@@ -107,23 +121,38 @@ describe('VisitorReferencesBase – visitEntityInstances', () => {
 		const { collector, internalModule } = makeCollector()
 
 		expect(collector.visitEntityInstances([])).toBe(collector)
-		expect(internalModule.visitReferences).toHaveBeenCalledWith(collector['visitor'], [], [])
+		expect(internalModule.visitEntityReferences).not.toHaveBeenCalled()
 	})
 })
 
 // ─── visitEntityModels ──────────────────────────────────────────────────────
 
 describe('VisitorReferencesBase – visitEntityModels', () => {
-	it('passes the flattened models to the internal module, with no instances', () => {
+	it('passes each internal model to the internal module, including nested ones', () => {
 		const { collector, internalModule } = makeCollector()
-		const child = makeAction({ id: 'child', connectionId: 'conn-2' })
-		const parent = makeAction({ id: 'parent', connectionId: 'internal', children: { default: [child] } })
+		const child = makeFeedback({ id: 'child', connectionId: 'internal', definitionId: 'child-def' })
+		const other = makeAction({ id: 'other', connectionId: 'conn-2' })
+		const parent = makeAction({ id: 'parent', connectionId: 'internal', children: { default: [child, other] } })
 		const sibling = makeFeedback({ id: 'sibling' })
 
 		collector.visitEntityModels([parent, sibling])
 
-		expect(internalModule.visitReferences).toHaveBeenCalledTimes(1)
-		expect(internalModule.visitReferences).toHaveBeenCalledWith(collector['visitor'], [parent, child, sibling], [])
+		const visitor = collector['visitor']
+		expect(internalModule.visitEntityReferences).toHaveBeenCalledTimes(2)
+		expect(internalModule.visitEntityReferences).toHaveBeenCalledWith(
+			visitor,
+			EntityModelType.Action,
+			'some-action',
+			'parent',
+			parent.options
+		)
+		expect(internalModule.visitEntityReferences).toHaveBeenCalledWith(
+			visitor,
+			EntityModelType.Feedback,
+			'child-def',
+			'child',
+			child.options
+		)
 	})
 
 	it('recurses through nested internal children and every child group', () => {
@@ -149,7 +178,7 @@ describe('VisitorReferencesBase – visitEntityModels', () => {
 
 		collector.visitEntityModels([parent])
 
-		expect(internalModule.visitReferences).toHaveBeenCalledWith(collector['visitor'], [parent], [])
+		expect(internalModule.visitEntityReferences).not.toHaveBeenCalled()
 		expect(collector['visitor'].connectionIds).toEqual(new Set(['conn-parent']))
 	})
 
@@ -220,7 +249,7 @@ describe('VisitorReferencesBase – visitEntityModels', () => {
 		const { updater, internalModule } = makeUpdater({ old: 'new' }, undefined)
 
 		expect(updater.visitEntityModels([]).hasChanges()).toBe(false)
-		expect(internalModule.visitReferences).toHaveBeenCalledWith(updater['visitor'], [], [])
+		expect(internalModule.visitEntityReferences).not.toHaveBeenCalled()
 	})
 })
 

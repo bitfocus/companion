@@ -48,7 +48,7 @@ function createImportController() {
 	const variables = mockDeep<VariablesController>(mockOptions)
 
 	// ── Baseline stubs shared by most paths ──
-	internalModule.visitReferences.mockReturnValue(undefined)
+	internalModule.visitEntityReferences.mockReturnValue(undefined)
 
 	userconfig.getKey.mockImplementation(mockGetKey({ gridSize: { ...DEFAULT_GRID_SIZE } }, 'default'))
 	userconfig.setKey.mockReturnValue(undefined)

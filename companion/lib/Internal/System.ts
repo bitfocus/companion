@@ -31,13 +31,10 @@ import { describeHowToEnableDangerousFeature } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const execAsync = promisify(exec)
@@ -430,17 +427,5 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			try {
-				if (action.action === 'exec') {
-					visitor.visitVariableName(action.options, 'targetVariable')
-				}
-			} catch (_e) {
-				//Ignore
-			}
-		}
 	}
 }

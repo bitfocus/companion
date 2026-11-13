@@ -21,15 +21,12 @@ import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalActionRecorder
@@ -367,19 +364,6 @@ export class InternalActionRecorder
 				return matches && session.isRunning
 			} else {
 				return matches
-			}
-		}
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			if (action.action === 'action_recorder_set_connections') {
-				visitor.visitConnectionIdArray(action.options, 'connections')
-			}
-		}
-		for (const feedback of feedbacks) {
-			if (feedback.type === 'action_recorder_check_connections') {
-				visitor.visitConnectionIdArray(feedback.options, 'connections', feedback.id)
 			}
 		}
 	}

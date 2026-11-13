@@ -33,7 +33,7 @@ type LooseTrigger = any
 
 /**
  * The fixup helpers depend on a VisitorReferencesUpdater, which calls
- * `InternalController.visitReferences` to fix up references inside `internal`
+ * `InternalController.visitEntityReferences` to fix up references inside `internal`
  * connection entities. None of the ImportFixup logic under test lives there, so
  * a no-op mock is sufficient. Variable-reference ($(label:var)) and connectionId
  * remapping on the entity itself are handled by the generic visitor, not by the
@@ -41,7 +41,7 @@ type LooseTrigger = any
  */
 function mockInternalModule(): InternalController {
 	return {
-		visitReferences: vi.fn(),
+		visitEntityReferences: vi.fn(),
 	} as unknown as InternalController
 }
 
@@ -744,7 +744,7 @@ describe('fixupPresetReferenceControl', () => {
 
 describe('fixupButtonReferenceControl', () => {
 	function makeUpdater(labelRemap: Record<string, string> = {}): VisitorReferencesUpdater {
-		const internalModule = { visitReferences: vi.fn() } as any
+		const internalModule = { visitEntityReferences: vi.fn() } as any
 		return new VisitorReferencesUpdater(internalModule, labelRemap, {}, undefined)
 	}
 

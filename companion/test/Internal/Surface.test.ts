@@ -8,12 +8,11 @@ import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandler
 import { InternalSurface } from '../../lib/Internal/Surface.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalVisitor,
 } from '../../lib/Internal/Types.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
+import { visitInputFieldReferences } from '../../lib/Resources/Visitors/InputFieldVisitor.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 
 function createSurface() {
@@ -661,23 +660,30 @@ describe('InternalSurface', () => {
 		})
 	})
 
-	describe('visitReferences', () => {
+	describe('reference fields', () => {
 		test('visits the outbound surface id on actions and feedbacks', () => {
 			const { surface } = createSurface()
 			const visitor = mockDeep<InternalVisitor>()
 
-			const actions: ActionForVisitor[] = [
+			const actions = [
 				{ id: 'a1', action: 'outbound_surface_set_enabled', options: { surfaceId: 'remote1' } as any },
 				{ id: 'a2', action: 'set_brightness', options: {} },
 			]
-			const feedbacks: FeedbackForVisitor[] = [
+			const feedbacks = [
 				{ id: 'f1', type: 'outbound_surface_enabled', options: { surfaceId: 'remote2' } as any },
 				{ id: 'f2', type: 'surface_on_page', options: {} },
 			]
 
-			surface.visitReferences(visitor, actions, feedbacks)
+			const actionDefinitions = surface.getActionDefinitions()
+			const feedbackDefinitions = surface.getFeedbackDefinitions()
+			for (const action of actions) {
+				visitInputFieldReferences(visitor, actionDefinitions[action.action].options, action.options, undefined)
+			}
+			for (const feedback of feedbacks) {
+				visitInputFieldReferences(visitor, feedbackDefinitions[feedback.type].options, feedback.options, feedback.id)
+			}
 
-			expect(visitor.visitOutboundSurfaceId).toHaveBeenCalledWith(actions[0].options, 'surfaceId')
+			expect(visitor.visitOutboundSurfaceId).toHaveBeenCalledWith(actions[0].options, 'surfaceId', undefined)
 			expect(visitor.visitOutboundSurfaceId).toHaveBeenCalledWith(feedbacks[0].options, 'surfaceId', 'f1')
 			expect(visitor.visitOutboundSurfaceId).toHaveBeenCalledTimes(2)
 		})

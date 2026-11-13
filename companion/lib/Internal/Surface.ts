@@ -27,15 +27,12 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const CHOICES_SURFACE_ID: SomeCompanionInputField = {
@@ -789,19 +786,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			if (!surfaceId) return false
 
 			return this.#surfaceController.outbound.getById(surfaceId)?.enabled ?? false
-		}
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			if (action.action === 'outbound_surface_set_enabled') {
-				visitor.visitOutboundSurfaceId(action.options, 'surfaceId')
-			}
-		}
-		for (const feedback of feedbacks) {
-			if (feedback.type === 'outbound_surface_enabled') {
-				visitor.visitOutboundSurfaceId(feedback.options, 'surfaceId', feedback.id)
-			}
 		}
 	}
 }

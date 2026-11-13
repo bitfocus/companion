@@ -24,10 +24,17 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 	 * from `getAllEntities()`.
 	 */
 	visitEntityInstances(entities: ControlEntityInstance[]): this {
-		// Apply any updates to the internal actions/feedbacks
-		this.internalModule.visitReferences(this.visitor, [], entities)
-
 		for (const entity of entities) {
+			if (isInternalConnectionId(entity.connectionId)) {
+				this.internalModule.visitEntityReferences(
+					this.visitor,
+					entity.type,
+					entity.definitionId,
+					entity.id,
+					entity.rawOptions // Ensure the options is not a copy/clone
+				)
+			}
+
 			entity.visitReferences(this.visitor)
 		}
 
@@ -51,10 +58,17 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 		}
 		pluckEntities(entities)
 
-		// Apply any updates to the internal actions/feedbacks
-		this.internalModule.visitReferences(this.visitor, flatEntities, [])
-
 		for (const entity of flatEntities) {
+			if (isInternalConnectionId(entity.connectionId)) {
+				this.internalModule.visitEntityReferences(
+					this.visitor,
+					entity.type,
+					entity.definitionId,
+					entity.id,
+					entity.options
+				)
+			}
+
 			visitEntityModel(this.visitor, entity)
 		}
 

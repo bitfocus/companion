@@ -25,15 +25,12 @@ import LogController from '../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackExecutionContext,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalBuildingBlocks
@@ -357,10 +354,6 @@ export class InternalBuildingBlocks
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }
 

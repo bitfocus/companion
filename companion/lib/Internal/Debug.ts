@@ -6,15 +6,12 @@ import type { JsonValue } from '@companion-module/host'
 import { isPackaged } from '../Resources/Util.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const CHOICES = [
@@ -200,9 +197,5 @@ export class InternalDebug extends EventEmitter<InternalModuleFragmentEvents> im
 			default:
 				return
 		}
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Any references in the options are followed by the generic options visitor
 	}
 }

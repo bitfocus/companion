@@ -29,15 +29,12 @@ import LogController from '../Log/Controller.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
@@ -520,31 +517,6 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			this.#debounceCheckFeedbacks()
 		} catch (e) {
 			this.#logger.error('Error calculating instance counts', e)
-		}
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			try {
-				if (action.action === 'instance_control') {
-					visitor.visitConnectionId(action.options, 'instance_id')
-				}
-			} catch (_e) {
-				//Ignore
-			}
-		}
-		for (const feedback of feedbacks) {
-			try {
-				if (feedback.type === 'instance_status') {
-					if (feedback.options.instance_id?.value !== 'all') {
-						visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
-					}
-				} else if (feedback.type === 'instance_custom_state') {
-					visitor.visitConnectionId(feedback.options, 'instance_id', feedback.id)
-				}
-			} catch (_e) {
-				//Ignore
-			}
 		}
 	}
 }

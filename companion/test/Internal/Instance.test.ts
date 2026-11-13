@@ -8,6 +8,7 @@ import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandler
 import type { InstanceController } from '../../lib/Instance/Controller.js'
 import { InternalInstance } from '../../lib/Internal/Instance.js'
 import type { ActionForInternalExecution, FeedbackForInternalExecution } from '../../lib/Internal/Types.js'
+import { visitInputFieldReferences } from '../../lib/Resources/Visitors/InputFieldVisitor.js'
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -544,7 +545,7 @@ describe('InternalInstance', () => {
 		})
 	})
 
-	describe('visitReferences', () => {
+	describe('reference fields', () => {
 		it('visits connection ids on instance_control actions and status feedbacks', () => {
 			const { internal } = createHarness()
 			const visitor = { visitConnectionId: vi.fn() } as any
@@ -558,9 +559,14 @@ describe('InternalInstance', () => {
 			const statusAll = { id: 'fb2', type: 'instance_status', options: { instance_id: exprVal('all') } } as any
 			const statusSpecific = { id: 'fb3', type: 'instance_status', options: { instance_id: exprVal('conn2') } } as any
 
-			internal.visitReferences(visitor, [action], [customState, statusAll, statusSpecific])
+			const actionDefinitions = internal.getActionDefinitions()
+			const feedbackDefinitions = internal.getFeedbackDefinitions()
+			visitInputFieldReferences(visitor, actionDefinitions[action.action].options, action.options, undefined)
+			for (const feedback of [customState, statusAll, statusSpecific]) {
+				visitInputFieldReferences(visitor, feedbackDefinitions[feedback.type].options, feedback.options, feedback.id)
+			}
 
-			expect(visitor.visitConnectionId).toHaveBeenCalledWith(action.options, 'instance_id')
+			expect(visitor.visitConnectionId).toHaveBeenCalledWith(action.options, 'instance_id', undefined)
 			expect(visitor.visitConnectionId).toHaveBeenCalledWith(customState.options, 'instance_id', 'fb1')
 			expect(visitor.visitConnectionId).toHaveBeenCalledWith(statusSpecific.options, 'instance_id', 'fb3')
 			// 'all' status feedbacks are not visited

@@ -21,16 +21,13 @@ import type { LocalVariablesController } from '../Variables/LocalVariablesContro
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	ExecuteFeedbackResultWithReferences,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
@@ -439,25 +436,5 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		}
 
 		return { result: undefined }
-	}
-
-	/**
-	 *
-	 */
-	visitReferences(visitor: InternalVisitor, _actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
-		for (const feedback of feedbacks) {
-			try {
-				// check_expression.expression handled by generic options visitor
-
-				if (feedback.type === 'variable_value') {
-					visitor.visitVariableName(feedback.options, 'variable', feedback.id)
-				} else if (feedback.type === 'variable_variable') {
-					visitor.visitVariableName(feedback.options, 'variable', feedback.id)
-					visitor.visitVariableName(feedback.options, 'variable2', feedback.id)
-				}
-			} catch (_e) {
-				//Ignore
-			}
-		}
 	}
 }

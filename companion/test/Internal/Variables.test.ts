@@ -6,6 +6,7 @@ import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandler
 import type { ActionForInternalExecution, FeedbackForInternalExecution } from '../../lib/Internal/Types.js'
 import { InternalVariables } from '../../lib/Internal/Variables.js'
 import LogController, { type Logger } from '../../lib/Log/Controller.js'
+import { visitInputFieldReferences } from '../../lib/Resources/Visitors/InputFieldVisitor.js'
 import type { LocalVariable, LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
@@ -549,7 +550,7 @@ describe('executeFeedback - expression based', () => {
 	})
 })
 
-// ---- definitions & visitReferences ------------------------------------------
+// ---- definitions // ---- definitions & visitReferences ------------------------------------------ reference fields -----------------------------------------
 
 describe('definitions', () => {
 	const module = new InternalVariables(makeFullLocalVariablesController(null))
@@ -581,14 +582,15 @@ describe('definitions', () => {
 	})
 })
 
-describe('visitReferences', () => {
+describe('reference fields', () => {
 	const module = new InternalVariables(makeFullLocalVariablesController(null))
+	const feedbackDefinitions = module.getFeedbackDefinitions()
 
 	it('visits the variable name option of variable_value feedbacks', () => {
 		const visitor = { visitVariableName: vi.fn(), visitString: vi.fn() } as any
 		const feedback = { id: 'fb1', type: 'variable_value', options: { variable: 'custom:foo' } } as any
 
-		module.visitReferences(visitor, [], [feedback])
+		visitInputFieldReferences(visitor, feedbackDefinitions.variable_value.options, feedback.options, feedback.id)
 
 		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable', 'fb1')
 	})
@@ -601,7 +603,7 @@ describe('visitReferences', () => {
 			options: { variable: 'custom:a', variable2: 'custom:b' },
 		} as any
 
-		module.visitReferences(visitor, [], [feedback])
+		visitInputFieldReferences(visitor, feedbackDefinitions.variable_variable.options, feedback.options, feedback.id)
 
 		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable', 'fb2')
 		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable2', 'fb2')

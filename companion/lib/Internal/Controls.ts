@@ -35,15 +35,12 @@ import type { IPageStore } from '../Page/Store.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 import { ParseLocationString } from './Util.js'
 
@@ -774,9 +771,5 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }

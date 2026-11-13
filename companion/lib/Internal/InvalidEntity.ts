@@ -2,15 +2,12 @@ import { EventEmitter } from 'node:events'
 import { FeedbackEntitySubType, INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const description =
@@ -58,9 +55,5 @@ export class InternalInvalidEntity
 	executeFeedback(feedback: FeedbackForInternalExecution): boolean | void {
 		if (feedback.definitionId !== INVALID_ENTITY_DEFINITION_ID) return
 		return false
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// The original isn't parsed, so has no references to follow
 	}
 }

@@ -8,6 +8,7 @@ import {
 	INVALID_ENTITY_DEFINITION_ID,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { RenderClock } from '../../lib/Controls/RenderClock.js'
 import { InternalController } from '../../lib/Internal/Controller.js'
@@ -325,5 +326,48 @@ describe('onVariablesChanged', () => {
 		controlStore.updateFeedbackValues.mockClear()
 		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control2')]))
 		expect(updatedEntityIds(controlStore).sort()).toEqual(['fb1', 'fb2'])
+	})
+})
+
+describe('visitEntityReferences', () => {
+	const fields = [{ type: 'internal:connection_id', id: 'conn', label: 'Connection', multiple: false }]
+
+	test('visits the options described by the definition, rechecking a feedback by its id', () => {
+		const { controller, instanceController } = createController()
+		instanceController.definitions.getEntityDefinition.mockReturnValue({ options: fields } as any)
+		const visitor = { visitConnectionId: vi.fn() } as any
+		const options = { conn: exprVal('conn-1') }
+
+		controller.visitEntityReferences(visitor, EntityModelType.Feedback, 'my_feedback', 'fb-1', options)
+
+		expect(instanceController.definitions.getEntityDefinition).toHaveBeenCalledWith(
+			EntityModelType.Feedback,
+			'internal',
+			'my_feedback'
+		)
+		expect(visitor.visitConnectionId).toHaveBeenCalledWith(options, 'conn', 'fb-1')
+	})
+
+	test('does not pass an id for an action', () => {
+		const { controller, instanceController } = createController()
+		instanceController.definitions.getEntityDefinition.mockReturnValue({ options: fields } as any)
+		const visitor = { visitConnectionId: vi.fn() } as any
+		const options = { conn: exprVal('conn-1') }
+
+		controller.visitEntityReferences(visitor, EntityModelType.Action, 'my_action', 'act-1', options)
+
+		expect(visitor.visitConnectionId).toHaveBeenCalledWith(options, 'conn', undefined)
+	})
+
+	test('does nothing for an unknown definition', () => {
+		const { controller, instanceController } = createController()
+		instanceController.definitions.getEntityDefinition.mockReturnValue(undefined)
+		const visitor = { visitConnectionId: vi.fn() } as any
+
+		controller.visitEntityReferences(visitor, EntityModelType.Action, 'missing', 'act-1', {
+			conn: exprVal('conn-1'),
+		})
+
+		expect(visitor.visitConnectionId).not.toHaveBeenCalled()
 	})
 })
