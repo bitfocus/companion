@@ -1,4 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import {
+	EntityModelType,
+	type ActionEntityModel,
+	type FeedbackEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
+import { visitEntityModel } from '../../../lib/Resources/Visitors/EntityInstanceVisitor.js'
 import { VisitorReferencesUpdaterVisitor } from '../../../lib/Resources/Visitors/ReferencesUpdater.js'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -618,5 +624,74 @@ describe('VisitorReferencesUpdaterVisitor – visitOutboundSurfaceId', () => {
 		visitor.visitOutboundSurfaceId(obj, 'surfaceId', 'fb-1')
 
 		expect(visitor.changedFeedbackIds.size).toBe(0)
+	})
+})
+
+// ─── visitEntityModel ────────────────────────────────────────────────────────
+
+describe('visitEntityModel', () => {
+	it('renames the references in where the result of an action is stored', () => {
+		const visitor = makeUpdater({ labelRemap: { old: 'new' } })
+		const action: ActionEntityModel = {
+			type: EntityModelType.Action,
+			id: 'act-1',
+			definitionId: 'def',
+			connectionId: 'conn',
+			options: { text: exprVal('$(old:a)') },
+			upgradeIndex: undefined,
+			storeResult: {
+				type: 'custom-variable',
+				variableName: exprExpr("concat('out_', $(old:b))"),
+				createIfNotExists: false,
+			},
+		}
+
+		visitEntityModel(visitor, action)
+
+		expect(action.options.text).toEqual(exprVal('$(new:a)'))
+		expect(action.storeResult).toEqual({
+			type: 'custom-variable',
+			variableName: exprExpr("concat('out_', $(new:b))"),
+			createIfNotExists: false,
+		})
+	})
+
+	it('renames the references in where each output of a custom action is written', () => {
+		const visitor = makeUpdater({ labelRemap: { old: 'new' } })
+		const action: ActionEntityModel = {
+			type: EntityModelType.Action,
+			id: 'act-1',
+			definitionId: 'def',
+			connectionId: 'custom-actions',
+			options: {},
+			upgradeIndex: undefined,
+			outputTargets: {
+				count: { type: 'page-variable', page: exprExpr('$(old:page)'), variableName: exprVal('shown') },
+			},
+		}
+
+		visitEntityModel(visitor, action)
+
+		expect(action.outputTargets).toEqual({
+			count: { type: 'page-variable', page: exprExpr('$(new:page)'), variableName: exprVal('shown') },
+		})
+	})
+
+	it('renames the references in the inversion of a feedback', () => {
+		const visitor = makeUpdater({ labelRemap: { old: 'new' } })
+		const feedback: FeedbackEntityModel = {
+			type: EntityModelType.Feedback,
+			id: 'fb-1',
+			definitionId: 'def',
+			connectionId: 'conn',
+			options: {},
+			upgradeIndex: undefined,
+			isInverted: exprExpr('$(old:c) > 1'),
+		}
+
+		visitEntityModel(visitor, feedback)
+
+		expect(feedback.isInverted).toEqual(exprExpr('$(new:c) > 1'))
+		expect(visitor.changedFeedbackIds).toEqual(new Set(['fb-1']))
 	})
 })

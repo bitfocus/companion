@@ -1,5 +1,6 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
+import { isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import {
@@ -108,6 +109,14 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 
 	/** Set where this action's result will be stored (if at all) */
 	entitySetRawStoreResult(listId: SomeSocketEntityLocation, id: string, target: RawStoreResult | undefined): boolean
+
+	/** Set where an output of this action will be written (if at all) */
+	entitySetRawOutputTarget(
+		listId: SomeSocketEntityLocation,
+		id: string,
+		outputId: string,
+		target: RawStoreResult | null
+	): boolean
 
 	/**
 	 * Set the local variable name for an entity
@@ -375,6 +384,9 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entity = entityList.findById(id)
 			if (!entity) return false
 
+			// The definitions of the internal module and of custom actions mean nothing to a connection, and the reverse
+			if (isVirtualConnectionId(entity.connectionId) || isVirtualConnectionId(String(connectionId))) return false
+
 			entity.setConnectionId(connectionId)
 
 			this.tryTriggerLocalVariablesChanged(entity)
@@ -411,6 +423,22 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			if (!entity) return false
 
 			entity.setRawStoreResult(target)
+
+			this.reportChange({ redraw: false })
+
+			return true
+		}
+
+		entitySetRawOutputTarget(
+			listId: SomeSocketEntityLocation,
+			id: string,
+			outputId: string,
+			target: RawStoreResult | null
+		): boolean {
+			const entity = this.getEntityList(listId)?.findById(id)
+			if (!entity) return false
+
+			if (!entity.setRawOutputTarget(outputId, target)) return false
 
 			this.reportChange({ redraw: false })
 

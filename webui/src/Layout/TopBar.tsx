@@ -22,6 +22,7 @@ import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
 import { IS_APPLE_PLATFORM } from '~/util/platform.js'
 import { useAdminLock } from './AdminLockContext.js'
+import { BetaBadge } from './BetaBadge.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { navLocationForPath } from './navRegistry.js'
 import { ContextHelpButton } from './PanelIcons.js'
@@ -108,6 +109,7 @@ function TopBarBreadcrumb({ page }: { page: TopBarPage | null }) {
 					<h1>
 						<span aria-current="page">{pageLabel}</span>
 					</h1>
+					{page?.beta && <BetaBadge />}
 				</li>
 			</ol>
 			{page?.helpAction && <ContextHelpButton action={page.helpAction} />}

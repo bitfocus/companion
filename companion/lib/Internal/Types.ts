@@ -12,6 +12,7 @@ import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
+import type { VisitorVariableRenamerVisitor } from '../Resources/Visitors/VariableRenamer.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 
 export interface FeedbackForInternalExecution {
@@ -45,7 +46,8 @@ export interface FeedbackExecutionContext {
 	readonly parser: VariablesAndExpressionParser
 }
 
-export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
+export type InternalVisitor =
+	VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor | VisitorVariableRenamerVisitor
 
 /**
  * A minimal representation of a feedback, for visiting internal feedbacks.
@@ -150,6 +152,8 @@ export type InternalActionDefinition = SetOptional<
 		| 'hasLifecycleFunctions'
 		| 'feedbackAffectedProperties'
 		| 'actionExecutionTimeout'
+		| 'actionOutputs'
+		| 'warning'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -168,6 +172,8 @@ export type InternalFeedbackDefinition = SetOptional<
 		| 'optionsToMonitorForInvalidations'
 		| 'actionHasResult'
 		| 'actionExecutionTimeout'
+		| 'actionOutputs'
+		| 'warning'
 	>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

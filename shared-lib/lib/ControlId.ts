@@ -73,6 +73,13 @@ export function CreateExpressionVariableControlId(variableId: string): Expressio
 }
 
 /**
+ * Create full custom action control id
+ */
+export function CreateCustomActionControlId(customActionId: string): CustomActionControlId {
+	return `custom-action:${customActionId}` as CustomActionControlId
+}
+
+/**
  * Create the full control id for a page's local-variables control (one per page, keyed by page id).
  */
 export function CreatePageControlId(pageId: string): PageControlId {
@@ -98,6 +105,10 @@ export interface ParsedControlIdExpressionVariable {
 	type: 'expression-variable'
 	variableId: string
 }
+export interface ParsedControlIdCustomAction {
+	type: 'custom-action'
+	customActionId: string
+}
 export interface ParsedControlIdPage {
 	type: 'page'
 	pageId: string
@@ -112,6 +123,7 @@ export type ParsedControlIdType =
 	| ParsedControlIdBank
 	| ParsedControlIdTrigger
 	| ParsedControlIdExpressionVariable
+	| ParsedControlIdCustomAction
 	| ParsedControlIdPage
 	| ParsedControlIdPreset
 
@@ -122,6 +134,7 @@ const CONTROL_ID_KINDS: Record<ControlIdKind, true> = {
 	bank: true,
 	trigger: true,
 	'expression-variable': true,
+	'custom-action': true,
 	page: true,
 	preset: true,
 }
@@ -149,6 +162,7 @@ export const zodControlIds = {
 	bank: controlIdSchema('bank'),
 	trigger: controlIdSchema('trigger'),
 	'expression-variable': controlIdSchema('expression-variable'),
+	'custom-action': controlIdSchema('custom-action'),
 	page: controlIdSchema('page'),
 	preset: controlIdSchema<'preset', `preset:${string}:${string}:${string}`>('preset'),
 } satisfies Record<ControlIdKind, z.ZodType>
@@ -159,6 +173,7 @@ export type ControlIdOfKind<TKind extends ControlIdKind> = z.output<(typeof zodC
 export type BankControlId = ControlIdOfKind<'bank'>
 export type TriggerControlId = ControlIdOfKind<'trigger'>
 export type ExpressionVariableControlId = ControlIdOfKind<'expression-variable'>
+export type CustomActionControlId = ControlIdOfKind<'custom-action'>
 export type PageControlId = ControlIdOfKind<'page'>
 export type PresetControlId = ControlIdOfKind<'preset'>
 
@@ -223,6 +238,8 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			return { type: 'trigger', trigger: value }
 		case 'expression-variable':
 			return { type: 'expression-variable', variableId: value }
+		case 'custom-action':
+			return { type: 'custom-action', customActionId: value }
 		case 'page':
 			return { type: 'page', pageId: value }
 		case 'preset': {

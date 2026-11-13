@@ -1,6 +1,11 @@
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { action, observable, type ObservableMap } from 'mobx'
 import { computedFn } from 'mobx-utils'
+import {
+	CUSTOM_ACTIONS_CONNECTION_ID,
+	getVirtualConnectionLabel,
+	INTERNAL_CONNECTION_ID,
+} from '@companion-app/shared/ConnectionId.js'
 import { canOfferEntityInPicker } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type {
@@ -28,7 +33,10 @@ export type AddEntityGroup = {
 
 export interface EntityLeafItem {
 	key: string
+	/** `connectionId:definitionId`, as the recently used list stores it */
 	fullId: string
+	connectionId: string
+	definitionId: string
 	label: string
 	searchLabel: string
 	sortKey: string
@@ -156,6 +164,8 @@ export class EntityDefinitionsForTypeStore {
 				leaves.push({
 					key: `${connectionId}:${id}`,
 					fullId: `${connectionId}:${id}`,
+					connectionId,
+					definitionId: id,
 					label: info.label,
 					searchLabel: `${label}: ${info.label}`,
 					sortKey: String(info.sortKey ?? info.label),
@@ -170,7 +180,12 @@ export class EntityDefinitionsForTypeStore {
 
 	buildBaseOptions = computedFn((feedbackListType: FeedbackEntitySubType | null): AddEntityGroup[] => {
 		const allConnectionOptions: AddEntityOption[] = [
-			...this.#buildConnectionOptions('internal', 'internal', feedbackListType),
+			...this.#buildConnectionOptions(INTERNAL_CONNECTION_ID, 'internal', feedbackListType),
+			...this.#buildConnectionOptions(
+				CUSTOM_ACTIONS_CONNECTION_ID,
+				getVirtualConnectionLabel(CUSTOM_ACTIONS_CONNECTION_ID) ?? CUSTOM_ACTIONS_CONNECTION_ID,
+				feedbackListType
+			),
 		]
 		for (const connection of this.#connectionsStore.sortedConnections()) {
 			allConnectionOptions.push(...this.#buildConnectionOptions(connection.id, connection.label, feedbackListType))

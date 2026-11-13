@@ -1,13 +1,16 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import { usePanelCollapseHelper, type PanelCollapseDefaultCollapsed } from '~/Helpers/CollapseHelper.js'
+import { buildCollectionTree } from '../buildCollectionTree.js'
 import {
 	CollapsibleTree,
 	type CollapsibleTreeHeaderProps,
 	type CollapsibleTreeLeafProps,
 	type CollapsibleTreeNode,
 } from '../CollapsibleTree.js'
+import { countTreeLeaves } from '../countTreeLeaves.js'
 
 // ---------------------------------------------------------------------------
 // Fixtures & helpers
@@ -463,5 +466,101 @@ describe('CollapsibleTree', () => {
 		expect(screen.getByRole('button', { name: 'Leaf A' })).not.toHaveAttribute('aria-current')
 		expect(screen.getByRole('button', { name: 'Leaf B' })).toHaveAttribute('aria-current', 'true')
 		expect(screen.getByRole('button', { name: 'Leaf B' })).toHaveClass('selected')
+	})
+})
+
+describe('countTreeLeaves', () => {
+	it('counts the leaves of a node and of the nodes inside it', () => {
+		const node = (leaves: number, children: CollapsibleTreeNode[]): CollapsibleTreeNode => ({
+			id: `${leaves}`,
+			children,
+			leaves: Array.from({ length: leaves }, (_, i) => i),
+			metadata: null,
+		})
+
+		expect(countTreeLeaves(node(0, []))).toBe(0)
+		// A group holding only other groups still has what they hold
+		expect(countTreeLeaves(node(0, [node(2, []), node(1, [node(3, [])])]))).toBe(6)
+	})
+})
+
+describe('buildCollectionTree', () => {
+	const collection = (id: string, sortOrder: number, children: CollectionBase<null>[] = []): CollectionBase<null> => ({
+		id,
+		label: id,
+		sortOrder,
+		children,
+		metaData: null,
+	})
+
+	interface Item {
+		name: string
+		collectionId: string | null
+	}
+	interface TestNode {
+		id: string
+		children: TestNode[]
+		items: string[]
+	}
+
+	function build(rootCollections: CollectionBase<null>[], items: Item[]) {
+		return buildCollectionTree(
+			rootCollections,
+			items,
+			(item) => item.collectionId,
+			(c, children, collectionItems): TestNode => ({
+				id: c.id,
+				children,
+				items: collectionItems.map((item) => item.name),
+			})
+		)
+	}
+
+	it('sorts items into their collections, nested, keeping the order of the items', () => {
+		const result = build(
+			[collection('a', 0, [collection('a1', 0)])],
+			[
+				{ name: 'x', collectionId: 'a1' },
+				{ name: 'y', collectionId: 'a' },
+				{ name: 'z', collectionId: 'a1' },
+			]
+		)
+
+		expect(result.nodes).toEqual([{ id: 'a', children: [{ id: 'a1', children: [], items: ['x', 'z'] }], items: ['y'] }])
+		expect(result.ungrouped).toEqual([])
+	})
+
+	it('puts the collections inside another in their sort order', () => {
+		const result = build(
+			[collection('a', 0, [collection('second', 2), collection('first', 1)])],
+			[
+				{ name: 'x', collectionId: 'second' },
+				{ name: 'y', collectionId: 'first' },
+			]
+		)
+
+		expect(result.nodes[0].children.map((node) => node.id)).toEqual(['first', 'second'])
+	})
+
+	it('leaves out a collection with nothing in it, but keeps one holding only other collections', () => {
+		const result = build(
+			[collection('empty', 0, [collection('also-empty', 0)]), collection('outer', 1, [collection('inner', 0)])],
+			[{ name: 'x', collectionId: 'inner' }]
+		)
+
+		expect(result.nodes).toEqual([{ id: 'outer', children: [{ id: 'inner', children: [], items: ['x'] }], items: [] }])
+	})
+
+	it('returns the items in no collection', () => {
+		const result = build(
+			[collection('a', 0)],
+			[
+				{ name: 'x', collectionId: null },
+				{ name: 'y', collectionId: 'a' },
+			]
+		)
+
+		expect(result.nodes.map((node) => node.id)).toEqual(['a'])
+		expect(result.ungrouped.map((item) => item.name)).toEqual(['x'])
 	})
 })

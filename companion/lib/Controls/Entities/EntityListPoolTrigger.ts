@@ -31,7 +31,7 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props, false)
+		super(props, false, [])
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,

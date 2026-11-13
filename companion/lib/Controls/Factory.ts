@@ -1,11 +1,13 @@
 import {
 	isControlIdOfKind,
+	type CustomActionControlId,
 	type ExpressionVariableControlId,
 	type SomeControlId,
 	type TriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import LogController from '../Log/Controller.js'
@@ -15,6 +17,7 @@ import { ControlButtonLink } from './ControlTypes/Button/Link.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlButtonReference } from './ControlTypes/Button/Reference.js'
+import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
@@ -42,13 +45,13 @@ export class ControlsFactory {
 	/**
 	 * Create a new control class instance
 	 * @param controlId Id of the control. Its kind must match the type of the control
-	 * @param category 'button' | 'trigger' | 'expression-variable' | 'all'
+	 * @param category 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	createClassForControl(
 		controlId: SomeControlId,
-		category: 'button' | 'trigger' | 'expression-variable' | 'all',
+		category: 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl | null {
@@ -87,6 +90,12 @@ export class ControlsFactory {
 			}
 		}
 
+		if ((category === 'all' || category === 'custom-action') && isControlIdOfKind(controlId, 'custom-action')) {
+			if (controlObj2?.type === 'custom-action' || (controlType === 'custom-action' && !controlObj2)) {
+				return new ControlCustomAction(this.#controlDeps, controlId, controlObj2, isImport)
+			}
+		}
+
 		if (category === 'all' && isControlIdOfKind(controlId, 'page')) {
 			if (controlObj2?.type === 'page' || (controlType === 'page' && !controlObj2)) {
 				return new ControlPage(this.#controlDeps, controlId, controlObj2, isImport)
@@ -107,6 +116,10 @@ export class ControlsFactory {
 		storage: ExpressionVariableModel | null = null
 	): ControlExpressionVariable {
 		return new ControlExpressionVariable(this.#controlDeps, controlId, storage, !!storage)
+	}
+
+	createCustomAction(controlId: CustomActionControlId, storage: CustomActionModel | null = null): ControlCustomAction {
+		return new ControlCustomAction(this.#controlDeps, controlId, storage, !!storage)
 	}
 
 	createPresetControl(

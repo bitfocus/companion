@@ -14,6 +14,7 @@ import { ControlEntityList, type ControlEntityListDefinition } from '../../../li
 import type { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -54,6 +55,15 @@ function createList(
 		trackEntity: vi.fn(),
 		forgetEntity: vi.fn(),
 	} as any
+	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
+	const scope: EntityScope = {
+		isTransient: false,
+		specialExpressionManager,
+		customActionChain: [],
+		customActionInstances,
+		localVariablesChanged: vi.fn(),
+		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+	}
 	const internalController: InternalControllerForEntity = {
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
@@ -66,7 +76,7 @@ function createList(
 		instanceDefinitions,
 		internalController,
 		processManager,
-		specialExpressionManager,
+		scope,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -86,7 +96,7 @@ function createList(
 		instanceDefinitions,
 		internalController,
 		processManager,
-		specialExpressionManager,
+		scope,
 		controlId,
 		newActionModel,
 		false
@@ -109,6 +119,8 @@ function createList(
 		internalController,
 		processManager,
 		specialExpressionManager,
+		customActionInstances,
+		scope,
 		newActionModel,
 		newAction,
 	}
@@ -256,6 +268,19 @@ describe('loadStorage', () => {
 		expect(compiledIds).toEqual(inputIds)
 
 		expect(getEntityDefinition).toHaveBeenCalledTimes(2)
+	})
+
+	test('ids derived from their own, including those of children', () => {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		const inputModels = ActionTree
+		list.loadStorage(structuredClone(inputModels), true, (id) => `copy/${id}`)
+
+		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
+		const compiledIds = list.getAllEntities().map((e) => e.id)
+		expect(compiledIds).toEqual(inputIds.map((id) => `copy/${id}`))
 	})
 
 	test('ids when cloned', () => {
@@ -1177,7 +1202,11 @@ describe('duplicateEntity', () => {
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, CreateBankControlId('test01'))
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), CreateBankControlId('test01'))
+		expect(internalEntityUpdate).toHaveBeenCalledWith(
+			newEntity!.asEntityModel(),
+			CreateBankControlId('test01'),
+			expect.any(Function)
+		)
 	})
 
 	test('duplicate deep when root is full', () => {
@@ -1710,7 +1739,7 @@ describe('updateFeedbackValues', () => {
 	})
 })
 
-describe('getAllEnabledConnectionIds', () => {
+describe('getAllEnabledEntities', () => {
 	test('default', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
@@ -1721,11 +1750,8 @@ describe('getAllEnabledConnectionIds', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
-
-		const connectionIds = new Set<string>()
-		list.getAllEnabledConnectionIds(connectionIds)
-		expect(connectionIds).toHaveLength(allConnectionIds.size)
+		// Every entity is enabled
+		expect(list.getAllEnabledEntities(false)).toEqual(list.getAllEntities())
 	})
 
 	test('all disabled', () => {
@@ -1743,10 +1769,21 @@ describe('getAllEnabledConnectionIds', () => {
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		// const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
-		const connectionIds = new Set<string>()
-		list.getAllEnabledConnectionIds(connectionIds)
-		expect(connectionIds).toHaveLength(0)
+		expect(list.getAllEnabledEntities(false)).toEqual([])
+	})
+
+	test('a disabled entity leaves out everything inside it', () => {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		const actions = structuredClone(ActionTree)
+		const group = actions.find((entity) => entity.id === 'int0')!
+		group.disabled = true
+
+		list.loadStorage(actions, true, false)
+
+		expect(list.getAllEnabledEntities(false).map((entity) => entity.id)).toEqual(['01', '02'])
 	})
 })
 
@@ -2030,3 +2067,218 @@ function translateFeedbackValues(oldValues: Record<string, any>): Map<string, Ne
 	}
 	return map
 }
+
+describe('scope', () => {
+	test('an entity parses its options in the scope of its list', () => {
+		const { list, scope, internalEntityUpdate, newActionModel } = createList(CreateBankControlId('test01'))
+		const parser = {} as any
+		vi.mocked(scope.createVariablesAndExpressionParser).mockReturnValue(parser)
+
+		list.loadStorage([{ ...newActionModel, type: EntityModelType.Feedback }], false, false)
+		const entity = list.findById(newActionModel.id)!
+
+		expect(entity.createVariablesAndExpressionParser({ 'a:b': 1 })).toBe(parser)
+		expect(scope.createVariablesAndExpressionParser).toHaveBeenCalledWith({ 'a:b': 1 }, undefined)
+
+		// The internal module is given the same scope
+		const createParser = internalEntityUpdate.mock.calls[0][2]
+		expect(createParser()).toBe(parser)
+	})
+})
+
+describe('transient child groups', () => {
+	const callerModel: ActionEntityModel = {
+		type: EntityModelType.Action,
+		id: 'caller',
+		connectionId: '__custom-actions__',
+		definitionId: 'custom-action-1',
+		options: {},
+		upgradeIndex: undefined,
+	}
+	const transientAction: ActionEntityModel = {
+		type: EntityModelType.Action,
+		id: 'caller:action',
+		connectionId: 'conn01',
+		definitionId: 'act01',
+		options: {},
+		upgradeIndex: undefined,
+	}
+	const transientFeedback: FeedbackEntityModel = {
+		type: EntityModelType.Feedback,
+		id: 'caller:feedback',
+		connectionId: 'conn01',
+		definitionId: 'fb01',
+		options: {},
+		upgradeIndex: undefined,
+	}
+
+	function createTransientScope(): EntityScope {
+		return {
+			isTransient: true,
+			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			customActionChain: ['custom-action:1'],
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			localVariablesChanged: vi.fn(),
+			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		}
+	}
+
+	function setup(caller: ActionEntityModel = callerModel) {
+		const res = createList(CreateBankControlId('test01'))
+		res.list.loadStorage([caller], false, false)
+		const callerEntity = res.list.findById(caller.id)!
+		res.connectionEntityUpdate.mockClear()
+
+		const transientScope = createTransientScope()
+		const group = callerEntity.createTransientList(
+			'instance',
+			transientScope,
+			{ type: EntityModelType.Action },
+			[transientAction, transientFeedback],
+			false
+		)
+		callerEntity.setTransientCopy('instance', { lists: [group] })
+
+		return { ...res, callerEntity, transientScope, group }
+	}
+
+	test('the enabled entities include those of a transient group only when asked', () => {
+		const { list } = setup()
+
+		expect(list.getAllEnabledEntities(false).map((entity) => entity.id)).toEqual(['caller'])
+		expect(list.getAllEnabledEntities(true).map((entity) => entity.id)).toEqual([
+			'caller',
+			transientAction.id,
+			transientFeedback.id,
+		])
+	})
+
+	test('entities are subscribed, parsing their options in the scope of the group', () => {
+		const { group, transientScope, connectionEntityUpdate, specialExpressionManager } = setup()
+
+		const action = group.findById(transientAction.id)!
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(action, CreateBankControlId('test01'))
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+
+		const parser = {} as any
+		vi.mocked(transientScope.createVariablesAndExpressionParser).mockReturnValue(parser)
+		expect(action.createVariablesAndExpressionParser(null)).toBe(parser)
+
+		// The special expressions are tracked in the scope of the group
+		expect(transientScope.specialExpressionManager.trackEntity).toHaveBeenCalledWith(action, 'storeResult')
+		expect(vi.mocked(specialExpressionManager.trackEntity).mock.calls.some(([entity]) => entity === action)).toBe(false)
+	})
+
+	test('entities are not persisted or listed, but can be found and run', () => {
+		const { list, callerEntity } = setup()
+
+		expect(callerEntity.asEntityModel()).toEqual(callerModel)
+		expect(list.getAllEntities().map((e) => e.id)).toEqual(['caller'])
+
+		expect(list.getAllEntitiesWithTransient().map((e) => e.id)).toEqual([
+			'caller',
+			transientAction.id,
+			transientFeedback.id,
+		])
+		expect(list.findById(transientFeedback.id)?.id).toBe(transientFeedback.id)
+		expect(callerEntity.getTransientCopy('instance')?.lists[0].getDirectEntities()).toHaveLength(2)
+	})
+
+	test('entities can not be edited through the list', () => {
+		const { list } = setup()
+
+		expect(list.removeEntity(transientAction.id)).toBeUndefined()
+		expect(list.findById(transientAction.id)).toBeTruthy()
+	})
+
+	test('feedback values reach the entities', () => {
+		const { list, group } = setup()
+
+		const changed = list.updateFeedbackValues(
+			'conn01',
+			new Map<string, NewFeedbackValue>([
+				[
+					transientFeedback.id,
+					{ entityId: transientFeedback.id, controlId: CreateBankControlId('test01'), value: 'abc' },
+				],
+			])
+		)
+
+		const feedback = group.findById(transientFeedback.id)!
+		expect(changed).toEqual([feedback])
+		expect(feedback.feedbackValue).toBe('abc')
+	})
+
+	test('replacing the copy cleans up the old entities', () => {
+		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		const newGroup = callerEntity.createTransientList(
+			'instance',
+			createTransientScope(),
+			{
+				type: EntityModelType.Action,
+			},
+			[transientAction],
+			false
+		)
+		callerEntity.setTransientCopy('instance', { lists: [newGroup] })
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(connectionEntityDelete).toHaveBeenCalledWith(
+			expect.objectContaining({ id: transientFeedback.id }),
+			CreateBankControlId('test01')
+		)
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(callerEntity.getTransientCopy('instance')?.lists).toEqual([newGroup])
+	})
+
+	test('removing the copy cleans up its entities', () => {
+		const { list, callerEntity, connectionEntityDelete } = setup()
+
+		callerEntity.removeTransientCopy('instance')
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(callerEntity.getTransientCopy('instance')).toBeUndefined()
+		expect(list.findById(transientAction.id)).toBeUndefined()
+
+		// Removing again does nothing
+		callerEntity.removeTransientCopy('instance')
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+	})
+
+	test('the group follows the lifecycle of its entity', () => {
+		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		callerEntity.setEnabled(false)
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+
+		callerEntity.setEnabled(true)
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+	})
+
+	test('the group of a disabled entity is not subscribed', () => {
+		const { callerEntity, connectionEntityUpdate } = setup({ ...callerModel, disabled: true })
+		expect(callerEntity.disabled).toBe(true)
+
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a transient list is not subscribed until its copy is held', () => {
+		const { callerEntity, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		const list = callerEntity.createTransientList(
+			'other',
+			createTransientScope(),
+			{ type: EntityModelType.Action },
+			[{ ...transientAction, id: 'other:action' }],
+			false
+		)
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+
+		callerEntity.setTransientCopy('other', { lists: [list] })
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+	})
+})

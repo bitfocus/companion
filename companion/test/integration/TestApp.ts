@@ -6,12 +6,22 @@ import os from 'node:os'
 import path from 'node:path'
 import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import type { BuildOptions } from 'esbuild'
+import { nanoid } from 'nanoid'
 import supertest from 'supertest'
-import { ParseControlId, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import {
+	isControlIdOfKind,
+	ParseControlId,
+	type BankControlId,
+	type CustomActionControlId,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
+	type ActionEntityModel,
 	type EntityOwner,
+	type RawStoreResult,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -98,6 +108,34 @@ export interface TestApp {
 		stepId: string,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add an action from the internal connection to a custom action's action list, or a child group in it */
+	addCustomActionAction(
+		controlId: CustomActionControlId,
+		owner: EntityOwner | null,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add a feedback from the internal connection to a child group in a custom action's action list (eg a condition) */
+	addCustomActionChildFeedback(
+		controlId: CustomActionControlId,
+		owner: EntityOwner,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add a local variable from the internal connection (eg `user_value`, `expression_value`) to a control */
+	addLocalVariable(
+		controlId: SomeControlId,
+		name: string,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add an action which runs a custom action, to the first step's 'down' set of a button, or to a custom action */
+	addCustomActionCall(
+		controlId: SomeControlId,
+		customActionControlId: CustomActionControlId,
+		options: Record<string, ExpressionOrValue<any>>,
+		outputTargets: Record<string, RawStoreResult> | null
 	): string
 	/** Add an action from the internal connection to a trigger's action list */
 	addTriggerAction(
@@ -478,6 +516,48 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 				definitionId,
 				options
 			)
+		},
+
+		addCustomActionAction(controlId, owner, definitionId, options) {
+			return addInternalEntity(controlId, 'custom_action_actions', owner, EntityModelType.Action, definitionId, options)
+		},
+
+		addCustomActionChildFeedback(controlId, owner, definitionId, options) {
+			return addInternalEntity(
+				controlId,
+				'custom_action_actions',
+				owner,
+				EntityModelType.Feedback,
+				definitionId,
+				options
+			)
+		},
+
+		addLocalVariable(controlId, name, definitionId, options) {
+			const id = addInternalEntity(controlId, 'local-variables', null, EntityModelType.Feedback, definitionId, options)
+			if (!getEditableEntities(controlId).entitySetVariableName('local-variables', id, name))
+				throw new Error(`Failed to name local variable "${name}" on "${controlId}"`)
+			return id
+		},
+
+		addCustomActionCall(controlId, customActionControlId, options, outputTargets) {
+			const parsedId = ParseControlId(customActionControlId)
+			if (parsedId?.type !== 'custom-action') throw new Error(`"${customActionControlId}" is not a custom action`)
+
+			const entityModel: ActionEntityModel = {
+				type: EntityModelType.Action,
+				id: nanoid(),
+				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				definitionId: parsedId.customActionId,
+				options,
+				upgradeIndex: undefined,
+				outputTargets: outputTargets ?? undefined,
+			}
+			const listId = isControlIdOfKind(controlId, 'custom-action') ? 'custom_action_actions' : firstDownSet(controlId)
+			if (!getEditableEntities(controlId).entityAdd(listId, null, entityModel))
+				throw new Error(`Failed to add custom action call to "${controlId}"`)
+
+			return entityModel.id
 		},
 
 		addTriggerAction(controlId, definitionId, options) {

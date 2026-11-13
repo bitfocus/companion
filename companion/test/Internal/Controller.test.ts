@@ -214,8 +214,12 @@ describe('onVariablesChanged', () => {
 			})),
 		} as any)
 
-		ctx.controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'))
-		ctx.controller.entityUpdate(makeFeedback('fb2'), CreateBankControlId('control2'))
+		ctx.controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'), () =>
+			ctx.controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
+		ctx.controller.entityUpdate(makeFeedback('fb2'), CreateBankControlId('control2'), () =>
+			ctx.controlStore.createVariablesAndExpressionParser(CreateBankControlId('control2'), null)
+		)
 		ctx.controlStore.updateFeedbackValues.mockClear()
 
 		return ctx
@@ -293,11 +297,13 @@ describe('onVariablesChanged', () => {
 	})
 
 	test('stops tracking the variables of deleted and replaced feedbacks', () => {
-		const { controller, variableDependencies } = setup()
+		const { controller, controlStore, variableDependencies } = setup()
 		expect(variableDependencies.stats().dependencies).toBe(2)
 
 		// Replacing a feedback swaps its tracking rather than adding to it
-		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'))
+		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
 		expect(variableDependencies.stats().dependencies).toBe(2)
 
 		controller.entityDelete(makeFeedback('fb1'))
@@ -308,7 +314,9 @@ describe('onVariablesChanged', () => {
 	test('a feedback re-tracked on a different control follows it', () => {
 		const { controller, controlStore } = setup()
 
-		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control2'))
+		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control2'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control2'), null)
+		)
 		controlStore.updateFeedbackValues.mockClear()
 
 		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control1')]))

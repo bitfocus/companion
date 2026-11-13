@@ -9,12 +9,13 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { clamp } from '../../Resources/Util.js'
 import { ControlEntityInstance } from './EntityInstance.js'
-import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
+	NewEntityIds,
 	NewFeedbackValue,
 	ProcessManagerForEntity,
 } from './Types.js'
@@ -28,7 +29,7 @@ export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	/**
 	 * Id of the control this belongs to
@@ -53,7 +54,7 @@ export class ControlEntityList {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		specialExpressionManager: EntityPoolSpecialExpressionManager,
+		scope: EntityScope,
 		controlId: SomeControlId,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
@@ -61,7 +62,7 @@ export class ControlEntityList {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#specialExpressionManager = specialExpressionManager
+		this.#scope = scope
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
@@ -75,6 +76,13 @@ export class ControlEntityList {
 	}
 
 	/**
+	 * Recursively get all the entities, including those in transient child groups
+	 */
+	getAllEntitiesWithTransient(): ControlEntityInstance[] {
+		return this.#entities.flatMap((e) => [e, ...e.getAllChildrenWithTransient()])
+	}
+
+	/**
 	 * Get the entities directly contained in this list
 	 */
 	getDirectEntities(): ControlEntityInstance[] {
@@ -85,9 +93,9 @@ export class ControlEntityList {
 	 * Initialise from storage
 	 * @param entities
 	 * @param skipSubscribe Whether to skip calling subscribe for the new entities
-	 * @param isCloned Whether this is a cloned instance
+	 * @param newIds How the entities get their ids
 	 */
-	loadStorage(entities: SomeEntityModel[], skipSubscribe: boolean, isCloned: boolean): void {
+	loadStorage(entities: SomeEntityModel[], skipSubscribe: boolean, newIds: NewEntityIds): void {
 		// Inform modules of entity cleanup
 		for (const entity of this.#entities) {
 			entity.cleanup()
@@ -107,10 +115,10 @@ export class ControlEntityList {
 						this.#instanceDefinitions,
 						this.#internalModule,
 						this.#processManager,
-						this.#specialExpressionManager,
+						this.#scope,
 						this.#controlId,
 						entity,
-						!!isCloned
+						newIds
 					)
 			) || []
 
@@ -184,7 +192,7 @@ export class ControlEntityList {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.#controlId,
 			entityModel,
 			!!isCloned
@@ -302,7 +310,7 @@ export class ControlEntityList {
 				this.#instanceDefinitions,
 				this.#internalModule,
 				this.#processManager,
-				this.#specialExpressionManager,
+				this.#scope,
 				this.#controlId,
 				entityModel,
 				true
@@ -426,7 +434,9 @@ export class ControlEntityList {
 		connectionId: string,
 		newValues: ReadonlyMap<string, NewFeedbackValue>
 	): ControlEntityInstance[] {
-		return this.#entities.flatMap((entity) => entity.updateFeedbackValues(connectionId, newValues))
+		const changed = this.#entities.flatMap((entity) => entity.updateFeedbackValues(connectionId, newValues))
+		this.#reportLocalVariablesChanged(changed)
+		return changed
 	}
 
 	/**
@@ -436,7 +446,21 @@ export class ControlEntityList {
 	updateIsInvertedValues(
 		newValues: ReadonlyMap<string, NewSpecialExpressionValue<'isInverted'>>
 	): ControlEntityInstance[] {
-		return this.#entities.flatMap((entity) => entity.updateIsInvertedValues(newValues))
+		const changed = this.#entities.flatMap((entity) => entity.updateIsInvertedValues(newValues))
+		this.#reportLocalVariablesChanged(changed)
+		return changed
+	}
+
+	/**
+	 * Tell the scope which of the local variables in this list have changed value, as for a copy nothing else will
+	 * @param changed The entities which changed, in this list or inside its entities
+	 */
+	#reportLocalVariablesChanged(changed: ControlEntityInstance[]): void {
+		const names = new Set<string>()
+		for (const entity of changed) {
+			if (entity.localVariableName && this.#entities.includes(entity)) names.add(entity.localVariableName)
+		}
+		if (names.size > 0) this.#scope.localVariablesChanged(names)
 	}
 
 	/**
@@ -451,11 +475,11 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Get all the connection ids that are enabled
+	 * The entities which are enabled, and those inside them which are. A disabled entity, and everything inside it, is
+	 * left out
+	 * @param includeTransient Whether to include the entities of transient child groups
 	 */
-	getAllEnabledConnectionIds(connectionIds: Set<string>): void {
-		for (const entity of this.#entities) {
-			entity.getAllEnabledConnectionIds(connectionIds)
-		}
+	getAllEnabledEntities(includeTransient: boolean): ControlEntityInstance[] {
+		return this.#entities.flatMap((entity) => entity.getAllEnabledEntities(includeTransient))
 	}
 }

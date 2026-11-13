@@ -10,6 +10,7 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	isInternalUserValueFeedback,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -23,6 +24,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
 import { useOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -37,7 +39,7 @@ import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { OptionsInputField } from '../OptionsInputField.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
-import { useEntityEditorContext } from './EntityEditorContext.js'
+import { useEntityEditorContext, type LocalVariableOutputs } from './EntityEditorContext.js'
 import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
 import { StoreResultFields } from './StoreResultFields.js'
 
@@ -56,7 +58,8 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	entityDefinition,
 	service,
 }: EntityCommonCellsProps): React.JSX.Element {
-	const { location, localVariablePrefix, controlId, readonly, localVariablesStore } = useEntityEditorContext()
+	const { location, localVariablePrefix, controlId, readonly, localVariablesStore, localVariableOutputs } =
+		useEntityEditorContext()
 	const { connections } = useContext(RootAppStoreContext)
 
 	const isConnectionEnabled =
@@ -195,6 +198,8 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						!!service.setRawStoreResult &&
 						controlId && (
 							<StoreResultFields
+								label="Store Action Result"
+								tooltip="The action result will be stored here"
 								isLocatedInGrid={!!location}
 								controlId={controlId}
 								storeResult={entity.type === EntityModelType.Action ? entity.storeResult : undefined}
@@ -202,6 +207,37 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
 							/>
+						)}
+
+					{entity.type === EntityModelType.Action &&
+						!!service.setRawOutputTarget &&
+						!!controlId &&
+						entityDefinition?.actionOutputs?.map((output) => (
+							<StoreResultFields
+								key={output.id}
+								label={`Store ${output.label || output.id}`}
+								tooltip="This output of the custom action will be stored here"
+								isLocatedInGrid={!!location}
+								controlId={controlId}
+								storeResult={entity.outputTargets?.[output.id]}
+								setStoreResult={(target) => service.setRawOutputTarget?.(output.id, target ?? null)}
+								readonly={readonly}
+								localVariablesStore={localVariablesStore}
+							/>
+						))}
+
+					{/* After the options, as where a result is stored is */}
+					{localVariableOutputs &&
+						entity.type === EntityModelType.Feedback &&
+						isInternalUserValueFeedback(entity) &&
+						!!entity.variableName && (
+							<MyErrorBoundary>
+								<EntityLocalVariableOutputFields
+									variableName={entity.variableName}
+									outputs={localVariableOutputs}
+									readonly={readonly}
+								/>
+							</MyErrorBoundary>
 						)}
 
 					{!!entity &&
@@ -222,6 +258,61 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 		</>
 	)
 })
+
+/**
+ * Whether a user value is an output of the custom action it is in, written to wherever its caller chooses, and its label
+ */
+function EntityLocalVariableOutputFields({
+	variableName,
+	outputs,
+	readonly,
+}: {
+	variableName: string
+	outputs: LocalVariableOutputs
+	readonly: boolean
+}) {
+	const outputFieldId = useId()
+	const labelFieldId = useId()
+
+	const label = outputs.labels.get(variableName)
+	const isOutput = label !== undefined
+
+	return (
+		<>
+			<FormLabel htmlFor={outputFieldId} sm={4} column="sm">
+				Output to caller
+				<InlineHelpIcon className="ms-1">
+					Each time a run sets this variable, its value is written to wherever the calling action chooses
+				</InlineHelpIcon>
+			</FormLabel>
+			<Grid.Col sm={8}>
+				<SwitchInputField
+					id={outputFieldId}
+					value={isOutput}
+					setValue={(value) => outputs.setOutput(variableName, value ? '' : null)}
+					disabled={readonly}
+				/>
+			</Grid.Col>
+
+			{isOutput && (
+				<>
+					<FormLabel htmlFor={labelFieldId} sm={4} column="sm">
+						Output label
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<TextInputFieldSimple
+							id={labelFieldId}
+							value={label}
+							placeholder={variableName}
+							setValue={(value) => outputs.setOutput(variableName, value)}
+							disabled={readonly}
+						/>
+					</Grid.Col>
+				</>
+			)}
+		</>
+	)
+}
 
 const EntityLocalVariableValueField = observer(function EntityLocalVariableValueField({
 	controlId,

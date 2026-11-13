@@ -78,22 +78,39 @@ export function resetEntityManagerMocks(): void {
 	mockAdapter.upgradeFeedbacks.mockResolvedValue([])
 }
 
+/** An entity parses its options in its own scope. The mock entities here use the scope of their control */
+function parseInControlScope<TManager extends ActionEntityManager | FeedbackEntityManager>(
+	manager: TManager
+): TManager {
+	const trackEntity = manager.trackEntity.bind(manager)
+	manager.trackEntity = (entity, controlId) => {
+		;(entity as any).createVariablesAndExpressionParser ??= (overrides: any) =>
+			mockControlsController.createVariablesAndExpressionParser(controlId, overrides)
+		trackEntity(entity, controlId)
+	}
+	return manager
+}
+
 export function createActionManager(variableDependencies: VariableDependencyRegistry): ActionEntityManager {
-	return new ActionEntityManager(
-		mockActionAdapter,
-		mockControlsController as any,
-		'test-connection-id',
-		variableDependencies
+	return parseInControlScope(
+		new ActionEntityManager(
+			mockActionAdapter,
+			mockControlsController as any,
+			'test-connection-id',
+			variableDependencies
+		)
 	)
 }
 
 export function createFeedbackManager(variableDependencies: VariableDependencyRegistry): FeedbackEntityManager {
-	return new FeedbackEntityManager(
-		mockFeedbackAdapter,
-		mockControlsController as any,
-		'test-connection-id',
-		variableDependencies,
-		mockRenderClock as any
+	return parseInControlScope(
+		new FeedbackEntityManager(
+			mockFeedbackAdapter,
+			mockControlsController as any,
+			'test-connection-id',
+			variableDependencies,
+			mockRenderClock as any
+		)
 	)
 }
 

@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
+	CreateCustomActionControlId,
 	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
+	type CustomActionControlId,
 } from '../ControlId.js'
 import { ActionSetsModelSchema } from '../Model/ActionModel.js'
 import {
@@ -13,6 +15,7 @@ import {
 	SomeButtonModelSchema,
 } from '../Model/ButtonModel.js'
 import { isControlModelForId, SomeControlModelSchema, zodStoredControlId } from '../Model/Controls.js'
+import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -277,6 +280,62 @@ describe('ExpressionVariableModelSchema', () => {
 	})
 })
 
+describe('CustomActionModelSchema', () => {
+	test('a minimal custom action gets the defaults', () => {
+		expect(CustomActionModelSchema.parse({ type: 'custom-action' })).toEqual({
+			type: 'custom-action',
+			options: { name: 'New custom action', description: '', sortOrder: 0, notes: '' },
+			inputs: [],
+			actions: [],
+			localVariables: [],
+			outputs: [],
+		})
+	})
+
+	test('an input must be a valid input field', () => {
+		const result = CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [{ type: 'sparkle', id: 'a' }] })
+		expect(result.success).toBe(false)
+	})
+
+	test.each([
+		['a type for connection config', { type: 'secret-text', id: 'key', label: 'Key' }],
+		['an id which is not usable in a variable', { type: 'checkbox', id: 'a b', label: 'A', default: false }],
+	])('an input can not have %s', (_name, input) => {
+		expect(CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [input] }).success).toBe(false)
+	})
+
+	test.each(['', 'a b', '__proto__'])('an output can not be of a variable named "%s"', (variableName) => {
+		expect(
+			CustomActionModelSchema.safeParse({ type: 'custom-action', outputs: [{ variableName, label: 'Out' }] }).success
+		).toBe(false)
+	})
+})
+
+describe('getCustomActionCallsExcludedFrom', () => {
+	const customActions: [CustomActionControlId, { calledCustomActionIds: string[] }][] = [
+		[CreateCustomActionControlId('a'), { calledCustomActionIds: ['b', 'c'] }],
+		[CreateCustomActionControlId('b'), { calledCustomActionIds: ['c'] }],
+		[CreateCustomActionControlId('c'), { calledCustomActionIds: [] }],
+	]
+
+	test('excludes the custom action itself, and any which call it', () => {
+		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('c'), customActions)).toEqual(
+			new Set(['__custom-actions__:c', '__custom-actions__:a', '__custom-actions__:b'])
+		)
+		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('a'), customActions)).toEqual(
+			new Set(['__custom-actions__:a'])
+		)
+	})
+
+	test('excludes nothing from a control which is not a custom action', () => {
+		expect(getCustomActionCallsExcludedFrom(CreateBankControlId('abc'), customActions)).toEqual(new Set())
+	})
+
+	test('excludes nothing when there is no control', () => {
+		expect(getCustomActionCallsExcludedFrom(null, customActions)).toEqual(new Set())
+	})
+})
+
 describe('PageControlModelSchema', () => {
 	test('a page control without local variables has none', () => {
 		expect(PageControlModelSchema.parse({ type: 'page' })).toEqual({ type: 'page', localVariables: [] })
@@ -288,6 +347,7 @@ describe('SomeControlModelSchema', () => {
 		['button-layered', { type: 'button-layered' }],
 		['trigger', { type: 'trigger' }],
 		['expression-variable', { type: 'expression-variable' }],
+		['custom-action', { type: 'custom-action' }],
 		['page', { type: 'page' }],
 		['pageup', { type: 'pageup' }],
 	])('parses a %s control', (type, control) => {
@@ -306,7 +366,9 @@ describe('isControlModelForId', () => {
 		['pagenum', CreateBankControlId('1'), true],
 		['trigger', CreateTriggerControlId('1'), true],
 		['page', CreatePageControlId('1'), true],
+		['custom-action', CreateCustomActionControlId('1'), true],
 		['trigger', CreateBankControlId('1'), false],
+		['custom-action', CreateTriggerControlId('1'), false],
 		['button-layered', CreateTriggerControlId('1'), false],
 		['expression-variable', CreatePageControlId('1'), false],
 	] as const)('a %s control under %s is %s', (type, controlId, expected) => {
@@ -320,6 +382,7 @@ describe('zodStoredControlId', () => {
 		expect(zodStoredControlId.safeParse(CreateBankControlId('1')).success).toBe(true)
 		expect(zodStoredControlId.safeParse(CreateTriggerControlId('1')).success).toBe(true)
 		expect(zodStoredControlId.safeParse(CreatePageControlId('1')).success).toBe(true)
+		expect(zodStoredControlId.safeParse(CreateCustomActionControlId('1')).success).toBe(true)
 	})
 
 	test('rejects a preset id, which is not a stored control', () => {

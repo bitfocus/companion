@@ -15,6 +15,13 @@ export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityMod
 				visitor.visitString(override.override, 'value', entity.id)
 			}
 		}
+
+		if (entity.isInverted) visitor.visitString(entity.isInverted, 'value', entity.id)
+	} else if (entity.type === EntityModelType.Action) {
+		// Where the result is stored can be an expression, or name a variable
+		if (entity.storeResult) visitExpressionFields(visitor, entity.storeResult, entity.id)
+		// As can where each output of a custom action is written
+		for (const target of Object.values(entity.outputTargets ?? {})) visitExpressionFields(visitor, target, entity.id)
 	}
 
 	// Fixup any references in entity options
@@ -27,5 +34,14 @@ export function visitEntityModel(visitor: InternalVisitor, entity: SomeEntityMod
 			// Unwrapped option
 			visitor.visitString(entity.options, key, entity.id)
 		}
+	}
+}
+
+/**
+ * Visit each field of an object which can be an expression
+ */
+function visitExpressionFields(visitor: InternalVisitor, obj: object, entityId: string): void {
+	for (const value of Object.values(obj)) {
+		if (isExpressionOrValue(value)) visitor.visitString(value, 'value', entityId)
 	}
 }

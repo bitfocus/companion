@@ -13,7 +13,7 @@ import {
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useControlEntitiesEditorService } from '~/Services/Controls/ControlEntitiesService.js'
-import { EntityEditorContextProvider } from './Components/EntityEditorContext.js'
+import { EntityEditorContextProvider, type LocalVariableOutputs } from './Components/EntityEditorContext.js'
 import { EditableEntityList } from './Components/EntityList.js'
 import { useEntityListReorderMonitor } from './Components/useEntityListReorderMonitor.js'
 import { EntityListActionContext, type LocalVariablesStore } from './LocalVariablesStore.js'
@@ -33,6 +33,8 @@ interface ControlEntitiesEditorProps {
 	subheading?: React.JSX.Element | string | null
 	localVariablesStore: LocalVariablesStore | null
 	localVariablePrefix: string | null
+	/** When set, its user value local variables can be outputs, as in a custom action */
+	localVariableOutputs?: LocalVariableOutputs
 }
 
 export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
@@ -49,6 +51,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 	subheading,
 	localVariablesStore,
 	localVariablePrefix,
+	localVariableOutputs,
 }: ControlEntitiesEditorProps) {
 	const confirmModal = useRef<GenericConfirmModalRef>(null)
 
@@ -78,6 +81,7 @@ export const ControlEntitiesEditor = observer(function ControlEntitiesEditor({
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
 				actionContext={actionContext}
+				localVariableOutputs={localVariableOutputs}
 			>
 				<PanelCollapseHelperProvider
 					storageId={`${entityType}_${controlId}_${stringifySocketEntityLocation(listId)}`}

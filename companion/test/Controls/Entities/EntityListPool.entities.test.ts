@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CUSTOM_ACTIONS_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
+import type { EntityScope } from '../../../lib/Controls/Entities/Types.js'
 import { actionModel, createPool, downSet, feedbackModel } from './EntityListPoolTestHelpers.js'
 
 // The pool schedules debounced timers (e.g. for local-variable/special-expression processing) that
@@ -183,6 +185,22 @@ describe('EntityListPool - entitySetConnection', () => {
 
 		expect(pool.entitySetConnection(downSet(), 'nope', 'conn')).toBe(false)
 	})
+
+	test.each([INTERNAL_CONNECTION_ID, CUSTOM_ACTIONS_CONNECTION_ID])(
+		'does not change an action to or from the %s connection',
+		(virtualConnectionId) => {
+			const { pool } = createPool()
+			const action = actionModel({ connectionId: 'conn-old' })
+			const virtual = actionModel({ connectionId: virtualConnectionId, definitionId: 'def-virtual' })
+			pool.entityAdd(downSet(), null, action, virtual)
+
+			expect(pool.entitySetConnection(downSet(), action.id, virtualConnectionId)).toBe(false)
+			expect(pool.findEntityById(action.id)?.connectionId).toBe('conn-old')
+
+			expect(pool.entitySetConnection(downSet(), virtual.id, 'conn-new')).toBe(false)
+			expect(pool.findEntityById(virtual.id)?.connectionId).toBe(virtualConnectionId)
+		}
+	)
 })
 
 describe('EntityListPool - entitySetInverted', () => {
@@ -302,6 +320,41 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 		})
 
 		expect(result).toBeUndefined()
+	})
+
+	test('ignores a copy in a transient group, as it is rebuilt once what it copies is upgraded', () => {
+		const { pool } = createPool()
+		const caller = actionModel()
+		pool.entityAdd(downSet(), null, caller)
+		const copy = actionModel({ definitionId: 'def-old' })
+		const copyScope: EntityScope = {
+			isTransient: true,
+			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			customActionChain: [],
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			localVariablesChanged: vi.fn(),
+			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		}
+		const callerEntity = pool.findEntityById(caller.id)!
+		const copyList = callerEntity.createTransientList(
+			'copy',
+			copyScope,
+			{ type: EntityModelType.Action },
+			[copy],
+			false
+		)
+		callerEntity.setTransientCopy('copy', { lists: [copyList] })
+
+		const result = pool.entityReplaceForUpgrade({
+			id: copy.id,
+			type: EntityModelType.Action,
+			definitionId: 'def-new',
+			options: {},
+			upgradeIndex: undefined,
+		})
+
+		expect(result).toBeUndefined()
+		expect(pool.findEntityById(caller.id)!.findChildById(copy.id)?.definitionId).toBe('def-old')
 	})
 
 	test('returns undefined for an unknown entity', () => {

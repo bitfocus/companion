@@ -1,6 +1,7 @@
+import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { computeIsLocalClient } from '../../lib/UI/TRPC.js'
+import { computeIsLocalClient, throttleIterator, toIterable } from '../../lib/UI/TRPC.js'
 
 describe('computeIsLocalClient', () => {
 	afterEach(() => {
@@ -54,5 +55,72 @@ describe('computeIsLocalClient', () => {
 			throw new Error('boom')
 		})
 		expect(computeIsLocalClient('192.168.1.50')).toBe(false)
+	})
+})
+
+describe('throttleIterator', () => {
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
+	function setup() {
+		vi.useFakeTimers()
+		const ee = new EventEmitter<{ value: [number] }>()
+		const abort = new AbortController()
+		const iterator = throttleIterator(toIterable(ee, 'value', abort.signal), 100)
+		return { ee, abort, iterator }
+	}
+
+	it('passes on a value straight away, then only the latest of those within the interval', async () => {
+		const { ee, iterator } = setup()
+
+		const first = iterator.next()
+		ee.emit('value', 1)
+		expect(await first).toEqual({ done: false, value: [1] })
+
+		const second = iterator.next()
+		ee.emit('value', 2)
+		ee.emit('value', 3)
+		await vi.advanceTimersByTimeAsync(99)
+		ee.emit('value', 4)
+		await vi.advanceTimersByTimeAsync(1)
+		expect(await second).toEqual({ done: false, value: [4] })
+
+		await iterator.return()
+	})
+
+	it('passes on a value straight away once an interval has passed without any', async () => {
+		const { ee, iterator } = setup()
+
+		const first = iterator.next()
+		ee.emit('value', 1)
+		await first
+		await vi.advanceTimersByTimeAsync(500)
+
+		const second = iterator.next()
+		ee.emit('value', 2)
+		expect(await second).toEqual({ done: false, value: [2] })
+
+		await iterator.return()
+	})
+
+	it('stops listening once returned', async () => {
+		const { ee, iterator } = setup()
+
+		const first = iterator.next()
+		ee.emit('value', 1)
+		await first
+		await iterator.return()
+
+		expect(ee.listenerCount('value')).toBe(0)
+	})
+
+	it('ends when the signal aborts', async () => {
+		const { ee, abort, iterator } = setup()
+
+		const first = iterator.next()
+		abort.abort()
+		await expect(first).rejects.toThrow()
+		expect(ee.listenerCount('value')).toBe(0)
 	})
 })

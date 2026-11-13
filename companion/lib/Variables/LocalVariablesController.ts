@@ -13,6 +13,7 @@ import { CreatePageControlId, type SomeControlId } from '@companion-app/shared/C
 import type { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from '@companion-module/host'
+import type { CustomActionRunFrame } from '../Controls/CustomActionRunFrame.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { EditableEntityListPool, SomeEntityPool } from '../Controls/Entities/EntityListPoolEditingMixin.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -25,6 +26,11 @@ const LocalVariablesList = 'local-variables' satisfies SomeSocketEntityLocation
 export type LocalVariable = {
 	readonly controlId: SomeControlId
 	readonly name: string
+	/**
+	 * The run of a custom action which the variable is being used by. Its value is then that of the run, rather
+	 * than the value held by the control
+	 */
+	readonly frame: CustomActionRunFrame | null
 }
 
 export class LocalVariablesController {
@@ -81,7 +87,7 @@ export class LocalVariablesController {
 	localVariableFor(
 		location: JsonValue | undefined,
 		name: JsonValue | undefined,
-		extras: { controlId: SomeControlId | null; location: RunActionExtras['location'] }
+		extras: { controlId: SomeControlId | null; location: RunActionExtras['location']; frame: RunActionExtras['frame'] }
 	): LocalVariable | null {
 		if (!name) return null
 
@@ -91,10 +97,17 @@ export class LocalVariablesController {
 		const locationStr = stringifyVariableValue(location)
 		if (!locationStr) return null
 
-		if (locationStr?.trim().toLocaleLowerCase() === 'this') {
-			// This could be any type of control (button, trigger, etc)
+		const keyword = locationStr.trim().toLocaleLowerCase()
+		if (keyword === 'run') {
+			// The local variables of the custom action being run, with the values of the run
+			if (!extras.frame) return null
+			return { controlId: extras.frame.customActionControlId, name, frame: extras.frame }
+		}
+		if (keyword === 'this') {
+			// The control running it, which could be any type of control (button, trigger, etc). In a custom action, as
+			// with `$(this:*)`, this is the control which called it
 			if (!extras.controlId) return null
-			return { controlId: extras.controlId, name }
+			return { controlId: extras.controlId, name, frame: null }
 		}
 
 		// Parse the location of a button
@@ -104,7 +117,7 @@ export class LocalVariablesController {
 		const controlId = this.#pageStore.getControlIdAt(controlLocation)
 		if (!controlId) return null
 
-		return { controlId, name }
+		return { controlId, name, frame: null }
 	}
 
 	/**
@@ -128,7 +141,7 @@ export class LocalVariablesController {
 		if (!pageId) return null
 
 		// eslint-disable-next-line @typescript-eslint/no-base-to-string
-		return { controlId: CreatePageControlId(pageId), name: String(name) }
+		return { controlId: CreatePageControlId(pageId), name: String(name), frame: null }
 	}
 
 	/**
@@ -137,19 +150,44 @@ export class LocalVariablesController {
 	 * on the same control, suitable for passing to `VariablesAndExpressionParser.createChildParser`.
 	 */
 	getLocalVariableContextFor(localVariable: LocalVariable): VariableValues | null {
-		const controlAndVariable = this.#getControlAndVariable(localVariable)
-		if (!controlAndVariable) return null
+		const localVariableEntities = this.#getLocalVariableEntitiesFor(localVariable)
+		if (!localVariableEntities) return null
 
-		const { entities, variableEntity } = controlAndVariable
-		const result: VariableValues = { 'this:current': variableEntity.feedbackValue }
+		const variableEntity = localVariableEntities.find((entity) => entity.rawLocalVariableName === localVariable.name)
+		if (!variableEntity) return null
 
-		for (const entity of entities.getAllEntitiesInList('local-variables')) {
+		const result: VariableValues = {
+			'this:current': this.#getValue(variableEntity, localVariable.frame),
+		}
+
+		for (const entity of localVariableEntities) {
 			const rawName = entity.rawLocalVariableName
 			if (!rawName) continue
-			result[`target:${rawName}`] = entity.feedbackValue
+			result[`target:${rawName}`] = this.#getValue(entity, localVariable.frame)
 		}
 
 		return result
+	}
+
+	/**
+	 * The local variables a local variable is among. In a run of a custom action, these are the copies held by the run,
+	 * whose values come from its inputs, rather than those of the custom action itself
+	 */
+	#getLocalVariableEntitiesFor(localVariable: LocalVariable): ControlEntityInstance[] | null {
+		if (localVariable.frame) return localVariable.frame.getLocalVariableEntities()
+
+		const controlAndVariable = this.#getControlAndVariable(localVariable)
+		if (!controlAndVariable) return null
+		return controlAndVariable.entities.getAllEntitiesInList('local-variables')
+	}
+
+	/**
+	 * Get the value of a local variable, from the run of a custom action if there is one
+	 */
+	#getValue(entity: ControlEntityInstance, frame: CustomActionRunFrame | null): JsonValue | undefined {
+		const rawName = entity.rawLocalVariableName
+		if (frame && rawName && frame.localValues.has(rawName)) return frame.localValues.get(rawName)
+		return entity.feedbackValue
 	}
 
 	/**
@@ -160,6 +198,13 @@ export class LocalVariablesController {
 	setLocalVariable(localVariable: LocalVariable, value: JsonValue | undefined): boolean {
 		const controlAndVariable = this.#getControlAndVariable(localVariable)
 		if (!controlAndVariable) return false
+
+		// Inside a custom action, the value is only for the run
+		if (localVariable.frame) {
+			localVariable.frame.localValues.set(localVariable.name, value)
+			localVariable.frame.localValueChanged(localVariable.name)
+			return true
+		}
 
 		const { entities, variableEntity } = controlAndVariable
 		entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, value)
@@ -176,6 +221,13 @@ export class LocalVariablesController {
 		const controlAndVariable = this.#getControlAndVariable(localVariable)
 		if (!controlAndVariable) return false
 
+		// Inside a custom action, a variable which has not been set in the run has its startup value
+		if (localVariable.frame) {
+			localVariable.frame.localValues.delete(localVariable.name)
+			localVariable.frame.localValueChanged(localVariable.name)
+			return true
+		}
+
 		const { entities, variableEntity } = controlAndVariable
 
 		// This isn't allowed to be an expression
@@ -191,6 +243,9 @@ export class LocalVariablesController {
 	 * Returns false if the variable could not be written to.
 	 */
 	writeLocalVariableStartupValue(localVariable: LocalVariable): boolean {
+		// A run of a custom action can't change the custom action itself
+		if (localVariable.frame) return false
+
 		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
 		if (!controlAndVariable) return false
 

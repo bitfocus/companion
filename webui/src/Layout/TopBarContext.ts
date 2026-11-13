@@ -7,6 +7,8 @@ export interface TopBarPage {
 	icon: IconDefinition | undefined
 	title: string
 	helpAction: ContextHelpButtonProps['action'] | undefined
+	/** Whether the page is for something whose behaviour is not yet settled */
+	beta: boolean | undefined
 }
 
 /**

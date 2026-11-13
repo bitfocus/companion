@@ -47,6 +47,7 @@ export interface IEntityEditorService {
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
 	setRawStoreResult: ((entityId: string, target: RawStoreResult | undefined) => void) | undefined
+	setRawOutputTarget: ((entityId: string, outputId: string, target: RawStoreResult | null) => void) | undefined
 
 	setInverted: (entityId: string, inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (entityId: string, name: string) => void
@@ -67,6 +68,7 @@ export interface IEntityEditorActionService {
 	setHeadline: ((headline: string) => void) | undefined
 
 	setRawStoreResult: ((target: RawStoreResult | undefined) => void) | undefined
+	setRawOutputTarget: ((outputId: string, target: RawStoreResult | null) => void) | undefined
 
 	setInverted: (inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (name: string) => void
@@ -93,6 +95,7 @@ export function useControlEntitiesEditorService(
 	const setHeadlineMutation = useMutationExt(trpc.controls.entities.setHeadline.mutationOptions())
 	const setInvertedMutation = useMutationExt(trpc.controls.entities.setInverted.mutationOptions())
 	const setRawStoreResultMutation = useMutationExt(trpc.controls.entities.setRawStoreResult.mutationOptions())
+	const setRawOutputTargetMutation = useMutationExt(trpc.controls.entities.setRawOutputTarget.mutationOptions())
 	const setVariableNameMutation = useMutationExt(trpc.controls.entities.setVariableName.mutationOptions())
 	const setVariableValueMutation = useMutationExt(trpc.controls.entities.setVariableValue.mutationOptions())
 	const replaceStyleOverrideMutation = useMutationExt(trpc.controls.entities.replaceStyleOverride.mutationOptions())
@@ -268,6 +271,14 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
+			setRawOutputTarget: (entityId: string, outputId: string, target: RawStoreResult | null) => {
+				setRawOutputTargetMutation
+					.mutateAsync({ controlId, entityLocation: listId, entityId, outputId, target })
+					.catch((e) => {
+						console.error('Failed to set the target of an output', e)
+					})
+			},
+
 			setVariableName: (entityId: string, name: string) => {
 				setVariableNameMutation
 					.mutateAsync({
@@ -331,6 +342,7 @@ export function useControlEntitiesEditorService(
 			setEnabledMutation,
 			setHeadlineMutation,
 			setInvertedMutation,
+			setRawOutputTargetMutation,
 			setVariableNameMutation,
 			setVariableValueMutation,
 			replaceStyleOverrideMutation,
@@ -371,6 +383,10 @@ export function useControlEntityService(
 				: undefined,
 			setRawStoreResult: serviceFactory.setRawStoreResult
 				? (target: RawStoreResult | undefined) => serviceFactory.setRawStoreResult?.(entityId, target)
+				: undefined,
+			setRawOutputTarget: serviceFactory.setRawOutputTarget
+				? (outputId: string, target: RawStoreResult | null) =>
+						serviceFactory.setRawOutputTarget?.(entityId, outputId, target)
 				: undefined,
 			setInverted: (inverted: ExpressionOrValue<boolean>) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),
