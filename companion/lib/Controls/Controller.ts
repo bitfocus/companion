@@ -630,14 +630,23 @@ export class ControlsController {
 
 		this.#publishCustomActionDefinitions()
 
-		// Now that every custom action is loaded, build the copies held by the actions which call them.
-		// Their connection entities are tracked by each connection when it starts
-		for (const control of this.#store.controls.values()) {
-			if (control.supportsEntities) control.entities.resubscribeEntities(undefined, CUSTOM_ACTIONS_CONNECTION_ID)
-		}
-
 		// Initialize expression variable names map
 		this.#expressionVariableNamesMap.rebuildMap()
+	}
+
+	/**
+	 * Subscribe the entities of every control, applying their side effects (internal module, special
+	 * expressions, module notify, and building the copies held by actions which call custom actions). Controls are
+	 * loaded without subscribing, so this must be called once at startup after everything they depend on (eg custom
+	 * variables and the custom actions) has been loaded.
+	 * Connections that start later pick up their entities themselves.
+	 */
+	subscribeAll(): void {
+		for (const control of this.#store.controls.values()) {
+			if (!control.supportsEntities) continue
+
+			control.entities.resubscribeEntities()
+		}
 	}
 
 	/**
