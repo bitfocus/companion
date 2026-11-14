@@ -1291,6 +1291,62 @@ describe('changes which leave the children alone', () => {
 	})
 })
 
+describe('disabling an entity with children', () => {
+	function setup() {
+		const ctx = createList(CreateBankControlId('test01'))
+		ctx.getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(ActionTree), true, false)
+		ctx.list.subscribe()
+		ctx.connectionEntityUpdate.mockClear()
+		ctx.internalEntityUpdate.mockClear()
+		ctx.connectionEntityDelete.mockClear()
+		ctx.internalEntityDelete.mockClear()
+		return ctx
+	}
+
+	function ids(calls: Array<[{ id: string }, ...any[]]>): string[] {
+		return calls.map(([entity]) => entity.id)
+	}
+
+	test('only cleans up the entity itself', () => {
+		const ctx = setup()
+
+		ctx.list.findById('int1')!.setEnabled(false)
+
+		expect(ids(ctx.internalEntityDelete.mock.calls)).toEqual(['int1'])
+		// int1-b, inside it, keeps its own state
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+	})
+
+	test('re-enabling only subscribes the entity itself', () => {
+		const ctx = setup()
+		ctx.list.findById('int1')!.setEnabled(false)
+
+		ctx.list.findById('int1')!.setEnabled(true)
+
+		expect(ids(ctx.internalEntityUpdate.mock.calls)).toEqual(['int1'])
+		expect(ctx.connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a recursive subscribe leaves the disabled entity out, but not those inside it', () => {
+		const ctx = setup()
+		ctx.list.findById('int1')!.setEnabled(false)
+		vi.mocked(ctx.specialExpressionManager.trackEntity).mockClear()
+		vi.mocked(ctx.specialExpressionManager.forgetEntity).mockClear()
+
+		ctx.list.subscribe()
+
+		expect(vi.mocked(ctx.specialExpressionManager.forgetEntity).mock.calls.map(([id]) => id)).toEqual(['int1'])
+		expect(ids(vi.mocked(ctx.specialExpressionManager.trackEntity).mock.calls as any)).toEqual([
+			'01',
+			'02',
+			'int0',
+			'int1-b',
+			'int2',
+		])
+	})
+})
+
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
@@ -2297,15 +2353,26 @@ describe('transient child groups', () => {
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
 	})
 
-	test('the group follows the lifecycle of its entity', () => {
-		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
-		connectionEntityUpdate.mockClear()
+	test('the group is cleaned up with its entity', () => {
+		const { callerEntity, connectionEntityDelete } = setup()
+
+		callerEntity.cleanup()
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+	})
+
+	test('enabling and disabling the entity has whatever built its copy rebuild or drop it', () => {
+		const { callerEntity, customActionInstances } = setup()
+		customActionInstances.entityUpdate.mockClear()
 
 		callerEntity.setEnabled(false)
-		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(customActionInstances.entityDelete).toHaveBeenCalledWith(callerEntity)
 
 		callerEntity.setEnabled(true)
-		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+		expect(customActionInstances.entityUpdate).toHaveBeenCalledWith(
+			callerEntity,
+			CreateBankControlId('test01'),
+			expect.anything()
+		)
 	})
 
 	test('the group of a disabled entity is not subscribed', () => {

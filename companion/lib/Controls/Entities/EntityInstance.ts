@@ -335,7 +335,8 @@ export class ControlEntityInstance {
 
 	/**
 	 * Inform the relevant module of a removed entity, without touching the entities inside it.
-	 * The counterpart of #subscribeSelf
+	 * The counterpart of #subscribeSelf. Any copy it holds (such as of a custom action) is dropped by whatever built
+	 * it, when told this entity has gone, just as #subscribeSelf has it built
 	 */
 	#cleanupSelf(): void {
 		// Inform relevant module
@@ -498,11 +499,13 @@ export class ControlEntityInstance {
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = this.#getStartupValue()
 
-		// Inform relevant module
+		// Only this entity is enabled or disabled. The entities inside it keep their own state and stay subscribed: a
+		// disabled entity doesn't run or evaluate them, so that is only wasted work, and it keeps every entity's
+		// subscription down to its own enabled state, however it is moved around or subscribed
 		if (!this.#data.disabled) {
-			this.subscribe()
+			this.#subscribeSelf()
 		} else {
-			this.cleanup()
+			this.#cleanupSelf()
 		}
 	}
 
