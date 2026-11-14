@@ -33,11 +33,6 @@ export const CUSTOM_ACTION_HELD_COPY = 'custom-action'
 
 export type CustomActionInstancesForEntity = Pick<CustomActionInstanceManager, 'entityUpdate' | 'entityDelete'>
 
-type CustomFeedbackInstancesForCustomActions = Pick<
-	CustomFeedbackInstanceManager,
-	'entityUpdate' | 'entityDelete' | 'evaluateLive' | 'copyRuntimeValues'
->
-
 /**
  * What is kept for each action which calls a custom action: how it parses its inputs, and the copy it holds
  */
@@ -95,7 +90,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	readonly #renderClock: RenderClock
 	readonly #variableDependencies: VariableDependencyRegistry
 	/** For any copies of custom feedbacks inside the copies */
-	readonly #customFeedbackInstances: CustomFeedbackInstancesForCustomActions
+	readonly #customFeedbackInstances: CustomFeedbackInstanceManager
 
 	/** The copies, by the action which calls the custom action */
 	readonly #callers = new Map<ControlEntityInstance, CallerState>()
@@ -112,7 +107,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 		controlStore: Pick<IControlStore, 'getControl'>,
 		renderClock: RenderClock,
 		variableDependencies: VariableDependencyRegistry,
-		customFeedbackInstances: CustomFeedbackInstancesForCustomActions
+		customFeedbackInstances: CustomFeedbackInstanceManager
 	) {
 		this.#controlStore = controlStore
 		this.#renderClock = renderClock
