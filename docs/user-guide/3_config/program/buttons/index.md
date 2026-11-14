@@ -12,7 +12,7 @@ You can change the size of the grid to any size you wish, in the [Buttons settin
 It can grow in all 4 directions.
 :::
 
-![Buttons Page](images/buttons.png?raw=true 'Buttons Page')
+![Buttons Page](images/buttons.png 'Buttons Page')
 
 The Buttons layout has multiple pages that can be navigated using the left/right arrows or the dropdown. Each page is also listed in the **Pages** tab in the right panel where you can manage pages and give them names. See [Pages](./pages.md) for more.
 
@@ -30,13 +30,13 @@ Next to the page selector you'll find:
     first column, replacing whatever is there.
   - **Clear page** — erases every button on the page.
 
-![Page actions menu](images/page-actions-menu.png?raw=true 'Page actions menu')
+![Page actions menu](images/page-actions-menu.png 'Page actions menu')
 
 ## Selecting and arranging buttons
 
 The toolbar above the grid chooses what clicking on the grid does. Hover over a tool to see its name.
 
-![Grid toolbar](images/grid-toolbar.png?raw=true 'Grid toolbar')
+![Grid toolbar](images/grid-toolbar.png 'Grid toolbar')
 
 The first group of tools changes how you select buttons:
 
@@ -85,7 +85,7 @@ Right-click a button for a menu of the common operations:
 If you right-click inside a selection of several buttons, the menu acts on the whole selection, for example
 **Copy 4 buttons**.
 
-![Grid right-click menu](images/grid-context-menu.png?raw=true 'Grid right-click menu')
+![Grid right-click menu](images/grid-context-menu.png 'Grid right-click menu')
 
 ### Keyboard shortcuts
 

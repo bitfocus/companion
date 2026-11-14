@@ -22,10 +22,10 @@ If one of your modules supports presets, it will be listed in this tab for you t
 below.
 
 _An example of modules currently loaded with premade presets_  
-![Preset Modules](images/preset-modules.png?raw=true 'Preset Modules')
+![Preset Modules](images/preset-modules.png 'Preset Modules')
 
-_Here is an example of presets made for an ATEM ME1_  
-![Preset Buttons](images/preset-buttons.png?raw=true 'Preset Buttons')
+_Here is an example of the presets of a vision mixer_  
+![Preset Buttons](images/preset-buttons.png 'Preset Buttons')
 
 Drag the preset buttons onto a page's button when in the Button Layout view.
 
@@ -44,7 +44,7 @@ toggle at the top of the Presets tab:
 - **Copy** — the button is a one-off copy of the preset, which you can then freely edit just like a manually
   defined button. It won't change when the preset does.
 
-![Preset placement toggle](images/preset-placement.png?raw=true 'Preset placement toggle')
+![Preset placement toggle](images/preset-placement.png 'Preset placement toggle')
 
 The choice is remembered by your browser, and only affects presets you place from then on.
 
@@ -57,7 +57,7 @@ button, the editor instead shows:
 - **Preset variables** — some presets are a template for a group of similar buttons, such as one button per
   input of a switcher. The values which make each button different are shown here, and can be changed.
 
-![A linked preset button](images/linked-preset.png?raw=true 'A linked preset button')
+![A linked preset button](images/linked-preset.png 'A linked preset button')
 
 If you want to customise a linked button further, click **Edit** at the top of the editor. This unlinks the
 button and turns it into a normal button with the same appearance, actions and feedbacks, which you can then
@@ -89,7 +89,7 @@ page. You can find a link to this in the [Connections page](../../../connect/con
      **startup page**.
    - **Page down**: Moves the surface down to the previous page.
 
-![Selecting type](images/selecting-type.png?raw=true 'Selecting type')
+![Selecting type](images/selecting-type.png 'Selecting type')
 
 ### Customising the page buttons
 
@@ -100,7 +100,7 @@ equivalent actions already filled in, which you can then restyle and customise f
 
 This is a one-way conversion and can't be undone.
 
-![Convert to Normal Button](images/convert-to-normal-button.png?raw=true)
+![Convert to Normal Button](images/convert-to-normal-button.png)
 
 ### Styling the button
 
@@ -148,7 +148,7 @@ A **Button reference** mirrors another button. It shows exactly what the other b
 turning it is the same as pressing or turning the other button. This is useful when you want the same button in
 more than one place, such as a "cut" button on every page, without having to keep several copies in sync.
 
-![Button reference](images/button-reference.png?raw=true 'Button reference')
+![Button reference](images/button-reference.png 'Button reference')
 
 To create one, either choose **Button reference** when setting up an empty button, or copy a button and then
 right-click where you want the reference and choose **Paste as reference**.
@@ -182,4 +182,4 @@ you come back to a complex show months later. The same notes field is also avail
 Some presets fill in the notes when they are placed, to explain what the button does. These notes are yours to
 change.
 
-![Button notes](images/button-notes.png?raw=true)
+![Button notes](images/button-notes.png)

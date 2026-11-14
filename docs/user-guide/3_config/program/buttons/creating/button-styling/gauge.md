@@ -14,7 +14,7 @@ at a glance is more useful than reading a number.
 As well as the shared **Drawing** and **Position & Size** sections (see
 [Button styling](./index.md#element-properties)), a Gauge element has several sections of its own.
 
-![Gauge element properties](images/gauge-properties.png?raw=true)
+![Gauge element properties](images/gauge-properties.png)
 
 ## Value
 

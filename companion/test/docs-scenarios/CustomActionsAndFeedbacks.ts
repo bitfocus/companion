@@ -1,9 +1,9 @@
 import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
-import { ParseControlId, type BankControlId } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type { TestApp } from '../integration/TestApp.js'
+import { createButtonWithText, prepareDocsApp, waitFor } from './Helpers.js'
 
 /**
  * The examples of the custom actions and custom feedbacks pages of the user guide
@@ -18,6 +18,8 @@ import type { TestApp } from '../integration/TestApp.js'
  *
  * The http api is enabled, for the screenshots to press buttons and set variables.
  */
+export const prepare = prepareDocsApp
+
 export async function seed(app: TestApp): Promise<void> {
 	// The screenshots press the buttons and set the variables through the http api
 	app.registry.userconfig.setKey('http_api_enabled', true)
@@ -145,18 +147,4 @@ export async function seed(app: TestApp): Promise<void> {
 		{ target: exprVal(50), step: exprVal(10), delay: exprVal(1000) },
 		{ level: { type: 'custom-variable', variableName: exprVal('fader_b'), createIfNotExists: false } }
 	)
-}
-
-async function createButtonWithText(app: TestApp, location: ControlLocation, text: string): Promise<BankControlId> {
-	const controlId = app.createButton(location)
-	await app.trpc().controls.styles.updateOption({ controlId, elementId: 'text0', key: 'text', value: exprVal(text) })
-	return controlId
-}
-
-async function waitFor(check: () => unknown): Promise<void> {
-	for (let attempt = 0; attempt < 100; attempt++) {
-		if (check()) return
-		await new Promise((resolve) => setTimeout(resolve, 50))
-	}
-	throw new Error('Timed out waiting for the app')
 }

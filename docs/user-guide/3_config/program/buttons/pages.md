@@ -36,7 +36,7 @@ Page variables are managed in the **Page Variables** tab next to the button grid
 currently shown in the grid. They can be any of the local variable types: a **User Value**, an **Evaluate
 Expression**, or a **Feedback**.
 
-![Page variables](images/page-variables.png?raw=true 'Page variables')
+![Page variables](images/page-variables.png 'Page variables')
 
 On any button on that page, use a page variable with `$(page:name)`. For example, a page variable called
 `presenter` is used as `$(page:presenter)`.

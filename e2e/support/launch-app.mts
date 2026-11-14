@@ -6,8 +6,9 @@
  * runs the app.
  *
  * Pass `--scenario <path>` (relative to the repository root) to seed the app before it is reported ready: the
- * module's exported `seed(app)` is given the fixture, to build what the tests need (eg the examples shown in the
- * screenshots of the docs).
+ * module's exported `prepare()` is run before the app starts (eg to stand in for services the app reaches out to), and
+ * its `seed(app)` is given the fixture, to build what the tests need (eg the examples shown in the screenshots of the
+ * docs).
  *
  * Prints a COMPANION_READY marker line with the bound port once the app is listening, and shuts
  * down gracefully on SIGTERM/SIGINT.
@@ -30,16 +31,17 @@ const { createTestApp } = (await import(testAppModulePath)) as {
 	createTestApp: (options: { configDir: string | null; extraModulePath: string | null }) => Promise<TestAppSlice>
 }
 
-const app = await createTestApp({ configDir: null, extraModulePath: null })
-
 const { values: args } = parseArgs({ options: { scenario: { type: 'string' } } })
-if (args.scenario) {
-	const repoRoot = path.join(import.meta.dirname, '../..')
-	const { seed } = (await import(pathToFileURL(path.join(repoRoot, args.scenario)).href)) as {
-		seed: (app: TestAppSlice) => Promise<void>
-	}
-	await seed(app)
-}
+const scenario = args.scenario
+	? ((await import(pathToFileURL(path.join(import.meta.dirname, '../..', args.scenario)).href)) as {
+			prepare: () => Promise<void>
+			seed: (app: TestAppSlice) => Promise<void>
+		})
+	: null
+
+await scenario?.prepare()
+const app = await createTestApp({ configDir: null, extraModulePath: null })
+await scenario?.seed(app)
 
 process.stdout.write(`COMPANION_READY ${JSON.stringify({ port: app.httpPort, configDir: app.configDir })}\n`)
 

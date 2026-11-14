@@ -18,7 +18,7 @@ A **feedback** lets a button change its own appearance automatically, based on w
 how a button can turn red when a camera goes live, show a different label when a mixer channel is
 muted, or light up while a layer is on air — all without you touching anything.
 
-![Feedback list](images/feedback-list.png?raw=true)
+![Feedback list](images/feedback-list.png)
 
 Some feedbacks come from your [connections](../../../connect/connections.md) (the module reports the device's
 state), and Companion also has built-in feedbacks for generic logic, such as "change the style when
@@ -65,7 +65,7 @@ Each feedback has a **Style Overrides** table listing the element properties it 
 Use the pencil on a row to change which element and property it overrides, and the bin to remove it. A
 feedback with no overrides has no effect, and says so.
 
-![Add Element Properties](images/feedback-add-element-properties.png?raw=true)
+![Add Element Properties](images/feedback-add-element-properties.png)
 
 You can add several element/property overrides to a single feedback, and you can reorder feedbacks by
 dragging the sort handle. They're applied from the top down, so a feedback **lower** in the list wins
@@ -87,7 +87,7 @@ Say you want a button's text to turn red when a custom variable `alarm` is true:
 
 Now the text is red whenever `alarm` is true, and returns to its normal color when it isn't.
 
-![Feedback example result](images/feedback-example-result.png?raw=true)
+![Feedback example result](images/feedback-example-result.png)
 
 :::tip[Upgrading from Companion 4.x? Here's what changed]
 You used to set a feedback's style on a single flat button style — "make the button's background red".
@@ -131,7 +131,7 @@ $(this:value) > -6 ? 0xff4040 : 0xffffff
 
 If the expression returns nothing (`undefined`), or fails, the element keeps its own value for that property.
 
-![Value feedback style override](images/feedback-value-override.png?raw=true)
+![Value feedback style override](images/feedback-value-override.png)
 
 As with element properties, Companion shows what each override's expression currently evaluates to, underneath
 the name of the property.

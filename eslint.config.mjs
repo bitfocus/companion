@@ -145,6 +145,14 @@ export default [
 		},
 	},
 	{
+		files: ['companion/test/docs-scenarios/modules/src/**/*'],
+		rules: {
+			// The demo module of the docs is bundled with the base library of the repository root, as a real module
+			// bundles its own copy, rather than being a dependency of the companion package
+			'n/no-extraneous-import': 'off',
+		},
+	},
+	{
 		files: ['e2e/**/*'],
 		rules: {
 			// @playwright/test is a root devDependency, which this rule doesn't recognise from here
