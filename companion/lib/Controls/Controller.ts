@@ -269,15 +269,7 @@ export class ControlsController {
 		}
 
 		const analysis = analyseCustomCalls(
-			new Map(
-				[...customActions].map(([id, control]) => [
-					id,
-					{
-						customActionIds: control.getCalledCustomActionIds(),
-						customFeedbackIds: control.getUsedCustomFeedbackIds(),
-					},
-				])
-			),
+			new Map([...customActions].map(([id, control]) => [id, control.getDirectCalls()])),
 			new Map([...customFeedbacks].map(([id, control]) => [id, control.getCalledCustomFeedbackIds()]))
 		)
 

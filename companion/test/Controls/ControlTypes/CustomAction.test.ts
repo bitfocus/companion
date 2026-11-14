@@ -328,12 +328,27 @@ describe('ControlCustomAction', () => {
 	})
 
 	describe('actions', () => {
-		test('the custom actions it calls leave out disabled calls, which can not make a loop', () => {
+		test('what it calls leaves out disabled calls and uses, which can not make a loop or nest', () => {
+			const useFeedback = (customFeedbackId: string): FeedbackEntityModel => ({
+				type: EntityModelType.Feedback,
+				id: `use-${nextId++}`,
+				connectionId: CUSTOM_CONNECTION_ID,
+				definitionId: customFeedbackId,
+				options: {},
+				upgradeIndex: undefined,
+			})
 			const { control } = createHarness({
 				actions: [callAction({}, 'enabled'), { ...callAction({}, 'disabled'), disabled: true }],
+				localVariables: [
+					{ ...useFeedback('used'), variableName: 'used' },
+					{ ...useFeedback('unused'), variableName: 'unused', disabled: true },
+				],
 			})
 
-			expect([...control.getCalledCustomActionIds()]).toEqual(['enabled'])
+			expect(control.getDirectCalls()).toEqual({
+				customActionIds: new Set(['enabled']),
+				customFeedbackIds: new Set(['used']),
+			})
 		})
 
 		test('an action which calls the custom action itself can not be added', () => {
