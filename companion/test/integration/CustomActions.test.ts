@@ -100,6 +100,55 @@ describe('custom actions', () => {
 		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe('default!'))
 	})
 
+	test('the actions of a custom action start together, even when called from a sequential group', async () => {
+		app.createCustomVariable('ran', false)
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Together' })
+		// A long running action, which a wait on its own is not: actions which start together still wait for a wait
+		const slowId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		app.addCustomActionAction(customActionId, { parentId: slowId, childGroup: 'default' }, 'wait', {
+			time: exprExpr('5000'),
+		})
+		app.addCustomActionAction(customActionId, null, 'custom_variable_set_value', {
+			name: exprVal('ran'),
+			create: exprVal(false),
+			value: exprExpr('true'),
+		})
+		await vi.waitFor(() =>
+			expect(
+				app.registry.instance.definitions.getEntityDefinition(
+					EntityModelType.Action,
+					CUSTOM_CONNECTION_ID,
+					customActionId.slice('custom-action:'.length)
+				)
+			).toBeTruthy()
+		)
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		const groupId = app.addInternalAction(buttonId, 'action_group', { execution_mode: exprVal('sequential') })
+		const control = app.registry.controls.getControl(buttonId)
+		if (!control?.supportsEntities) throw new Error('Expected a button')
+		const stepId = (control.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+		const callId = await app.trpc().controls.entities.add({
+			controlId: buttonId,
+			entityLocation: { stepId, setId: 'down' },
+			ownerId: { parentId: groupId, childGroup: 'default' },
+			connectionId: CUSTOM_CONNECTION_ID,
+			entityType: EntityModelType.Action,
+			entityDefinition: customActionId.slice('custom-action:'.length),
+		})
+		if (!callId) throw new Error('Failed to add the call')
+
+		app.pressButton(location, true)
+
+		// Well before the wait is over
+		await vi.waitFor(() => expect(app.getCustomVariableValue('ran')).toBe(true), { timeout: 1000 })
+
+		app.registry.controls.getControl(buttonId)?.abortDelayedActions(false, null, 0)
+	})
+
 	test('changing an input part way through a run does not affect that run', async () => {
 		app.createCustomVariable('out', '')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Slow' })

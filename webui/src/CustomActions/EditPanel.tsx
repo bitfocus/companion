@@ -190,9 +190,6 @@ function CustomActionPanelContent({
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
 								heading="Actions"
-								subheading={
-									<p className="text-sm text-muted">The actions run in order each time the custom action is called.</p>
-								}
 								headingActions={[
 									<TestRunButton
 										key="test-run"

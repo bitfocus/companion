@@ -222,6 +222,8 @@ export class CustomActionInstanceManager extends CustomEntityInstanceManager<
 		const runExtras: RunActionExtras = {
 			...extras,
 			abortDelayed: AbortSignal.any([extras.abortDelayed, abortController.signal]),
+			// Force the executionMode to match how other action lists behave
+			executionMode: 'concurrent',
 		}
 
 		const copyKey = `custom-action-run:${runId}`

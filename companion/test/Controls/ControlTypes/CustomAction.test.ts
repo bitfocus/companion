@@ -822,7 +822,10 @@ describe('ControlCustomAction', () => {
 		})
 
 		test('an aborted caller stops the custom action', async () => {
-			const { executeAction, runAsButton } = createHarness({ actions: [action('first'), action('second')] })
+			// The actions of a custom action start together, so the wait holds back the second until the first is done
+			const { executeAction, runAsButton } = createHarness({
+				actions: [action('first'), action('wait'), action('second')],
+			})
 			const abort = new AbortController()
 			const ran: string[] = []
 			executeAction.mockImplementation(async (action) => {
@@ -858,8 +861,9 @@ describe('ControlCustomAction', () => {
 		})
 
 		test('aborting the runs of a custom action stops them, but not the rest of what the caller is doing', async () => {
+			// The actions of a custom action start together, so the wait holds back the second until the first is done
 			const { executeAction, runAsButton, customActionInstances } = createHarness({
-				actions: [action('first'), action('second')],
+				actions: [action('first'), action('wait'), action('second')],
 			})
 			const ran: string[] = []
 			executeAction.mockImplementation(async (action) => {
