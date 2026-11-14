@@ -165,18 +165,29 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		return super.entityReplaceAll(listId, entities)
 	}
 
+	override entitySetCustomDefinition(listId: SomeSocketEntityLocation, id: string, definitionId: string): boolean {
+		const entity = this.getEntityList(listId)?.findById(id)
+		if (entity && this.#isSelfCall({ type: entity.type, connectionId: entity.connectionId, definitionId })) return false
+		return super.entitySetCustomDefinition(listId, id, definitionId)
+	}
+
 	/**
 	 * Check if any of some entities (or their children) is an action which runs this custom action
 	 */
 	#containsSelfCall(entityModels: SomeEntityModel[]): boolean {
-		const selfCall = getCustomActionCallDefinition(this.controlId)
-		if (!selfCall) return false
-
 		return entityModels.some(
 			(entity) =>
-				(isCustomActionCall(entity) && entity.definitionId === selfCall.definitionId) ||
+				this.#isSelfCall(entity) ||
 				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
 		)
+	}
+
+	/**
+	 * Check if an entity is an action which runs this custom action
+	 */
+	#isSelfCall(entity: { type: EntityModelType; connectionId: string; definitionId: string }): boolean {
+		const selfCall = getCustomActionCallDefinition(this.controlId)
+		return !!selfCall && isCustomActionCall(entity) && entity.definitionId === selfCall.definitionId
 	}
 
 	/**

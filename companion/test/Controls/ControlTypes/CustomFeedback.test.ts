@@ -317,6 +317,17 @@ describe('ControlCustomFeedback', () => {
 
 			expect(control.entities.entityAdd('feedbacks', null, useFeedback({}, 'other'))).toBe(true)
 		})
+
+		test('a feedback can not be changed to use the custom feedback itself', () => {
+			const use = useFeedback({}, 'other')
+			const { control } = createHarness({ feedbacks: [use] })
+
+			expect(control.entities.entitySetCustomDefinition('feedbacks', use.id, CUSTOM_FEEDBACK_ID)).toBe(false)
+			expect(control.entities.getFeedbackEntities()[0].definitionId).toBe('other')
+
+			expect(control.entities.entitySetCustomDefinition('feedbacks', use.id, 'another')).toBe(true)
+			expect(control.entities.getFeedbackEntities()[0].definitionId).toBe('another')
+		})
 	})
 
 	describe('value of a feedback using it', () => {

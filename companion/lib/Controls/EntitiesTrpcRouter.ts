@@ -248,6 +248,24 @@ export function createEntitiesTrpcRouter(
 				return getEditableEntities(control).entitySetConnection(entityLocation, entityId, connectionId)
 			}),
 
+		setCustomDefinition: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					definitionId: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const { controlId, entityLocation, entityId, definitionId } = input
+
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				return getEditableEntities(control).entitySetCustomDefinition(entityLocation, entityId, definitionId)
+			}),
+
 		setInverted: publicProcedure
 			.input(
 				z.object({

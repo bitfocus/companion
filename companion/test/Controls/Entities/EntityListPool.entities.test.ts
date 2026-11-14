@@ -203,6 +203,62 @@ describe('EntityListPool - entitySetConnection', () => {
 	)
 })
 
+describe('EntityListPool - entitySetCustomDefinition', () => {
+	test.each([
+		['a custom action call', 'down', actionModel, 'customActionInstances'],
+		['a custom feedback use', 'feedbacks', feedbackModel, 'customFeedbackInstances'],
+	] as const)('changes what %s uses, keeping the options, and redraws', (_name, listId, makeModel, instancesKey) => {
+		const { pool, reportChange, deps } = createPool()
+		const instances = deps[instancesKey]
+		const location = listId === 'down' ? downSet() : listId
+		const entityModel = makeModel({
+			connectionId: CUSTOM_CONNECTION_ID,
+			definitionId: 'old',
+			options: { n: { isExpression: false, value: 1 } },
+		})
+		pool.entityAdd(location, null, entityModel)
+		reportChange.mockClear()
+		vi.mocked(instances.entityUpdate).mockClear()
+
+		expect(pool.entitySetCustomDefinition(location, entityModel.id, 'new')).toBe(true)
+
+		const entity = pool.findEntityById(entityModel.id)
+		// Whatever built its copy drops it and builds one of the new custom action or feedback
+		expect(instances.entityDelete).toHaveBeenCalledWith(entity)
+		expect(instances.entityUpdate).toHaveBeenCalledTimes(1)
+		expect(entity?.definitionId).toBe('new')
+		expect(entity?.rawOptions).toEqual({ n: { isExpression: false, value: 1 } })
+		expect(reportChange).toHaveBeenCalledWith({ redraw: true })
+	})
+
+	test('does nothing when it already uses that one', () => {
+		const { pool, reportChange } = createPool()
+		const call = actionModel({ connectionId: CUSTOM_CONNECTION_ID, definitionId: 'old' })
+		pool.entityAdd(downSet(), null, call)
+		reportChange.mockClear()
+
+		expect(pool.entitySetCustomDefinition(downSet(), call.id, 'old')).toBe(false)
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+
+	test('returns false for an unknown entity', () => {
+		const { pool } = createPool()
+
+		expect(pool.entitySetCustomDefinition(downSet(), 'nope', 'new')).toBe(false)
+	})
+
+	test('does not change an action which is not a custom action call', () => {
+		const { pool, reportChange } = createPool()
+		const action = actionModel({ connectionId: 'conn-old', definitionId: 'def-old' })
+		pool.entityAdd(downSet(), null, action)
+		reportChange.mockClear()
+
+		expect(pool.entitySetCustomDefinition(downSet(), action.id, 'new')).toBe(false)
+		expect(pool.findEntityById(action.id)?.definitionId).toBe('def-old')
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+})
+
 describe('EntityListPool - entitySetInverted', () => {
 	test('sets the inverted flag on a feedback', () => {
 		const { pool, reportChange } = createPool()

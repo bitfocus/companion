@@ -163,18 +163,29 @@ export class ControlEntityListPoolCustomFeedback extends WithEntityEditing(Contr
 		return super.entityReplaceAll(listId, entities)
 	}
 
+	override entitySetCustomDefinition(listId: SomeSocketEntityLocation, id: string, definitionId: string): boolean {
+		const entity = this.getEntityList(listId)?.findById(id)
+		if (entity && this.#isSelfCall({ type: entity.type, connectionId: entity.connectionId, definitionId })) return false
+		return super.entitySetCustomDefinition(listId, id, definitionId)
+	}
+
 	/**
 	 * Check if any of some entities (or their children) is a feedback which uses this custom feedback
 	 */
 	#containsSelfCall(entityModels: SomeEntityModel[]): boolean {
-		const selfCall = getCustomFeedbackCallDefinition(this.controlId)
-		if (!selfCall) return false
-
 		return entityModels.some(
 			(entity) =>
-				(isCustomFeedbackUse(entity) && entity.definitionId === selfCall.definitionId) ||
+				this.#isSelfCall(entity) ||
 				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
 		)
+	}
+
+	/**
+	 * Check if an entity is a feedback which uses this custom feedback
+	 */
+	#isSelfCall(entity: { type: EntityModelType; connectionId: string; definitionId: string }): boolean {
+		const selfCall = getCustomFeedbackCallDefinition(this.controlId)
+		return !!selfCall && isCustomFeedbackUse(entity) && entity.definitionId === selfCall.definitionId
 	}
 
 	protected getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined {

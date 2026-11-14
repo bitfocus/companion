@@ -2,6 +2,7 @@ import { pointerIntersection } from '@dnd-kit/collision'
 import { useSortable } from '@dnd-kit/react/sortable'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
+import { isCustomConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -179,6 +180,8 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	// Options are only one source of expandable content: retain all shared editor controls too.
 	const hasDetails =
 		!entityDefinition ||
+		// Which custom action or feedback it uses can be changed
+		isCustomConnectionId(entity.connectionId) ||
 		(!!connectionInfo &&
 			Array.from(connections.connections.values()).filter(
 				(connection) => connection.moduleId === connectionInfo.moduleId

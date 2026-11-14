@@ -3,7 +3,11 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
-import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
+import {
+	isCustomConnectionId,
+	isInternalConnectionId,
+	isVirtualConnectionId,
+} from '@companion-app/shared/ConnectionId.js'
 import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -39,6 +43,7 @@ import type { LocalVariablesStore } from '../LocalVariablesStore.js'
 import { OptionButtonPreview } from '../OptionButtonPreview.js'
 import { OptionsInputField } from '../OptionsInputField.js'
 import { EntityChangeConnection } from './EntityChangeConnection.js'
+import { EntityChangeCustomDefinition } from './EntityChangeCustomDefinition.js'
 import { useEntityEditorContext, type LocalVariableOutputs } from './EntityEditorContext.js'
 import { LayeredStylesOverrides } from './LayeredStylesOverrides.js'
 import { StoreResultFields } from './StoreResultFields.js'
@@ -139,6 +144,14 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					)}
 
 					<EntityChangeConnection entityConnectionId={entity.connectionId} setConnectionId={service.setConnection} />
+
+					{isCustomConnectionId(entity.connectionId) && (
+						<EntityChangeCustomDefinition
+							entityType={entity.type}
+							definitionId={entity.definitionId}
+							setDefinitionId={service.setCustomDefinition}
+						/>
+					)}
 
 					{!!entityDefinition &&
 						entityDefinition.entityType === EntityModelType.Feedback &&

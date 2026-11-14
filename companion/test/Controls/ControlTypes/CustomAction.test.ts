@@ -362,6 +362,17 @@ describe('ControlCustomAction', () => {
 
 			expect(control.entities.getActionEntities()).toHaveLength(1)
 		})
+
+		test('a call can not be changed to call the custom action itself', () => {
+			const call = callAction({}, 'other')
+			const { control } = createHarness({ actions: [call] })
+
+			expect(control.entities.entitySetCustomDefinition('custom_action_actions', call.id, CUSTOM_ACTION_ID)).toBe(false)
+			expect(control.entities.getActionEntities()[0].definitionId).toBe('other')
+
+			expect(control.entities.entitySetCustomDefinition('custom_action_actions', call.id, 'another')).toBe(true)
+			expect(control.entities.getActionEntities()[0].definitionId).toBe('another')
+		})
 	})
 
 	describe('inputs', () => {

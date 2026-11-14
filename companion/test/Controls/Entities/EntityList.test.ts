@@ -2533,6 +2533,17 @@ describe('transient child groups', () => {
 		)
 	})
 
+	test('changing the custom action called has whatever built its copy drop it and build the new one', () => {
+		const { callerEntity, customActionInstances } = setup()
+		customActionInstances.entityUpdate.mockClear()
+
+		expect(callerEntity.setCustomDefinitionId('custom-action-2')).toBe(true)
+
+		expect(customActionInstances.entityDelete).toHaveBeenCalledWith(callerEntity)
+		expect(customActionInstances.entityUpdate).toHaveBeenCalledTimes(1)
+		expect(callerEntity.definitionId).toBe('custom-action-2')
+	})
+
 	test('the group of a disabled entity is not subscribed', () => {
 		const { callerEntity, connectionEntityUpdate } = setup({ ...callerModel, disabled: true })
 		expect(callerEntity.disabled).toBe(true)

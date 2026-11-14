@@ -100,6 +100,13 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 	entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string): boolean
 
 	/**
+	 * Set which custom action or feedback an entity which uses one uses
+	 * @param id the id of the entity
+	 * @param definitionId the id of the custom action or feedback to use
+	 */
+	entitySetCustomDefinition(listId: SomeSocketEntityLocation, id: string, definitionId: string): boolean
+
+	/**
 	 * Set whether a boolean feedback should be inverted
 	 * @param id the id of the entity
 	 * @param isInverted the new value
@@ -392,6 +399,19 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 				redraw: true,
 				// No need to invalidate caches, feedback values havent changed
 			})
+
+			return true
+		}
+
+		entitySetCustomDefinition(listId: SomeSocketEntityLocation, id: string, definitionId: string): boolean {
+			const entity = this.getEntityList(listId)?.findById(id)
+			if (!entity) return false
+
+			if (!entity.setCustomDefinitionId(definitionId)) return false
+
+			this.tryTriggerLocalVariablesChanged(entity)
+
+			this.reportChange({ redraw: true })
 
 			return true
 		}

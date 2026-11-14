@@ -542,6 +542,21 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Set which custom action or feedback this entity uses, keeping its options, so that one whose custom action or
+	 * feedback has gone can be pointed at another
+	 */
+	setCustomDefinitionId(definitionId: string): boolean {
+		if (!isCustomActionCall(this.#data) && !isCustomFeedbackUse(this.#data)) return false
+		if (this.#data.definitionId === definitionId) return false
+
+		this.#cleanupSelf()
+		this.#data.definitionId = definitionId
+		this.#subscribeSelf()
+
+		return true
+	}
+
+	/**
 	 * Set whether this feedback is inverted
 	 */
 	setInverted(isInverted: ExpressionOrValue<boolean>): void {

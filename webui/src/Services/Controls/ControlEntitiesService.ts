@@ -35,6 +35,7 @@ export interface IEntityEditorService {
 	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
 	setConnection: (entityId: string, connectionId: string) => void
+	setCustomDefinition: (entityId: string, definitionId: string) => void
 	moveCard: (
 		dragListId: SomeSocketEntityLocation,
 		dragEntityId: string,
@@ -62,6 +63,7 @@ export interface IEntityEditorActionService {
 	performDelete: () => void
 	performDuplicate: () => void
 	setConnection: (connectionId: string) => void
+	setCustomDefinition: (definitionId: string) => void
 	performLearn: (() => void) | undefined
 	cancelLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
@@ -87,6 +89,7 @@ export function useControlEntitiesEditorService(
 	const moveMutation = useMutationExt(trpc.controls.entities.move.mutationOptions())
 	const setOptionMutation = useMutationExt(trpc.controls.entities.setOption.mutationOptions())
 	const setConnectionMutation = useMutationExt(trpc.controls.entities.setConnection.mutationOptions())
+	const setCustomDefinitionMutation = useMutationExt(trpc.controls.entities.setCustomDefinition.mutationOptions())
 	const removeMutation = useMutationExt(trpc.controls.entities.remove.mutationOptions())
 	const duplicateMutation = useMutationExt(trpc.controls.entities.duplicate.mutationOptions())
 	const learnOptionsMutation = useMutationExt(trpc.controls.entities.learnOptions.mutationOptions())
@@ -173,6 +176,19 @@ export function useControlEntitiesEditorService(
 					})
 					.catch((e) => {
 						console.error('Failed to set control entity connection', e)
+					})
+			},
+
+			setCustomDefinition: (entityId: string, definitionId: string) => {
+				setCustomDefinitionMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						definitionId,
+					})
+					.catch((e) => {
+						console.error('Failed to set control entity custom definition', e)
 					})
 			},
 
@@ -335,6 +351,7 @@ export function useControlEntitiesEditorService(
 			moveMutation,
 			setOptionMutation,
 			setConnectionMutation,
+			setCustomDefinitionMutation,
 			removeMutation,
 			duplicateMutation,
 			learnOptionsMutation,
@@ -373,6 +390,7 @@ export function useControlEntityService(
 			performDelete: () => serviceFactory.performDelete(entityId, entityTypeLabel),
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
+			setCustomDefinition: (definitionId: string) => serviceFactory.setCustomDefinition(entityId, definitionId),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(entityId) : undefined,
 			cancelLearn: serviceFactory.cancelLearn ? () => serviceFactory.cancelLearn?.(entityId) : undefined,
 			setEnabled: serviceFactory.setEnabled
