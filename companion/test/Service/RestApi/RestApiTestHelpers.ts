@@ -15,6 +15,7 @@ export function createTestEnabledUserConfig(): DataUserConfig {
 
 /** The only member the REST API router uses from each Registry resource. */
 type FakeRestApiResource = { createRestApiRouter: (logger: Logger) => express.Router }
+type FakeControlsRestApiResource = { createRestApiRouter: () => express.Router }
 
 /**
  * Build the fake Registry for REST API router tests. Every resource defaults to an empty router;
@@ -22,12 +23,15 @@ type FakeRestApiResource = { createRestApiRouter: (logger: Logger) => express.Ro
  * default here once, rather than editing every resource's test file.
  */
 export function createTestRestApiResources(
-	overrides: Partial<Record<'instance' | 'surfaces' | 'imageLibrary', FakeRestApiResource>>
+	overrides: Partial<Record<'instance' | 'surfaces' | 'imageLibrary', FakeRestApiResource>> & {
+		controls?: FakeControlsRestApiResource
+	}
 ): Registry {
 	const emptyResource: FakeRestApiResource = { createRestApiRouter: () => express.Router() }
 	return {
 		instance: overrides.instance ?? emptyResource,
 		surfaces: overrides.surfaces ?? emptyResource,
+		controls: overrides.controls ?? emptyResource,
 		graphics: { imageLibrary: overrides.imageLibrary ?? emptyResource },
 	} as unknown as Registry
 }
