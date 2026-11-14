@@ -201,7 +201,6 @@ export interface CustomActionDataWithId extends Omit<ClientCustomActionData, 'co
 	collectionId: string | null
 }
 
-// TODO: written in a follow-up, so this is a 404 until then
 const customActionsHelpPage = '/user-guide/config/custom-actions'
 
 function CustomActionListNoContent() {
