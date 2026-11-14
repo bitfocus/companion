@@ -91,6 +91,8 @@ export default defineConfig(({ mode }) => {
 				[`${normalizedBase}/user-guide`]: {
 					// forward to Docusaurus (note: if changing hostname, change it in tools/webui-dev-docs.mts too)
 					target: `http://localhost:4000`,
+					// also its hot reload websocket, which docusaurus.config.ts serves under /user-guide
+					ws: true,
 					changeOrigin: true, // not strictly necessary, but probably good practice for "external" servers
 					// rewrite: don't rewrite for docusaurus - it testing a base_url use 'yarn dev:docs --base' or manually set env BASE_URL for docusaurus to use
 					configure: (proxy) => {

@@ -1,11 +1,33 @@
 import type * as Preset from '@docusaurus/preset-classic'
-import type { Config } from '@docusaurus/types'
+import type { Config, Plugin } from '@docusaurus/types'
 // @ts-expect-error No types provided for this plugin
 import lunrPlugin from 'docusaurus-lunr-search'
 import { themes as prismThemes } from 'prism-react-renderer'
 import remarkVideo from './src/remark/remark-video'
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+type WebpackConfiguration = Parameters<NonNullable<Plugin['configureWebpack']>>[0]
+
+/**
+ * Serve the hot reload websocket of `docusaurus start` under the base url, rather than at `/ws`, so that a proxy
+ * forwarding the docs (eg the vite dev server of the webui, at `/user-guide`) forwards it too
+ */
+function devServerWebSocketPlugin(): Plugin {
+	const path = `${process.env.BASE_URL ?? ''}/user-guide/ws`
+	return {
+		name: 'dev-server-websocket',
+		configureWebpack: (_config, isServer) => {
+			if (isServer) return
+			// webpack's types don't know of the devServer options, which docusaurus merges into its own
+			const devServer = {
+				webSocketServer: { type: 'ws', options: { path } },
+				client: { webSocketURL: { pathname: path } },
+			}
+			return { devServer } as WebpackConfiguration
+		},
+	}
+}
 
 const config: Config = {
 	title: 'Bitfocus Companion',
@@ -200,7 +222,7 @@ const config: Config = {
 		},
 	} satisfies Preset.ThemeConfig,
 
-	plugins: [lunrPlugin],
+	plugins: [lunrPlugin, devServerWebSocketPlugin],
 	clientModules: process.env.NODE_ENV === 'development' ? [require.resolve('./src/hash-nav.js')] : [],
 }
 
