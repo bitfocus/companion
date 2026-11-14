@@ -29,7 +29,7 @@ The button grid, button previews, the emulator and the web buttons page stay dar
   [Server configuration](../../1_getting-started/server-configuration.md#advanced)), it can't be changed
   here.
 
-  ![Installation Name](images/install-name.png?raw=true 'Installation Name')
+  ![Installation Name](images/install-name.png 'Installation Name')
 
 - **Announce Companion on the network (mDNS/Bonjour)**  
   Lets other software and devices, such as Companion Satellite, discover this Companion automatically.
@@ -173,7 +173,7 @@ When enabled, a table of **API keys** is shown. Every request to the REST API mu
 - Use the pencil to rename a key or change its scopes, and the bin to revoke it. A revoked key stops working
   immediately.
 
-![REST API settings](images/settings-rest-api.png?raw=true 'REST API settings')
+![REST API settings](images/settings-rest-api.png 'REST API settings')
 
 ### Prometheus Metrics
 
@@ -187,7 +187,7 @@ _Disabled by default._
   The token Prometheus must use to read the metrics. One is generated when the endpoint is enabled. Use the button
   next to it to generate a new one, which stops the old one from working.
 
-![Prometheus settings](images/settings-prometheus.png?raw=true 'Prometheus settings')
+![Prometheus settings](images/settings-prometheus.png 'Prometheus settings')
 
 ### OSC
 

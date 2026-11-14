@@ -26,7 +26,7 @@ export async function prepareDocsApp(): Promise<void> {
  */
 export async function addDemoConnection(
 	app: TestApp,
-	module: (typeof DEMO_MODULES)[keyof typeof DEMO_MODULES],
+	module: (typeof DEMO_MODULES)['visionMixer' | 'audioMixer' | 'mediaPlayer'],
 	label: string,
 	versionId: string
 ): Promise<string> {
@@ -116,10 +116,13 @@ export function firstStepDown(app: TestApp, controlId: SomeControlId): SomeSocke
 }
 
 /** Wait for a check to pass, as the app processes a change */
-export async function waitFor<T>(check: () => T | undefined | null | false, timeout = 5_000): Promise<T> {
+export async function waitFor<T>(
+	check: () => T | undefined | null | false | Promise<T | undefined | null | false>,
+	timeout = 5_000
+): Promise<T> {
 	const end = Date.now() + timeout
 	while (Date.now() < end) {
-		const result = check()
+		const result = await check()
 		if (result) return result
 		await new Promise((resolve) => setTimeout(resolve, 50))
 	}

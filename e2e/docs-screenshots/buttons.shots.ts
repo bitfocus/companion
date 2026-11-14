@@ -1,8 +1,10 @@
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { panelClip, shoot, unionClip, withViewport } from './shoot.js'
+import { clickWithCursor, panelClip, shoot, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/buttons/index.md and pages.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
+// Wide, so that the edit panels don't wrap their content too much
+test.use({ viewport: { width: 1920, height: 1600 } })
 
 const IMAGES = '3_config/program/buttons/images'
 
@@ -17,7 +19,7 @@ test('buttons page', async ({ page }) => {
 test('page actions menu', async ({ page }) => {
 	await gotoApp(page, '/buttons')
 	const button = page.getByRole('button', { name: 'Page actions' })
-	await button.click()
+	await clickWithCursor(button, 'left')
 	const menu = page.getByRole('dialog').filter({ hasText: 'Edit page' })
 	await expect(menu).toBeVisible()
 	await shoot(page, await unionClip(page, [button, menu]), `${IMAGES}/page-actions-menu`)
@@ -36,7 +38,7 @@ test('grid toolbar', async ({ page }) => {
 
 test('grid context menu', async ({ page }) => {
 	await gotoApp(page, '/buttons')
-	await page.getByTitle('1/0/2', { exact: true }).click({ button: 'right' })
+	await clickWithCursor(page.getByTitle('1/0/2', { exact: true }), 'right')
 	const menu = page.getByRole('dialog').filter({ hasText: 'Abort Actions' })
 	await expect(menu).toBeVisible()
 	const cells = [page.getByTitle('1/0/0', { exact: true }), page.getByTitle('1/3/5', { exact: true })]

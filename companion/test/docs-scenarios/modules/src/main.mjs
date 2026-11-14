@@ -63,8 +63,8 @@ class DemoInstance extends InstanceBase {
 	/** It doesn't connect to anything, so it reports the status it is configured to */
 	updateStatusFromConfig() {
 		switch (this.config.simulate_status) {
-			case 'connecting':
-				this.updateStatus(InstanceStatus.Connecting, `Connecting to ${this.config.host}`)
+			case 'warning':
+				this.updateStatus(InstanceStatus.UnknownWarning, `${this.config.host} is running old firmware`)
 				break
 			case 'failure':
 				this.updateStatus(InstanceStatus.ConnectionFailure, `Unable to reach ${this.config.host}`)
@@ -87,7 +87,7 @@ class DemoInstance extends InstanceBase {
 				tooltip: 'This is a demo, which pretends to connect',
 				choices: [
 					{ id: 'ok', label: 'Connected' },
-					{ id: 'connecting', label: 'Connecting' },
+					{ id: 'warning', label: 'Old firmware' },
 					{ id: 'failure', label: 'Connection failure' },
 				],
 				default: 'ok',

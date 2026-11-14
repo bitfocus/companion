@@ -21,13 +21,13 @@ You can also write some **Notes** to save in the file, such as what you changed 
 
 You're also able to completely reset your configuration here as well.
 
-![Import/Export](images/import-export.png?raw=true 'Import/Export')
+![Import/Export](images/import-export.png 'Import/Export')
 
 ## Import
 
 Here you can import a `.companionconfig` file. Various options will be disabled if it is not possible to import them from the file you have provided. Any notes written when the file was exported are shown at the top.
 
-![Import](images/import.png?raw=true 'Import')
+![Import](images/import.png 'Import')
 
 On the **Full import** tab, you can specify which categories you want to import. Clicking the button: "Import, Preserving unselected components" allows you to import without performing a full reset (your selected components will still be reset and then repopulated from the import file). The "Full Reset then Import" button will reset all components and then import only the selected configuration categories.
 

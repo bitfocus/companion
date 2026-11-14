@@ -4,6 +4,8 @@ import { contentClip, shoot, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/variables.md, triggers.md and image-library.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
+// Wide, so that the edit panels don't wrap their content too much
+test.use({ viewport: { width: 1920, height: 1600 } })
 
 const IMAGES = '3_config/program/images'
 

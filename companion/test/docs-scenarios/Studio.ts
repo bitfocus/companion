@@ -32,12 +32,18 @@ import {
  *   each kind, 3/6 shows the input on program
  *
  * Page 2, "Audio": 0/1 plays a clip on the media player, which is failing to connect, 0/2 mutes a microphone on the
- * audio mixer, which is connecting, and 0/3 is running a long wait.
+ * audio mixer, which has a warning, and 0/3 is running a long wait.
  *
  * Page 3, "Graphics", is empty. The image library has the Companion and Bitfocus logos.
  *
  * There are some custom and expression variables, and a trigger which puts Camera 2 on preview when Camera 1 goes on
  * program.
+ *
+ * The installation is named "Studio A", and its prometheus metrics and REST API are enabled.
+ *
+ * The surfaces are two emulators: one for the studio, and one in the "Audio desk" group, which may only show the
+ * Studio and Audio pages, and a control panel (the demo surface module) which Companion connects to over the network. Another control panel
+ * has been discovered, but not connected to.
  */
 export const prepare = prepareDocsApp
 
@@ -71,7 +77,7 @@ export async function seed(app: TestApp): Promise<void> {
 	const mixer = await addDemoConnection(app, DEMO_MODULES.visionMixer, 'mixer', '2.6.0')
 	const audio = await addDemoConnection(app, DEMO_MODULES.audioMixer, 'audio', '1.3.1')
 	const playback = await addDemoConnection(app, DEMO_MODULES.mediaPlayer, 'playback', '3.0.2')
-	await setConnectionConfig(app, audio, 'audio', { host: '192.168.0.20', port: 10023, simulate_status: 'connecting' })
+	await setConnectionConfig(app, audio, 'audio', { host: '192.168.0.20', port: 10023, simulate_status: 'warning' })
 	await setConnectionConfig(app, playback, 'playback', { host: '192.168.0.30', port: 9993, simulate_status: 'failure' })
 
 	const repoRoot = path.join(import.meta.dirname, '../../..')
@@ -184,6 +190,13 @@ export async function seed(app: TestApp): Promise<void> {
 	await createStylingButtons(app)
 	await createVariables(app, mixer)
 	await createTrigger(app, mixer)
+	await createSurfaces(app)
+
+	app.registry.userconfig.setKey('installName', 'Studio A')
+	app.registry.userconfig.setKey('rest_api_enabled', true)
+	// A token of its own, rather than a random one, so that it is the same in every screenshot
+	app.registry.userconfig.setKey('prometheus_token', 'DocsExampleScrapeTokenNotReal000')
+	app.registry.userconfig.setKey('prometheus_enabled', true)
 
 	const playClip = await createButtonWithText(app, STUDIO.playClip, 'Play clip')
 	await addEntity(app, playClip, firstStepDown(app, playClip), null, playback, EntityModelType.Action, 'cut', {})
@@ -387,6 +400,37 @@ async function atFixedTime<T>(time: number, run: () => Promise<T>): Promise<T> {
 	} finally {
 		Date.now = realNow
 	}
+}
+
+/** The surfaces the surfaces page describes */
+async function createSurfaces(app: TestApp): Promise<void> {
+	const surfaces = app.trpc().surfaces
+	await surfaces.emulatorAdd({ baseId: 'studio', name: 'Studio', rows: 4, columns: 8 })
+	const audioDesk = await surfaces.emulatorAdd({ baseId: 'audio-desk', name: 'Audio desk', rows: 2, columns: 4 })
+
+	const group = await surfaces.groupAdd({ baseId: 'audio', name: 'Audio desk' })
+	await surfaces.surfaceSetGroup({ surfaceId: audioDesk, groupId: group })
+	const pageIds = [1, 2].map((pageNumber) => app.registry.page.store.getPageId(pageNumber))
+
+	await surfaces.groupSetConfigKey({ groupId: group, change: { key: 'restrict_pages', value: true } })
+	await surfaces.groupSetConfigKey({
+		groupId: group,
+		change: { key: 'allowed_page_ids', value: pageIds.filter((id) => id !== undefined) },
+	})
+
+	const module = DEMO_MODULES.controlPanel
+	const instanceId = await app.trpc().instances.surfaces.add({
+		moduleId: module.id,
+		label: 'control-panel',
+		versionId: module.versions[0].version,
+	})
+	// Connect to the presenter's panel, once it has been installed and started, and has found the panels
+	await waitFor(async () => {
+		const result = await app
+			.trpc()
+			.surfaces.outbound.add({ instanceId, connectionId: `${instanceId}:demo-panel-presenter` })
+		return result.ok
+	}, 60_000)
 }
 
 /** Change the config of a connection */

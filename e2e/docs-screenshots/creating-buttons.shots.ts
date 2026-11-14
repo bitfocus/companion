@@ -4,6 +4,8 @@ import { contentClip, shoot, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/buttons/creating/index.md, steps.md, actions.md and feedbacks.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
+// Wide, so that the edit panels don't wrap their content too much
+test.use({ viewport: { width: 1920, height: 1600 } })
 
 const IMAGES = '3_config/program/buttons/creating/images'
 
@@ -50,7 +52,7 @@ test('linked preset', async ({ page }) => {
 // These panels centre what they show, so are taken with a shorter window
 test('selecting the type of a button', async ({ page }) => {
 	await withViewport(page, { width: 1440, height: 640 }, async () => {
-		await editButton(page, '1/3/3')
+		await editButton(page, '1/0/5')
 		await expect(panel(page).getByText('Empty button')).toBeVisible()
 		await shoot(page, panel(page), `${IMAGES}/selecting-type`)
 	})

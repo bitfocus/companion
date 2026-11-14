@@ -24,11 +24,41 @@ export async function shoot(page: Page, target: ShotTarget, name: string): Promi
 
 		const segments = `${name}.${theme}.png`.split('/')
 		if ('clip' in target) {
-			await expect(target.page).toHaveScreenshot(segments, { clip: target.clip, stylePath: SCREENSHOT_STYLE })
+			await expect(target.page).toHaveScreenshot(segments, {
+				clip: roundClip(target.clip),
+				stylePath: SCREENSHOT_STYLE,
+			})
 		} else {
 			await expect(target).toHaveScreenshot(segments, { stylePath: SCREENSHOT_STYLE })
 		}
 	}
+}
+
+/**
+ * The bounding box of an element once it has stopped moving, eg when a menu has finished animating open
+ */
+async function stableBoundingBox(element: Locator): Promise<Awaited<ReturnType<Locator['boundingBox']>>> {
+	// Unchanged for several readings in a row, as an animation can pause between its steps
+	let previous = await element.boundingBox()
+	let unchanged = 0
+	for (let attempt = 0; attempt < 40; attempt++) {
+		await element.page().waitForTimeout(100)
+		const current = await element.boundingBox()
+		unchanged = JSON.stringify(current) === JSON.stringify(previous) ? unchanged + 1 : 0
+		if (unchanged >= 3) return current
+		previous = current
+	}
+	throw new Error('The element did not stop moving')
+}
+
+/**
+ * Round an area out to whole pixels, so that one which moves by a fraction of a pixel (eg as a popover settles) still
+ * gives an image of the same size
+ */
+function roundClip(clip: { x: number; y: number; width: number; height: number }): typeof clip {
+	const x = Math.floor(clip.x)
+	const y = Math.floor(clip.y)
+	return { x, y, width: Math.ceil(clip.x + clip.width) - x, height: Math.ceil(clip.y + clip.height) - y }
 }
 
 /**
@@ -127,7 +157,7 @@ export async function withViewport(
  * @param margin Space to leave around them
  */
 export async function unionClip(page: Page, elements: Locator[], margin = 8): Promise<ShotTarget> {
-	const boxes = await Promise.all(elements.map(async (element) => element.boundingBox()))
+	const boxes = await Promise.all(elements.map(async (element) => stableBoundingBox(element)))
 	if (boxes.some((box) => !box)) throw new Error('An element is not visible')
 	const visible = boxes.filter((box) => !!box)
 
@@ -136,4 +166,48 @@ export async function unionClip(page: Page, elements: Locator[], margin = 8): Pr
 	const right = Math.max(...visible.map((box) => box.x + box.width)) + margin
 	const bottom = Math.max(...visible.map((box) => box.y + box.height)) + margin
 	return { page, clip: { x: left, y: top, width: right - left, height: bottom - top } }
+}
+
+/** A mouse pointer, as an arrow with its tip at the top left */
+const CURSOR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28">
+<path d="M1 1 L1 22 L6 17 L9.5 25.5 L13 24 L9.5 15.5 L16.5 15.5 Z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+</svg>`
+
+/**
+ * Click an element, and draw the mouse pointer where it was clicked, as screenshots don't show the real one. Use this to
+ * open a menu, so that the screenshot shows what was clicked to open it
+ * @param target The element to click, in its centre
+ * @param button Which mouse button to click
+ */
+export async function clickWithCursor(target: Locator, button: 'left' | 'right'): Promise<void> {
+	const box = await target.boundingBox()
+	if (!box) throw new Error('The element is not visible')
+	const x = box.x + box.width / 2
+	const y = box.y + box.height / 2
+
+	await target.click({ button })
+	await drawCursor(target.page(), x, y)
+}
+
+/**
+ * Draw the mouse pointer at a point of the page, as screenshots don't show the real one
+ * @param page The page
+ * @param x Where the tip of the pointer is, from the left of the page
+ * @param y Where the tip of the pointer is, from the top of the page
+ */
+export async function drawCursor(page: Page, x: number, y: number): Promise<void> {
+	await page.evaluate(
+		({ x, y, svg }) => {
+			document.getElementById('docs-screenshot-cursor')?.remove()
+			const cursor = document.createElement('div')
+			cursor.id = 'docs-screenshot-cursor'
+			cursor.style.cssText = `position: fixed; inset: auto; left: ${x}px; top: ${y}px; margin: 0; padding: 0; border: 0; background: none; overflow: visible; pointer-events: none;`
+			cursor.innerHTML = svg
+			document.body.appendChild(cursor)
+			// In the top layer, above any menu which is shown there
+			cursor.popover = 'manual'
+			cursor.showPopover()
+		},
+		{ x, y, svg: CURSOR_SVG }
+	)
 }

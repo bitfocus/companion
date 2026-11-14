@@ -160,6 +160,19 @@ them with `shoot()` into `docs/user-guide/**/images/<name>.{light,dark}.png`. Pa
 its own copy of this plugin, so keep them in step). When changing a page covered by a scenario, update the
 scenario/shots and re-run.
 
+- Most pages share the `Studio.ts` scenario (a page of buttons, variables, triggers, surfaces…): extend it rather than
+  adding another, and keep its doc comment listing what is where. A scenario exports `prepare()` (run before the app
+  starts; use `prepareDocsApp`) and `seed(app)`; shared helpers are in `docs-scenarios/Helpers.ts`.
+- Connections and surfaces use the demo modules in `docs-scenarios/modules/` (a vision mixer etc., and a control
+  panel), which a stand-in for the module store (it answers the store's requests from `fetch`) offers for install, so no
+  real module or network is needed. Add actions/presets/etc. to `modules/src/*.mjs` when a page needs them.
+- Anything which changes from run to run must be fixed in the scenario (no random ids, fixed times and tokens) or hidden
+  by `e2e/docs-screenshots/screenshot.css` (build version, machine-specific notes), or the images churn.
+- Crop to what the page describes with the helpers in `shoot.ts` (`contentClip`, `unionClip`, `gridClip`), and widen or
+  shorten the window (`withViewport`) to avoid tall, over-wrapped images. Open menus with `clickWithCursor` so the
+  pointer is drawn. Check the images after a run.
+- The comparison tolerates small differences, so use `--update-snapshots=all` when a small change (eg text) must be
+  written.
 - Don't regenerate the What's New pages' images: they show a feature as it was in that release. Photos, and
   screenshots of other software, are also out of scope.
 - The run reuses `webui/build` if it exists, so after ui changes set `E2E_FORCE_WEBUI_BUILD=1` or it shoots the old ui.

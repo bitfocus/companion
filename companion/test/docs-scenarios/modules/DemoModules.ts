@@ -7,6 +7,7 @@ import { promisify } from 'node:util'
 import { gzip } from 'node:zlib'
 import * as esbuild from 'esbuild'
 import * as tarfs from 'tar-fs'
+import { SURFACE_BASE_VERSION } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import type {
 	CompanionModuleInfo,
 	CompanionModuleVersionInfo,
@@ -22,6 +23,7 @@ const STORE_API = 'https://developer.bitfocus.io/api/v1/companion/modules'
 const PACKAGE_URL = 'https://docs-demo-modules.invalid/'
 
 interface DemoModule {
+	type: 'connection' | 'surface'
 	id: string
 	name: string
 	manufacturer: string
@@ -31,11 +33,13 @@ interface DemoModule {
 }
 
 /**
- * The connection modules of the docs, all bundled from the same source (src/main.mjs). The store offers them for
- * download like it does real modules, so that the screenshots can show modules being installed and updated
+ * The modules of the docs. The connection modules are all bundled from the same source (src/main.mjs), and the
+ * surface module from src/surface.mjs. The store offers them for download like it does real modules, so that the
+ * screenshots can show modules being installed and updated
  */
 export const DEMO_MODULES = {
 	visionMixer: {
+		type: 'connection',
 		id: 'demo-vision-mixer',
 		name: 'Demo: Vision Mixer',
 		manufacturer: 'Demo',
@@ -49,6 +53,7 @@ export const DEMO_MODULES = {
 		],
 	},
 	audioMixer: {
+		type: 'connection',
 		id: 'demo-audio-mixer',
 		name: 'Demo: Audio Mixer',
 		manufacturer: 'Demo',
@@ -59,22 +64,66 @@ export const DEMO_MODULES = {
 		],
 	},
 	mediaPlayer: {
+		type: 'connection',
 		id: 'demo-media-player',
 		name: 'Demo: Media Player',
 		manufacturer: 'Demo',
 		products: ['Media Player'],
 		versions: [{ version: '3.0.2', daysAgo: 90, prerelease: false }],
 	},
+	controlPanel: {
+		type: 'surface',
+		id: 'demo-control-panel',
+		name: 'Demo: Control Panel',
+		manufacturer: 'Demo',
+		products: ['Control Panel'],
+		versions: [{ version: '1.1.0', daysAgo: 45, prerelease: false }],
+	},
+	// More modules, which the scenarios don't use, so that the lists of the store aren't so short
+	videoRouter: {
+		type: 'connection',
+		id: 'demo-video-router',
+		name: 'Demo: Video Router',
+		manufacturer: 'Demo',
+		products: ['Video Router'],
+		versions: [{ version: '1.4.0', daysAgo: 120, prerelease: false }],
+	},
+	lightingDesk: {
+		type: 'connection',
+		id: 'demo-lighting-desk',
+		name: 'Demo: Lighting Desk',
+		manufacturer: 'Demo',
+		products: ['Lighting Desk'],
+		versions: [{ version: '5.2.1', daysAgo: 20, prerelease: false }],
+	},
+	graphicsTitler: {
+		type: 'connection',
+		id: 'demo-graphics-titler',
+		name: 'Demo: Graphics Titler',
+		manufacturer: 'Demo',
+		products: ['Graphics Titler'],
+		versions: [{ version: '0.9.3', daysAgo: 75, prerelease: false }],
+	},
+	jogWheel: {
+		type: 'surface',
+		id: 'demo-jog-wheel',
+		name: 'Demo: Jog Wheel',
+		manufacturer: 'Demo',
+		products: ['Jog Wheel'],
+		versions: [{ version: '2.0.0', daysAgo: 200, prerelease: false }],
+	},
+	faderBank: {
+		type: 'surface',
+		id: 'demo-fader-bank',
+		name: 'Demo: Fader Bank',
+		manufacturer: 'Demo',
+		products: ['Fader Bank'],
+		versions: [{ version: '1.0.4', daysAgo: 15, prerelease: false }],
+	},
 } satisfies Record<string, DemoModule>
 
-/** Modules the store lists, without any versions to download, so that the list isn't only the demo modules */
-const OTHER_STORE_CONNECTIONS: Pick<CompanionModuleInfo, 'id' | 'name' | 'manufacturer' | 'products'>[] = [
-	{ id: 'generic-http', name: 'Generic: HTTP Requests', manufacturer: 'Generic', products: ['HTTP Requests'] },
-	{ id: 'generic-osc', name: 'Generic: OSC', manufacturer: 'Generic', products: ['OSC'] },
-	{ id: 'generic-ping', name: 'Generic: Ping', manufacturer: 'Generic', products: ['Ping'] },
-	{ id: 'generic-tcp-udp', name: 'Generic: TCP/UDP', manufacturer: 'Generic', products: ['TCP/UDP'] },
-	{ id: 'generic-websocket', name: 'Generic: Websocket', manufacturer: 'Generic', products: ['Websocket'] },
-]
+/** The api version each type of demo module is built against, the one installed in the repository */
+const API_VERSIONS = { connection: '2.3.0', surface: SURFACE_BASE_VERSION } as const
 
 /**
  * Stand in for the module store, which the app can't reach from the screenshots (and whose content changes), by
@@ -86,11 +135,15 @@ export async function standInForModuleStore(): Promise<void> {
 	const versions = new Map<string, CompanionModuleVersionInfo[]>()
 	const now = Date.now()
 
-	const bundle = await bundleModuleSource()
-	for (const module of Object.values(DEMO_MODULES) as DemoModule[]) {
+	const bundles = {
+		connection: await bundleModuleSource('main.mjs'),
+		surface: await bundleModuleSource('surface.mjs'),
+	}
+	const demoModules = Object.values(DEMO_MODULES) as DemoModule[]
+	for (const module of demoModules) {
 		const moduleVersions: CompanionModuleVersionInfo[] = []
 		for (const { version, daysAgo, prerelease } of module.versions) {
-			const tarball = await packModule(module, version, bundle)
+			const tarball = await packModule(module, version, bundles[module.type])
 			const tarUrl = `${PACKAGE_URL}${module.id}-${version}.tgz`
 			packages.set(tarUrl, tarball)
 			moduleVersions.push({
@@ -100,18 +153,18 @@ export async function standInForModuleStore(): Promise<void> {
 				releasedAt: now - daysAgo * DAY,
 				tarUrl,
 				tarSha: crypto.createHash('sha256').update(tarball).digest('hex'),
-				apiVersion: MODULE_API_VERSION,
+				apiVersion: API_VERSIONS[module.type],
 				license: 'MIT',
 				licenseCategory: 'MIT',
 			})
 		}
-		versions.set(module.id, moduleVersions)
+		versions.set(`${module.type}/${module.id}`, moduleVersions)
 	}
 
-	const connections: CompanionModuleInfo[] = [
-		...(Object.values(DEMO_MODULES) as DemoModule[]).map((module) => storeInfo(module)),
-		...OTHER_STORE_CONNECTIONS.map((module) => storeInfo(module)),
-	]
+	const storeModules: Record<string, CompanionModuleInfo[]> = {
+		connection: demoModules.filter((module) => module.type === 'connection').map((module) => storeInfo(module)),
+		surface: demoModules.filter((module) => module.type === 'surface').map((module) => storeInfo(module)),
+	}
 
 	const realFetch = globalThis.fetch
 	globalThis.fetch = async (input, init) => {
@@ -124,11 +177,9 @@ export async function standInForModuleStore(): Promise<void> {
 			// `<api>/<moduleType>` lists the modules, and `<api>/<moduleType>/<moduleId>` the versions of one
 			const [moduleType, moduleId] = new URL(url).pathname.slice(new URL(STORE_API).pathname.length + 1).split('/')
 
-			if (moduleId === undefined) {
-				return Response.json({ modules: moduleType === 'connection' ? connections : [] })
-			}
+			if (moduleId === undefined) return Response.json({ modules: storeModules[moduleType] ?? [] })
 
-			const moduleVersions = moduleType === 'connection' ? versions.get(moduleId) : undefined
+			const moduleVersions = versions.get(`${moduleType}/${moduleId}`)
 			if (!moduleVersions) return Response.json({ error: 'Not found' }, { status: 404 })
 			return Response.json({ versions: moduleVersions })
 		}
@@ -137,31 +188,29 @@ export async function standInForModuleStore(): Promise<void> {
 	}
 }
 
-/** The module api version the demo modules are built against, the one installed in the repository */
-const MODULE_API_VERSION = '2.3.0'
-
-function storeInfo(
-	module: Pick<CompanionModuleInfo, 'id' | 'name' | 'manufacturer' | 'products'>
-): CompanionModuleInfo {
+function storeInfo(module: DemoModule): CompanionModuleInfo {
+	const type = module.type
 	return {
 		id: module.id,
-		type: 'connection',
+		type,
 		name: module.name,
 		shortname: module.id,
 		manufacturer: module.manufacturer,
 		products: module.products,
 		keywords: [],
-		storeUrl: `https://bitfocus.io/connections/${module.id}`,
-		githubUrl: `https://github.com/bitfocus/companion-module-${module.id}`,
+		storeUrl: `https://bitfocus.io/${type}s/${module.id}`,
+		// The lists of modules to add only show those with a stable release, which have help
+		latestHelpUrl: `https://bitfocus.io/${type}s/${module.id}/help`,
+		githubUrl: `https://github.com/bitfocus/companion-${type === 'connection' ? 'module' : 'surface'}-${module.id}`,
 		legacyIds: [],
 		license: 'MIT',
 		licenseCategory: 'MIT',
 	}
 }
 
-async function bundleModuleSource(): Promise<string> {
+async function bundleModuleSource(file: string): Promise<string> {
 	const result = await esbuild.build({
-		entryPoints: [path.join(import.meta.dirname, 'src/main.mjs')],
+		entryPoints: [path.join(import.meta.dirname, 'src', file)],
 		bundle: true,
 		minify: true,
 		platform: 'node',
@@ -184,26 +233,31 @@ async function packModule(module: DemoModule, version: string, bundle: string): 
 			JSON.stringify({ name: module.id, version, private: true, type: 'module' })
 		)
 		fs.writeFileSync(path.join(pkgDir, 'companion/main.mjs'), bundle)
-		fs.writeFileSync(
-			path.join(pkgDir, 'companion/manifest.json'),
-			JSON.stringify({
-				type: 'connection',
-				id: module.id,
-				name: module.name,
-				shortname: module.id,
-				description: `A demo of a ${module.products.join(', ').toLowerCase()}, for the docs`,
-				version,
-				license: 'MIT',
-				repository: 'https://github.com/bitfocus/companion',
-				bugs: 'https://github.com/bitfocus/companion/issues',
-				maintainers: [{ name: 'Bitfocus' }],
-				legacyIds: [],
-				runtime: { type: 'node22', api: 'nodejs-ipc', apiVersion: MODULE_API_VERSION, entrypoint: 'main.mjs' },
-				manufacturer: module.manufacturer,
-				products: module.products,
-				keywords: [],
-			})
-		)
+		const manifest = {
+			type: module.type,
+			id: module.id,
+			name: module.name,
+			shortname: module.id,
+			description: `A demo of a ${module.products.join(', ').toLowerCase()}, for the docs`,
+			version,
+			license: 'MIT',
+			repository: 'https://github.com/bitfocus/companion',
+			bugs: 'https://github.com/bitfocus/companion/issues',
+			maintainers: [{ name: 'Bitfocus' }],
+			products: module.products,
+			keywords: [],
+			...(module.type === 'connection'
+				? {
+						legacyIds: [],
+						manufacturer: module.manufacturer,
+						runtime: { type: 'node22', api: 'nodejs-ipc', apiVersion: API_VERSIONS.connection, entrypoint: 'main.mjs' },
+					}
+				: {
+						usbIds: [],
+						runtime: { type: 'node22', apiVersion: API_VERSIONS.surface, entrypoint: 'main.mjs' },
+					}),
+		}
+		fs.writeFileSync(path.join(pkgDir, 'companion/manifest.json'), JSON.stringify(manifest))
 
 		const pack = tarfs.pack(dir, {
 			entries: ['pkg'],
