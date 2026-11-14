@@ -16,7 +16,7 @@ interface TriggerTestContext extends MockControlDependencies {
 function createTrigger(storage: TriggerModel | null = null): TriggerTestContext {
 	const mocks = createMockControlDependencies()
 	const trigger = new ControlTrigger(mocks.deps, CONTROL_ID, storage, false)
-	vi.runAllTimers() // flush the deferred event setup
+	trigger.start(false)
 	return { ...mocks, trigger }
 }
 
@@ -50,13 +50,14 @@ describe('ControlTrigger', () => {
 
 	describe('construction', () => {
 		test('a new trigger persists the default model when started', () => {
-			const { trigger, dbSet } = createTrigger()
+			const mocks = createMockControlDependencies()
+			const trigger = new ControlTrigger(mocks.deps, CONTROL_ID, null, false)
 
 			expect(trigger.type).toBe('trigger')
-			expect(dbSet).not.toHaveBeenCalled()
+			expect(mocks.dbSet).not.toHaveBeenCalled()
 
 			trigger.start(true)
-			expect(dbSet).toHaveBeenCalledWith(CONTROL_ID, {
+			expect(mocks.dbSet).toHaveBeenCalledWith(CONTROL_ID, {
 				type: 'trigger',
 				options: TriggerOptionsSchema.parse({}),
 				actions: [],
@@ -66,14 +67,16 @@ describe('ControlTrigger', () => {
 			})
 		})
 
-		test('reports itself as disabled on the event bus during setup', () => {
+		test('sets up its events when started, not when constructed', () => {
 			const mocks = createMockControlDependencies()
 			const listener = vi.fn()
 			mocks.bus.on('trigger_enabled', listener)
 
-			new ControlTrigger(mocks.deps, CONTROL_ID, null, false)
+			const trigger = new ControlTrigger(mocks.deps, CONTROL_ID, null, false)
 			vi.runAllTimers()
+			expect(listener).not.toHaveBeenCalled()
 
+			trigger.start(false)
 			expect(listener).toHaveBeenCalledWith(CONTROL_ID, false)
 		})
 

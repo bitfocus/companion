@@ -194,11 +194,6 @@ export class ControlTrigger
 			this.entities.loadStorage(storage, isImport)
 			this.events = storage.events || this.events
 		}
-
-		// Ensure trigger is stored before setup
-		setImmediate(() => {
-			this.#setupEvents()
-		})
 	}
 
 	#entityListReportChange(options: ControlEntityListChangeProps): void {
@@ -566,6 +561,9 @@ export class ControlTrigger
 
 	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
+
+		// After the entities, as the condition of a trigger is checked from their values
+		this.#setupEvents()
 
 		if (save) this.commitChange()
 	}

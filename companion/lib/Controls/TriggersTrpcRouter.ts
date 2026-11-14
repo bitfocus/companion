@@ -96,10 +96,7 @@ export function createTriggersTrpcRouter(
 				controlStore.controls.set(newControlId, newControl)
 				newControl.start(true)
 
-				setImmediate(() => {
-					// Ensure the trigger is enabled, on a slight debounce
-					newControl.setCollectionEnabled(triggerCollections.isCollectionEnabled(newControl.options.collectionId))
-				})
+				newControl.setCollectionEnabled(triggerCollections.isCollectionEnabled(newControl.options.collectionId))
 
 				return newControlId
 			}

@@ -541,10 +541,7 @@ export class ControlsController {
 			newControl.start(true)
 
 			if (newControl instanceof ControlTrigger) {
-				setImmediate(() => {
-					// Ensure the trigger is enabled, on a slight debounce
-					newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
-				})
+				newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
 			}
 
 			return true
