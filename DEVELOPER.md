@@ -87,3 +87,19 @@ yarn dev:docs
 ```
 
 Connect to it at http://localhost:4000/
+
+### Screenshots
+
+Some screenshots in the docs are taken automatically, in both the light and dark theme, from a real Companion seeded with the examples the page describes. To update them after changing the ui:
+
+```bash
+yarn docs:screenshots
+```
+
+This builds the webui if it hasn't been built, and only rewrites the images that have changed. Without `--update-snapshots` (`yarn playwright test -c e2e/docs-screenshots.config.ts`) it checks that they are still up to date instead.
+
+- The examples are seeded by a scenario in `companion/test/docs-scenarios/`, which builds them with the integration-test fixture.
+- The screenshots are taken by a `*.shots.ts` file in `e2e/docs-screenshots/`, with `shoot()`, which writes `<name>.light.png` and `<name>.dark.png` next to the page.
+- A page shows them as a normal image without the theme, `![…](images/my-page/name.png)`, and the site shows the one matching its theme.
+
+Screenshots differ a little between machines (fonts, antialiasing), so take them all on the same one.

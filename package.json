@@ -38,6 +38,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "test:e2e": "playwright test -c e2e",
+    "docs:screenshots": "playwright test -c e2e/docs-screenshots.config.ts --update-snapshots=changed",
     "fetch-runtimes": "tsx ./tools/fetch_nodejs.mts",
     "fetch-test-modules": "tsx ./tools/fetch_test_modules.mts",
     "build:writefile": "tsx ./tools/build_writefile.mts",

@@ -1,5 +1,11 @@
 {
-	"include": ["playwright.config.ts", "support/**/*", "tests/**/*"],
+	"include": [
+		"playwright.config.ts",
+		"docs-screenshots.config.ts",
+		"support/**/*",
+		"tests/**/*",
+		"docs-screenshots/**/*"
+	],
 	"compilerOptions": {
 		"module": "nodenext",
 		"moduleResolution": "nodenext",

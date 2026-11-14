@@ -324,3 +324,17 @@
 	border-radius: 0.5rem;
 	margin: 1rem 0;
 }
+
+/* A screenshot taken in both themes (see src/remark/remark-themed-image.ts) is a pair of images: show the one
+   matching the theme, centred like any other image on its own line */
+.markdown img[src$='#themed-light'],
+.markdown img[src$='#themed-dark'] {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+[data-theme='light'] .markdown img[src$='#themed-dark'],
+[data-theme='dark'] .markdown img[src$='#themed-light'] {
+	display: none;
+}

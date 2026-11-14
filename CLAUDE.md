@@ -150,6 +150,15 @@ utilities` (declared in `tailwind.css`). App CSS is assigned to a layer by path 
   lower-layer rule can never override a class defined in a higher layer — put a component override in
   that component's own CSS (the `components` layer), not in an `app-base` file like `common.css`.
 
+## Docs screenshots
+
+Screenshots of the user guide can be generated (light and dark) with `yarn docs:screenshots`: a scenario in
+`companion/test/docs-scenarios/` seeds the app via `TestApp`, and an `e2e/docs-screenshots/*.shots.ts` file captures
+them with `shoot()` into `docs/user-guide/**/images/<name>.{light,dark}.png`. Pages reference them as
+`![…](images/<name>.png)` and `docs/src/remark/remark-themed-image.ts` picks the right theme. When changing a page
+covered by a scenario, update the scenario/shots and re-run rather than taking screenshots by hand. In a sandbox whose
+preinstalled chromium doesn't match the pinned Playwright, set `PLAYWRIGHT_CHROMIUM_PATH`.
+
 ## Testing notes
 
 - Framework is **Vitest** (not Jest). Prefer pure/unit tests where possible; heavy UI components
