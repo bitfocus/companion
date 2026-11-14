@@ -383,11 +383,13 @@ export class ControlEntityInstance {
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = this.#getStartupValue()
 
-		// Inform relevant module
+		// Only this entity is enabled or disabled. The entities inside it keep their own state and stay subscribed: a
+		// disabled entity doesn't run or evaluate them, so that is only wasted work, and it keeps every entity's
+		// subscription down to its own enabled state, however it is moved around or subscribed
 		if (!this.#data.disabled) {
-			this.subscribe()
+			this.#subscribeSelf()
 		} else {
-			this.cleanup()
+			this.#cleanupSelf()
 		}
 	}
 

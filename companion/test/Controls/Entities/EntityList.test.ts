@@ -1223,6 +1223,62 @@ describe('changes which leave the children alone', () => {
 	})
 })
 
+describe('disabling an entity with children', () => {
+	function setup() {
+		const ctx = createList('test01')
+		ctx.getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(ActionTree), true, false)
+		ctx.list.subscribe()
+		ctx.connectionEntityUpdate.mockClear()
+		ctx.internalEntityUpdate.mockClear()
+		ctx.connectionEntityDelete.mockClear()
+		ctx.internalEntityDelete.mockClear()
+		return ctx
+	}
+
+	function ids(calls: Array<[{ id: string }, ...any[]]>): string[] {
+		return calls.map(([entity]) => entity.id)
+	}
+
+	test('only cleans up the entity itself', () => {
+		const ctx = setup()
+
+		ctx.list.findById('int1')!.setEnabled(false)
+
+		expect(ids(ctx.internalEntityDelete.mock.calls)).toEqual(['int1'])
+		// int1-b, inside it, keeps its own state
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+	})
+
+	test('re-enabling only subscribes the entity itself', () => {
+		const ctx = setup()
+		ctx.list.findById('int1')!.setEnabled(false)
+
+		ctx.list.findById('int1')!.setEnabled(true)
+
+		expect(ids(ctx.internalEntityUpdate.mock.calls)).toEqual(['int1'])
+		expect(ctx.connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a recursive subscribe leaves the disabled entity out, but not those inside it', () => {
+		const ctx = setup()
+		ctx.list.findById('int1')!.setEnabled(false)
+		vi.mocked(ctx.specialExpressionManager.trackEntity).mockClear()
+		vi.mocked(ctx.specialExpressionManager.forgetEntity).mockClear()
+
+		ctx.list.subscribe()
+
+		expect(vi.mocked(ctx.specialExpressionManager.forgetEntity).mock.calls.map(([id]) => id)).toEqual(['int1'])
+		expect(ids(vi.mocked(ctx.specialExpressionManager.trackEntity).mock.calls as any)).toEqual([
+			'01',
+			'02',
+			'int0',
+			'int1-b',
+			'int2',
+		])
+	})
+})
+
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList('test01')
