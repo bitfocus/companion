@@ -392,6 +392,64 @@ describe('importFull config gating', () => {
 		)
 	})
 
+	test('keeps the feedbacks which use a custom feedback', async () => {
+		const { controller, controls } = createImportController()
+
+		const data = baseData()
+		data.triggers.t1.condition = [
+			{
+				type: 'feedback',
+				id: 'use',
+				connectionId: CUSTOM_CONNECTION_ID,
+				definitionId: 'cf1',
+				options: { flag: { isExpression: false, value: true } },
+			},
+		]
+
+		await controller.importFull(data, fullConfig())
+
+		expect(controls.importTrigger).toHaveBeenCalledWith(
+			CreateTriggerControlId('t1'),
+			expect.objectContaining({
+				condition: [expect.objectContaining({ id: 'use', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'cf1' })],
+			})
+		)
+	})
+
+	test('keeps the calls between custom actions and between custom feedbacks', async () => {
+		const { controller, controls } = createImportController()
+
+		const data = baseData()
+		data.customActions.ca2 = {
+			...data.customActions.ca1,
+			actions: [{ type: 'action', id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'ca1', options: {} }],
+		}
+		data.customFeedbacks.cf2 = {
+			...data.customFeedbacks.cf1,
+			feedbacks: [
+				{ type: 'feedback', id: 'use', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'cf1', options: {} },
+			],
+		}
+
+		await controller.importFull(data, fullConfig())
+
+		// The ids are kept, so the calls still point at the imported definitions
+		expect(controls.importCustomAction).toHaveBeenCalledWith(CreateCustomActionControlId('ca1'), expect.any(Object))
+		expect(controls.importCustomAction).toHaveBeenCalledWith(
+			CreateCustomActionControlId('ca2'),
+			expect.objectContaining({
+				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'ca1' })],
+			})
+		)
+		expect(controls.importCustomFeedback).toHaveBeenCalledWith(CreateCustomFeedbackControlId('cf1'), expect.any(Object))
+		expect(controls.importCustomFeedback).toHaveBeenCalledWith(
+			CreateCustomFeedbackControlId('cf2'),
+			expect.objectContaining({
+				feedbacks: [expect.objectContaining({ id: 'use', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'cf1' })],
+			})
+		)
+	})
+
 	test('sections set to "unchanged" are not imported', async () => {
 		const { controller, controls, variables, graphics, instance } = createImportController()
 
