@@ -1,5 +1,13 @@
 import type { Locator } from '@playwright/test'
-import { expect, gotoApp, reloadApp, test, watchConsoleErrors, type Page } from '../support/fixtures.js'
+import {
+	clickListPageAdd,
+	expect,
+	gotoApp,
+	reloadApp,
+	test,
+	watchConsoleErrors,
+	type Page,
+} from '../support/fixtures.js'
 
 function listRow(page: Page, name: string): Locator {
 	return page.locator('.primary-panel').getByRole('button', { name: new RegExp(`^\\$\\(expression:${name}\\)`) })
@@ -7,7 +15,7 @@ function listRow(page: Page, name: string): Locator {
 
 async function createExpressionVariable(page: Page, name: string): Promise<Locator> {
 	await gotoApp(page, '/variables/expression')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Expression Variable' }).click()
+	await clickListPageAdd(page, 'Add Expression Variable', 'Add your first expression variable')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByRole('textbox', { name: 'Name' }).fill(name)
 	await dialog.getByRole('button', { name: 'Add' }).click()

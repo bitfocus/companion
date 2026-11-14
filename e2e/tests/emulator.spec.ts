@@ -1,4 +1,4 @@
-import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
+import { clickListPageAdd, expect, gotoApp, test, type Page } from '../support/fixtures.js'
 
 async function readBackgroundImage(page: Page, title: string): Promise<string> {
 	return await page.getByTitle(title).evaluate((el) => getComputedStyle(el).backgroundImage)
@@ -10,7 +10,7 @@ test.describe('emulator', () => {
 	test('add an emulator through the surfaces page', async ({ page }) => {
 		await gotoApp(page, '/surfaces')
 
-		await page.locator('.primary-panel').getByRole('button', { name: 'Add Emulator' }).click()
+		await clickListPageAdd(page, 'Add Emulator', 'Add an emulator')
 		const dialog = page.getByRole('dialog')
 		await dialog.getByLabel(/^Name/).fill('E2E Emulator')
 		await dialog.getByLabel(/^Id/).fill('e2etest')

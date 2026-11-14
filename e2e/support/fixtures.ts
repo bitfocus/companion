@@ -53,3 +53,15 @@ export async function reloadApp(page: Page): Promise<void> {
 	await page.reload()
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
 }
+
+/**
+ * Click a list page's add button: the one above its list, or the one in the empty state that replaces the list
+ * until there is something in it
+ */
+export async function clickListPageAdd(page: Page, listButton: string, emptyStateButton: string): Promise<void> {
+	await page
+		.locator('.primary-panel')
+		.getByRole('button', { name: listButton })
+		.or(page.locator('.page-empty-state').getByRole('button', { name: emptyStateButton }))
+		.click()
+}

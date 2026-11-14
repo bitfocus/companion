@@ -1,5 +1,5 @@
 import type { Locator, Page } from '@playwright/test'
-import { expect, gotoApp } from './fixtures.js'
+import { clickListPageAdd, expect, gotoApp } from './fixtures.js'
 
 /** The custom variables list row for one variable */
 export function customVariableRow(page: Page, name: string): Locator {
@@ -19,7 +19,7 @@ export async function navigateToCustomVariables(page: Page): Promise<void> {
 export async function createCustomVariable(page: Page, name: string): Promise<void> {
 	await gotoApp(page, '/variables/custom')
 
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Custom Variable' }).click()
+	await clickListPageAdd(page, 'Add Custom Variable', 'Add your first custom variable')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByPlaceholder('variableName').fill(name)
 	await dialog.getByRole('button', { name: 'Add', exact: true }).click()

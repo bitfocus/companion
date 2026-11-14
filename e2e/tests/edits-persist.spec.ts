@@ -1,4 +1,4 @@
-import { expect, gotoApp, reloadApp, test, watchConsoleErrors } from '../support/fixtures.js'
+import { clickListPageAdd, expect, gotoApp, reloadApp, test, watchConsoleErrors } from '../support/fixtures.js'
 
 /**
  * Edits made through the ui reach the backend and are kept. The backend checks each change against a schema, so a
@@ -51,7 +51,7 @@ test('a settings dropdown persists', async ({ page }) => {
 test('surface group settings persist', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
 	await gotoApp(page, '/surfaces')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Emulator' }).click()
+	await clickListPageAdd(page, 'Add Emulator', 'Add an emulator')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByLabel(/^Name/).fill('Persist Emulator')
 	await dialog.getByLabel(/^Id/).fill('persist')
@@ -83,7 +83,7 @@ test('surface group settings persist', async ({ page }) => {
 test('a trigger name and enabled state persist', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
 	await gotoApp(page, '/triggers')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Trigger' }).click()
+	await clickListPageAdd(page, 'Add Trigger', 'Add your first trigger')
 
 	await page.getByRole('button', { name: 'Edit trigger name' }).click()
 	const nameInput = page.locator('.secondary-panel').getByRole('textbox').first()
@@ -117,7 +117,7 @@ test('a trigger name and enabled state persist', async ({ page }) => {
 test('an expression variable persists', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
 	await gotoApp(page, '/variables/expression')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Expression Variable' }).click()
+	await clickListPageAdd(page, 'Add Expression Variable', 'Add your first expression variable')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByRole('textbox', { name: 'Name' }).fill('e2e_persist')
 	await dialog.getByRole('button', { name: 'Add' }).click()
