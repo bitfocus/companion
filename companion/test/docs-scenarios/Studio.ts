@@ -28,12 +28,16 @@ import {
  *   too high (a value feedback), 2/4 red text while the custom variable `alarm` is true, 2/5 rolls a clip with a
  *   sequential action group, and 2/6 puts Camera 3 on air with an auto transition
  * - 3/1 the level of MIC 1, drawn with elements rather than the composite element, 3/2 an arrow kept square by its
- *   group, 3/3 the logo from the image library, 3/4 a reference element mirroring 0/1
+ *   group, 3/3 the logo from the image library, 3/4 a reference element mirroring 0/1, 3/5 has local variables of
+ *   each kind, 3/6 shows the input on program
  *
  * Page 2, "Audio": 0/1 plays a clip on the media player, which is failing to connect, 0/2 mutes a microphone on the
  * audio mixer, which is connecting, and 0/3 is running a long wait.
  *
  * Page 3, "Graphics", is empty. The image library has the Companion and Bitfocus logos.
+ *
+ * There are some custom and expression variables, and a trigger which puts Camera 2 on preview when Camera 1 goes on
+ * program.
  */
 export const prepare = prepareDocsApp
 
@@ -56,6 +60,8 @@ export const STUDIO = {
 	arrow: { pageNumber: 1, row: 3, column: 2 },
 	logo: { pageNumber: 1, row: 3, column: 3 },
 	referenceElement: { pageNumber: 1, row: 3, column: 4 },
+	localVariables: { pageNumber: 1, row: 3, column: 5 },
+	onAir: { pageNumber: 1, row: 3, column: 6 },
 	playClip: { pageNumber: 2, row: 0, column: 1 },
 	mute: { pageNumber: 2, row: 0, column: 2 },
 	running: { pageNumber: 2, row: 0, column: 3 },
@@ -74,7 +80,10 @@ export async function seed(app: TestApp): Promise<void> {
 		['bitfocus', 'The Bitfocus logo', 'launcher/assets/bitfocus-logo.png'],
 	]) {
 		await app.trpc().imageLibrary.create({ name, description })
-		await app.registry.graphics.imageLibrary.setImageData(name, 'image/png', fs.readFileSync(path.join(repoRoot, file)))
+		// The library shows when an image was last changed, so change them at a fixed time
+		await atFixedTime(IMAGES_MODIFIED_AT, async () =>
+			app.registry.graphics.imageLibrary.setImageData(name, 'image/png', fs.readFileSync(path.join(repoRoot, file)))
+		)
 	}
 
 	await app.trpc().pages.setName({ pageNumber: 1, name: 'Studio' })
@@ -173,6 +182,8 @@ export async function seed(app: TestApp): Promise<void> {
 	await addEntity(app, camera3, camera3Down, null, mixer, EntityModelType.Action, 'auto', { duration: exprVal(25) })
 
 	await createStylingButtons(app)
+	await createVariables(app, mixer)
+	await createTrigger(app, mixer)
 
 	const playClip = await createButtonWithText(app, STUDIO.playClip, 'Play clip')
 	await addEntity(app, playClip, firstStepDown(app, playClip), null, playback, EntityModelType.Action, 'cut', {})
@@ -279,6 +290,103 @@ async function createStylingButtons(app: TestApp): Promise<void> {
 	const reference = app.createButton(STUDIO.referenceElement)
 	await app.trpc().controls.styles.removeElement({ controlId: reference, elementId: 'text0' })
 	await addElement(app, reference, 'reference', 'Camera 1', null, { location: exprExpr('`${$(this:page)}/0/1`') })
+}
+
+/** The variables the variables page describes, and the buttons using them */
+async function createVariables(app: TestApp, mixer: string): Promise<void> {
+	app.createCustomVariable('show_name', 'Morning Show')
+	app.createCustomVariable('takes', 3)
+	const custom = app.trpc().customVariables
+	await custom.setDescription({ name: 'alarm', description: 'Whether the alarm is sounding' })
+	await custom.setDescription({ name: 'show_name', description: 'The name of the show' })
+	await custom.setDescription({ name: 'takes', description: 'How many takes there have been' })
+
+	for (const [name, description, expression] of [
+		['on_air', 'The name of the input on air, in capitals', 'toUpperCase($(mixer:program_input_name))'],
+		['takes_left', 'How many takes there are left before the break', '10 - $(custom:takes)'],
+	]) {
+		const controlId = await app.trpc().controls.expressionVariables.create({ variableName: name })
+		await app.trpc().controls.setOptionsField({
+			controlId,
+			change: { controlType: 'expression-variable', key: 'description', value: description },
+		})
+		// The expression is the option of the variable's own feedback
+		const control = app.registry.controls.getControl(controlId) as unknown as {
+			entities: { getRootEntity(): { id: string } | undefined }
+		}
+		const entityId = control.entities.getRootEntity()?.id
+		if (!entityId) throw new Error(`The expression variable "${name}" has no expression`)
+		await app.trpc().controls.entities.setOption({
+			controlId,
+			entityLocation: 'feedbacks',
+			entityId,
+			key: 'expression',
+			value: exprVal(expression),
+		})
+	}
+
+	const localVariables = await createButtonWithText(app, STUDIO.localVariables, 'Count\\n$(local:count)')
+	app.addLocalVariable(localVariables, 'count', 'user_value', { startup_value: exprVal(1) })
+	app.addLocalVariable(localVariables, 'doubled', 'expression_value', { expression: exprVal('$(local:count) * 2') })
+	const live = await addEntity(
+		app,
+		localVariables,
+		'local-variables',
+		null,
+		mixer,
+		EntityModelType.Feedback,
+		'program',
+		{
+			input: exprVal(1),
+		}
+	)
+	await app.trpc().controls.entities.setVariableName({
+		controlId: localVariables,
+		entityLocation: 'local-variables',
+		entityId: live,
+		name: 'camera_1_live',
+	})
+
+	await createButtonWithText(app, STUDIO.onAir, 'On air\\n$(mixer:program_input_name)')
+}
+
+/** A trigger which puts Camera 2 on preview when Camera 1 goes on program, but is disabled */
+async function createTrigger(app: TestApp, mixer: string): Promise<void> {
+	const controlId = await app.trpc().controls.triggers.create()
+	// Left disabled, so that it doesn't run and show when it last ran
+	await app.trpc().controls.setOptionsField({
+		controlId,
+		change: { controlType: 'trigger', key: 'name', value: 'Camera 2 ready' },
+	})
+
+	if (!(await app.trpc().controls.events.add({ controlId, eventType: 'variable_changed' }))) {
+		throw new Error('Failed to add an event')
+	}
+	// The new event is the last of the trigger's
+	const trigger = app.registry.controls.getControl(controlId) as unknown as { events: { id: string }[] }
+	const eventId = trigger.events.at(-1)?.id
+	if (!eventId) throw new Error('The trigger has no events')
+	await app.trpc().controls.events.setOption({ controlId, eventId, key: 'variableId', value: 'mixer:program_input' })
+	await app.trpc().controls.events.add({ controlId, eventType: 'interval' })
+
+	app.addInternalFeedback(controlId, 'check_expression', { expression: exprVal('$(mixer:program_input) == 1') })
+	await addEntity(app, controlId, 'trigger_actions', null, mixer, EntityModelType.Action, 'preview', {
+		input: exprVal(2),
+	})
+}
+
+/** When the images of the library were last changed */
+const IMAGES_MODIFIED_AT = new Date('2026-06-01T10:30:00Z').getTime()
+
+/** Run something which records the time, as if it were a fixed time */
+async function atFixedTime<T>(time: number, run: () => Promise<T>): Promise<T> {
+	const realNow = Date.now
+	Date.now = () => time
+	try {
+		return await run()
+	} finally {
+		Date.now = realNow
+	}
 }
 
 /** Change the config of a connection */

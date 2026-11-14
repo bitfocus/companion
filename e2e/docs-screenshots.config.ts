@@ -43,6 +43,9 @@ export default defineConfig({
 				viewport: { width: 1440, height: 1800 },
 				// Sharp on high density screens
 				deviceScaleFactor: 2,
+				// Dates and numbers are formatted the same on every machine
+				locale: 'en-GB',
+				timezoneId: 'UTC',
 				launchOptions: executablePath ? { executablePath } : {},
 			},
 		},

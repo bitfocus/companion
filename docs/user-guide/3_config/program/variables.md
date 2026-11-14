@@ -19,7 +19,7 @@ You can use variables in any input field with the variables support icon. Any ot
 
 For example, using one in button text:
 
-![Connection variables usage](images/dynamic-variable-usage.png?raw=true 'Connection variable usage')
+![Connection variables usage](images/dynamic-variable-usage.png 'Connection variable usage')
 
 There are a few types of variables:
 
