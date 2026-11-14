@@ -375,6 +375,9 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entity = entityList.findById(id)
 			if (!entity) return false
 
+			// The definitions of the internal module mean nothing to a connection, and the reverse
+			if (entity.connectionId === 'internal' || String(connectionId) === 'internal') return false
+
 			entity.setConnectionId(connectionId)
 
 			this.tryTriggerLocalVariablesChanged(entity)

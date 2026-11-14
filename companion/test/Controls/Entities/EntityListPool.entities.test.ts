@@ -182,6 +182,19 @@ describe('EntityListPool - entitySetConnection', () => {
 
 		expect(pool.entitySetConnection(downSet(), 'nope', 'conn')).toBe(false)
 	})
+
+	test('does not change an action to or from the internal connection', () => {
+		const { pool } = createPool()
+		const action = actionModel({ connectionId: 'conn-old' })
+		const internal = actionModel({ connectionId: 'internal', definitionId: 'def-internal' })
+		pool.entityAdd(downSet(), null, action, internal)
+
+		expect(pool.entitySetConnection(downSet(), action.id, 'internal')).toBe(false)
+		expect(pool.findEntityById(action.id)?.connectionId).toBe('conn-old')
+
+		expect(pool.entitySetConnection(downSet(), internal.id, 'conn-new')).toBe(false)
+		expect(pool.findEntityById(internal.id)?.connectionId).toBe('internal')
+	})
 })
 
 describe('EntityListPool - entitySetInverted', () => {
