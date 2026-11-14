@@ -10,7 +10,7 @@ import { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
 import { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
-import { describeUseControl, formatElapsed, type UseControlStores } from '../UsesDescription.js'
+import { describeUseControl, type UseControlStores } from '../BuildingBlockUses.js'
 
 const placedButton = CreateBankControlId('placed')
 
@@ -105,18 +105,5 @@ describe('describeUseControl', () => {
 	test('any other control is described by its id', () => {
 		const controlId = CreateExpressionVariableControlId('x')
 		expect(describeUseControl(controlId, createStores())).toEqual({ kind: 'Control', name: controlId, link: null })
-	})
-})
-
-describe('formatElapsed', () => {
-	test.each([
-		[0, '0s'],
-		[999, '0s'],
-		[45_000, '45s'],
-		[185_000, '3m 05s'],
-		[3_720_000, '1h 02m'],
-		[-5, '0s'],
-	])('%d ms is %s', (ms, expected) => {
-		expect(formatElapsed(ms)).toBe(expected)
 	})
 })

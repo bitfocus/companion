@@ -1,6 +1,5 @@
 import { faLink, faStop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
@@ -14,13 +13,14 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { ListHeading } from '~/Components/ListHeading.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { BuildingBlockUseName } from '~/Controls/BuildingBlockUseName.js'
+import { describeUseControl } from '~/Controls/BuildingBlockUses.js'
 import { useNow } from '~/Hooks/useNow.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { assertNever } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import '~/Controls/BuildingBlockUses.css'
-import { describeUseControl, formatElapsed, type UseControlLink } from './UsesDescription.js'
+import { formatElapsed } from './formatElapsed.js'
 
 interface CustomActionUsesEditorProps {
 	controlId: CustomActionControlId
@@ -124,16 +124,7 @@ function TestRunRow({ controlId }: { controlId: CustomActionControlId }) {
 	)
 }
 
-const UseRow = observer(function UseRow({
-	customActionId,
-	use,
-}: {
-	customActionId: CustomActionControlId
-	use: CustomActionUse
-}) {
-	const stores = useContext(RootAppStoreContext)
-	const description = describeUseControl(use.controlId, stores)
-
+function UseRow({ customActionId, use }: { customActionId: CustomActionControlId; use: CustomActionUse }) {
 	const abortMutation = useMutationExt(trpc.controls.customActions.abortUse.mutationOptions())
 	const abort = useCallback(() => {
 		abortMutation
@@ -143,10 +134,7 @@ const UseRow = observer(function UseRow({
 
 	return (
 		<li className="building-block-use">
-			<div className="building-block-use-name">
-				<span className="building-block-use-kind">{description.kind}</span>
-				<UseControlName name={description.name} link={description.link} />
-			</div>
+			<BuildingBlockUseName controlId={use.controlId} />
 			<RunsStatus runs={use.runs} useControlId={use.controlId} disabled={use.disabled} />
 			<Button
 				size="sm"
@@ -160,49 +148,6 @@ const UseRow = observer(function UseRow({
 			</Button>
 		</li>
 	)
-})
-
-/** The name of a control which uses a custom action or feedback, linking to roughly where it is */
-export function UseControlName({ name, link }: { name: string; link: UseControlLink | null }): React.JSX.Element {
-	if (!link) return <>{name}</>
-
-	switch (link.type) {
-		case 'buttons-page':
-			return (
-				<Link to="/buttons/$page" params={{ page: String(link.pageNumber) }} title="Show its page of buttons">
-					{name}
-				</Link>
-			)
-		case 'trigger':
-			return (
-				<Link to="/triggers/$controlId" params={{ controlId: link.triggerId }} title="Edit the trigger">
-					{name}
-				</Link>
-			)
-		case 'custom-action':
-			return (
-				<Link
-					to="/custom-actions/$controlId"
-					params={{ controlId: link.customActionId }}
-					title="Edit the custom action"
-				>
-					{name}
-				</Link>
-			)
-		case 'custom-feedback':
-			return (
-				<Link
-					to="/custom-feedbacks/$controlId"
-					params={{ controlId: link.customFeedbackId }}
-					title="Edit the custom feedback"
-				>
-					{name}
-				</Link>
-			)
-		default:
-			assertNever(link)
-			return <>{name}</>
-	}
 }
 
 function OtherRunsRow({ runs }: { runs: CustomActionRunInfo[] }) {

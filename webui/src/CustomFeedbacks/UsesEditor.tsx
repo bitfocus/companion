@@ -1,16 +1,13 @@
 import { faLink } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { observer } from 'mobx-react-lite'
-import { useContext, useState } from 'react'
+import { useState } from 'react'
 import type { CustomFeedbackControlId } from '@companion-app/shared/ControlId.js'
 import type { CustomFeedbackUse } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import { ListHeading } from '~/Components/ListHeading.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { describeUseControl } from '~/CustomActions/UsesDescription.js'
-import { UseControlName } from '~/CustomActions/UsesEditor.js'
+import { BuildingBlockUseName } from '~/Controls/BuildingBlockUseName.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import '~/Controls/BuildingBlockUses.css'
 
 interface CustomFeedbackUsesEditorProps {
@@ -66,17 +63,11 @@ export function CustomFeedbackUsesEditor({ controlId }: CustomFeedbackUsesEditor
 	)
 }
 
-const UseRow = observer(function UseRow({ use }: { use: CustomFeedbackUse }) {
-	const stores = useContext(RootAppStoreContext)
-	const description = describeUseControl(use.controlId, stores)
-
+function UseRow({ use }: { use: CustomFeedbackUse }) {
 	return (
 		<li className="building-block-use">
-			<div className="building-block-use-name">
-				<span className="building-block-use-kind">{description.kind}</span>
-				<UseControlName name={description.name} link={description.link} />
-			</div>
+			<BuildingBlockUseName controlId={use.controlId} />
 			{use.disabled && <div className="building-block-use-status">Disabled</div>}
 		</li>
 	)
-})
+}
