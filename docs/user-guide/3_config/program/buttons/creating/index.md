@@ -24,7 +24,7 @@ below.
 _An example of modules currently loaded with premade presets_  
 ![Preset Modules](images/preset-modules.png 'Preset Modules')
 
-_Here is an example of the presets of a vision mixer_  
+_Here is an example of the presets of an ATEM_  
 ![Preset Buttons](images/preset-buttons.png 'Preset Buttons')
 
 Drag the preset buttons onto a page's button when in the Button Layout view.

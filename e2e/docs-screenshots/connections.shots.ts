@@ -28,7 +28,7 @@ test('adding a connection', async ({ page }) => {
 	await gotoApp(page, '/connections')
 	await page.getByRole('button', { name: 'Add Connection' }).click()
 	const dialog = page.getByRole('dialog')
-	await dialog.getByText('Vision Mixer', { exact: true }).click()
+	await dialog.getByText('ATEM', { exact: true }).click()
 	await expect(dialog.getByText('Connection Label')).toBeVisible()
 	await shoot(page, dialog, `${IMAGES}/connections/connection-add-dialog`)
 })
@@ -72,10 +72,16 @@ test('modules', async ({ page }) => {
 	await gotoApp(page, '/modules')
 	// Those available from the store too, not only those installed
 	await primary(page).getByRole('button', { name: 'Filter by Available' }).click()
+	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken
+	await primary(page)
+		.getByRole('button', { name: /refresh/i })
+		.click()
+	await expect(primary(page).locator('.last-updated')).toContainText('a few seconds ago')
 	await expect(primary(page).getByText('Lighting Desk', { exact: true })).toBeVisible()
 	await shoot(page, await contentClip(primary(page)), `${IMAGES}/module-list`)
 
-	await primary(page).getByText('Vision Mixer', { exact: true }).click()
-	await expect(secondary(page).getByText('2.3.0', { exact: true })).toBeVisible()
+	// The versions of a real module, an ATEM
+	await primary(page).getByText('ATEM', { exact: true }).click()
+	await expect(secondary(page).getByText('4.3.0', { exact: true })).toBeVisible()
 	await shoot(page, await contentClip(secondary(page)), `${IMAGES}/module-manage`)
 })

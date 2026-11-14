@@ -141,7 +141,9 @@ the name of the property.
 Some modules also provide feedbacks that draw a complete generated image, typically to show a complex
 status in a well-arranged way.
 
-![Module style feedback](images/feedback-advanced-example.png?raw=true)
+![A feedback which draws an image of audio meters](images/feedback-advanced-example.png)
+
+Add an override on the feedback to use the image it draws as the image of one of your Image elements.
 
 :::note
 A few older module feedbacks are limited in what they can change. If you find a module's feedbacks too

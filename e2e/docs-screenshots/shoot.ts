@@ -62,6 +62,15 @@ function roundClip(clip: { x: number; y: number; width: number; height: number }
 }
 
 /**
+ * Capture a screenshot for the docs of something which looks the same in both themes, as `<name>.png`
+ * @param target What to capture
+ * @param name The path of the image under `docs/user-guide`, without its extension
+ */
+export async function shootUnthemed(target: Locator, name: string): Promise<void> {
+	await expect(target).toHaveScreenshot(`${name}.png`.split('/'), { stylePath: SCREENSHOT_STYLE })
+}
+
+/**
  * The area of an edit panel down to the end of its content, rather than the full height of the panel
  * @param panel The panel, which fills the height of the page
  * @param content The content of the panel, which may be shorter

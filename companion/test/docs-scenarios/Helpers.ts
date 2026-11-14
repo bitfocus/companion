@@ -7,9 +7,9 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { prepareForModuleChildren, type TestApp } from '../integration/TestApp.js'
-import { DEMO_MODULES, standInForModuleStore } from './modules/DemoModules.js'
+import { DEMO_MODULES, REAL_MODULES, standInForModuleStore } from './modules/DemoModules.js'
 
-export { DEMO_MODULES }
+export { DEMO_MODULES, REAL_MODULES }
 
 /**
  * Get ready to start the app of a scenario: stand in for the module store, so the demo modules can be installed from
@@ -30,12 +30,38 @@ export async function addDemoConnection(
 	label: string,
 	versionId: string
 ): Promise<string> {
-	const connectionId = await app.trpc().instances.connections.add({ module: { type: module.id }, label, versionId })
+	return addStoreConnection(app, module.id, label, versionId, 'program')
+}
+
+/**
+ * Add a connection of a real module, installing its pinned version from the (stand in) store, and wait for it to be
+ * running
+ * @param readyActionId An action of the module, which is defined once it is running
+ * @returns The id of the connection
+ */
+export async function addRealConnection(
+	app: TestApp,
+	module: (typeof REAL_MODULES)[keyof typeof REAL_MODULES],
+	label: string,
+	versionId: string,
+	readyActionId: string
+): Promise<string> {
+	return addStoreConnection(app, module.info.id, label, versionId, readyActionId)
+}
+
+async function addStoreConnection(
+	app: TestApp,
+	moduleId: string,
+	label: string,
+	versionId: string,
+	readyActionId: string
+): Promise<string> {
+	const connectionId = await app.trpc().instances.connections.add({ module: { type: moduleId }, label, versionId })
 	if (!connectionId) throw new Error(`Failed to add the connection "${label}"`)
 
 	// It starts once the module is installed, and is ready once its definitions have arrived
 	await waitFor(
-		() => app.registry.instance.definitions.getEntityDefinition(EntityModelType.Action, connectionId, 'program'),
+		() => app.registry.instance.definitions.getEntityDefinition(EntityModelType.Action, connectionId, readyActionId),
 		60_000
 	)
 	return connectionId

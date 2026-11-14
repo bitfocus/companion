@@ -53,6 +53,9 @@ test('surface integrations', async ({ page }) => {
 	await page.getByRole('button', { name: 'Add Surface Integration' }).click()
 	const dialog = page.getByRole('dialog')
 	await expect(dialog.getByText('Fader Bank')).toBeVisible()
+	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken
+	await dialog.getByRole('button', { name: 'Refresh modules list' }).click()
+	await expect(dialog.locator('.last-updated')).toContainText('a few seconds ago')
 	await shoot(page, dialog, '7_surfaces/images/surface-integrations-add-panel')
 })
 

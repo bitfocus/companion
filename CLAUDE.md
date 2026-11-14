@@ -165,7 +165,12 @@ scenario/shots and re-run.
   starts; use `prepareDocsApp`) and `seed(app)`; shared helpers are in `docs-scenarios/Helpers.ts`.
 - Connections and surfaces use the demo modules in `docs-scenarios/modules/` (a vision mixer etc., and a control
   panel), which a stand-in for the module store (it answers the store's requests from `fetch`) offers for install, so no
-  real module or network is needed. Add actions/presets/etc. to `modules/src/*.mjs` when a page needs them.
+  real module or network is needed. Add actions/presets/etc. to `modules/src/*.mjs` when a page needs them. The store
+  also offers a few popular real modules (`REAL_MODULES`: ATEM, vMix, Videohub) at pinned versions, downloaded once into
+  `.cache` (node's `fetch` must be able to reach the module builds host the first time); use them occasionally, where
+  the real thing helps, without an address so their status doesn't depend on a device.
+- The launcher's windows are shot from its vite dev server, with `window.api` (the electron main process) mocked
+  (`launcher.shots.ts`). A window with only one look is shot once with `shootUnthemed`.
 - Anything which changes from run to run must be fixed in the scenario (no random ids, fixed times and tokens) or hidden
   by `e2e/docs-screenshots/screenshot.css` (build version, machine-specific notes), or the images churn.
 - Crop to what the page describes with the helpers in `shoot.ts` (`contentClip`, `unionClip`, `gridClip`), and widen or

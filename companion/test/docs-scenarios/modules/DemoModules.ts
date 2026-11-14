@@ -122,12 +122,137 @@ export const DEMO_MODULES = {
 	},
 } satisfies Record<string, DemoModule>
 
+interface RealModuleVersion {
+	version: string
+	daysAgo: number
+	tarUrl: string
+	tarSha: string
+	apiVersion: string
+}
+
+interface RealModule {
+	info: Omit<CompanionModuleInfo, 'type' | 'license' | 'licenseCategory'>
+	versions: RealModuleVersion[]
+}
+
+const BUILDS = 'https://developer-module-builds.s4.bitfocus.io/connection'
+
+/**
+ * Some popular real modules, which the store offers alongside the demo modules, at versions pinned (by url and checksum)
+ * so that the screenshots are the same each time. A version is downloaded the first time it is installed, and kept in
+ * the repository's `.cache`. Their release dates are made recent, like those of the demo modules.
+ */
+export const REAL_MODULES = {
+	atem: {
+		info: {
+			id: 'bmd-atem',
+			name: 'Blackmagic Design: ATEM',
+			shortname: 'atem',
+			manufacturer: 'Blackmagic Design',
+			products: ['ATEM'],
+			keywords: ['Vision Mixer'],
+			storeUrl: 'https://bitfocus.io/connections/bmd-atem',
+			githubUrl: 'https://github.com/bitfocus/companion-module-bmd-atem',
+			latestHelpUrl: `${BUILDS}/bmd-atem/v4.4.0-328e0a3508eb-3b99640c8d87/HELP.md`,
+			legacyIds: ['atem'],
+		},
+		versions: [
+			{
+				version: '4.3.0',
+				daysAgo: 160,
+				tarUrl: `${BUILDS}/bmd-atem/v4.3.0-f098f3ada86415658e966e4d9d42fd5719584064/bmd-atem-v4.3.0.tgz`,
+				tarSha: 'd2b5cabe6568ba6889f4bb1daebeaff22f9d4c4df2c38da63bebbb6bca965d96',
+				apiVersion: '2.0.4',
+			},
+			{
+				version: '4.3.1',
+				daysAgo: 110,
+				tarUrl: `${BUILDS}/bmd-atem/v4.3.1-23715ca054e1-23ffa58c85cc/bmd-atem-v4.3.1.tgz`,
+				tarSha: '23ffa58c85cc1bec4d7b3290d7a82250892f0335ac01b3b855cf9e6633b7023e',
+				apiVersion: '2.0.4',
+			},
+			{
+				version: '4.4.0',
+				daysAgo: 40,
+				tarUrl: `${BUILDS}/bmd-atem/v4.4.0-328e0a3508eb-3b99640c8d87/bmd-atem-v4.4.0.tgz`,
+				tarSha: '3b99640c8d87989cfcb2b4e0bd511a0ca25626bc9b3bfaf838bd89948dcda009',
+				apiVersion: '2.0.4',
+			},
+		],
+	},
+	vmix: {
+		info: {
+			id: 'studiocoast-vmix',
+			name: 'StudioCoast: vMix',
+			shortname: 'vmix',
+			manufacturer: 'StudioCoast',
+			products: ['vMix'],
+			keywords: ['Software', 'Vision Mixer'],
+			storeUrl: 'https://bitfocus.io/connections/studiocoast-vmix',
+			githubUrl: 'https://github.com/bitfocus/companion-module-studiocoast-vmix',
+			latestHelpUrl: `${BUILDS}/studiocoast-vmix/v5.0.6-0f2f6670417a-1c0c8658d9a3/HELP.md`,
+			legacyIds: [],
+		},
+		versions: [
+			{
+				version: '5.0.6',
+				daysAgo: 25,
+				tarUrl: `${BUILDS}/studiocoast-vmix/v5.0.6-0f2f6670417a-1c0c8658d9a3/studiocoast-vmix-v5.0.6.tgz`,
+				tarSha: '1c0c8658d9a304770aeb1fd4cdb2b883d08ff147b0ab74bbf82f6ee1923e8f1f',
+				apiVersion: '2.0.4',
+			},
+		],
+	},
+	videohub: {
+		info: {
+			id: 'bmd-videohub',
+			name: 'Blackmagic Design: Videohub',
+			shortname: 'videohub',
+			manufacturer: 'Blackmagic Design',
+			products: ['Videohub'],
+			keywords: ['Matrix', 'Router'],
+			storeUrl: 'https://bitfocus.io/connections/bmd-videohub',
+			githubUrl: 'https://github.com/bitfocus/companion-module-bmd-videohub',
+			latestHelpUrl: `${BUILDS}/bmd-videohub/v3.2.1-1791892cd4580c151c41db35feddf050118ec7ba/HELP.md`,
+			legacyIds: ['videohub'],
+		},
+		versions: [
+			{
+				version: '3.2.1',
+				daysAgo: 70,
+				tarUrl: `${BUILDS}/bmd-videohub/v3.2.1-1791892cd4580c151c41db35feddf050118ec7ba/bmd-videohub-v3.2.1.tgz`,
+				tarSha: 'd0d9d00baacdfe42e9da219bc1a5b080fdf78876855d0f459d26fc86683627a6',
+				apiVersion: '2.0.4',
+			},
+		],
+	},
+} satisfies Record<string, RealModule>
+
+/** Where the packages of the real modules are kept once downloaded */
+const REAL_MODULES_CACHE = path.join(import.meta.dirname, '../../../../.cache/docs-store-modules')
+
+/** The package of a version of a real module, from the cache, or downloaded (and checked) the first time */
+async function realModulePackage(fetchFn: typeof fetch, version: RealModuleVersion): Promise<Buffer> {
+	const cachePath = path.join(REAL_MODULES_CACHE, `${version.tarSha}.tgz`)
+	if (fs.existsSync(cachePath)) return fs.readFileSync(cachePath)
+
+	const response = await fetchFn(version.tarUrl)
+	if (!response.ok) throw new Error(`Failed to download ${version.tarUrl}: HTTP ${response.status}`)
+	const tarball = Buffer.from(await response.arrayBuffer())
+	const sha = crypto.createHash('sha256').update(tarball).digest('hex')
+	if (sha !== version.tarSha) throw new Error(`${version.tarUrl} does not match its checksum`)
+
+	fs.mkdirSync(REAL_MODULES_CACHE, { recursive: true })
+	fs.writeFileSync(cachePath, tarball)
+	return tarball
+}
+
 /** The api version each type of demo module is built against, the one installed in the repository */
 const API_VERSIONS = { connection: '2.3.0', surface: SURFACE_BASE_VERSION } as const
 
 /**
- * Stand in for the module store, which the app can't reach from the screenshots (and whose content changes), by
- * answering its requests from `fetch` with the demo modules. Call this before the app starts, as it refreshes the
+ * Stand in for the module store, whose content changes, by answering its requests from `fetch` with the demo modules
+ * and the pinned versions of some real ones. Call this before the app starts, as it refreshes the
  * list of modules as it starts.
  */
 export async function standInForModuleStore(): Promise<void> {
@@ -161,8 +286,37 @@ export async function standInForModuleStore(): Promise<void> {
 		versions.set(`${module.type}/${module.id}`, moduleVersions)
 	}
 
+	const realPackages = new Map<string, RealModuleVersion>()
+	for (const module of Object.values(REAL_MODULES) as RealModule[]) {
+		versions.set(
+			`connection/${module.info.id}`,
+			module.versions.map((version) => {
+				realPackages.set(version.tarUrl, version)
+				return {
+					id: `v${version.version}`,
+					isPrerelease: false,
+					isLegacy: false,
+					releasedAt: now - version.daysAgo * DAY,
+					tarUrl: version.tarUrl,
+					tarSha: version.tarSha,
+					apiVersion: version.apiVersion,
+					license: 'MIT',
+					licenseCategory: 'MIT',
+				}
+			})
+		)
+	}
+
 	const storeModules: Record<string, CompanionModuleInfo[]> = {
-		connection: demoModules.filter((module) => module.type === 'connection').map((module) => storeInfo(module)),
+		connection: [
+			...demoModules.filter((module) => module.type === 'connection').map((module) => storeInfo(module)),
+			...(Object.values(REAL_MODULES) as RealModule[]).map((module): CompanionModuleInfo => ({
+				...module.info,
+				type: 'connection',
+				license: 'MIT',
+				licenseCategory: 'MIT',
+			})),
+		],
 		surface: demoModules.filter((module) => module.type === 'surface').map((module) => storeInfo(module)),
 	}
 
@@ -172,6 +326,9 @@ export async function standInForModuleStore(): Promise<void> {
 
 		const tarball = packages.get(url)
 		if (tarball) return new Response(new Uint8Array(tarball))
+
+		const realPackage = realPackages.get(url)
+		if (realPackage) return new Response(new Uint8Array(await realModulePackage(realFetch, realPackage)))
 
 		if (url.startsWith(STORE_API)) {
 			// `<api>/<moduleType>` lists the modules, and `<api>/<moduleType>/<moduleId>` the versions of one

@@ -26,14 +26,23 @@ const panel = (page: Page) => page.locator('.secondary-panel')
 test('presets', async ({ page }) => {
 	await gotoApp(page, '/buttons')
 	await page.getByRole('tab', { name: 'Presets' }).click()
-	await expect(panel(page).getByText('Demo: Media Player')).toBeVisible()
+	await expect(panel(page).getByText('Blackmagic Design: ATEM')).toBeVisible()
 	await shoot(page, await contentClip(panel(page)), `${IMAGES}/preset-modules`)
 
-	await panel(page).getByText('Demo: Vision Mixer').click()
-	await panel(page).getByRole('button', { name: 'Inputs', exact: true }).click()
-	await expect(panel(page).getByRole('button', { name: 'Colour Bars' }).first()).toBeVisible()
-	await shoot(page, await contentClip(panel(page)), `${IMAGES}/preset-buttons`)
+	// The presets of a real module, an ATEM
+	await panel(page).getByText('Blackmagic Design: ATEM').click()
+	await panel(page).getByRole('button', { name: 'MixEffect Program/Preview', exact: true }).click()
+	// Down to the end of its program and preview buttons
+	const lastPreviewButton = panel(page).getByRole('button', { name: 'Preview button for MP2K', exact: true })
+	await expect(lastPreviewButton).toBeVisible()
+	await shoot(
+		page,
+		await unionClip(page, [panel(page).getByRole('tablist'), lastPreviewButton]),
+		`${IMAGES}/preset-buttons`
+	)
 
+	await panel(page).getByRole('button', { name: 'Back', exact: true }).click()
+	await panel(page).getByText('Demo: Vision Mixer').click()
 	// Linked or copied, and the composite elements
 	await panel(page).getByRole('button', { name: 'Inputs', exact: true }).click()
 	await panel(page)
@@ -101,6 +110,13 @@ test('actions', async ({ page }) => {
 		await expect(group).toBeVisible()
 		await shoot(page, group, `${IMAGES}/action-group-sequential`)
 	})
+})
+
+test('generated image', async ({ page }) => {
+	await editButton(page, '1/3/0')
+	await openEditorTab(page, 'Feedbacks')
+	await expect(panel(page).getByText('Audio meters (image)')).toBeVisible()
+	await shoot(page, await contentClip(panel(page)), `${IMAGES}/feedback-advanced-example`)
 })
 
 test('feedbacks', async ({ page }) => {

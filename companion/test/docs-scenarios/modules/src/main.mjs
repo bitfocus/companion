@@ -179,6 +179,20 @@ class DemoInstance extends InstanceBase {
 				options: [{ type: 'dropdown', id: 'mic', label: 'Microphone', choices: MIC_CHOICES, default: 1 }],
 				callback: (feedback) => !!this.mics[Number(feedback.options.mic)]?.muted,
 			},
+			audio_meters: {
+				type: 'advanced',
+				name: 'Audio meters (image)',
+				description: 'An image of the levels of all of the microphones',
+				options: [],
+				affectedProperties: ['imageBuffer'],
+				callback: (feedback) => ({
+					imageBuffer: drawMeters(
+						feedback.image ?? { width: 72, height: 72 },
+						MICS.map((mic) => this.mics[mic.id].level)
+					),
+					imageBufferEncoding: { pixelFormat: 'RGB' },
+				}),
+			},
 			audio_level: {
 				type: 'value',
 				name: 'Audio level (dB)',
@@ -443,6 +457,35 @@ class DemoInstance extends InstanceBase {
 			...Object.fromEntries(MICS.map((mic) => [`mic_${mic.id}_muted`, this.mics[mic.id].muted])),
 		})
 	}
+}
+
+/**
+ * Draw a meter for each level, side by side, as the pixels of an image
+ * @returns The pixels, as RGB, base64 encoded
+ */
+function drawMeters(size, levels) {
+	const { width, height } = size
+	const pixels = Buffer.alloc(width * height * 3)
+	const meterWidth = width / levels.length
+	for (let x = 0; x < width; x++) {
+		const meter = Math.floor(x / meterWidth)
+		const inset = x - meter * meterWidth
+		// A gap between the meters
+		if (inset < meterWidth * 0.2 || inset > meterWidth * 0.8) continue
+
+		// From -60dB at the bottom to +10dB at the top
+		const top = Math.round(height * (1 - (levels[meter] + 60) / 70))
+		for (let y = 0; y < height; y++) {
+			const db = 10 - (y / height) * 70
+			const lit = y >= top
+			const [r, g, b] = db > 0 ? [220, 0, 0] : db > -18 ? [220, 200, 0] : [0, 190, 0]
+			const offset = (y * width + x) * 3
+			pixels[offset] = lit ? r : r / 6
+			pixels[offset + 1] = lit ? g : g / 6
+			pixels[offset + 2] = lit ? b : b / 6
+		}
+	}
+	return pixels.toString('base64')
 }
 
 export default DemoInstance
