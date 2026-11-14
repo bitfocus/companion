@@ -70,6 +70,14 @@ yarn lint
 yarn format
 ```
 
+`yarn lint` runs ESLint with `--concurrency auto`, which can use a lot of memory on machines with many cores. To cap the number of workers on your machine only, create a `.env.yarn` file in the root of the repository (it is gitignored, and Yarn loads it into every `yarn` script):
+
+```bash
+ESLINT_CONCURRENCY=4
+```
+
+Note that `.env` is not used for this, as Yarn does not read it.
+
 ## Type checking
 
 TypeScript types across all packages can be checked without running the full build:

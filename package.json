@@ -53,7 +53,7 @@
     "build:watch": "tsc --build --watch",
     "check-types": "tsc --build",
     "watch-types": "run build:watch",
-    "lint": "eslint --concurrency auto"
+    "lint": "eslint --concurrency ${ESLINT_CONCURRENCY:-auto}"
   },
   "engines": {
     "npm": "please-use-yarn",
