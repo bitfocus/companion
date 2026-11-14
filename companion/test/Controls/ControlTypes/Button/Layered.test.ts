@@ -220,9 +220,11 @@ describe('ControlButtonLayered', () => {
 			expect(control.drawing.getAllElementIds()).toEqual(DEFAULT_ELEMENT_IDS)
 		})
 
-		it('persists a brand new control to the db on construction', () => {
-			createControl(null)
+		it('persists a brand new control to the db when started, not on construction', () => {
+			const control = createControl(null)
+			expect(dbSet).not.toHaveBeenCalled()
 
+			control.start(true)
 			expect(dbSet).toHaveBeenCalledWith(CONTROL_ID, expect.objectContaining({ type: 'button-layered' }))
 		})
 

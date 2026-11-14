@@ -153,6 +153,8 @@ export function createCustomActionTrpcRouter(
 
 			newControl.optionsSetField({ key: 'name', value: input.name })
 
+			newControl.start(true)
+
 			return controlId
 		}),
 
@@ -177,6 +179,7 @@ export function createCustomActionTrpcRouter(
 
 			const newControl = factory.createCustomAction(newControlId, controlJson)
 			controlStore.controls.set(newControlId, newControl)
+			newControl.start(true)
 
 			return newControlId
 		}),

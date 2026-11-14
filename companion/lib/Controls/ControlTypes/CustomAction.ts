@@ -148,7 +148,7 @@ export class ControlCustomAction
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a custom action, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(
 		deps: ControlDependencies,
@@ -180,12 +180,7 @@ export class ControlCustomAction
 
 		this.options = this.optionsSchema.parse({})
 
-		if (!storage) {
-			// New control
-
-			// Save the change
-			this.commitChange()
-		} else {
+		if (storage) {
 			if (storage.type !== 'custom-action')
 				throw new Error(`Invalid type given to ControlCustomAction: "${storage.type}"`)
 
@@ -197,9 +192,6 @@ export class ControlCustomAction
 				const variable = this.#findLocalVariable(output.variableName)
 				if (variable) this.#outputLabels.set(variable.id, output.label)
 			}
-
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
 		}
 	}
 
@@ -611,14 +603,10 @@ export class ControlCustomAction
 		}
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**

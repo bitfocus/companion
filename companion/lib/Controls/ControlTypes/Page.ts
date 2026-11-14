@@ -63,7 +63,7 @@ export class ControlPage
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control (`page:<pageId>`)
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a control, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(
 		deps: ControlDependencies,
@@ -87,16 +87,10 @@ export class ControlPage
 			customActionInstances: deps.customActionInstances,
 		})
 
-		if (!storage) {
-			// New control
-			this.commitChange()
-		} else {
+		if (storage) {
 			if (storage.type !== 'page') throw new Error(`Invalid type given to ControlPage: "${storage.type}"`)
 
 			this.entities.loadStorage(storage, isImport)
-
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
 		}
 	}
 
@@ -169,14 +163,10 @@ export class ControlPage
 		this.commitChange(changed)
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**

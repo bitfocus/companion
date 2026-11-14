@@ -95,29 +95,18 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 	 * @param registry - the application core
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(
-		deps: ControlDependencies,
-		controlId: BankControlId,
-		storage: PageNumberButtonModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: PageNumberButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/PageNumber')
 
-		if (!storage) {
-			// New control
-
-			// Save the change
-			this.commitChange()
-
-			// Notify interested
-		} else {
+		if (storage) {
 			if (storage.type !== 'pagenum')
 				throw new Error(`Invalid type given to ControlButtonPageNumber: "${storage.type}"`)
-
-			if (isImport) this.commitChange()
 		}
+	}
+
+	override start(save: boolean): void {
+		if (save) this.commitChange()
 	}
 
 	protected getDrawElements(): ReturnType<ControlButtonPage<any>['getDrawElements']> {

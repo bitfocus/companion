@@ -49,10 +49,13 @@ describe('ControlTrigger', () => {
 	})
 
 	describe('construction', () => {
-		test('a new trigger persists the default model', () => {
+		test('a new trigger persists the default model when started', () => {
 			const { trigger, dbSet } = createTrigger()
 
 			expect(trigger.type).toBe('trigger')
+			expect(dbSet).not.toHaveBeenCalled()
+
+			trigger.start(true)
 			expect(dbSet).toHaveBeenCalledWith(CONTROL_ID, {
 				type: 'trigger',
 				options: TriggerOptionsSchema.parse({}),
@@ -381,6 +384,7 @@ describe('ControlTrigger', () => {
 			mocks.deps.changeEvents.on('triggerChange', listener)
 
 			const trigger = new ControlTrigger(mocks.deps, CONTROL_ID, null, false)
+			trigger.start(true)
 			vi.runAllTimers()
 
 			expect(listener).toHaveBeenCalledWith(

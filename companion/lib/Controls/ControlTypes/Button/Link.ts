@@ -110,7 +110,7 @@ export class ControlButtonLink
 		this.#drawing.invalidate()
 	}
 
-	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null, isImport: boolean) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/Link')
 
 		this.#locationVariables = deps.variableDependencies.create(this, controlId, null)
@@ -123,10 +123,7 @@ export class ControlButtonLink
 			() => this.options
 		)
 
-		if (!storage) {
-			// New control
-			this.commitChange()
-		} else {
+		if (storage) {
 			if (storage.type !== 'link-button') throw new Error(`Invalid type given to ControlButtonLink: "${storage.type}"`)
 
 			const { options, invalidKeys } = parseLinkButtonOptions(storage.options)
@@ -134,12 +131,13 @@ export class ControlButtonLink
 			if (invalidKeys.length > 0) {
 				this.logger.warn(`Replaced invalid options with their defaults: ${invalidKeys.join(', ')}`)
 			}
-
-			// Saved again when anything had to be replaced, so that it is valid from now on
-			if (isImport || invalidKeys.length > 0) this.commitChange()
 		}
 
 		this.#updateTarget()
+	}
+
+	override start(save: boolean): void {
+		if (save) this.commitChange()
 	}
 
 	destroy(): void {

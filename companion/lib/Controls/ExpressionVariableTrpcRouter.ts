@@ -4,10 +4,11 @@ import z from 'zod'
 import { CreateExpressionVariableControlId, zodControlIds } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ClientExpressionVariableData,
-	ExpressionVariableUpdate,
-	ExpressionVariableUpdateInitOp,
+import {
+	ExpressionVariableOptionsSchema,
+	type ClientExpressionVariableData,
+	type ExpressionVariableUpdate,
+	type ExpressionVariableUpdateInitOp,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -61,15 +62,6 @@ export function createExpressionVariableTrpcRouter(
 			)
 			if (!rootEntity) throw new Error('Failed to get initial entity for expression variable')
 
-			const controlId = CreateExpressionVariableControlId(nanoid())
-			const newControl = factory.createExpressionVariable(controlId)
-
-			if (!newControl.entities.entityAdd('feedbacks', null, rootEntity)) {
-				throw new Error('Failed to add feedback entity to expression variable')
-			}
-
-			controlStore.controls.set(controlId, newControl)
-
 			// Add variable to the end of the list
 			const allExpressionVariables: ControlExpressionVariable[] = []
 			for (const control of controlStore.controls.values()) {
@@ -78,13 +70,22 @@ export function createExpressionVariableTrpcRouter(
 				}
 			}
 			const maxRank = Math.max(0, ...allExpressionVariables.map((control) => control.options.sortOrder))
-			newControl.optionsSetField({ key: 'sortOrder', value: maxRank }, true)
 
+			// Built complete, root entity included, so that it is never stored without one
+			const controlId = CreateExpressionVariableControlId(nanoid())
+			const newControl = factory.createExpressionVariable(controlId, {
+				type: 'expression-variable',
+				options: ExpressionVariableOptionsSchema.parse({ variableName: input.variableName, sortOrder: maxRank }),
+				entity: rootEntity,
+				localVariables: [],
+			})
+
+			controlStore.controls.set(controlId, newControl)
+
+			// Registered before it is saved, as the saved client state includes whether it is active
 			expressionVariableNamesMap.addExpressionVariable(controlId, newControl.options.variableName)
-			newControl.optionsSetField({ key: 'variableName', value: input.variableName })
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			return controlId
 		}),
@@ -120,7 +121,10 @@ export function createExpressionVariableTrpcRouter(
 					const newControl = factory.createExpressionVariable(newControlId, controlJson)
 					controlStore.controls.set(newControlId, newControl)
 
+					// Register the name before it is saved, as the saved client state includes whether it is active
 					expressionVariableNamesMap.addExpressionVariable(newControlId, newControl.options.variableName)
+
+					newControl.start(true)
 
 					return newControlId
 				}

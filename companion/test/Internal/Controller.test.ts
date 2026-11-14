@@ -193,7 +193,7 @@ describe('initVariables', () => {
 
 		controller.initVariables()
 
-		// Subscribing entities at startup is owned by ControlsController.subscribeAll
+		// Subscribing entities at startup is owned by ControlsController.startAll
 		expect(control.entities.resubscribeEntities).not.toHaveBeenCalled()
 	})
 })

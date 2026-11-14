@@ -189,7 +189,7 @@ describe('ControlEntityListPoolTrigger', () => {
 			expect(reportChange).not.toHaveBeenCalled()
 		})
 
-		/** As at startup: loaded without subscribing, then ControlsController.subscribeAll resubscribes everything */
+		/** As at startup: loaded without subscribing, then ControlsController.startAll resubscribes everything */
 		function loadAtStartup(pool: ReturnType<typeof createTriggerPool>['pool'], action: ActionEntityModel) {
 			pool.loadStorage(triggerStorage({ actions: [action] }), false)
 			pool.resubscribeEntities()

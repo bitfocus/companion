@@ -154,7 +154,7 @@ export class ControlTrigger
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(deps: ControlDependencies, controlId: TriggerControlId, storage: TriggerModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
@@ -187,22 +187,12 @@ export class ControlTrigger
 		this.options = this.optionsSchema.parse({})
 		this.events = []
 
-		if (!storage) {
-			// New control
-
-			// Save the change
-			this.commitChange()
-
-			// Notify interested
-		} else {
+		if (storage) {
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, isImport)
 			this.events = storage.events || this.events
-
-			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.#postProcessImport())
 		}
 
 		// Ensure trigger is stored before setup
@@ -574,14 +564,10 @@ export class ControlTrigger
 		return true
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**

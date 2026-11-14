@@ -62,8 +62,7 @@ export function createTriggersTrpcRouter(
 			const maxRank = Math.max(0, ...allTriggers.map((control) => control.options.sortOrder))
 			newControl.optionsSetField({ key: 'sortOrder', value: maxRank }, true)
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			// No collectionId yet so mark as enabled
 			newControl.setCollectionEnabled(true)
@@ -95,6 +94,7 @@ export function createTriggersTrpcRouter(
 
 				const newControl = factory.createTrigger(newControlId, controlJson)
 				controlStore.controls.set(newControlId, newControl)
+				newControl.start(true)
 
 				setImmediate(() => {
 					// Ensure the trigger is enabled, on a slight debounce

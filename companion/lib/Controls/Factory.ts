@@ -63,15 +63,15 @@ export class ControlsFactory {
 			} else if (controlObj2?.type === 'preset-reference') {
 				return new ControlButtonPresetReference(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'button-reference' || (controlType === 'button-reference' && !controlObj2)) {
-				return new ControlButtonReference(this.#controlDeps, controlId, controlObj2, isImport)
+				return new ControlButtonReference(this.#controlDeps, controlId, controlObj2)
 			} else if (controlObj2?.type === 'link-button' || (controlType === 'link-button' && !controlObj2)) {
-				return new ControlButtonLink(this.#controlDeps, controlId, controlObj2, isImport)
+				return new ControlButtonLink(this.#controlDeps, controlId, controlObj2)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
-				return new ControlButtonPageNumber(this.#controlDeps, controlId, controlObj2, isImport)
+				return new ControlButtonPageNumber(this.#controlDeps, controlId, controlObj2)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {
-				return new ControlButtonPageUp(this.#controlDeps, controlId, controlObj2, isImport)
+				return new ControlButtonPageUp(this.#controlDeps, controlId, controlObj2)
 			} else if (controlObj2?.type === 'pagedown' || (controlType === 'pagedown' && !controlObj2)) {
-				return new ControlButtonPageDown(this.#controlDeps, controlId, controlObj2, isImport)
+				return new ControlButtonPageDown(this.#controlDeps, controlId, controlObj2)
 			}
 		}
 

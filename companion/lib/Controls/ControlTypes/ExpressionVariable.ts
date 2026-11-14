@@ -84,7 +84,7 @@ export class ControlExpressionVariable
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(
 		deps: ControlDependencies,
@@ -112,22 +112,12 @@ export class ControlExpressionVariable
 
 		this.options = this.optionsSchema.parse({})
 
-		if (!storage) {
-			// New control
-
-			// Save the change
-			this.commitChange()
-
-			// Notify interested
-		} else {
+		if (storage) {
 			if (storage.type !== 'expression-variable')
 				throw new Error(`Invalid type given to ControlExpressionVariable: "${storage.type}"`)
 
 			this.options = storage.options || this.options
 			this.entities.loadStorage(storage, isImport)
-
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
 		}
 	}
 
@@ -259,14 +249,10 @@ export class ControlExpressionVariable
 		return true
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**

@@ -534,16 +534,18 @@ export class Registry {
 
 			this.controls.init()
 
-			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs)
-			this.page.ensurePageControlsExist()
-
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
 			for (const id of getVirtualConnectionIds()) knownConnectionIds.add(id)
 			this.controls.verifyConnectionIds(knownConnectionIds)
 
 			this.variables.custom.init()
-			// Now that everything the entities depend on is loaded, subscribe them
-			this.controls.subscribeAll()
+			// Now that everything the controls depend on is loaded, start them
+			this.controls.startAll()
+
+			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs). Each is
+			// started as it is created
+			this.page.ensurePageControlsExist()
+
 			this.internalModule.initVariables()
 			this.graphics.triggerRegenerateAll()
 

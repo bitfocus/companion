@@ -521,8 +521,7 @@ export class ControlsController {
 			// It was made before it was placed, so anything relative to its location must be resolved again
 			newControl.triggerLocationHasChanged()
 
-			// Ensure it is stored to the db
-			newControl.commitChange(true)
+			newControl.start(true)
 
 			return newControlId
 		}
@@ -539,6 +538,7 @@ export class ControlsController {
 		const newControl = this.#factory.createClassForControl(controlId, 'trigger', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
+			newControl.start(true)
 
 			if (newControl instanceof ControlTrigger) {
 				setImmediate(() => {
@@ -546,9 +546,6 @@ export class ControlsController {
 					newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
 				})
 			}
-
-			// Ensure it is stored to the db
-			newControl.commitChange()
 
 			return true
 		}
@@ -569,12 +566,11 @@ export class ControlsController {
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
 
-			// Add to names map
+			// Add to names map before it is saved, as the saved client state includes whether it is active
 			const expressionVariableControl = newControl as ControlExpressionVariable
 			this.#expressionVariableNamesMap.addExpressionVariable(controlId, expressionVariableControl.options.variableName)
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			return newControl as ControlExpressionVariable
 		}
@@ -591,9 +587,7 @@ export class ControlsController {
 		const newControl = this.#factory.createClassForControl(controlId, 'custom-action', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
-
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			return true
 		}
@@ -635,17 +629,16 @@ export class ControlsController {
 	}
 
 	/**
-	 * Subscribe the entities of every control, applying their side effects (internal module, special
-	 * expressions, module notify, and building the copies held by actions which call custom actions). Controls are
-	 * loaded without subscribing, so this must be called once at startup after everything they depend on (eg custom
-	 * variables and the custom actions) has been loaded.
+	 * Start every control loaded by init, subscribing their entities and applying their side effects (internal
+	 * module, special expressions, module notify, and building the copies held by actions which call custom
+	 * actions). Controls are loaded without being started, so this must be called once at startup after everything
+	 * they depend on (eg custom variables and the custom actions) has been loaded. They are already stored, so are
+	 * not saved again.
 	 * Connections that start later pick up their entities themselves.
 	 */
-	subscribeAll(): void {
+	startAll(): void {
 		for (const control of this.#store.controls.values()) {
-			if (!control.supportsEntities) continue
-
-			control.entities.resubscribeEntities()
+			control.start(false)
 		}
 	}
 
@@ -797,6 +790,7 @@ export class ControlsController {
 
 		this.#store.controls.set(controlId, newControl)
 		this.#controlEvents.emit('controlPlacedAt', location, controlId)
+		newControl.start(true)
 
 		// Notify interested parties
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)
@@ -835,6 +829,7 @@ export class ControlsController {
 		if (!newControl) throw new Error(`Failed to create page control for page "${pageId}"`)
 
 		this.#store.controls.set(controlId, newControl)
+		newControl.start(true)
 
 		return controlId
 	}
@@ -891,6 +886,7 @@ export class ControlsController {
 		const newControl = this.#factory.createPresetControl(connectionId, presetId, variablesHash, presetModel)
 
 		this.#store.controls.set(controlId, newControl)
+		newControl.start(true)
 
 		// Force a redraw
 		this.#controlEvents.emit('invalidateControlRender', controlId)

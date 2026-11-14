@@ -154,9 +154,6 @@ export class ControlButtonLayered
 		if (!storage) {
 			// New control
 			this.drawing.loadElements(structuredClone(ControlButtonLayered.DefaultElements))
-
-			this.commitChange()
-			this.sendRuntimePropsChange()
 		} else {
 			if (storage.type !== 'button-layered')
 				throw new Error(`Invalid type given to ControlButtonLayered: "${storage.type}"`)
@@ -166,9 +163,6 @@ export class ControlButtonLayered
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
 			this.entities.loadStorage(storage, isImport)
 			this.entities.stepExpressionUpdate(this.options)
-
-			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.postProcessImport())
 		}
 	}
 

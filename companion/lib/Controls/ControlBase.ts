@@ -80,6 +80,14 @@ export abstract class ControlBase<
 	}
 
 	/**
+	 * Start this control, once it has been added to the store. Called exactly once by whoever created it: at startup,
+	 * and for a new, imported or cloned control. Constructing a control neither subscribes its entities nor saves it,
+	 * this does both.
+	 * @param save Whether to save it: true for anything not already stored as it is, such as a new or imported control
+	 */
+	abstract start(save: boolean): void
+
+	/**
 	 * Post-process a change to this control
 	 * This includes, redrawing, writing to the db and informing any interested clients
 	 * @param redraw - whether to redraw the control
