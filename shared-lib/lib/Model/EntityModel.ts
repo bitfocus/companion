@@ -193,9 +193,8 @@ function entityChildrenSchema() {
 	return z.record(z.string(), z.array(SomeEntityModelSchema).optional()).optional()
 }
 
-/** The connection ids custom actions and feedbacks had in the betas, before they became `custom` */
+/** The connection id custom actions had in the betas, before it became `custom` */
 const BETA_CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
-const BETA_CUSTOM_FEEDBACKS_CONNECTION_ID = '__custom-feedbacks__'
 
 // Kept as object schemas for the discriminated union, and exported with the hand-written types below
 const actionEntityObjectSchema = z.object({
@@ -217,12 +216,6 @@ const actionEntityObjectSchema = z.object({
 const feedbackEntityObjectSchema = z.object({
 	type: z.literal(EntityModelType.Feedback),
 	...entityBaseShape,
-	// Uses of custom feedbacks saved by a beta are given the connection id they have now
-	connectionId: z
-		.string()
-		.transform((connectionId) =>
-			connectionId === BETA_CUSTOM_FEEDBACKS_CONNECTION_ID ? CUSTOM_CONNECTION_ID : connectionId
-		),
 	get children() {
 		return entityChildrenSchema()
 	},
