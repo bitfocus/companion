@@ -38,7 +38,7 @@ import {
 	type CustomActionRunFrame,
 	type CustomActionValues,
 } from '../CustomActionRunFrame.js'
-import type { CustomActionCallAnalysis } from '../CustomActions/CustomActionCalls.js'
+import type { CustomActionCallAnalysis, CustomActionCalls } from '../CustomActions/CustomActionCalls.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
@@ -544,27 +544,18 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Get the ids of the custom actions this calls directly, including from within other actions
+	 * Get the custom actions this calls directly, including from within other actions, and the custom feedbacks it uses
+	 * directly, as the conditions of its actions or its local variables
 	 */
-	getCalledCustomActionIds(): Set<string> {
-		// A disabled call, or one inside a disabled group, doesn't run, so can't make a loop
-		const ids = new Set<string>()
+	getDirectCalls(): CustomActionCalls {
+		// A disabled call or use, or one inside a disabled group, isn't run, so can't make a loop or nest
+		const customActionIds = new Set<string>()
+		const customFeedbackIds = new Set<string>()
 		for (const entity of this.entities.getAllEnabledEntities(false)) {
-			if (isCustomActionCall(entity)) ids.add(entity.definitionId)
+			if (isCustomActionCall(entity)) customActionIds.add(entity.definitionId)
+			else if (isCustomFeedbackUse(entity)) customFeedbackIds.add(entity.definitionId)
 		}
-		return ids
-	}
-
-	/**
-	 * Get the ids of the custom feedbacks this uses directly, as the conditions of its actions or its local variables
-	 */
-	getUsedCustomFeedbackIds(): Set<string> {
-		// A disabled use, or one inside a disabled group, isn't evaluated, so doesn't nest
-		const ids = new Set<string>()
-		for (const entity of this.entities.getAllEnabledEntities(false)) {
-			if (isCustomFeedbackUse(entity)) ids.add(entity.definitionId)
-		}
-		return ids
+		return { customActionIds, customFeedbackIds }
 	}
 
 	/**
