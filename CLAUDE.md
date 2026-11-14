@@ -150,6 +150,23 @@ utilities` (declared in `tailwind.css`). App CSS is assigned to a layer by path 
   lower-layer rule can never override a class defined in a higher layer — put a component override in
   that component's own CSS (the `components` layer), not in an `app-base` file like `common.css`.
 
+## Docs screenshots
+
+Screenshots of the Companion ui in the user guide are generated with Playwright, in light and dark, by
+`yarn docs:screenshots`. **Take new ones this way, not by hand**, so they can be regenerated as the ui changes: a scenario
+in `companion/test/docs-scenarios/` seeds the app via `TestApp`, and an `e2e/docs-screenshots/*.shots.ts` file captures
+them with `shoot()` into `docs/user-guide/**/images/<name>.{light,dark}.png`. Pages reference them as
+`![…](images/<name>.png)`; `docs/src/remark/remark-themed-image.ts` picks the theme (the website, bitfocus/website, has
+its own copy of this plugin, so keep them in step). When changing a page covered by a scenario, update the
+scenario/shots and re-run.
+
+- Don't regenerate the What's New pages' images: they show a feature as it was in that release. Photos, and
+  screenshots of other software, are also out of scope.
+- The run reuses `webui/build` if it exists, so after ui changes set `E2E_FORCE_WEBUI_BUILD=1` or it shoots the old ui.
+- Images differ slightly between machines, so regenerate a page's images on one machine. To add a shot without
+  touching the others, run just its test with `--update-snapshots=missing`.
+- In a sandbox whose preinstalled chromium doesn't match the pinned Playwright, set `PLAYWRIGHT_CHROMIUM_PATH`.
+
 ## Testing notes
 
 - Framework is **Vitest** (not Jest). Prefer pure/unit tests where possible; heavy UI components

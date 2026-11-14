@@ -95,3 +95,23 @@ yarn dev:docs
 ```
 
 Connect to it at http://localhost:4000/
+
+### Screenshots
+
+Screenshots of the Companion ui in the docs are taken automatically with [Playwright](https://playwright.dev/), in both the light and dark theme, from a real Companion seeded with the examples the page describes. Please take new screenshots this way rather than by hand, so that they can be kept up to date as the ui changes.
+
+```bash
+# Rewrite the images which have changed. Add E2E_FORCE_WEBUI_BUILD=1 after changing the ui, as an existing webui build is reused
+yarn docs:screenshots
+
+# Check that the images are up to date, without changing them
+yarn playwright test -c e2e/docs-screenshots.config.ts
+```
+
+- The examples are seeded by a scenario in `companion/test/docs-scenarios/`, which builds them with the integration-test fixture.
+- The screenshots are taken by a `*.shots.ts` file in `e2e/docs-screenshots/`, with `shoot()`, which writes `<name>.light.png` and `<name>.dark.png` next to the page.
+- A page shows them as a normal image without the theme, `![…](images/my-page/name.png)`, and the site shows the one matching its theme.
+
+The images of the What's New pages are not regenerated, as they show a feature as it was in that release.
+
+Screenshots differ a little between machines (fonts, antialiasing), so take all of a page's on the same one.

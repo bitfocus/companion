@@ -6,10 +6,16 @@ import { launchCompanion, type CompanionServer } from './companion.js'
  * Tests must therefore use distinct grid locations / variable names, the same discipline as the
  * backend integration suite.
  */
-export const test = base.extend<NonNullable<unknown>, { companion: CompanionServer }>({
+export const test = base.extend<NonNullable<unknown>, { scenario: string | null; companion: CompanionServer }>({
+	/**
+	 * A module which seeds the app before the tests run (see launch-app.mts), set with `test.use({ scenario })`.
+	 * The app is shared by the worker, so this applies to the whole file
+	 */
+	scenario: [null, { scope: 'worker', option: true }],
+
 	companion: [
-		async ({}, use) => {
-			const server = await launchCompanion()
+		async ({ scenario }, use) => {
+			const server = await launchCompanion(scenario)
 			await use(server)
 			await server.stop()
 		},
