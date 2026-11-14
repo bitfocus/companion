@@ -7,25 +7,50 @@ import type { SettingsItemDefinition } from '../SettingsItems.js'
 
 const userGuideDir = path.resolve(import.meta.dirname, '../../../../docs/user-guide')
 
-/** Resolve a `/user-guide/...` link to its markdown file, allowing for docusaurus' numeric ordering prefixes */
-function findUserGuidePage(link: string): string | null {
-	const segments = link
-		.replace(/^\/user-guide\//, '')
-		.split('#')[0]
-		.split('/')
+/**
+ * The url of each user guide page, relative to `/user-guide`, as docusaurus gives it: from its `slug` front matter if
+ * it has one, otherwise its path without the numeric ordering prefixes (an `index.md` being its folder)
+ */
+function collectUserGuidePages(): Map<string, string> {
+	const pages = new Map<string, string>()
 
-	let dir = userGuideDir
-	for (const [index, segment] of segments.entries()) {
-		const isLast = index === segments.length - 1
-		const match = fs
-			.readdirSync(dir)
-			.find(
-				(entry) => entry.replace(/^\d+_/, '').replace(/\.md$/, '') === segment && (!isLast || entry.endsWith('.md'))
-			)
-		if (!match) return null
-		dir = path.join(dir, match)
+	const visit = (dir: string, urlSegments: string[]) => {
+		for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+			const name = entry.name.replace(/^\d+_/, '')
+			const fullPath = path.join(dir, entry.name)
+			if (entry.isDirectory()) {
+				visit(fullPath, [...urlSegments, name])
+			} else if (entry.name.endsWith('.md')) {
+				const slug = readSlug(fs.readFileSync(fullPath, 'utf8'))
+				const page = name.replace(/\.md$/, '')
+				// A slug without a leading slash is relative to the folder of the page
+				const url = slug?.startsWith('/')
+					? slug
+					: `/${[...urlSegments, ...(slug ? [slug] : page === 'index' ? [] : [page])].join('/')}`
+				pages.set(url.replace(/\/$/, ''), fullPath)
+			}
+		}
 	}
-	return dir
+	visit(userGuideDir, [])
+
+	return pages
+}
+
+/** The `slug` in the front matter at the top of a page, if it has one */
+function readSlug(content: string): string | undefined {
+	const frontMatter = /^---\n([\s\S]*?)\n---\n/.exec(content)?.[1]
+	return frontMatter ? /^slug:\s*(.+?)\s*$/m.exec(frontMatter)?.[1] : undefined
+}
+
+const userGuidePages = collectUserGuidePages()
+
+/** Resolve a `/user-guide/...` link to its markdown file */
+function findUserGuidePage(link: string): string | null {
+	const url = link
+		.replace(/^\/user-guide/, '')
+		.split('#')[0]
+		.replace(/\/$/, '')
+	return userGuidePages.get(url) ?? null
 }
 
 describe.each<[string, readonly SettingsItemDefinition[]]>([

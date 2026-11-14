@@ -17,10 +17,10 @@ secondsToTimestamp(max(0, timeDiff($(internal:time_hms), '19:30:00')), 'HH:mm:ss
 Expressions can be used in many places throughout Companion:
 
 - **Button text** — enable the expression mode toggle on a text element to compute the text instead of writing it literally.
-- **Any button element property** — the color, position, size, visibility and every other property of a [button element](../3_config/buttons/creating/button-styling/index.md) can be an expression.
+- **Any button element property** — the color, position, size, visibility and every other property of a [button element](../3_config/program/buttons/creating/button-styling/index.md) can be an expression.
 - **Internal actions** — for example, the value of the **Custom Variable: Set value** action can be set with an expression.
 - **Internal feedbacks** — **Variable: Check boolean expression** lets you style a button whenever an expression evaluates to true, and **Evaluate Expression** exposes the result for use in styling.
-- **Expression variables and local variables** — variables whose value is recalculated automatically from an expression. See [Variables](../3_config/variables.md).
+- **Expression variables and local variables** — variables whose value is recalculated automatically from an expression. See [Variables](../3_config/program/variables.md).
 - **Trigger conditions** — trigger conditions use the same feedbacks as buttons, so the boolean expression feedback works there too.
 - **Any action or feedback field** — since Companion 4.3, modules can support expressions in **any** action or feedback field. Look for the expression toggle button next to an input field to switch it into expression mode.
 

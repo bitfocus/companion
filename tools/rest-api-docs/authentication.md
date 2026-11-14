@@ -24,7 +24,7 @@ scope an endpoint needs is rejected with `403 Forbidden`.
 ## Why API keys are required
 
 You may notice that the rest of Companion does not ask for this. The admin interface has no real
-authentication yet (the [Admin UI Password](../../3_config/settings.md#admin-ui-password) only stops casual
+authentication yet (the [Admin UI Password](../../3_config/system/settings.md#admin-ui-password) only stops casual
 browsers), and the older remote control protocols such as [HTTP Remote Control](../http-remote-control.md),
 [TCP/UDP](../tcp-udp.md) and [OSC](../osc-control.md) accept requests from anyone who can reach them.
 
@@ -49,7 +49,7 @@ the keys once the REST API is turned on.
 - Use the pencil button to rename a key or change its scopes, and the bin button to revoke it. A revoked
   key stops working immediately.
 
-API keys are separate from the [Admin UI Password](../../3_config/settings.md#admin-ui-password),
+API keys are separate from the [Admin UI Password](../../3_config/system/settings.md#admin-ui-password),
 which does not protect the REST API.
 
 ## Scopes

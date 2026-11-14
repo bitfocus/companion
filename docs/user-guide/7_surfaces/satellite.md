@@ -14,7 +14,7 @@ This is useful when:
 
 ## How It Works
 
-Companion Satellite connects to Companion over TCP (default port `16622`) or WebSockets (default port `16623`). Once connected, any surfaces attached to the machine running Satellite appear in Companion's [Surfaces](../3_config/surfaces.md) page and can be configured just like locally connected devices.
+Companion Satellite connects to Companion over TCP (default port `16622`) or WebSockets (default port `16623`). Once connected, any surfaces attached to the machine running Satellite appear in Companion's [Surfaces](../3_config/connect/surfaces.md) page and can be configured just like locally connected devices.
 
 ## Setup
 
@@ -23,12 +23,12 @@ Companion Satellite connects to Companion over TCP (default port `16622`) or Web
 3. In Companion, open the **Surfaces** page — the remote surfaces will appear automatically once Satellite connects.
 
 :::note
-If Satellite does not connect, check that ports `16622` and `16623` are reachable on the Companion host. You can verify the listen port in [Settings](../3_config/settings.md#satellite).
+If Satellite does not connect, check that ports `16622` and `16623` are reachable on the Companion host. You can verify the listen port in [Settings](../3_config/system/settings.md#satellite).
 :::
 
 ## Configuration
 
-Once the surfaces appear in Companion, they are configured in the same way as any other surface. See [Surfaces](../3_config/surfaces.md) for the available settings.
+Once the surfaces appear in Companion, they are configured in the same way as any other surface. See [Surfaces](../3_config/connect/surfaces.md) for the available settings.
 
 :::note
 Companion Satellite supports a subset of surfaces compared to a directly-connected Companion instance. Check the Satellite release notes for the current supported device list.

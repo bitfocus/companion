@@ -11,4 +11,4 @@ By default no emulators are created on new installs of Companion. Since Companio
 
 You can use keyboard hotkeys to control the emulator and trigger button presses. Instructions are at the top of the emulator selection page.
 
-Additional settings for each emulator are available in the [Surfaces page](../3_config/surfaces.md#surface-settings).
+Additional settings for each emulator are available in the [Surfaces page](../3_config/connect/surfaces.md#surface-settings).

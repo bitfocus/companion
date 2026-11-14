@@ -12,7 +12,7 @@ buttons, variables or triggers; or performing other tasks and diagnostics.
 - You navigate to pages from the left Sidebar.
 - The header at the top of the page may show notifications, such as the availability of new versions of Companion, and
   also provides quick access to help and support. (If you are using the
-  [Admin Password](./settings.md#admin-ui-password) feature, a lock-icon appears in the header allowing you to
+  [Admin Password](./system/settings.md#admin-ui-password) feature, a lock-icon appears in the header allowing you to
   lock the Admin interface with a single click.)
 - The main area of the page is typically split into a large main panel (left) for primary tasks and a secondary panel
   (right) for details, previews, or contextual settings.

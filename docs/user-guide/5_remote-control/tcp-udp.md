@@ -4,7 +4,7 @@ sidebar_position: 1
 description: Control Companion remotely via TCP or UDP commands.
 ---
 
-Remote triggering can be done by sending TCP or UDP commands. The port numbers must be setup in the [Settings](../3_config/settings.md#tcp) before they can be used.
+Remote triggering can be done by sending TCP or UDP commands. The port numbers must be setup in the [Settings](../3_config/system/settings.md#tcp) before they can be used.
 
 :::warning
 TCP commands must be terminated with a newline character, i.e., \n (0x0A) or \r\n (0x0D, 0x0A).
