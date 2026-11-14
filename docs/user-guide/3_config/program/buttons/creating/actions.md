@@ -26,22 +26,21 @@ Once added you can edit the time of that group and whether it executed upon rele
 
 When there is a duration group added, the **Release actions** becomes **Short release actions**, and will only be executed when released before the first duration group time is reached.
 
-Starting in Companion 3.5, the delays have been replaced with a new **internal: Wait** Action. This will delay all actions that follow it in the list.  
-Actions at the root level get executed in the **Concurrent** mode described below.
+## Execution order
 
-## Changing execution behaviour
+The actions of a button, and of a trigger, start together: Companion doesn't wait for one action to finish before starting the next. This is called **Concurrent** mode.
 
-To allow for more complex setups and customisability, there is also a new **internal: Action Group** action.  
-This action acts as a group that can contain other actions, including other **Action Group**
+The exception is the **internal: Wait** action. The actions after a Wait are held back until it is over, so you can use it to space out a sequence.
 
-These groups have a few modes of execution
+To run actions strictly one after another, put them inside an **internal: Action Group** set to **Sequential**. Each action then waits for the one before it to finish. Not every module lets Companion know when one of its actions has finished, but many do. This lets you build sequences which must happen in a particular order, without relying on short waits.
 
-- **Inherit** follows the mode of the parent group
-- **Concurrent** this is equivalent to previous releases of Companion, with **Absolute Delays** enabled.  
-  In this mode, the actions get executed in parallel, broken up between any **internal: Wait** actions.
-- **Sequential** In this mode, the actions get executed in order, waiting for the previous one to complete execution before starting the next.
-  Not every module implementats actions in a way that lets Companion know that execution has completed, but many do.  
-  This allows for programming complex sequences that must be done in a particular order without relying on small delays
+An **Action Group** has three modes:
+
+- **Concurrent**: its actions start together, held back by any Wait actions.
+- **Sequential**: its actions run one at a time, in order.
+- **Inherit**: it uses the mode of the group it is in. At the top level of a button or trigger, that is Concurrent.
+
+Groups can be put inside each other. The actions inside a **Logic: If statement** or **Logic: While loop** use the mode of the place the If statement or While loop is in.
 
 ![Action Group Sequential](images/action-group-sequential.png?raw=true 'Action Group Sequential')
 

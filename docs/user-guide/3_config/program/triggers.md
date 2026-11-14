@@ -49,4 +49,6 @@ feedbacks from connections use the most recent value reported by the connection.
 This defines what will happen when the trigger executes and condition is met.  
  Every action that can be used on a button can also be used here. If you want, you can make it press a button using the **Button: Trigger press and release** action. Its **Hold duration (ms)** option lets you hold the button down for a while before releasing it, which is useful for buttons with long-press actions. Leave it at `0` to release straight away.
 
+They run in the same way as a button's actions, see [Execution order](./buttons/creating/actions.md#execution-order).
+
 ![Actions](images/triggers/actions.png?raw=true 'Actions')
