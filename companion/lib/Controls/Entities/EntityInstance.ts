@@ -1069,7 +1069,9 @@ export class ControlEntityInstance {
 
 		// A custom feedback is evaluated live too, so that its inputs and feedbacks see the execution
 		if (context && isCustomFeedbackUse(this.#data)) {
+			// Without a value, such as for invalid inputs, it is inactive, even when inverted
 			const value = this.#scope.customFeedbackInstances.evaluateLive(this, context)
+			if (value === undefined) return false
 			if (definition.showInvert && this.#cachedIsInverted) return !value
 			return value
 		}

@@ -498,6 +498,20 @@ describe('ControlCustomFeedback', () => {
 			expect(customFeedbackInstances.getHeldCopy(callerEntity)).toBeUndefined()
 		})
 
+		test('leaves an inverted feedback inactive while an input is invalid', async () => {
+			const { deps, createCaller } = createHarness({ feedbacks: [check('false')] })
+
+			deps.variableValues.setVariableValues('custom', [{ id: 'level', value: 5 }])
+			const { callerEntity } = createCaller({
+				...useFeedback({ n: exprExpr('$(custom:level)') }),
+				isInverted: exprVal(true),
+			})
+			await expectValue(callerEntity, true)
+
+			deps.variableValues.setVariableValues('custom', [{ id: 'level', value: 'not a number' }])
+			await expectValue(callerEntity, false)
+		})
+
 		test('is not held by a disabled feedback, nor subscribed', async () => {
 			const { createCaller, customFeedbackInstances, processManager } = createHarness({
 				feedbacks: [{ ...moduleValue('unused'), variableName: undefined }],
@@ -789,6 +803,24 @@ describe('ControlCustomFeedback', () => {
 			await expectValue(callerEntity, false)
 
 			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, {}, {}))).toBe(false)
+		})
+
+		test('is inactive when inverted with an input which is invalid in the action', async () => {
+			const { deps, createCaller } = createHarness({ feedbacks: [check('false')] })
+
+			deps.variableValues.setVariableValues('custom', [{ id: 'level', value: 5 }])
+			const { callerEntity } = createCaller({
+				...useFeedback({ n: exprExpr('$(custom:level)') }),
+				isInverted: exprVal(true),
+			})
+			await expectValue(callerEntity, true)
+
+			expect(
+				callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, { 'custom:level': 'not a number' }, {}))
+			).toBe(false)
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, { 'custom:level': 7 }, {}))).toBe(
+				true
+			)
 		})
 	})
 })

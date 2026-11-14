@@ -151,23 +151,24 @@ export class CustomFeedbackInstanceManager implements VariableDependencyListener
 	 * As anywhere else, connection feedbacks can only provide their cached values, from the inputs of the copy
 	 * @param caller The feedback which uses a custom feedback
 	 * @param context The execution context
+	 * @returns Its value, or undefined when it has none, such as when an input is invalid
 	 */
-	evaluateLive(caller: ControlEntityInstance, context: FeedbackExecutionContext): boolean {
+	evaluateLive(caller: ControlEntityInstance, context: FeedbackExecutionContext): boolean | undefined {
 		const state = this.#callers.get(caller)
-		if (!state) return false
+		if (!state) return undefined
 
 		// Not only the copy held by the caller, as its inputs are parsed outside of any execution, so may be invalid where
 		// they are not here (eg using $(this:delta))
 		const customFeedbackControlId = CreateCustomFeedbackControlId(caller.definitionId)
 		const customFeedback = this.#controlStore.getControl(customFeedbackControlId)
-		if (!(customFeedback instanceof ControlCustomFeedback)) return false
+		if (!(customFeedback instanceof ControlCustomFeedback)) return undefined
 
 		const chain = state.callerScope.customActionChain
-		if (chain.includes(customFeedbackControlId) || chain.length >= MAX_CUSTOM_ACTION_DEPTH) return false
+		if (chain.includes(customFeedbackControlId) || chain.length >= MAX_CUSTOM_ACTION_DEPTH) return undefined
 
 		// Invalid inputs make it inactive, as they do the copy
 		const parseRes = customFeedback.parseCallInputs(caller.rawOptions, context.parser, state.controlId)
-		if (!parseRes.ok) return false
+		if (!parseRes.ok) return undefined
 
 		const evaluateCopy = (copy: CustomFeedbackCopy): boolean => {
 			const parser = customFeedback.createCopyParser(
@@ -379,7 +380,7 @@ export class CustomFeedbackInstanceManager implements VariableDependencyListener
 		state.customFeedbackControlId = null
 		state.inputVariables.set(null)
 
-		// Without a copy, the feedback is false
+		// Without a copy, the feedback has no value
 		this.#queueValueUpdate(caller)
 	}
 
@@ -410,8 +411,9 @@ export class CustomFeedbackInstanceManager implements VariableDependencyListener
 			const state = this.#callers.get(caller)
 			if (!state) continue
 
-			// Without a copy, such as when it was refused one for using itself, it is false
-			const value = isAllTrue(state.heldCopy?.feedbacks.getChildBooleanFeedbackValues(null))
+			// Without a copy, such as when its inputs are invalid or it was refused one for using itself, it has no value,
+			// so that it stays inactive when inverted
+			const value = state.heldCopy ? isAllTrue(state.heldCopy.feedbacks.getChildBooleanFeedbackValues(null)) : undefined
 			newValues.push({ entityId: caller.id, controlId: state.controlId, value })
 		}
 

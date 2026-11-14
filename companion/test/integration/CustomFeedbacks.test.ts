@@ -341,14 +341,31 @@ describe('custom feedbacks', () => {
 		expect(app.getFeedbackValue(button, useId)).toBe(true)
 	})
 
-	test('deleting it stops it being offered, and its uses become false', async () => {
+	test('deleting it stops it being offered, and its uses become inactive, even when inverted', async () => {
 		app.createCustomVariable('level', 7)
 		const customFeedbackId = await createAboveCustomFeedback()
 		const controlId = `custom-feedback:${customFeedbackId}` as CustomFeedbackControlId
 
 		const button = app.createButton({ pageNumber: 1, row: 1, column: 1 })
 		const useId = await addUse(button, customFeedbackId, 5)
-		await vi.waitFor(() => expect(app.getFeedbackValue(button, useId)).toBe(true))
+		const invertedUseId = await addUse(button, customFeedbackId, 10)
+		await app.trpc().controls.entities.setInverted({
+			controlId: button,
+			entityLocation: 'feedbacks',
+			entityId: invertedUseId,
+			isInverted: exprVal(true),
+		})
+
+		const isActive = (entityId: string) => {
+			const control = app.registry.controls.getControl(button)
+			return control?.supportsEntities
+				? control.entities.findEntityById(entityId)?.getBooleanFeedbackValue(null)
+				: undefined
+		}
+		await vi.waitFor(() => {
+			expect(isActive(useId)).toBe(true)
+			expect(isActive(invertedUseId)).toBe(true)
+		})
 
 		expect(await app.trpc().controls.customFeedbacks.delete({ controlId })).toBe(true)
 
@@ -360,7 +377,10 @@ describe('custom feedbacks', () => {
 					customFeedbackId
 				)
 			).toBeFalsy()
-			expect(app.getFeedbackValue(button, useId)).toBe(false)
+			// They have no value, rather than false, so that inverting one does not make it active
+			expect(app.getFeedbackValue(button, useId)).toBeUndefined()
+			expect(isActive(useId)).toBe(false)
+			expect(isActive(invertedUseId)).toBe(false)
 		})
 	})
 
