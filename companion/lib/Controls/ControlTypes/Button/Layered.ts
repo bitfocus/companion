@@ -164,11 +164,10 @@ export class ControlButtonLayered
 			this.drawing.loadElements(structuredClone(storage.style.layers))
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 			this.entities.stepExpressionUpdate(this.options)
 
 			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.postProcessImport())
 		}
 	}
 

@@ -233,7 +233,7 @@ export abstract class ButtonControlRuntimeBase<
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	protected postProcessImport(): void {
+	override postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()

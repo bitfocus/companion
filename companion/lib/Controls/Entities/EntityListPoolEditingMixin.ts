@@ -1,6 +1,5 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
-import { isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import {
@@ -175,7 +174,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 
 			// Inform relevant module
 			for (const entity of newEntities) {
-				entity.subscribe(true)
+				entity.subscribe()
 			}
 
 			this.tryTriggerLocalVariablesChanged(...newEntities)
@@ -346,7 +345,8 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entityList = this.getEntityList(listId)
 			if (!entityList) return false
 
-			entityList.loadStorage(entities, false, false)
+			entityList.loadStorage(entities, false)
+			entityList.subscribe()
 
 			this.reportChange({
 				redraw: true,
@@ -384,10 +384,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entity = entityList.findById(id)
 			if (!entity) return false
 
-			// The definitions of the internal module and of custom actions mean nothing to a connection, and the reverse
-			if (isVirtualConnectionId(entity.connectionId) || isVirtualConnectionId(String(connectionId))) return false
-
-			entity.setConnectionId(connectionId)
+			if (!entity.setConnectionId(connectionId)) return false
 
 			this.tryTriggerLocalVariablesChanged(entity)
 
@@ -539,7 +536,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 				.toArray()
 			if (existingKeys.length === 0) {
 				// add the default '1000' set
-				step.sets.set(1000, this.createActionEntityList([], false, false))
+				step.sets.set(1000, this.createActionEntityList([], false))
 
 				this.reportChange({ redraw: true })
 
@@ -549,7 +546,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 				const max = Math.max(...existingKeys)
 				const newIndex = Math.floor(max / 1000) * 1000 + 1000
 
-				step.sets.set(newIndex, this.createActionEntityList([], false, false))
+				step.sets.set(newIndex, this.createActionEntityList([], false))
 
 				this.reportChange({ redraw: false })
 
@@ -682,6 +679,11 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const newStepId = `${max + 1}`
 			this.steps.set(newStepId, newStep)
+
+			// Inform relevant modules of the copied actions
+			for (const set of newStep.sets.values()) {
+				set.subscribe()
+			}
 
 			// Ensure current step is valid
 			this.stepCheckExpression(false)

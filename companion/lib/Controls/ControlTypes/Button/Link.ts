@@ -110,7 +110,7 @@ export class ControlButtonLink
 		this.#drawing.invalidate()
 	}
 
-	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null, isImport: boolean) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/Link')
 
 		this.#locationVariables = deps.variableDependencies.create(this, controlId, null)
@@ -136,10 +136,17 @@ export class ControlButtonLink
 			}
 
 			// Saved again when anything had to be replaced, so that it is valid from now on
-			if (isImport || invalidKeys.length > 0) this.commitChange()
+			if (invalidKeys.length > 0) this.commitChange()
 		}
 
 		this.#updateTarget()
+	}
+
+	/**
+	 * If this control was imported to a running system, save it
+	 */
+	override postProcessImport(): void {
+		this.commitChange()
 	}
 
 	destroy(): void {

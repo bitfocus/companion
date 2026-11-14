@@ -185,6 +185,19 @@ describe("the placeholder for an entity that couldn't be loaded", () => {
 	})
 })
 
+describe('initVariables', () => {
+	test('does not subscribe any entities', () => {
+		const { controller, controlStore } = createController()
+		const control = { supportsEntities: true, entities: { resubscribeEntities: vi.fn() } }
+		controlStore.getAllControls.mockReturnValue(new Map([[CreateBankControlId('a'), control as any]]))
+
+		controller.initVariables()
+
+		// Subscribing entities at startup is owned by ControlsController.subscribeAll
+		expect(control.entities.resubscribeEntities).not.toHaveBeenCalled()
+	})
+})
+
 describe('onVariablesChanged', () => {
 	function makeFeedback(id: string): FeedbackEntityModel {
 		return {
@@ -285,6 +298,21 @@ describe('onVariablesChanged', () => {
 		)
 
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+	})
+
+	test('a feedback updated as disabled is no longer re-evaluated', () => {
+		const { controller, controlStore, variableDependencies } = setup()
+
+		controller.entityUpdate({ ...makeFeedback('fb1'), disabled: true }, CreateBankControlId('control1'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
+		controller.onVariablesChanged(
+			new Set(['local:x']),
+			new Set([CreateBankControlId('control1'), CreateBankControlId('control2')])
+		)
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+		expect(variableDependencies.stats().dependencies).toBe(1)
 	})
 
 	test('stops tracking the variables of every feedback when destroyed', () => {

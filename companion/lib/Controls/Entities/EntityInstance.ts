@@ -257,7 +257,8 @@ export class ControlEntityInstance {
 			// If we do this later, then any children will end up discarded
 			const newProps = this.#internalModule.entityUpgrade(this.#data, this.#controlId)
 			if (newProps) {
-				this.replaceProps(newProps, false)
+				// Constructing never subscribes, the creator does that once this is fully set up
+				this.replaceProps(newProps, true)
 
 				children = { ...children, ...newProps.children }
 			}
@@ -266,7 +267,7 @@ export class ControlEntityInstance {
 			for (const groupDefinition of supportedChildGroups) {
 				try {
 					const childGroup = this.#getOrCreateChildGroupFromDefinition(groupDefinition)
-					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], true, newIds)
+					childGroup.loadStorage(children?.[groupDefinition.groupId] ?? [], newIds)
 				} catch (e) {
 					this.#logger.error(`Error loading child entity group: ${stringifyError(e)}`)
 				}
@@ -323,6 +324,22 @@ export class ControlEntityInstance {
 	 * Inform the instance of a removed/disabled entity
 	 */
 	cleanup(): void {
+		this.#cleanupSelf()
+
+		for (const childGroup of this.#children.values()) {
+			childGroup.cleanup()
+		}
+		for (const childGroup of this.#transientCopyLists()) {
+			childGroup.cleanup()
+		}
+	}
+
+	/**
+	 * Inform the relevant module of a removed entity, without touching the entities inside it.
+	 * The counterpart of #subscribeSelf. Any copy it holds (such as of a custom action) is dropped by whatever built
+	 * it, when told this entity has gone, just as #subscribeSelf has it built
+	 */
+	#cleanupSelf(): void {
 		// Inform relevant module
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
@@ -338,13 +355,6 @@ export class ControlEntityInstance {
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
-
-		for (const childGroup of this.#children.values()) {
-			childGroup.cleanup()
-		}
-		for (const childGroup of this.#transientCopyLists()) {
-			childGroup.cleanup()
-		}
 	}
 
 	/**
@@ -373,7 +383,7 @@ export class ControlEntityInstance {
 			{ parentId: this.id, childGroup: listId },
 			listDefinition
 		)
-		list.loadStorage(entities, true, newIds)
+		list.loadStorage(entities, newIds)
 		return list
 	}
 
@@ -388,7 +398,7 @@ export class ControlEntityInstance {
 		// Only once held, so that the values its entities are given as they subscribe reach them.
 		// A disabled entity has nothing subscribed, so neither should its copies
 		if (!this.disabled) {
-			for (const list of copy.lists) list.subscribe(true)
+			for (const list of copy.lists) list.subscribe()
 		}
 	}
 
@@ -416,49 +426,54 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Inform the instance of an updated entity
-	 * @param recursive whether to call recursively
+	 * Inform the instance of an updated entity, and the entities inside it. The counterpart of cleanup
 	 * @param onlyType If set, only re-subscribe entities of this type
 	 * @param onlyConnectionId If set, only re-subscribe entities for this connection
 	 */
-	subscribe(recursive: boolean, onlyType?: EntityModelType, onlyConnectionId?: string): void {
+	subscribe(onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		if (
 			(!onlyConnectionId || this.#data.connectionId === onlyConnectionId) &&
 			(!onlyType || this.#data.type === onlyType)
 		) {
-			const thisData = this.#data
-
-			if (isInternalConnectionId(thisData.connectionId)) {
-				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
-					this.createVariablesAndExpressionParser(null)
-				)
-			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
-				// Build or update the copy of the custom action held by this action
-				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
-			} else if (!isVirtualConnectionId(thisData.connectionId)) {
-				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
-				// The EntityManager will not subscribe disabled entities to the module.
-				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e: unknown) => {
-					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
-				})
-			}
-
-			if (thisData.disabled) {
-				this.#scope.specialExpressionManager.forgetEntity(this.id)
-			} else {
-				const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
-				this.#scope.specialExpressionManager.trackEntity(this, specialExpression)
-			}
+			this.#subscribeSelf()
 		}
 
-		if (recursive) {
-			for (const childGroup of this.#children.values()) {
-				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
-			}
-			for (const childGroup of this.#transientCopyLists()) {
-				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
-			}
+		for (const childGroup of this.#children.values()) {
+			childGroup.subscribe(onlyType, onlyConnectionId)
+		}
+		for (const childGroup of this.#transientCopyLists()) {
+			childGroup.subscribe(onlyType, onlyConnectionId)
+		}
+	}
+
+	/**
+	 * Inform the relevant module of an updated entity, without touching the entities inside it.
+	 * The counterpart of #cleanupSelf
+	 */
+	#subscribeSelf(): void {
+		const thisData = this.#data
+
+		if (isInternalConnectionId(thisData.connectionId)) {
+			// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
+			this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
+				this.createVariablesAndExpressionParser(null)
+			)
+		} else if (isCustomActionsConnectionId(thisData.connectionId)) {
+			// Build or update the copy of the custom action held by this action
+			this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
+		} else if (!isVirtualConnectionId(thisData.connectionId)) {
+			// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
+			// The EntityManager will not subscribe disabled entities to the module.
+			this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e: unknown) => {
+				this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
+			})
+		}
+
+		if (thisData.disabled) {
+			this.#scope.specialExpressionManager.forgetEntity(this.id)
+		} else {
+			const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
+			this.#scope.specialExpressionManager.trackEntity(this, specialExpression)
 		}
 	}
 
@@ -482,14 +497,17 @@ export class ControlEntityInstance {
 	setEnabled(enabled: boolean): void {
 		this.#data.disabled = !enabled
 
-		// Remove from cached feedback values
-		this.#cachedFeedbackValue = this.#getStartupValue()
-
-		// Inform relevant module
+		// Only this entity is enabled or disabled. The entities inside it keep their own state and stay subscribed: a
+		// disabled entity doesn't run or evaluate them, so that is only wasted work, and it keeps every entity's
+		// subscription down to its own enabled state, however it is moved around or subscribed
 		if (!this.#data.disabled) {
-			this.subscribe(true)
+			// Start again from the startup value
+			this.#cachedFeedbackValue = this.#getStartupValue()
+
+			this.#subscribeSelf()
 		} else {
-			this.cleanup()
+			// This clears the cached feedback value
+			this.#cleanupSelf()
 		}
 	}
 
@@ -505,13 +523,19 @@ export class ControlEntityInstance {
 	/**
 	 * Set the connection of this entity
 	 */
-	setConnectionId(connectionId: string): void {
+	setConnectionId(connectionId: string): boolean {
+		// The definitions (and children) of the internal module and of custom actions mean nothing to a connection, and
+		// the reverse. So only a module entity, which has no children, can change connection
+		if (isVirtualConnectionId(this.#data.connectionId) || isVirtualConnectionId(connectionId)) return false
+
 		// first unsubscribe action from old connection
-		this.cleanup()
+		this.#cleanupSelf()
 		// next change connectionId
 		this.#data.connectionId = connectionId
 		// last subscribe to new connection
-		this.subscribe(false)
+		this.#subscribeSelf()
+
+		return true
 	}
 
 	/**
@@ -528,7 +552,7 @@ export class ControlEntityInstance {
 
 		if (isInverted.isExpression) {
 			// Trigger a re-evaluation of the expression
-			this.subscribe(false)
+			this.#subscribeSelf()
 		} else {
 			this.#cachedIsInverted = !!isInverted.value
 		}
@@ -559,7 +583,7 @@ export class ControlEntityInstance {
 		}
 
 		// Inform relevant module
-		this.subscribe(false)
+		this.#subscribeSelf()
 	}
 
 	/** Set the target into which an action's result is stored (if any). */
@@ -568,9 +592,10 @@ export class ControlEntityInstance {
 
 		const data = this.#data as ActionEntityModel
 
-		this.cleanup()
 		data.storeResult = target
-		this.subscribe(false)
+		// Only the storeResult expression of this entity changes, which trackEntity replaces. Nothing else needs to be
+		// cleaned up, least of all the entities inside it
+		this.#subscribeSelf()
 	}
 
 	/**
@@ -636,7 +661,7 @@ export class ControlEntityInstance {
 		}
 
 		// Inform relevant module
-		this.subscribe(false)
+		this.#subscribeSelf()
 	}
 
 	/**
@@ -911,7 +936,7 @@ export class ControlEntityInstance {
 		}
 
 		if (!skipNotifyModule) {
-			this.subscribe(false)
+			this.#subscribeSelf()
 		}
 	}
 

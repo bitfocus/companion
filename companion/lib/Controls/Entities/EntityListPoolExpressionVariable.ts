@@ -40,9 +40,9 @@ export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlE
 		})
 	}
 
-	loadStorage(storage: ExpressionVariableModel, skipSubscribe: boolean, isImport: boolean): void {
-		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], skipSubscribe, isImport)
-		this.#localVariables.loadStorage(storage.localVariables, skipSubscribe, isImport)
+	loadStorage(storage: ExpressionVariableModel, isImport: boolean): void {
+		this.#entities.loadStorage(storage.entity ? [storage.entity] : [], isImport)
+		this.#localVariables.loadStorage(storage.localVariables, isImport)
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {

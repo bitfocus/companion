@@ -104,14 +104,8 @@ export class ControlButtonPageUp extends ControlButtonPage<PageUpButtonModel> {
 	 * @param registry - the application core
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(
-		deps: ControlDependencies,
-		controlId: BankControlId,
-		storage: PageUpButtonModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: PageUpButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/PageUp')
 
 		if (!storage) {
@@ -123,9 +117,14 @@ export class ControlButtonPageUp extends ControlButtonPage<PageUpButtonModel> {
 			// Notify interested
 		} else {
 			if (storage.type !== 'pageup') throw new Error(`Invalid type given to ControlButtonPageUp: "${storage.type}"`)
-
-			if (isImport) this.commitChange()
 		}
+	}
+
+	/**
+	 * If this control was imported to a running system, save it
+	 */
+	override postProcessImport(): void {
+		this.commitChange()
 	}
 
 	protected getDrawElements(): ReturnType<ControlButtonPage<any>['getDrawElements']> {

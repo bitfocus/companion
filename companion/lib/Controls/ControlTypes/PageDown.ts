@@ -104,14 +104,8 @@ export class ControlButtonPageDown extends ControlButtonPage<PageDownButtonModel
 	 * @param registry - the application core
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(
-		deps: ControlDependencies,
-		controlId: BankControlId,
-		storage: PageDownButtonModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: PageDownButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/Pagedown')
 
 		if (!storage) {
@@ -123,9 +117,14 @@ export class ControlButtonPageDown extends ControlButtonPage<PageDownButtonModel
 			// Notify interested
 		} else {
 			if (storage.type !== 'pagedown') throw new Error(`Invalid type given to ControlButtonPageDown: "${storage.type}"`)
-
-			if (isImport) this.commitChange()
 		}
+	}
+
+	/**
+	 * If this control was imported to a running system, save it
+	 */
+	override postProcessImport(): void {
+		this.commitChange()
 	}
 
 	protected getDrawElements(): ReturnType<ControlButtonPage<any>['getDrawElements']> {

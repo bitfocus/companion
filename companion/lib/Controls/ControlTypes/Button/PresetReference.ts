@@ -154,14 +154,11 @@ export class ControlButtonPresetReference
 		this.drawing.loadElements(storage.style.layers)
 		this.options = Object.assign(this.options, storage.options || {})
 		this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
-		this.entities.loadStorage(storage, true, isImport)
+		this.entities.loadStorage(storage, isImport)
 		this.entities.stepExpressionUpdate(this.options)
 
 		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.
 		this.#lastPresetChecksum = storage.checksum ?? null
-
-		// Ensure control is stored before setup
-		if (isImport) setImmediate(() => this.postProcessImport())
 	}
 
 	/**
@@ -200,8 +197,8 @@ export class ControlButtonPresetReference
 		this.options = Object.assign(this.options, updatedModel.options || {})
 		this.options.notes = userNotes
 		this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
-		// Load as a clone, to generate new entity ids.
-		this.entities.loadStorage(updatedModel, false, true)
+		// Load as a clone, to generate new entity ids. Subscribed below, once the step expression is updated
+		this.entities.loadStorage(updatedModel, true)
 		this.entities.stepExpressionUpdate(this.options)
 		this.entities.resubscribeEntities()
 

@@ -195,18 +195,10 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	}
 
 	/**
-	 * Trigger the first update after launch of each action and feedback
+	 * Compute the initial values of the internal variables after launch
 	 */
-	firstUpdate(): void {
+	initVariables(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		// Find all the feedbacks on controls
-		const allControls = this.#controlsStore.getAllControls()
-		for (const control of allControls.values()) {
-			if (!control.supportsEntities) continue
-
-			control.entities.resubscribeEntities(undefined, INTERNAL_CONNECTION_ID)
-		}
 
 		// Make all variables values
 		for (const fragment of this.#fragments) {
@@ -316,7 +308,11 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
-		if (feedback.disabled) return
+		if (feedback.disabled) {
+			// Drop any state from when it was enabled, rather than relying on the caller to have deleted it first
+			this.entityDelete(feedback)
+			return
+		}
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 

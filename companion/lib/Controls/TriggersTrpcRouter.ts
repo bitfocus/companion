@@ -95,6 +95,7 @@ export function createTriggersTrpcRouter(
 
 				const newControl = factory.createTrigger(newControlId, controlJson)
 				controlStore.controls.set(newControlId, newControl)
+				newControl.postProcessImport()
 
 				setImmediate(() => {
 					// Ensure the trigger is enabled, on a slight debounce

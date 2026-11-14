@@ -177,6 +177,7 @@ export function createCustomActionTrpcRouter(
 
 			const newControl = factory.createCustomAction(newControlId, controlJson)
 			controlStore.controls.set(newControlId, newControl)
+			newControl.postProcessImport()
 
 			return newControlId
 		}),

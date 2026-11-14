@@ -44,10 +44,10 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 		})
 	}
 
-	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean): void {
-		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
-		this.#actions.loadStorage(storage.actions || [], skipSubscribe, isImport)
-		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
+	loadStorage(storage: TriggerModel, isImport: boolean): void {
+		this.#feedbacks.loadStorage(storage.condition || [], isImport)
+		this.#actions.loadStorage(storage.actions || [], isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], isImport)
 	}
 
 	/**

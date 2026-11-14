@@ -120,7 +120,10 @@ export function createExpressionVariableTrpcRouter(
 					const newControl = factory.createExpressionVariable(newControlId, controlJson)
 					controlStore.controls.set(newControlId, newControl)
 
+					// Register the name before it is saved, as the saved client state includes whether it is active
 					expressionVariableNamesMap.addExpressionVariable(newControlId, newControl.options.variableName)
+
+					newControl.postProcessImport()
 
 					return newControlId
 				}

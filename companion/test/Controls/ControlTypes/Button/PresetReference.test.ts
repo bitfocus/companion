@@ -104,6 +104,25 @@ describe('ControlButtonPresetReference', () => {
 		return new ControlButtonPresetReference(deps, CreateBankControlId('test01'), model, false)
 	}
 
+	describe('import', () => {
+		it('constructing an imported control does not subscribe its entities, postProcessImport does', async () => {
+			const processManager = deps.instance.processManager as any
+			const control = new ControlButtonPresetReference(
+				deps,
+				CreateBankControlId('test01'),
+				makeModel({ feedbacks: [makeDefinitionFeedback('fb')] }),
+				true
+			)
+
+			// Nothing is deferred from the constructor any more
+			await new Promise((resolve) => setImmediate(resolve))
+			expect(processManager.connectionEntityUpdate).not.toHaveBeenCalled()
+
+			control.postProcessImport()
+			expect(processManager.connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		})
+	})
+
 	describe('preset definition ids', () => {
 		// A preset definition allocates deterministic ids so its content checksum is stable across re-reports.
 		// Those ids must never reach a live control: entity ids are tracked per connection, so two buttons
@@ -413,8 +432,8 @@ describe('ControlButtonPresetReference', () => {
 
 			// The preset changed, so the reference rebuilt: the imageBuffer is cleared until refetched...
 			expect(control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')).toBeUndefined()
-			// ...and the refreshed feedback was re-subscribed so the module provides it again
-			expect(processManager.connectionEntityUpdate).toHaveBeenCalled()
+			// ...and the refreshed feedback was re-subscribed (once) so the module provides it again
+			expect(processManager.connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		})
 	})
 

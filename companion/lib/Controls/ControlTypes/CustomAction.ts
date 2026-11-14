@@ -192,14 +192,14 @@ export class ControlCustomAction
 			this.options = { ...this.options, ...storage.options }
 			// The inputs are checked by the schema of the custom action when it is loaded
 			this.#inputs = storage.inputs
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 			for (const output of storage.outputs) {
 				const variable = this.#findLocalVariable(output.variableName)
 				if (variable) this.#outputLabels.set(variable.id, output.label)
 			}
 
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
+			// An import is saved by postProcessImport, once it has been stored
+			if (!isImport) this.commitChange()
 		}
 	}
 
@@ -614,7 +614,7 @@ export class ControlCustomAction
 	/**
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
-	#postProcessImport(): void {
+	override postProcessImport(): void {
 		this.entities.resubscribeEntities()
 
 		this.commitChange()

@@ -542,7 +542,9 @@ export class Registry {
 			this.controls.verifyConnectionIds(knownConnectionIds)
 
 			this.variables.custom.init()
-			this.internalModule.firstUpdate()
+			// Now that everything the entities depend on is loaded, subscribe them
+			this.controls.subscribeAll()
+			this.internalModule.initVariables()
 			this.graphics.triggerRegenerateAll()
 
 			// We are ready to start the instances/connections
