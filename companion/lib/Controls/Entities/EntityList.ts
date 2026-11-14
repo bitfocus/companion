@@ -123,7 +123,7 @@ export class ControlEntityList {
 			) || []
 
 		if (!skipSubscribe) {
-			this.subscribe(true)
+			this.subscribe()
 		}
 	}
 
@@ -138,14 +138,13 @@ export class ControlEntityList {
 	}
 
 	/**
-	 * Inform the instance of an updated entity
-	 * @param recursive whether to call recursively
+	 * Inform the instance of updated entities, and the entities inside them. The counterpart of cleanup
 	 * @param onlyType If set, only re-subscribe entities of this type
 	 * @param onlyConnectionId If set, only re-subscribe entities for this connection
 	 */
-	subscribe(recursive: boolean, onlyType?: EntityModelType, onlyConnectionId?: string): void {
+	subscribe(onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		for (const entity of this.#entities) {
-			entity.subscribe(recursive, onlyType, onlyConnectionId)
+			entity.subscribe(onlyType, onlyConnectionId)
 		}
 	}
 
@@ -318,7 +317,7 @@ export class ControlEntityList {
 
 			this.#entities.splice(entityIndex + 1, 0, newEntity)
 
-			newEntity.subscribe(true)
+			newEntity.subscribe()
 
 			return newEntity
 		}

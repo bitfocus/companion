@@ -358,50 +358,43 @@ describe('subscribe entities', () => {
 		expect(list.getDirectEntities()).toHaveLength(3)
 	})
 
-	test('non recursive', () => {
-		list.subscribe(false)
-
-		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
-		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-	})
-
-	test('recursive', () => {
-		list.subscribe(true)
+	test('everything', () => {
+		list.subscribe()
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(4)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
 	})
 
 	test('only actions', () => {
-		list.subscribe(true, EntityModelType.Action)
+		list.subscribe(EntityModelType.Action)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(3)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
 	})
 
 	test('only feedbacks', () => {
-		list.subscribe(true, EntityModelType.Feedback)
+		list.subscribe(EntityModelType.Feedback)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
 
 	test('only internal', () => {
-		list.subscribe(true, undefined, 'internal')
+		list.subscribe(undefined, 'internal')
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
 	})
 
 	test('only conn01', () => {
-		list.subscribe(true, undefined, 'conn01')
+		list.subscribe(undefined, 'conn01')
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
 
 	test('only missing-connection', () => {
-		list.subscribe(true, undefined, 'missing-connection')
+		list.subscribe(undefined, 'missing-connection')
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
@@ -2026,7 +2019,7 @@ describe('updateIsInvertedValues', () => {
 			upgradeIndex: undefined,
 		}
 
-		// loadStorage calls subscribe(true) if skipSubscribe is false
+		// loadStorage calls subscribe() if skipSubscribe is false
 		list.loadStorage([newFeedback], false, false)
 
 		expect(specialExpressionManager.trackEntity).toHaveBeenCalledTimes(1)

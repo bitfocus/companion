@@ -174,7 +174,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 
 			// Inform relevant module
 			for (const entity of newEntities) {
-				entity.subscribe(true)
+				entity.subscribe()
 			}
 
 			this.tryTriggerLocalVariablesChanged(...newEntities)
