@@ -10,6 +10,7 @@ import type {
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import type { CustomActionValues } from '../CustomActionRunFrame.js'
+import type { CustomFeedbackInstancesForEntity } from '../CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
 import { EntityPoolSpecialExpressionManager } from '../Entities/EntitySpecialExpressionManager.js'
@@ -27,6 +28,7 @@ export class CustomActionCopy implements EntityScope, TransientCopy {
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
 	readonly customActionChain: ReadonlyArray<string>
 	readonly customActionInstances: CustomActionInstancesForEntity
+	readonly customFeedbackInstances: CustomFeedbackInstancesForEntity
 	readonly isTransient = true
 
 	readonly #customAction: ControlCustomAction
@@ -50,6 +52,7 @@ export class CustomActionCopy implements EntityScope, TransientCopy {
 	 * @param idPrefix The prefix for the ids of the copied entities, which must be unique within the control
 	 * @param customActionChain The custom actions this copy is running inside, ending with this one
 	 * @param customActionInstances For any copies of custom actions called by this copy
+	 * @param customFeedbackInstances For any copies of custom feedbacks used by this copy
 	 * @param renderClock The render clock, for special expressions which depend on it
 	 * @param variableDependencies Where the special expressions register the variables they reference
 	 * @param values The inputs and local variable values of the copy
@@ -61,6 +64,7 @@ export class CustomActionCopy implements EntityScope, TransientCopy {
 		idPrefix: string,
 		customActionChain: ReadonlyArray<string>,
 		customActionInstances: CustomActionInstancesForEntity,
+		customFeedbackInstances: CustomFeedbackInstancesForEntity,
 		renderClock: RenderClock,
 		variableDependencies: VariableDependencyRegistry,
 		values: CustomActionValues
@@ -70,6 +74,7 @@ export class CustomActionCopy implements EntityScope, TransientCopy {
 		this.#variableDependencies = variableDependencies
 		this.customActionChain = customActionChain
 		this.customActionInstances = customActionInstances
+		this.customFeedbackInstances = customFeedbackInstances
 		this.#values = values
 
 		this.specialExpressionManager = new EntityPoolSpecialExpressionManager(
@@ -128,6 +133,10 @@ export class CustomActionCopy implements EntityScope, TransientCopy {
 	 */
 	localValueChanged(name: string): void {
 		this.#variablesChanged(new Set([`local:${name}`]))
+	}
+
+	valuesChanged(): void {
+		// Its local variables are reported by their lists, and nothing else reads the values of its entities
 	}
 
 	localVariablesChanged(names: ReadonlySet<string>): void {

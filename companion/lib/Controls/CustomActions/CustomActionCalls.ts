@@ -110,3 +110,68 @@ function longestChain(
 
 	return { length: longest + 1, dependsOnChain: dependsOnChain || stoppedEarly }
 }
+
+/**
+ * What a custom action calls, and the custom feedbacks it uses
+ */
+export interface CustomActionCalls {
+	/** The ids of the custom actions it calls directly */
+	readonly customActionIds: ReadonlySet<string>
+	/** The ids of the custom feedbacks it uses directly, as conditions or local variables */
+	readonly customFeedbackIds: ReadonlySet<string>
+}
+
+/**
+ * Work out what each custom action and custom feedback ends up calling. The copies of the custom feedbacks a custom
+ * action uses are nested inside its own, so they count towards the same depth (see `MAX_CUSTOM_ACTION_DEPTH`), and
+ * the chain from a custom action carries on through them. A custom feedback can't call a custom action, so a loop is
+ * only ever of one kind, and what each is told it calls is only of its own kind.
+ * @param customActions What each custom action calls directly, by its id
+ * @param customFeedbacks The ids of the custom feedbacks each custom feedback uses directly, by its id
+ */
+export function analyseCustomCalls(
+	customActions: ReadonlyMap<string, CustomActionCalls>,
+	customFeedbacks: ReadonlyMap<string, ReadonlySet<string>>
+): {
+	customActions: Map<string, CustomActionCallAnalysis>
+	customFeedbacks: Map<string, CustomActionCallAnalysis>
+} {
+	// The ids of each kind are only unique within that kind
+	const actionKey = (id: string) => `action:${id}`
+	const feedbackKey = (id: string) => `feedback:${id}`
+
+	const directCalls = new Map<string, ReadonlySet<string>>()
+	for (const [id, calls] of customActions) {
+		directCalls.set(
+			actionKey(id),
+			new Set([...[...calls.customActionIds].map(actionKey), ...[...calls.customFeedbackIds].map(feedbackKey)])
+		)
+	}
+	for (const [id, used] of customFeedbacks) {
+		directCalls.set(feedbackKey(id), new Set([...used].map(feedbackKey)))
+	}
+
+	const analysis = analyseCustomActionCalls(directCalls)
+
+	const ofKind = (ids: Iterable<string>, prefix: string) =>
+		[...ids].filter((key) => key.startsWith(prefix)).map((key) => key.slice(prefix.length))
+
+	const forKind = (ids: Iterable<string>, key: (id: string) => string, prefix: string) => {
+		const result = new Map<string, CustomActionCallAnalysis>()
+		for (const id of ids) {
+			const callAnalysis = analysis.get(key(id))
+			if (!callAnalysis) continue
+			result.set(id, {
+				calledIds: new Set(ofKind(callAnalysis.calledIds, prefix)),
+				loop: callAnalysis.loop && ofKind(callAnalysis.loop, prefix),
+				tooDeep: callAnalysis.tooDeep,
+			})
+		}
+		return result
+	}
+
+	return {
+		customActions: forKind(customActions.keys(), actionKey, 'action:'),
+		customFeedbacks: forKind(customFeedbacks.keys(), feedbackKey, 'feedback:'),
+	}
+}

@@ -135,6 +135,14 @@ describe('SomeEntityModelSchema', () => {
 		expect(SomeEntityModelSchema.safeParse(parent).success).toBe(false)
 	})
 
+	test('a call to a custom action saved by a beta is given the connection id it has now', () => {
+		const call = { ...action, connectionId: '__custom-actions__', definitionId: 'abc' }
+		const parent = { ...action, connectionId: 'internal', children: { default: [call] } }
+
+		expect(SomeEntityModelSchema.parse(call)).toMatchObject({ connectionId: 'custom', definitionId: 'abc' })
+		expect(SomeEntityModelSchema.parse(parent).children?.default?.[0]).toMatchObject({ connectionId: 'custom' })
+	})
+
 	test('action fields are not accepted on a feedback, and the reverse', () => {
 		expect(SomeEntityModelSchema.parse({ ...action, variableName: 'x' })).not.toHaveProperty('variableName')
 		expect(

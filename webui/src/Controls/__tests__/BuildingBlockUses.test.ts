@@ -2,13 +2,15 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomFeedbackControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
+import { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
-import { describeUseControl, formatElapsed, type UseControlStores } from '../UsesDescription.js'
+import { describeUseControl, type UseControlStores } from '../BuildingBlockUses.js'
 
 const placedButton = CreateBankControlId('placed')
 
@@ -30,7 +32,10 @@ function createStores(): UseControlStores {
 	const customActionsList = new CustomActionsListStore()
 	customActionsList.customActions.set(CreateCustomActionControlId('outer'), { name: 'Outer' } as any)
 
-	return { pages, triggersList, customActionsList }
+	const customFeedbacksList = new CustomFeedbacksListStore()
+	customFeedbacksList.customFeedbacks.set(CreateCustomFeedbackControlId('inner'), { name: 'Inner' } as any)
+
+	return { pages, triggersList, customActionsList, customFeedbacksList }
 }
 
 describe('describeUseControl', () => {
@@ -89,21 +94,16 @@ describe('describeUseControl', () => {
 		})
 	})
 
+	test('a custom feedback is described by its name', () => {
+		expect(describeUseControl(CreateCustomFeedbackControlId('inner'), createStores())).toEqual({
+			kind: 'Custom feedback',
+			name: 'Inner',
+			link: { type: 'custom-feedback', customFeedbackId: 'inner' },
+		})
+	})
+
 	test('any other control is described by its id', () => {
 		const controlId = CreateExpressionVariableControlId('x')
 		expect(describeUseControl(controlId, createStores())).toEqual({ kind: 'Control', name: controlId, link: null })
-	})
-})
-
-describe('formatElapsed', () => {
-	test.each([
-		[0, '0s'],
-		[999, '0s'],
-		[45_000, '45s'],
-		[185_000, '3m 05s'],
-		[3_720_000, '1h 02m'],
-		[-5, '0s'],
-	])('%d ms is %s', (ms, expected) => {
-		expect(formatElapsed(ms)).toBe(expected)
 	})
 })

@@ -72,8 +72,8 @@ describe('navLocationForPath', () => {
 })
 
 describe('ALL_NAV_PAGES', () => {
-	test('leaves out the pages still to come', () => {
+	test('includes the pages of the building blocks', () => {
 		expect(ALL_NAV_PAGES.map((page) => page.label)).toContain('Building Blocks: Custom Actions')
-		expect(ALL_NAV_PAGES.map((page) => page.label)).not.toContain('Building Blocks: Custom Feedbacks')
+		expect(ALL_NAV_PAGES.map((page) => page.label)).toContain('Building Blocks: Custom Feedbacks')
 	})
 })

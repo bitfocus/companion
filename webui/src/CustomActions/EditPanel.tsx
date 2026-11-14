@@ -4,20 +4,17 @@ import { useCallback, useContext, useId, useMemo } from 'react'
 import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
 import type { CustomActionModel, CustomActionOptions } from '@companion-app/shared/Model/CustomActionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { toCompanionInputField, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
+import { toCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid.js'
-import {
-	InputFieldDefinitionsEditor,
-	type InputFieldDefinitionsService,
-} from '~/Components/InputFieldDefinitionsEditor/InputFieldDefinitionsEditor.js'
+import type { InputFieldDefinitionsService } from '~/Components/InputFieldDefinitionsEditor/InputFieldDefinitionsEditor.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
+import { BuildingBlockInputsEditor } from '~/Controls/BuildingBlockInputsEditor.js'
 import type { LocalVariableOutputs } from '~/Controls/Components/EntityEditorContext.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
-import { LocalVariablesSupportHint } from '~/Controls/InputFeatures.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
@@ -94,6 +91,31 @@ function CustomActionPanelContent({
 		}),
 		[config.outputs, controlId, outputSetMutation]
 	)
+	const inputAddMutation = useMutationExt(trpc.controls.customActions.inputs.add.mutationOptions())
+	const inputRemoveMutation = useMutationExt(trpc.controls.customActions.inputs.remove.mutationOptions())
+	const inputMoveMutation = useMutationExt(trpc.controls.customActions.inputs.move.mutationOptions())
+	const inputUpdateMutation = useMutationExt(trpc.controls.customActions.inputs.update.mutationOptions())
+	const inputsService = useMemo(
+		(): InputFieldDefinitionsService => ({
+			addField: (field) => {
+				inputAddMutation.mutateAsync({ controlId, field }).catch((e) => console.error('Failed to add input', e))
+			},
+			removeField: (inputId) => {
+				inputRemoveMutation.mutateAsync({ controlId, inputId }).catch((e) => console.error('Failed to remove input', e))
+			},
+			moveField: (inputId, index) => {
+				inputMoveMutation
+					.mutateAsync({ controlId, inputId, index })
+					.catch((e) => console.error('Failed to move input', e))
+			},
+			updateField: (inputId, field) => {
+				inputUpdateMutation
+					.mutateAsync({ controlId, inputId, field })
+					.catch((e) => console.error('Failed to update input', e))
+			},
+		}),
+		[inputAddMutation, inputRemoveMutation, inputMoveMutation, inputUpdateMutation, controlId]
+	)
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, inputFields)
 
 	return (
@@ -136,7 +158,12 @@ function CustomActionPanelContent({
 				<div className="max-w-readable">
 					{activeTab === 'inputs' && (
 						<MyErrorBoundary>
-							<CustomActionInputsEditor controlId={controlId} inputs={config.inputs} />
+							<BuildingBlockInputsEditor
+								service={inputsService}
+								inputs={config.inputs}
+								usedAs="action"
+								collapseStorageId={`custom_action_inputs_${controlId}`}
+							/>
 						</MyErrorBoundary>
 					)}
 
@@ -232,60 +259,6 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 				/>
 			</Grid.Col>
 		</Grid.Row>
-	)
-}
-
-function CustomActionInputsEditor({
-	controlId,
-	inputs,
-}: {
-	controlId: CustomActionControlId
-	inputs: AuthorableInputField[]
-}) {
-	const addMutation = useMutationExt(trpc.controls.customActions.inputAdd.mutationOptions())
-	const removeMutation = useMutationExt(trpc.controls.customActions.inputRemove.mutationOptions())
-	const moveMutation = useMutationExt(trpc.controls.customActions.inputMove.mutationOptions())
-	const updateMutation = useMutationExt(trpc.controls.customActions.inputUpdate.mutationOptions())
-
-	const service = useMemo(
-		(): InputFieldDefinitionsService => ({
-			addField: (field) => {
-				addMutation.mutateAsync({ controlId, field }).catch((e) => console.error('Failed to add input', e))
-			},
-			removeField: (inputId) => {
-				removeMutation.mutateAsync({ controlId, inputId }).catch((e) => console.error('Failed to remove input', e))
-			},
-			moveField: (inputId, index) => {
-				moveMutation.mutateAsync({ controlId, inputId, index }).catch((e) => console.error('Failed to move input', e))
-			},
-			updateField: (inputId, field) => {
-				updateMutation
-					.mutateAsync({ controlId, inputId, field })
-					.catch((e) => console.error('Failed to update input', e))
-			},
-		}),
-		[addMutation, removeMutation, moveMutation, updateMutation, controlId]
-	)
-
-	return (
-		<InputFieldDefinitionsEditor
-			heading="Inputs"
-			subheading={
-				<>
-					<p className="text-sm text-muted mb-1">
-						The inputs are the options of the action. Their values are available to the actions as{' '}
-						<code>$(options:id)</code>.
-					</p>
-					<LocalVariablesSupportHint subject="Inputs" />
-				</>
-			}
-			headingActions={null}
-			fields={inputs}
-			service={service}
-			readonly={false}
-			localVariablesStore={null}
-			collapseStorageId={`custom_action_inputs_${controlId}`}
-		/>
 	)
 }
 

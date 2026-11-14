@@ -1,5 +1,4 @@
 import type z from 'zod'
-import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -13,7 +12,7 @@ import {
 	type CustomActionRuntimeProps,
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	AuthorableInputFieldSchema,
 	toCompanionInputField,
@@ -39,7 +38,7 @@ import {
 	type CustomActionRunFrame,
 	type CustomActionValues,
 } from '../CustomActionRunFrame.js'
-import type { CustomActionCallAnalysis } from '../CustomActions/CustomActionCalls.js'
+import type { CustomActionCallAnalysis, CustomActionCalls } from '../CustomActions/CustomActionCalls.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
@@ -174,6 +173,7 @@ export class ControlCustomAction
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 			getDefaultInputVariables: () => buildCustomActionInputVariables(this.#getDefaultInputValues()),
 			localVariableRenamed: (fromName, toName) => this.#localVariableRenamed(fromName, toName),
 		})
@@ -536,15 +536,18 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Get the ids of the custom actions this calls directly, including from within other actions
+	 * Get the custom actions this calls directly, including from within other actions, and the custom feedbacks it uses
+	 * directly, as the conditions of its actions or its local variables
 	 */
-	getCalledCustomActionIds(): Set<string> {
-		// A disabled call, or one inside a disabled group, doesn't run, so can't make a loop
-		const ids = new Set<string>()
+	getDirectCalls(): CustomActionCalls {
+		// A disabled call or use, or one inside a disabled group, isn't run, so can't make a loop or nest
+		const customActionIds = new Set<string>()
+		const customFeedbackIds = new Set<string>()
 		for (const entity of this.entities.getAllEnabledEntities(false)) {
-			if (isCustomActionsConnectionId(entity.connectionId)) ids.add(entity.definitionId)
+			if (isCustomActionCall(entity)) customActionIds.add(entity.definitionId)
+			else if (isCustomFeedbackUse(entity)) customFeedbackIds.add(entity.definitionId)
 		}
-		return ids
+		return { customActionIds, customFeedbackIds }
 	}
 
 	/**

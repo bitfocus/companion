@@ -149,6 +149,7 @@ describe('ControlButtonLayered', () => {
 			linkButtons: null as any,
 			referencedLocations: new ReferencedLocationsIndex(),
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() } as any,
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),

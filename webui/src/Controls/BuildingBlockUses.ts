@@ -6,6 +6,7 @@ import {
 } from '@companion-app/shared/ControlId.js'
 import { assertNever } from '~/Resources/util.js'
 import type { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
+import type { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
 import type { PagesStore } from '~/Stores/PagesStore.js'
 import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
 
@@ -13,15 +14,17 @@ export interface UseControlStores {
 	readonly pages: PagesStore
 	readonly triggersList: TriggersListStore
 	readonly customActionsList: CustomActionsListStore
+	readonly customFeedbacksList: CustomFeedbacksListStore
 }
 
-/** Where to go to find a control which calls a custom action */
+/** Where to go to find a control which uses a custom action or feedback */
 export type UseControlLink =
 	| { readonly type: 'buttons-page'; readonly pageNumber: number }
 	| { readonly type: 'trigger'; readonly triggerId: string }
 	| { readonly type: 'custom-action'; readonly customActionId: string }
+	| { readonly type: 'custom-feedback'; readonly customFeedbackId: string }
 
-/** What a control which calls a custom action is, for showing in a list of its uses */
+/** What a control which uses a custom action or feedback is, for showing in a list of its uses */
 export interface UseControlDescription {
 	readonly kind: string
 	readonly name: string
@@ -30,7 +33,7 @@ export interface UseControlDescription {
 }
 
 /**
- * Describe a control which calls a custom action, such as a button by its location or a trigger by its name
+ * Describe a control which uses a custom action or feedback, such as a button by its location or a trigger by its name
  */
 export function describeUseControl(controlId: SomeControlId, stores: UseControlStores): UseControlDescription {
 	const kind = getControlIdKind(controlId)
@@ -67,6 +70,20 @@ export function describeUseControl(controlId: SomeControlId, stores: UseControlS
 						: null,
 			}
 		}
+		case 'custom-feedback': {
+			const customFeedback = isControlIdOfKind(controlId, 'custom-feedback')
+				? stores.customFeedbacksList.customFeedbacks.get(controlId)
+				: undefined
+			const parsedId = ParseControlId(controlId)
+			return {
+				kind: 'Custom feedback',
+				name: customFeedback?.name || 'Unnamed custom feedback',
+				link:
+					parsedId?.type === 'custom-feedback'
+						? { type: 'custom-feedback', customFeedbackId: parsedId.customFeedbackId }
+						: null,
+			}
+		}
 		case 'expression-variable':
 		case 'page':
 		case 'preset':
@@ -76,18 +93,4 @@ export function describeUseControl(controlId: SomeControlId, stores: UseControlS
 			assertNever(kind)
 			return { kind: 'Control', name: controlId, link: null }
 	}
-}
-
-/**
- * How long something has been running for, such as `45s`, `3m 05s` or `1h 02m`
- */
-export function formatElapsed(ms: number): string {
-	const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-	const hours = Math.floor(totalSeconds / 3600)
-	const minutes = Math.floor((totalSeconds % 3600) / 60)
-	const seconds = totalSeconds % 60
-
-	if (hours > 0) return `${hours}h ${String(minutes).padStart(2, '0')}m`
-	if (minutes > 0) return `${minutes}m ${String(seconds).padStart(2, '0')}s`
-	return `${seconds}s`
 }

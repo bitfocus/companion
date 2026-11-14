@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomFeedbackControlId,
 	CreateTriggerControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -62,6 +63,8 @@ function createImportController() {
 	controls.replaceExpressionVariableCollections.mockReturnValue(undefined)
 	controls.importCustomAction.mockReturnValue(true)
 	controls.replaceCustomActionCollections.mockReturnValue(undefined)
+	controls.importCustomFeedback.mockReturnValue(true)
+	controls.replaceCustomFeedbackCollections.mockReturnValue(undefined)
 	controls.replaceTriggerCollections.mockReturnValue(undefined)
 
 	graphics.clearAllForPage.mockReturnValue(undefined)
@@ -267,6 +270,7 @@ function fullConfig(overrides: Partial<ClientImportOrResetSelection> = {}): Clie
 		customVariables: all,
 		expressionVariables: all,
 		customActions: all,
+		customFeedbacks: all,
 		userconfig: 'reset',
 		imageLibrary: all,
 		...overrides,
@@ -306,6 +310,25 @@ describe('importFull config gating', () => {
 				},
 			},
 			customActionCollections: [{ id: 'col', label: 'Col', sortOrder: 0, children: [], metaData: null }],
+			customFeedbacks: {
+				cf1: {
+					type: 'custom-feedback',
+					options: { name: 'CF', description: '', sortOrder: 0 },
+					inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
+					feedbacks: [
+						{
+							type: 'feedback',
+							id: 'f1',
+							connectionId: 'internal',
+							definitionId: 'check_expression',
+							options: {},
+							upgradeIndex: undefined,
+						},
+					],
+					localVariables: [],
+				},
+			},
+			customFeedbackCollections: [{ id: 'fcol', label: 'FCol', sortOrder: 0, children: [], metaData: null }],
 			imageLibrary: [{ info: { name: 'i' } }],
 			imageLibraryCollections: [],
 		}
@@ -332,6 +355,17 @@ describe('importFull config gating', () => {
 				actions: [expect.objectContaining({ id: 'a1', connectionId: 'internal', definitionId: 'wait' })],
 			})
 		)
+		expect(controls.replaceCustomFeedbackCollections).toHaveBeenCalledWith([
+			{ id: 'fcol', label: 'FCol', sortOrder: 0, children: [], metaData: null },
+		])
+		expect(controls.importCustomFeedback).toHaveBeenCalledWith(
+			CreateCustomFeedbackControlId('cf1'),
+			expect.objectContaining({
+				type: 'custom-feedback',
+				inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
+				feedbacks: [expect.objectContaining({ id: 'f1', connectionId: 'internal', definitionId: 'check_expression' })],
+			})
+		)
 	})
 
 	test('keeps the actions which call a custom action', async () => {
@@ -342,7 +376,7 @@ describe('importFull config gating', () => {
 			{
 				type: 'action',
 				id: 'call',
-				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				connectionId: CUSTOM_CONNECTION_ID,
 				definitionId: 'ca1',
 				options: { flag: { isExpression: false, value: true } },
 			},
@@ -353,7 +387,65 @@ describe('importFull config gating', () => {
 		expect(controls.importTrigger).toHaveBeenCalledWith(
 			CreateTriggerControlId('t1'),
 			expect.objectContaining({
-				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID })],
+				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID })],
+			})
+		)
+	})
+
+	test('keeps the feedbacks which use a custom feedback', async () => {
+		const { controller, controls } = createImportController()
+
+		const data = baseData()
+		data.triggers.t1.condition = [
+			{
+				type: 'feedback',
+				id: 'use',
+				connectionId: CUSTOM_CONNECTION_ID,
+				definitionId: 'cf1',
+				options: { flag: { isExpression: false, value: true } },
+			},
+		]
+
+		await controller.importFull(data, fullConfig())
+
+		expect(controls.importTrigger).toHaveBeenCalledWith(
+			CreateTriggerControlId('t1'),
+			expect.objectContaining({
+				condition: [expect.objectContaining({ id: 'use', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'cf1' })],
+			})
+		)
+	})
+
+	test('keeps the calls between custom actions and between custom feedbacks', async () => {
+		const { controller, controls } = createImportController()
+
+		const data = baseData()
+		data.customActions.ca2 = {
+			...data.customActions.ca1,
+			actions: [{ type: 'action', id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'ca1', options: {} }],
+		}
+		data.customFeedbacks.cf2 = {
+			...data.customFeedbacks.cf1,
+			feedbacks: [
+				{ type: 'feedback', id: 'use', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'cf1', options: {} },
+			],
+		}
+
+		await controller.importFull(data, fullConfig())
+
+		// The ids are kept, so the calls still point at the imported definitions
+		expect(controls.importCustomAction).toHaveBeenCalledWith(CreateCustomActionControlId('ca1'), expect.any(Object))
+		expect(controls.importCustomAction).toHaveBeenCalledWith(
+			CreateCustomActionControlId('ca2'),
+			expect.objectContaining({
+				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'ca1' })],
+			})
+		)
+		expect(controls.importCustomFeedback).toHaveBeenCalledWith(CreateCustomFeedbackControlId('cf1'), expect.any(Object))
+		expect(controls.importCustomFeedback).toHaveBeenCalledWith(
+			CreateCustomFeedbackControlId('cf2'),
+			expect.objectContaining({
+				feedbacks: [expect.objectContaining({ id: 'use', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'cf1' })],
 			})
 		)
 	})
@@ -367,6 +459,7 @@ describe('importFull config gating', () => {
 			customVariables: 'unchanged',
 			expressionVariables: 'unchanged',
 			customActions: 'unchanged',
+			customFeedbacks: 'unchanged',
 			imageLibrary: 'unchanged',
 			surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'unchanged' },
 		})
@@ -374,6 +467,7 @@ describe('importFull config gating', () => {
 		await controller.importFull(baseData(), config)
 
 		expect(controls.importCustomAction).not.toHaveBeenCalled()
+		expect(controls.importCustomFeedback).not.toHaveBeenCalled()
 
 		expect(controls.importControl).not.toHaveBeenCalled()
 		expect(controls.importTrigger).not.toHaveBeenCalled()

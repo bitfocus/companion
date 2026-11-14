@@ -4,6 +4,7 @@ import { getCustomActionCallDefinition, type CustomActionModel } from '@companio
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	isCustomActionCall,
 	type EntityOwner,
 	type ResolvedFeedbackStyleOverride,
 	type SomeEntityModel,
@@ -136,7 +137,11 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 				values[`local:${name}`] = entity.getResolvedFeedbackValue(null)
 			} else {
 				// A computed variable is evaluated for this run, so that it sees the inputs and variables of the run
-				values[`local:${name}`] = entity.getResolvedFeedbackValue({ parser: createParser(values) })
+				values[`local:${name}`] = entity.getResolvedFeedbackValue({
+					parser: createParser(values),
+					executionVariables: {},
+					parserOptions: options,
+				})
 			}
 		}
 
@@ -169,7 +174,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 
 		return entityModels.some(
 			(entity) =>
-				(entity.connectionId === selfCall.connectionId && entity.definitionId === selfCall.definitionId) ||
+				(isCustomActionCall(entity) && entity.definitionId === selfCall.definitionId) ||
 				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
 		)
 	}

@@ -3,13 +3,13 @@ import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomActionControlId,
 	type CustomActionControlId,
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { CustomActionRunInfo } from '@companion-app/shared/Model/CustomActionModel.js'
+import { isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type {
@@ -20,6 +20,7 @@ import type {
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlCustomAction, type CustomActionRunExtras } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
+import type { CustomFeedbackInstanceManager } from '../CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import { resolveStoreResult } from '../Entities/EntitySpecialExpressionManager.js'
 import type { EntityScope, StoreResult } from '../Entities/Types.js'
@@ -88,6 +89,8 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	readonly #controlStore: Pick<IControlStore, 'getControl'>
 	readonly #renderClock: RenderClock
 	readonly #variableDependencies: VariableDependencyRegistry
+	/** For any copies of custom feedbacks inside the copies */
+	readonly #customFeedbackInstances: CustomFeedbackInstanceManager
 
 	/** The copies, by the action which calls the custom action */
 	readonly #callers = new Map<ControlEntityInstance, CallerState>()
@@ -103,11 +106,13 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 	constructor(
 		controlStore: Pick<IControlStore, 'getControl'>,
 		renderClock: RenderClock,
-		variableDependencies: VariableDependencyRegistry
+		variableDependencies: VariableDependencyRegistry,
+		customFeedbackInstances: CustomFeedbackInstanceManager
 	) {
 		this.#controlStore = controlStore
 		this.#renderClock = renderClock
 		this.#variableDependencies = variableDependencies
+		this.#customFeedbackInstances = customFeedbackInstances
 	}
 
 	/**
@@ -273,6 +278,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 				`${caller.id}@${runId}/`,
 				[...chain, customActionControlId],
 				this,
+				this.#customFeedbackInstances,
 				this.#renderClock,
 				this.#variableDependencies,
 				{ customActionControlId: customAction.controlId, inputValues, localValues: new Map() }
@@ -423,6 +429,7 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 			`${caller.id}/`,
 			[...chain, customActionControlId],
 			this,
+			this.#customFeedbackInstances,
 			this.#renderClock,
 			this.#variableDependencies,
 			{ customActionControlId, inputValues, localValues: new Map() }
@@ -456,7 +463,12 @@ export class CustomActionInstanceManager implements VariableDependencyListener<C
 
 			entity.copyRuntimeValuesFrom(sourceEntity)
 
-			if (!isCustomActionsConnectionId(entity.connectionId)) continue
+			if (isCustomFeedbackUse(entity)) {
+				// The custom feedback this uses has its own copy, which can also start from the existing one
+				this.#customFeedbackInstances.copyRuntimeValues(entity, sourceEntity)
+				continue
+			}
+			if (!isCustomActionCall(entity)) continue
 
 			// The custom action this calls has its own copy, which can start from the existing one if it sees the same
 			const targetHeld = this.getHeldCopy(entity)

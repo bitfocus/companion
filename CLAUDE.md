@@ -164,6 +164,8 @@ utilities` (declared in `tailwind.css`). App CSS is assigned to a layer by path 
 - The Node version is pinned in `.node-version` (also enforced by `package.json` `engines`). The data
   layer relies on it: `node:sqlite` (used by `lib/Data/`) is only a stable builtin on that Node
   version, so use it rather than an older Node.
+- Before using a running dev instance, check the repo-root `.env`: `COMPANION_APP_PORT` (backend, default 8000)
+  and `COMPANION_UI_PORT` (webui, default 5173) may be changed, e.g. to run a second checkout alongside.
 - Corepack provides Yarn 4 — run `corepack enable` if `yarn` isn't already the Berry release. Do not
   fall back to the global Yarn 1.
 - `yarn install` is enough to start developing — you do **not** need to run `yarn build:ts` first.

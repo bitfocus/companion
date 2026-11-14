@@ -2,10 +2,12 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomFeedbackControlId,
 	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
 	type CustomActionControlId,
+	type CustomFeedbackControlId,
 } from '../ControlId.js'
 import { ActionSetsModelSchema } from '../Model/ActionModel.js'
 import {
@@ -16,6 +18,7 @@ import {
 } from '../Model/ButtonModel.js'
 import { isControlModelForId, SomeControlModelSchema, zodStoredControlId } from '../Model/Controls.js'
 import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
+import { CustomFeedbackModelSchema, getCustomFeedbackCallsExcludedFrom } from '../Model/CustomFeedbackModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -320,10 +323,10 @@ describe('getCustomActionCallsExcludedFrom', () => {
 
 	test('excludes the custom action itself, and any which call it', () => {
 		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('c'), customActions)).toEqual(
-			new Set(['__custom-actions__:c', '__custom-actions__:a', '__custom-actions__:b'])
+			new Set(['custom:c', 'custom:a', 'custom:b'])
 		)
 		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('a'), customActions)).toEqual(
-			new Set(['__custom-actions__:a'])
+			new Set(['custom:a'])
 		)
 	})
 
@@ -333,6 +336,47 @@ describe('getCustomActionCallsExcludedFrom', () => {
 
 	test('excludes nothing when there is no control', () => {
 		expect(getCustomActionCallsExcludedFrom(null, customActions)).toEqual(new Set())
+	})
+})
+
+describe('CustomFeedbackModelSchema', () => {
+	test('a minimal custom feedback gets the defaults', () => {
+		expect(CustomFeedbackModelSchema.parse({ type: 'custom-feedback' })).toEqual({
+			type: 'custom-feedback',
+			options: { name: 'New custom feedback', description: '', sortOrder: 0, notes: '' },
+			inputs: [],
+			feedbacks: [],
+			localVariables: [],
+		})
+	})
+
+	test('an input must be a valid input field', () => {
+		const result = CustomFeedbackModelSchema.safeParse({
+			type: 'custom-feedback',
+			inputs: [{ type: 'sparkle', id: 'a' }],
+		})
+		expect(result.success).toBe(false)
+	})
+})
+
+describe('getCustomFeedbackCallsExcludedFrom', () => {
+	const customFeedbacks: [CustomFeedbackControlId, { calledCustomFeedbackIds: string[] }][] = [
+		[CreateCustomFeedbackControlId('a'), { calledCustomFeedbackIds: ['b', 'c'] }],
+		[CreateCustomFeedbackControlId('b'), { calledCustomFeedbackIds: ['c'] }],
+		[CreateCustomFeedbackControlId('c'), { calledCustomFeedbackIds: [] }],
+	]
+
+	test('excludes the custom feedback itself, and any which use it', () => {
+		expect(getCustomFeedbackCallsExcludedFrom(CreateCustomFeedbackControlId('c'), customFeedbacks)).toEqual(
+			new Set(['custom:c', 'custom:a', 'custom:b'])
+		)
+		expect(getCustomFeedbackCallsExcludedFrom(CreateCustomFeedbackControlId('a'), customFeedbacks)).toEqual(
+			new Set(['custom:a'])
+		)
+	})
+
+	test('excludes nothing from a control which is not a custom feedback', () => {
+		expect(getCustomFeedbackCallsExcludedFrom(CreateCustomActionControlId('c'), customFeedbacks)).toEqual(new Set())
 	})
 })
 
@@ -348,6 +392,7 @@ describe('SomeControlModelSchema', () => {
 		['trigger', { type: 'trigger' }],
 		['expression-variable', { type: 'expression-variable' }],
 		['custom-action', { type: 'custom-action' }],
+		['custom-feedback', { type: 'custom-feedback' }],
 		['page', { type: 'page' }],
 		['pageup', { type: 'pageup' }],
 	])('parses a %s control', (type, control) => {

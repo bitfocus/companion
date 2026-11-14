@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -12,6 +13,7 @@ import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
 	fixupButtonReferenceControl,
 	fixupCustomActionControl,
+	fixupCustomFeedbackControl,
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
@@ -460,15 +462,38 @@ describe('fixupCustomActionControl', () => {
 
 	test('keeps the calls to other custom actions', () => {
 		const control = makeCustomAction({
-			actions: [makeAction({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' })],
+			actions: [makeAction({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'other' })],
 		})
 
 		// As the import maps each connection provided by Companion itself to itself
-		const map = { ...standardMap(), [CUSTOM_ACTIONS_CONNECTION_ID]: { id: CUSTOM_ACTIONS_CONNECTION_ID, label: '' } }
+		const map = { ...standardMap(), [CUSTOM_CONNECTION_ID]: { id: CUSTOM_CONNECTION_ID, label: '' } }
 		const result = fixupCustomActionControl(control, makeUpdater(map))
 
 		expect(result.actions).toEqual([
-			expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: 'other' }),
+			expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'other' }),
+		])
+	})
+})
+
+describe('fixupCustomFeedbackControl', () => {
+	test('keeps only the first of the inputs with the same id', () => {
+		const control: CustomFeedbackModel = {
+			type: 'custom-feedback',
+			options: { name: 'Custom', description: '', sortOrder: 0, notes: '' },
+			inputs: [
+				{ type: 'textinput', id: 'text', label: 'First', default: '' },
+				{ type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 10 },
+				{ type: 'textinput', id: 'text', label: 'Second', default: '' },
+			],
+			feedbacks: [],
+			localVariables: [],
+		}
+
+		const result = fixupCustomFeedbackControl(control, makeUpdater(standardMap()))
+
+		expect(result.inputs.map((input) => [input.id, input.label])).toEqual([
+			['text', 'First'],
+			['n', 'N'],
 		])
 	})
 })

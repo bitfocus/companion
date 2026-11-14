@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { CUSTOM_ACTIONS_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
@@ -186,7 +186,7 @@ describe('EntityListPool - entitySetConnection', () => {
 		expect(pool.entitySetConnection(downSet(), 'nope', 'conn')).toBe(false)
 	})
 
-	test.each([INTERNAL_CONNECTION_ID, CUSTOM_ACTIONS_CONNECTION_ID])(
+	test.each([INTERNAL_CONNECTION_ID, CUSTOM_CONNECTION_ID])(
 		'does not change an action to or from the %s connection',
 		(virtualConnectionId) => {
 			const { pool } = createPool()
@@ -332,6 +332,7 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
 			customActionChain: [],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
 			localVariablesChanged: vi.fn(),
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
@@ -343,7 +344,7 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 			[copy],
 			false
 		)
-		callerEntity.setTransientCopy('copy', { lists: [copyList] })
+		callerEntity.setTransientCopy('copy', { lists: [copyList], valuesChanged: vi.fn() })
 
 		const result = pool.entityReplaceForUpgrade({
 			id: copy.id,
