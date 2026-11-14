@@ -1,4 +1,4 @@
-import { faAdd, faCubesStacked, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faBook, faCubesStacked, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import classnames from 'classnames'
@@ -10,7 +10,7 @@ import type {
 	ClientCustomFeedbackData,
 	CustomFeedbackCollection,
 } from '@companion-app/shared/Model/CustomFeedbackModel.js'
-import { Button } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -24,7 +24,7 @@ import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useComputed } from '~/Resources/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useCustomFeedbackCollectionsApi } from './CustomFeedbackCollectionsApi'
 import { CustomFeedbacksTableContextProvider, useCustomFeedbacksTableContext } from './CustomFeedbacksTableContext'
@@ -117,18 +117,22 @@ export const CustomFeedbacksPage = observer(function CustomFeedbacksPage() {
 							<p>Use them to keep a condition you repeat on many buttons or triggers in one place.</p>
 						</>
 					),
-					// TODO: link to the guide here and in the header, once it is written
 					actions: (
-						<Button color="primary" onClick={doAddNew}>
-							<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first custom feedback
-						</Button>
+						<>
+							<Button color="primary" onClick={doAddNew}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first custom feedback
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(customFeedbacksHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
 					),
 				}
 			: null
 
 	return (
 		<div className="page-shell">
-			<PageHeader icon={faCubesStacked} title="Custom Feedbacks" beta />
+			<PageHeader icon={faCubesStacked} title="Custom Feedbacks" helpAction={customFeedbacksHelpPage} beta />
 
 			<GenericConfirmModal ref={confirmModalRef} />
 
@@ -201,6 +205,8 @@ export interface CustomFeedbackDataWithId extends Omit<ClientCustomFeedbackData,
 	id: string
 	collectionId: string | null
 }
+
+const customFeedbacksHelpPage = '/user-guide/config/custom-feedbacks'
 
 function CustomFeedbackListNoContent() {
 	return <NonIdealState icon={faList} text="No custom feedbacks yet" />
