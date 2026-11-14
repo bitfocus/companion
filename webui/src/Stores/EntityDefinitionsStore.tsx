@@ -6,6 +6,7 @@ import {
 	getVirtualConnectionLabel,
 	INTERNAL_CONNECTION_ID,
 } from '@companion-app/shared/ConnectionId.js'
+import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { canOfferEntityInPicker } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type {
@@ -103,13 +104,18 @@ export class EntityDefinitionsForTypeStore {
 	}
 
 	#buildConnectionOptions = computedFn(
-		(connectionId: string, label: string, feedbackListType: FeedbackEntitySubType | null): AddEntityOption[] => {
+		(
+			connectionId: string,
+			label: string,
+			feedbackListType: FeedbackEntitySubType | null,
+			controlKind: ControlIdKind | null
+		): AddEntityOption[] => {
 			const entityDefs = this.connections.get(connectionId)
 			if (!entityDefs) return []
 
 			const options: AddEntityOption[] = []
 			for (const [definitionId, definition] of entityDefs.entries()) {
-				if (!canOfferEntityInPicker(feedbackListType, definition)) continue
+				if (!canOfferEntityInPicker(feedbackListType, controlKind, definition)) continue
 
 				const optionLabel = `${label}: ${definition.label}`
 				options.push({
@@ -124,33 +130,39 @@ export class EntityDefinitionsForTypeStore {
 		}
 	)
 
-	#buildInternalCommonOptions = computedFn((feedbackListType: FeedbackEntitySubType | null): AddEntityOption[] => {
-		if (feedbackListType !== FeedbackEntitySubType.Value) return []
+	#buildInternalCommonOptions = computedFn(
+		(feedbackListType: FeedbackEntitySubType | null, controlKind: ControlIdKind | null): AddEntityOption[] => {
+			if (feedbackListType !== FeedbackEntitySubType.Value) return []
 
-		const internalDefs = this.connections.get('internal')
-		if (!internalDefs) return []
+			const internalDefs = this.connections.get('internal')
+			if (!internalDefs) return []
 
-		const options: AddEntityOption[] = []
-		for (const [definitionId, definition] of internalDefs.entries()) {
-			if (
-				!canOfferEntityInPicker(feedbackListType, definition) ||
-				definition.feedbackType !== FeedbackEntitySubType.Value
-			)
-				continue
+			const options: AddEntityOption[] = []
+			for (const [definitionId, definition] of internalDefs.entries()) {
+				if (
+					!canOfferEntityInPicker(feedbackListType, controlKind, definition) ||
+					definition.feedbackType !== FeedbackEntitySubType.Value
+				)
+					continue
 
-			const optionLabel = `internal: ${definition.label}`
-			options.push({
-				id: `internal:${definitionId}`,
-				label: optionLabel,
-				sortKey: definition.sortKey ?? definition.label,
-				fuzzy: fuzzyPrepare(optionLabel),
-			})
+				const optionLabel = `internal: ${definition.label}`
+				options.push({
+					id: `internal:${definitionId}`,
+					label: optionLabel,
+					sortKey: definition.sortKey ?? definition.label,
+					fuzzy: fuzzyPrepare(optionLabel),
+				})
+			}
+			return options
 		}
-		return options
-	})
+	)
 
 	buildConnectionLeaves = computedFn(
-		(connectionId: string, feedbackListType: FeedbackEntitySubType | null): EntityLeafItem[] => {
+		(
+			connectionId: string,
+			feedbackListType: FeedbackEntitySubType | null,
+			controlKind: ControlIdKind | null
+		): EntityLeafItem[] => {
 			const items = this.connections.get(connectionId)
 			if (!items || items.size === 0) return []
 
@@ -159,7 +171,7 @@ export class EntityDefinitionsForTypeStore {
 			const leaves: EntityLeafItem[] = []
 			for (const [id, info] of items.entries()) {
 				if (!info || !info.label) continue
-				if (!canOfferEntityInPicker(feedbackListType, info)) continue
+				if (!canOfferEntityInPicker(feedbackListType, controlKind, info)) continue
 
 				leaves.push({
 					key: `${connectionId}:${id}`,
@@ -178,30 +190,35 @@ export class EntityDefinitionsForTypeStore {
 		}
 	)
 
-	buildBaseOptions = computedFn((feedbackListType: FeedbackEntitySubType | null): AddEntityGroup[] => {
-		const allConnectionOptions: AddEntityOption[] = [
-			...this.#buildConnectionOptions(INTERNAL_CONNECTION_ID, 'internal', feedbackListType),
-			...this.#buildConnectionOptions(
-				CUSTOM_CONNECTION_ID,
-				getVirtualConnectionLabel(CUSTOM_CONNECTION_ID) ?? CUSTOM_CONNECTION_ID,
-				feedbackListType
-			),
-		]
-		for (const connection of this.#connectionsStore.sortedConnections()) {
-			allConnectionOptions.push(...this.#buildConnectionOptions(connection.id, connection.label, feedbackListType))
+	buildBaseOptions = computedFn(
+		(feedbackListType: FeedbackEntitySubType | null, controlKind: ControlIdKind | null): AddEntityGroup[] => {
+			const allConnectionOptions: AddEntityOption[] = [
+				...this.#buildConnectionOptions(INTERNAL_CONNECTION_ID, 'internal', feedbackListType, controlKind),
+				...this.#buildConnectionOptions(
+					CUSTOM_CONNECTION_ID,
+					getVirtualConnectionLabel(CUSTOM_CONNECTION_ID) ?? CUSTOM_CONNECTION_ID,
+					feedbackListType,
+					controlKind
+				),
+			]
+			for (const connection of this.#connectionsStore.sortedConnections()) {
+				allConnectionOptions.push(
+					...this.#buildConnectionOptions(connection.id, connection.label, feedbackListType, controlKind)
+				)
+			}
+
+			const groups: AddEntityGroup[] = [
+				{ id: '__all__', label: '', showWhenUnfiltered: false, items: allConnectionOptions },
+			]
+
+			const commonOptions = this.#buildInternalCommonOptions(feedbackListType, controlKind)
+			if (commonOptions.length > 0) {
+				groups.push({ id: '__common__', label: 'Common', showWhenUnfiltered: true, items: commonOptions })
+			}
+
+			return groups
 		}
-
-		const groups: AddEntityGroup[] = [
-			{ id: '__all__', label: '', showWhenUnfiltered: false, items: allConnectionOptions },
-		]
-
-		const commonOptions = this.#buildInternalCommonOptions(feedbackListType)
-		if (commonOptions.length > 0) {
-			groups.push({ id: '__common__', label: 'Common', showWhenUnfiltered: true, items: commonOptions })
-		}
-
-		return groups
-	})
+	)
 
 	public updateStore = action((change: EntityDefinitionUpdate | null) => {
 		if (!change) {

@@ -1,3 +1,4 @@
+import type { ControlIdKind } from './ControlId.js'
 import type { ClientEntityDefinition } from './Model/EntityDefinitionModel.js'
 import { FeedbackEntitySubType } from './Model/EntityModel.js'
 import { assertNever } from './Util.js'
@@ -34,11 +35,15 @@ export function canAddEntityToFeedbackList(
 
 /**
  * Whether an entity can be offered in a picker for adding to a list. Some entities, like the placeholder for one
- * that couldn't be loaded, exist but are never added by the user.
+ * that couldn't be loaded, exist but are never added by the user. Others make no sense in some kinds of control.
+ * `controlKind` is null when the list doesn't belong to a control.
  */
 export function canOfferEntityInPicker(
 	feedbackListType: FeedbackEntitySubType | null,
+	controlKind: ControlIdKind | null,
 	definition: ClientEntityDefinition
 ): boolean {
-	return !definition.hiddenFromPicker && canAddEntityToFeedbackList(feedbackListType, definition)
+	if (definition.hiddenFromPicker) return false
+	if (controlKind && definition.hiddenForControlTypes?.includes(controlKind)) return false
+	return canAddEntityToFeedbackList(feedbackListType, definition)
 }

@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
+import { getControlIdKind } from '@companion-app/shared/ControlId.js'
 import { getCustomActionCallsExcludedFrom } from '@companion-app/shared/Model/CustomActionModel.js'
 import { getCustomFeedbackCallsExcludedFrom } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
@@ -40,6 +41,8 @@ export const AddEntityPanel = observer(function AddEntityPanel({
 		[controlId, customActionsList, customFeedbacksList]
 	)
 
+	const controlKind = (controlId && getControlIdKind(controlId)) ?? null
+
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
 	const addEntity = useCallback(
@@ -70,6 +73,7 @@ export const AddEntityPanel = observer(function AddEntityPanel({
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
 				feedbackListType={feedbackListType}
+				controlKind={controlKind}
 				excludedIds={excludedIds}
 				disabled={readonly}
 			/>
@@ -79,6 +83,7 @@ export const AddEntityPanel = observer(function AddEntityPanel({
 					addEntity={addEntity}
 					entityType={entityType}
 					feedbackListType={feedbackListType}
+					controlKind={controlKind}
 					entityTypeLabel={entityTypeLabel}
 					excludedIds={excludedIds}
 					disabled={readonly}

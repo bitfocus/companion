@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, type FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
@@ -54,6 +55,8 @@ const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
 	feedbackListType: FeedbackEntitySubType | null
+	/** The kind of control being edited, or null when the list isn't on a control */
+	controlKind: ControlIdKind | null
 	entityType: EntityModelType
 	entityTypeLabel: string
 	/** A definition which can't be added here, such as a custom action running itself */
@@ -132,6 +135,7 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 export const AddEntitiesModal = observer(function AddEntitiesModal({
 	addEntity,
 	feedbackListType,
+	controlKind,
 	entityType,
 	entityTypeLabel,
 	excludedIds,
@@ -160,10 +164,10 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 
 	const getEntityLeaves = useCallback(
 		(connectionId: string): EntityLeafItem[] => {
-			const leaves = definitions.buildConnectionLeaves(connectionId, feedbackListType)
+			const leaves = definitions.buildConnectionLeaves(connectionId, feedbackListType, controlKind)
 			return excludedIds.size === 0 ? leaves : leaves.filter((leaf) => !excludedIds.has(leaf.fullId))
 		},
-		[definitions, feedbackListType, excludedIds]
+		[definitions, feedbackListType, controlKind, excludedIds]
 	)
 
 	const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
@@ -175,7 +179,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		getEntityLeaves
 	)
 
-	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType)
+	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType, controlKind)
 	const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
 		if (internalLeaves.length === 0) return null
 		return {

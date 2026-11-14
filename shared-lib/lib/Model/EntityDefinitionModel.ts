@@ -1,4 +1,5 @@
 import type { CompanionButtonStyleProps } from '@companion-module/base'
+import type { ControlIdKind } from '../ControlId.js'
 import type { ObjectsDiff } from './Common.js'
 import type { EntityModelType, EntitySupportedChildGroupDefinition, FeedbackEntitySubType } from './EntityModel.js'
 import type { SomeCompanionInputField } from './Options.js'
@@ -30,6 +31,8 @@ export interface ClientEntityDefinition {
 	feedbackDisableStyleOverrides?: boolean
 	/** When true, this entity is never offered for adding, as it only stands in for one that couldn't be loaded. Defaults to false */
 	hiddenFromPicker?: boolean
+	/** Never offered for adding to a control of these types; existing ones still work. Defaults to none */
+	hiddenForControlTypes?: ControlIdKind[]
 	/** When true, this feedback cannot be used as a style override: it is hidden from the add menu and rejected by validation. */
 	feedbackStyleOverridesUnsupported?: boolean
 	hasLifecycleFunctions: boolean

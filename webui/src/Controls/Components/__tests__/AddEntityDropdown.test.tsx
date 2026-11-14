@@ -52,6 +52,7 @@ function renderDropdown(excludedIds: ReadonlySet<string> = new Set()) {
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
 					feedbackListType={null}
+					controlKind="bank"
 					excludedIds={excludedIds}
 					disabled={false}
 				/>

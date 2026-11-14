@@ -4,6 +4,7 @@ import { ChevronDownIcon } from 'lucide-react'
 import { toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
+import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { canOfferEntityInPicker } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -20,6 +21,8 @@ interface AddEntityDropdownProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
+	/** The kind of control being edited, or null when the list isn't on a control */
+	controlKind: ControlIdKind | null
 	/** The ids (`<connectionId>:<definitionId>`) of what can't be added here, such as a custom action running itself */
 	excludedIds: ReadonlySet<string>
 	disabled: boolean
@@ -29,6 +32,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	entityType,
 	entityTypeLabel,
 	feedbackListType,
+	controlKind,
 	excludedIds,
 	disabled,
 }: AddEntityDropdownProps) {
@@ -37,7 +41,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 	const recentlyUsedStore = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
 
-	const baseGroups = definitions.buildBaseOptions(feedbackListType)
+	const baseGroups = definitions.buildBaseOptions(feedbackListType, controlKind)
 
 	const options = useComputed(() => {
 		const recents: AddEntityOption[] = []
@@ -48,7 +52,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			const definition = definitions.connections.get(connectionId)?.get(definitionId)
 			if (!definition) continue
 
-			if (!canOfferEntityInPicker(feedbackListType, definition)) continue
+			if (!canOfferEntityInPicker(feedbackListType, controlKind, definition)) continue
 
 			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 			const optionLabel = `${connectionLabel}: ${definition.label}`

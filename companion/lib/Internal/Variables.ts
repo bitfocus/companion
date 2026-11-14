@@ -192,6 +192,8 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				showInvert: false,
 				// A user value is only meaningful as a local variable, not as a style override
 				feedbackStyleOverridesUnsupported: true,
+				// Nothing can change one in a custom feedback, as it has no actions
+				hiddenForControlTypes: ['custom-feedback'],
 				options: [
 					{
 						type: 'checkbox',

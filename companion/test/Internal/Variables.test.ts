@@ -580,6 +580,10 @@ describe('definitions', () => {
 			])
 		)
 	})
+
+	it('does not offer user_value in a custom feedback', () => {
+		expect(module.getFeedbackDefinitions().user_value.hiddenForControlTypes).toEqual(['custom-feedback'])
+	})
 })
 
 describe('reference fields', () => {

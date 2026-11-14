@@ -706,6 +706,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						feedbackDisableStyleOverrides: false,
 						feedbackStyleOverridesUnsupported: false,
 						hiddenFromPicker: action.hiddenFromPicker ?? false,
+						hiddenForControlTypes: action.hiddenForControlTypes,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -745,6 +746,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
 						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
 						hiddenFromPicker: feedback.hiddenFromPicker ?? false,
+						hiddenForControlTypes: feedback.hiddenForControlTypes,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 
