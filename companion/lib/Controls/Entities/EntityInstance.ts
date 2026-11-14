@@ -297,7 +297,8 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Inform the relevant module of a removed entity, without touching the entities inside it
+	 * Inform the relevant module of a removed entity, without touching the entities inside it.
+	 * The counterpart of #subscribeSelf
 	 */
 	#cleanupSelf(): void {
 		// Inform relevant module
@@ -316,41 +317,46 @@ export class ControlEntityInstance {
 	}
 
 	/**
-	 * Inform the instance of an updated entity
-	 * @param recursive whether to call recursively
+	 * Inform the instance of an updated entity, and the entities inside it. The counterpart of cleanup
 	 * @param onlyType If set, only re-subscribe entities of this type
 	 * @param onlyConnectionId If set, only re-subscribe entities for this connection
 	 */
-	subscribe(recursive: boolean, onlyType?: EntityModelType, onlyConnectionId?: string): void {
+	subscribe(onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		if (
 			(!onlyConnectionId || this.#data.connectionId === onlyConnectionId) &&
 			(!onlyType || this.#data.type === onlyType)
 		) {
-			const thisData = this.#data
-
-			if (thisData.connectionId === 'internal') {
-				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-			} else {
-				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
-				// The EntityManager will not subscribe disabled entities to the module.
-				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
-					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
-				})
-			}
-
-			if (thisData.disabled) {
-				this.#specialExpressionManager.forgetEntity(this.id)
-			} else {
-				const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
-				this.#specialExpressionManager.trackEntity(this, specialExpression)
-			}
+			this.#subscribeSelf()
 		}
 
-		if (recursive) {
-			for (const childGroup of this.#children.values()) {
-				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
-			}
+		for (const childGroup of this.#children.values()) {
+			childGroup.subscribe(onlyType, onlyConnectionId)
+		}
+	}
+
+	/**
+	 * Inform the relevant module of an updated entity, without touching the entities inside it.
+	 * The counterpart of #cleanupSelf
+	 */
+	#subscribeSelf(): void {
+		const thisData = this.#data
+
+		if (thisData.connectionId === 'internal') {
+			// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
+			this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
+		} else {
+			// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
+			// The EntityManager will not subscribe disabled entities to the module.
+			this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
+				this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+			})
+		}
+
+		if (thisData.disabled) {
+			this.#specialExpressionManager.forgetEntity(this.id)
+		} else {
+			const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
+			this.#specialExpressionManager.trackEntity(this, specialExpression)
 		}
 	}
 
@@ -379,7 +385,7 @@ export class ControlEntityInstance {
 
 		// Inform relevant module
 		if (!this.#data.disabled) {
-			this.subscribe(true)
+			this.subscribe()
 		} else {
 			this.cleanup()
 		}
@@ -410,7 +416,7 @@ export class ControlEntityInstance {
 		// next change connectionId
 		this.#data.connectionId = connectionId
 		// last subscribe to new connection
-		this.subscribe(false)
+		this.#subscribeSelf()
 
 		return true
 	}
@@ -429,7 +435,7 @@ export class ControlEntityInstance {
 
 		if (isInverted.isExpression) {
 			// Trigger a re-evaluation of the expression
-			this.subscribe(false)
+			this.#subscribeSelf()
 		} else {
 			this.#cachedIsInverted = !!isInverted.value
 		}
@@ -460,7 +466,7 @@ export class ControlEntityInstance {
 		}
 
 		// Inform relevant module
-		this.subscribe(false)
+		this.#subscribeSelf()
 	}
 
 	/** Set the target into which an action's result is stored (if any). */
@@ -472,7 +478,7 @@ export class ControlEntityInstance {
 		data.storeResult = target
 		// Only the storeResult expression of this entity changes, which trackEntity replaces. Nothing else needs to be
 		// cleaned up, least of all the entities inside it
-		this.subscribe(false)
+		this.#subscribeSelf()
 	}
 
 	/**
@@ -512,7 +518,7 @@ export class ControlEntityInstance {
 		}
 
 		// Inform relevant module
-		this.subscribe(false)
+		this.#subscribeSelf()
 	}
 
 	getEntityDefinition(): ClientEntityDefinition | undefined {
@@ -733,7 +739,7 @@ export class ControlEntityInstance {
 		}
 
 		if (!skipNotifyModule) {
-			this.subscribe(false)
+			this.#subscribeSelf()
 		}
 	}
 

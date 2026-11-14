@@ -300,7 +300,7 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	resubscribeEntities(onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		for (const list of this.getAllEntityLists()) {
-			list.subscribe(true, onlyType, onlyConnectionId)
+			list.subscribe(onlyType, onlyConnectionId)
 		}
 	}
 
