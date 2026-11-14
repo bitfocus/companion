@@ -1,7 +1,12 @@
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
-import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import {
+	ActionStepOptionsSchema,
+	type ActionSetId,
+	type ActionSetsModel,
+	type ActionStepOptions,
+} from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
@@ -59,13 +64,6 @@ export abstract class ButtonEntityListPoolBase
 	extends ControlEntityListPoolBase
 	implements VariableDependencyListener<null>
 {
-	/**
-	 * The defaults options for a step
-	 */
-	static DefaultStepOptions: ActionStepOptions = {
-		runWhileHeld: [], // array of set ids
-	}
-
 	readonly #feedbacks: ControlEntityList
 	readonly #localVariables: ControlEntityList
 
@@ -399,7 +397,7 @@ export abstract class ButtonEntityListPoolBase
 		existingOptions: ActionStepOptions | null,
 		isCloned: boolean
 	): ControlEntityListActionStep {
-		const options = existingOptions || structuredClone(ButtonEntityListPoolBase.DefaultStepOptions)
+		const options = existingOptions || ActionStepOptionsSchema.parse({})
 
 		const downList = this.createActionEntityList(existingActions?.down || [], isCloned)
 		const upList = this.createActionEntityList(existingActions?.up || [], isCloned)
