@@ -550,11 +550,13 @@ export class ControlEntityInstance {
 
 		thisData.isInverted = isInverted
 
-		if (isInverted.isExpression) {
-			// Trigger a re-evaluation of the expression
-			this.#subscribeSelf()
+		// Only the inversion changes, which nothing but the special expression manager needs to know about
+		if (isInverted.isExpression && !this.disabled) {
+			this.#scope.specialExpressionManager.trackEntity(this, 'isInverted')
 		} else {
-			this.#cachedIsInverted = !!isInverted.value
+			// Stop tracking any expression it had before
+			this.#scope.specialExpressionManager.forgetEntity(this.id)
+			this.#cachedIsInverted = !isInverted.isExpression && !!isInverted.value
 		}
 	}
 

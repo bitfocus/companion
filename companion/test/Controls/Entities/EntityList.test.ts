@@ -1974,6 +1974,50 @@ describe('getAllEnabledEntities', () => {
 	})
 })
 
+describe('setInverted', () => {
+	function setup() {
+		const ctx = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
+		ctx.getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(FeedbackTree), false)
+		ctx.list.subscribe()
+		ctx.connectionEntityUpdate.mockClear()
+		vi.mocked(ctx.specialExpressionManager.trackEntity).mockClear()
+		vi.mocked(ctx.specialExpressionManager.forgetEntity).mockClear()
+		return { ...ctx, entity: ctx.list.findById('01')! }
+	}
+
+	test('an expression is tracked by the special expression manager, without notifying the module', () => {
+		const { entity, connectionEntityUpdate, specialExpressionManager } = setup()
+
+		entity.setInverted({ isExpression: true, value: '$(custom:a)' })
+
+		expect(specialExpressionManager.trackEntity).toHaveBeenCalledTimes(1)
+		expect(specialExpressionManager.trackEntity).toHaveBeenCalledWith(entity, 'isInverted')
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a value stops tracking any previous expression', () => {
+		const { entity, connectionEntityUpdate, specialExpressionManager } = setup()
+		entity.setInverted({ isExpression: true, value: '$(custom:a)' })
+
+		entity.setInverted({ isExpression: false, value: true })
+
+		expect(specialExpressionManager.forgetEntity).toHaveBeenCalledWith(entity.id)
+		expect(entity.rawIsInverted).toEqual({ isExpression: false, value: true })
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('an expression on a disabled feedback is not tracked', () => {
+		const { entity, specialExpressionManager } = setup()
+		entity.setEnabled(false)
+		vi.mocked(specialExpressionManager.trackEntity).mockClear()
+
+		entity.setInverted({ isExpression: true, value: '$(custom:a)' })
+
+		expect(specialExpressionManager.trackEntity).not.toHaveBeenCalled()
+	})
+})
+
 describe('updateIsInvertedValues', () => {
 	test('update value for feedback', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
