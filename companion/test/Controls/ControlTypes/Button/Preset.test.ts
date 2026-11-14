@@ -128,6 +128,25 @@ describe('ControlButtonPreset', () => {
 		expect(loadSpy).not.toHaveBeenCalled()
 	})
 
+	it('subscribes its entities once set up', async () => {
+		const control = createControl()
+		const resubscribeSpy = vi.spyOn(control.entities, 'resubscribeEntities')
+
+		await new Promise((resolve) => setImmediate(resolve))
+
+		expect(resubscribeSpy).toHaveBeenCalledTimes(1)
+	})
+
+	it('does not subscribe its entities when destroyed before it was set up', async () => {
+		const control = createControl()
+		const resubscribeSpy = vi.spyOn(control.entities, 'resubscribeEntities')
+
+		control.destroy()
+		await new Promise((resolve) => setImmediate(resolve))
+
+		expect(resubscribeSpy).not.toHaveBeenCalled()
+	})
+
 	it('keeps the last-known data when the preset is gone', () => {
 		definitions.convertPresetToPreviewControlModel = vi.fn(() => null)
 		const control = createControl()

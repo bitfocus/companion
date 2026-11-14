@@ -98,6 +98,11 @@ export class ControlButtonPreset
 
 	#lastRender: ImageResult | null = null
 
+	/**
+	 * Set once destroyed, as a preview can be deleted before its deferred setup has run
+	 */
+	#destroyed = false
+
 	get lastRender(): ImageResult | null {
 		return this.#lastRender
 	}
@@ -162,6 +167,7 @@ export class ControlButtonPreset
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.#destroyed = true
 		this.#drawing.dispose()
 		this.entities.destroy()
 
@@ -228,6 +234,9 @@ export class ControlButtonPreset
 	 * If this control was imported to a running system, do some data cleanup/validation
 	 */
 	protected postProcessImport(): void {
+		// Don't resubscribe the entities of a preview deleted before this ran, as nothing would clean them up again
+		if (this.#destroyed) return
+
 		this.entities.resubscribeEntities()
 
 		this.commitChange()
