@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { contentClip, shoot, unionClip, withViewport } from './shoot.js'
+import { contentClip, fitWindowToPanel, padClip, shoot, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/variables.md, triggers.md and image-library.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
@@ -13,14 +13,23 @@ const primary = (page: Page) => page.locator('.primary-panel')
 const secondary = (page: Page) => page.locator('.secondary-panel')
 
 test('variables page', async ({ page }) => {
-	await gotoApp(page, '/variables')
-	await expect(primary(page).getByText('Demo: Media Player')).toBeVisible()
-	await shoot(page, await contentClip(primary(page)), `${IMAGES}/variables-page`)
+	await withViewport(page, { width: 1920, height: 1600 }, async () => {
+		await gotoApp(page, '/variables')
+		await expect(primary(page).getByText('Demo: Media Player')).toBeVisible()
+		// Just tall enough for the list, as its card fills the height of the window, and with some of the page around it
+		await fitWindowToPanel(primary(page), 16)
+		const panel = await primary(page).boundingBox()
+		if (!panel) throw new Error('The panel is not visible')
+		await shoot(page, padClip({ page, clip: panel }, 8), `${IMAGES}/variables-page`)
+	})
 
 	await primary(page).getByText('Demo: Vision Mixer').click()
 	await expect(secondary(page).getByText('$(mixer:input_1_name)')).toBeVisible()
 	await withViewport(page, { width: 1280, height: 700 }, async () => {
-		await shoot(page, page.locator('.split-panels'), `${IMAGES}/variables-connection`)
+		const panels = await page.locator('.split-panels').boundingBox()
+		if (!panels) throw new Error('The panels are not visible')
+		// With some of the page around them
+		await shoot(page, padClip({ page, clip: panels }, 8), `${IMAGES}/variables-connection`)
 	})
 })
 

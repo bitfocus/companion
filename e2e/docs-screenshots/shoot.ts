@@ -117,6 +117,36 @@ export async function contentClip(panel: Locator, margin = 16): Promise<ShotTarg
 }
 
 /**
+ * Shrink the window until a panel which fills its height ends just below what it shows, so that the whole panel, with
+ * its edges, can be shot without the empty space below its content
+ * @param panel The panel
+ * @param margin Space to leave below its content
+ */
+export async function fitWindowToPanel(panel: Locator, margin: number): Promise<void> {
+	const page = panel.page()
+	const viewport = page.viewportSize()
+	const panelBox = await panel.boundingBox()
+	const target = await contentClip(panel, margin)
+	if (!viewport || !panelBox || !('clip' in target)) throw new Error('The panel is not visible')
+
+	const spare = panelBox.y + panelBox.height - (target.clip.y + target.clip.height)
+	await page.setViewportSize({ width: viewport.width, height: Math.ceil(viewport.height - spare) })
+}
+
+/**
+ * An area grown by some padding on every side, eg to show some of the page around a panel rather than cutting at
+ * its edges
+ */
+export function padClip(target: ShotTarget, padding: number): ShotTarget {
+	if (!('clip' in target)) throw new Error('Only an area can be padded')
+	const { x, y, width, height } = target.clip
+	return {
+		page: target.page,
+		clip: { x: x - padding, y: y - padding, width: width + padding * 2, height: height + padding * 2 },
+	}
+}
+
+/**
  * The area covering some cells of the button grid
  * @param page The page
  * @param from The top left cell, as `page/row/column`
