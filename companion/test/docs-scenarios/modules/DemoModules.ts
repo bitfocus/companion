@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { Readable } from 'node:stream'
 import { buffer } from 'node:stream/consumers'
@@ -247,6 +248,18 @@ async function realModulePackage(fetchFn: typeof fetch, version: RealModuleVersi
 	return tarball
 }
 
+/**
+ * Download the pinned versions of the real modules into the cache, if they aren't there already, so that installing
+ * them doesn't need to while an app is starting
+ */
+export async function cacheRealModules(): Promise<void> {
+	for (const module of Object.values(REAL_MODULES) as RealModule[]) {
+		for (const version of module.versions) {
+			await realModulePackage(globalThis.fetch, version)
+		}
+	}
+}
+
 /** The api version each type of demo module is built against, the one installed in the repository */
 const API_VERSIONS = { connection: '2.3.0', surface: SURFACE_BASE_VERSION } as const
 
@@ -381,7 +394,7 @@ async function bundleModuleSource(file: string): Promise<string> {
 
 /** Pack a module as a tarball, laid out like those of the module store */
 async function packModule(module: DemoModule, version: string, bundle: string): Promise<Buffer> {
-	const dir = fs.mkdtempSync(path.join(import.meta.dirname, '../../../../.cache/docs-module-'))
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'docs-module-'))
 	try {
 		const pkgDir = path.join(dir, 'pkg')
 		fs.mkdirSync(path.join(pkgDir, 'companion'), { recursive: true })

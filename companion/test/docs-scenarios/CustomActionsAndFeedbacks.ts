@@ -144,7 +144,7 @@ export async function seed(app: TestApp): Promise<void> {
 	app.addCustomActionCall(
 		rampB,
 		ramp,
-		{ target: exprVal(50), step: exprVal(10), delay: exprVal(1000) },
+		{ target: exprVal(50), step: exprVal(10), delay: exprVal(2000) },
 		{ level: { type: 'custom-variable', variableName: exprVal('fader_b'), createIfNotExists: false } }
 	)
 }

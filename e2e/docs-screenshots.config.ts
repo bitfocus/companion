@@ -13,7 +13,7 @@ export default defineConfig({
 	testDir: './docs-screenshots',
 	testMatch: '*.shots.ts',
 	outputDir: './test-results/docs-screenshots',
-	globalSetup: './support/global-setup.ts',
+	globalSetup: ['./support/global-setup.ts', './docs-screenshots/global-setup.ts'],
 	// The images are written straight into the docs, next to the pages which show them
 	snapshotPathTemplate: '../docs/user-guide/{arg}{ext}',
 	timeout: 120_000,
