@@ -80,3 +80,13 @@ test('a custom action can be test run from the list', async ({ page }) => {
 
 	expect(errors).toEqual([])
 })
+
+test('the tabs move between the kinds of building block', async ({ page }) => {
+	await gotoApp(page, '/custom-actions')
+	const tabs = page.locator('.page-tabs')
+	await expect(tabs.locator('.page-tab.active')).toHaveText('Custom Actions')
+
+	await tabs.getByRole('link', { name: 'Custom Feedbacks' }).click()
+	await expect(page).toHaveURL(/\/custom-feedbacks$/)
+	await expect(tabs.locator('.page-tab.active')).toHaveText('Custom Feedbacks')
+})

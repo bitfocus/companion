@@ -1,7 +1,7 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { faAdd, faBook, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useLocation } from '@tanstack/react-router'
 import classnames from 'classnames'
 import { single as fuzzySingle } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
@@ -16,8 +16,10 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode.js'
+import { activePageIdForPath, BUILDING_BLOCKS_SECTION } from '~/Layout/navRegistry.js'
 import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
+import { PageTabs } from '~/Layout/PageTabs.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
@@ -93,6 +95,7 @@ export const BuildingBlockListPage = observer(function BuildingBlockListPage({
 	rowActions,
 }: BuildingBlockListPageProps) {
 	const twoPanelMode = useTwoPanelMode()
+	const pathname = useLocation().pathname
 	const [filter, setFilter] = useState('')
 
 	const confirmRemove = useCallback(
@@ -150,6 +153,11 @@ export const BuildingBlockListPage = observer(function BuildingBlockListPage({
 	return (
 		<div className="page-shell">
 			<PageHeader icon={kind.icon} title={`${kind.nounTitle}s`} helpAction={kind.helpPage} beta />
+
+			<PageTabs
+				tabs={BUILDING_BLOCKS_SECTION.pages}
+				activeTab={activePageIdForPath(BUILDING_BLOCKS_SECTION, pathname)}
+			/>
 
 			<GenericConfirmModal ref={confirmModalRef} />
 
