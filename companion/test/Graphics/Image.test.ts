@@ -657,6 +657,54 @@ describe('Image drawing', () => {
 	// -------------------------------------------------------------------------
 
 	describe('drawBase64Image', () => {
+		describe('svg with no intrinsic size, oversampled', () => {
+			// A solid red svg with only a viewBox, which the canvas gives a default size
+			const svgDataUrl = `data:image/svg+xml;base64,${Buffer.from(
+				'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10"><rect width="20" height="10" fill="#ff0000"/></svg>'
+			).toString('base64')}`
+
+			/** The RGBA of a pixel, in un-oversampled coordinates */
+			function pixelAt(img: Image, x: number, y: number): number[] {
+				const buffer = img.buffer()
+				const offset = (y * img.oversampling * img.realwidth + x * img.oversampling) * 4
+				return [...buffer.subarray(offset, offset + 4)]
+			}
+
+			test.each(['fit', 'fill', 'crop'] as const)('%s draws the whole image', async (scale) => {
+				const img = Image.create(72, 72, 4, null)
+				img.fillColor('#000000')
+				await img.drawBase64Image(svgDataUrl, 0, 0, 72, 72, 'center', 'center', scale)
+
+				// Fit leaves bands above and below the 2:1 image, so check across its middle and down its centre
+				const yMin = scale === 'fit' ? 19 : 1
+				const yMax = scale === 'fit' ? 52 : 70
+				for (const [x, y] of [
+					[1, 36],
+					[70, 36],
+					[36, yMin],
+					[36, yMax],
+					[70, yMax],
+				]) {
+					expect(pixelAt(img, x, y), `pixel ${x},${y}`).toEqual([255, 0, 0, 255])
+				}
+			})
+
+			// A different colour in each quadrant, so any cropping or misplacement shows
+			const quadrantsSvgDataUrl = `data:image/svg+xml;base64,${Buffer.from(
+				'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">' +
+					'<rect width="10" height="5" fill="#ff0000"/><rect x="10" width="10" height="5" fill="#00ff00"/>' +
+					'<rect y="5" width="10" height="5" fill="#0000ff"/><rect x="10" y="5" width="10" height="5" fill="#ffff00"/>' +
+					'</svg>'
+			).toString('base64')}`
+
+			test.each(['fit', 'crop'] as const)('%s matches snapshot', async (scale) => {
+				const img = Image.create(72, 58, 4, null)
+				img.fillColor('#222222')
+				await img.drawBase64Image(quadrantsSvgDataUrl, 6, 6, 60, 46, 'center', 'center', scale)
+				await expect(img.canvasImage).toMatchImageSnapshot()
+			})
+		})
+
 		test('fit scale - portrait source in landscape canvas', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#222222')

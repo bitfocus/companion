@@ -127,7 +127,24 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		dw: number,
 		dh: number
 	): void {
-		this.#context2d.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
+		// The canvas crops an svg with no intrinsic size when drawn from a source rect under a transform (eg the
+		// oversampling), so draw the whole image instead, clipped to the destination when only part of it is wanted
+		if (sx === 0 && sy === 0 && sw === image.width && sh === image.height) {
+			this.#context2d.drawImage(image, dx, dy, dw, dh)
+			return
+		}
+
+		const scaleX = dw / sw
+		const scaleY = dh / sh
+		this.#context2d.save()
+		try {
+			this.#context2d.beginPath()
+			this.#context2d.rect(dx, dy, dw, dh)
+			this.#context2d.clip()
+			this.#context2d.drawImage(image, dx - sx * scaleX, dy - sy * scaleY, image.width * scaleX, image.height * scaleY)
+		} finally {
+			this.#context2d.restore()
+		}
 	}
 
 	protected async loadBase64Image(base64Image: string): Promise<CanvasImage> {
