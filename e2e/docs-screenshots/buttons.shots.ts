@@ -1,5 +1,5 @@
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { clickWithCursor, panelClip, shoot, unionClip, withViewport } from './shoot.js'
+import { clickWithCursor, panelsClip, shoot, shootPanel, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/buttons/index.md and pages.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
@@ -12,7 +12,7 @@ test('buttons page', async ({ page }) => {
 	await withViewport(page, { width: 1280, height: 620 }, async () => {
 		await gotoApp(page, '/buttons')
 		await expect(page.getByTitle('1/1/3', { exact: true })).toBeVisible()
-		await shoot(page, page.locator('.buttons-page'), `${IMAGES}/buttons`)
+		await shoot(page, await panelsClip(page.locator('.buttons-page')), `${IMAGES}/buttons`)
 	})
 })
 
@@ -50,7 +50,7 @@ test('pages', async ({ page }) => {
 	await page.getByRole('tab', { name: 'Pages' }).click()
 	const panel = page.locator('.secondary-panel')
 	await expect(panel.locator('.pages-list-row')).toHaveCount(4)
-	await shoot(page, await panelClip(panel, panel.locator('.pages-list-table')), `${IMAGES}/pages`)
+	await shootPanel(panel, `${IMAGES}/pages`)
 })
 
 test('page variables', async ({ page }) => {
@@ -58,5 +58,5 @@ test('page variables', async ({ page }) => {
 	await page.getByRole('tab', { name: 'Page Variables' }).click()
 	const panel = page.locator('.secondary-panel')
 	await expect(panel.getByRole('textbox', { name: 'Current Value' })).toHaveValue('Jane Smith')
-	await shoot(page, await panelClip(panel, panel.locator('.tab-panel > *').first()), `${IMAGES}/page-variables`)
+	await shootPanel(panel, `${IMAGES}/page-variables`)
 })

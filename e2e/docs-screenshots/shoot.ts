@@ -133,6 +133,41 @@ export async function fitWindowToPanel(panel: Locator, margin: number): Promise<
 	await page.setViewportSize({ width: viewport.width, height: Math.ceil(viewport.height - spare) })
 }
 
+/** Space left around a panel in its screenshots, so that its rounded corners (and those of panels beside it) show */
+const PANEL_PADDING = 8
+
+/**
+ * Capture a panel which fills the height of the window, down to the end of its content, with its edges and some of the
+ * page around it. The window is shrunk for it, so that the panel ends just below its content, and then put back
+ * @param panel The panel
+ * @param name The path of the image under `docs/user-guide`, without its extension
+ */
+export async function shootPanel(panel: Locator, name: string): Promise<void> {
+	const page = panel.page()
+	const viewport = page.viewportSize()
+	if (!viewport) throw new Error('The page has no viewport')
+
+	// The handle to resize the panel beside it would show at its edge, cut off
+	const hideHandle = await page.addStyleTag({ content: '.split-panels > .resize-handle { visibility: hidden; }' })
+	try {
+		await fitWindowToPanel(panel, 16)
+		await shoot(page, await panelsClip(panel), name)
+	} finally {
+		await hideHandle.evaluate((style) => (style as HTMLStyleElement).remove())
+		await page.setViewportSize(viewport)
+	}
+}
+
+/**
+ * The area of some panels, with some of the page around them, so that their rounded corners show
+ * @param panels The panels, or what contains them (eg `.split-panels`)
+ */
+export async function panelsClip(panels: Locator): Promise<ShotTarget> {
+	const box = await stableBoundingBox(panels)
+	if (!box) throw new Error('The panels are not visible')
+	return padClip({ page: panels.page(), clip: box }, PANEL_PADDING)
+}
+
 /**
  * An area grown by some padding on every side, eg to show some of the page around a panel rather than cutting at
  * its edges

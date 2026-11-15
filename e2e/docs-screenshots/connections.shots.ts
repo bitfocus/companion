@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { clickWithCursor, contentClip, shoot, unionClip, withViewport } from './shoot.js'
+import { clickWithCursor, panelsClip, shoot, shootPanel, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/connect/connections.md and modules.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
@@ -20,7 +20,7 @@ test('connections page', async ({ page }) => {
 		await gotoApp(page, '/connections')
 		await connectionRow(page, 'Demo: Vision Mixer').click()
 		await expect(secondary(page).getByText('Target IP')).toBeVisible()
-		await shoot(page, page.locator('.split-panels'), `${IMAGES}/connection_list`)
+		await shoot(page, await panelsClip(page.locator('.split-panels')), `${IMAGES}/connection_list`)
 	})
 })
 
@@ -70,18 +70,21 @@ test('configuring a connection', async ({ page }) => {
 
 test('modules', async ({ page }) => {
 	await gotoApp(page, '/modules')
-	// Those available from the store too, not only those installed
-	await primary(page).getByRole('button', { name: 'Filter by Available' }).click()
-	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken
+	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken. The
+	// time is shown relative to a "now" which only moves on once a minute, so the page is reloaded to show it afresh
 	await primary(page)
 		.getByRole('button', { name: /refresh/i })
 		.click()
+	await expect(primary(page).locator('.last-updated')).toContainText('seconds')
+	await gotoApp(page, '/modules')
 	await expect(primary(page).locator('.last-updated')).toContainText('a few seconds ago')
+	// Those available from the store too, not only those installed
+	await primary(page).getByRole('button', { name: 'Filter by Available' }).click()
 	await expect(primary(page).getByText('Lighting Desk', { exact: true })).toBeVisible()
-	await shoot(page, await contentClip(primary(page)), `${IMAGES}/module-list`)
+	await shootPanel(primary(page), `${IMAGES}/module-list`)
 
 	// The versions of a real module, an ATEM
 	await primary(page).getByText('ATEM', { exact: true }).click()
 	await expect(secondary(page).getByText('4.3.0', { exact: true })).toBeVisible()
-	await shoot(page, await contentClip(secondary(page)), `${IMAGES}/module-manage`)
+	await shootPanel(secondary(page), `${IMAGES}/module-manage`)
 })

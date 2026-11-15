@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { contentClip, fitWindowToPanel, padClip, shoot, unionClip, withViewport } from './shoot.js'
+import { panelsClip, shoot, shootPanel, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/variables.md, triggers.md and image-library.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
@@ -13,23 +13,14 @@ const primary = (page: Page) => page.locator('.primary-panel')
 const secondary = (page: Page) => page.locator('.secondary-panel')
 
 test('variables page', async ({ page }) => {
-	await withViewport(page, { width: 1920, height: 1600 }, async () => {
-		await gotoApp(page, '/variables')
-		await expect(primary(page).getByText('Demo: Media Player')).toBeVisible()
-		// Just tall enough for the list, as its card fills the height of the window, and with some of the page around it
-		await fitWindowToPanel(primary(page), 16)
-		const panel = await primary(page).boundingBox()
-		if (!panel) throw new Error('The panel is not visible')
-		await shoot(page, padClip({ page, clip: panel }, 8), `${IMAGES}/variables-page`)
-	})
+	await gotoApp(page, '/variables')
+	await expect(primary(page).getByText('Demo: Media Player')).toBeVisible()
+	await shootPanel(primary(page), `${IMAGES}/variables-page`)
 
 	await primary(page).getByText('Demo: Vision Mixer').click()
 	await expect(secondary(page).getByText('$(mixer:input_1_name)')).toBeVisible()
 	await withViewport(page, { width: 1280, height: 700 }, async () => {
-		const panels = await page.locator('.split-panels').boundingBox()
-		if (!panels) throw new Error('The panels are not visible')
-		// With some of the page around them
-		await shoot(page, padClip({ page, clip: panels }, 8), `${IMAGES}/variables-connection`)
+		await shoot(page, await panelsClip(page.locator('.split-panels')), `${IMAGES}/variables-connection`)
 	})
 })
 
@@ -64,7 +55,7 @@ test('custom variables', async ({ page }) => {
 		await gotoApp(page, '/variables/custom')
 		await primary(page).getByText('$(custom:show_name)').click()
 		await expect(secondary(page).locator('input[value="The name of the show"]')).toBeVisible()
-		await shoot(page, page.locator('.split-panels'), `${IMAGES}/variables-custom`)
+		await shoot(page, await panelsClip(page.locator('.split-panels')), `${IMAGES}/variables-custom`)
 	})
 })
 
@@ -73,7 +64,7 @@ test('expression variables', async ({ page }) => {
 		await gotoApp(page, '/variables/expression')
 		await primary(page).getByText('$(expression:on_air)').click()
 		await expect(secondary(page).getByText('toUpperCase')).toBeVisible()
-		await shoot(page, page.locator('.split-panels'), `${IMAGES}/variables-expression`)
+		await shoot(page, await panelsClip(page.locator('.split-panels')), `${IMAGES}/variables-expression`)
 	})
 })
 
@@ -89,13 +80,13 @@ test('local variables', async ({ page }) => {
 
 	await secondary(page).getByRole('button', { name: 'Collapse all' }).click()
 	await expect(secondary(page).getByText('$(local:doubled)')).toBeVisible()
-	await shoot(page, await contentClip(secondary(page)), `${IMAGES}/variables-page-collapsed`)
+	await shootPanel(secondary(page), `${IMAGES}/variables-page-collapsed`)
 })
 
 test('triggers', async ({ page }) => {
 	await gotoApp(page, '/triggers')
 	await expect(primary(page).getByText('Camera 2 ready')).toBeVisible()
-	await shoot(page, await contentClip(primary(page)), `${IMAGES}/triggers`)
+	await shootPanel(primary(page), `${IMAGES}/triggers`)
 
 	await primary(page).getByText('Camera 2 ready').click()
 	const stages = secondary(page).locator('.trigger-stage')
@@ -108,9 +99,9 @@ test('triggers', async ({ page }) => {
 test('image library', async ({ page }) => {
 	await gotoApp(page, '/image-library')
 	await expect(primary(page).getByText('The Companion logo')).toBeVisible()
-	await shoot(page, await contentClip(primary(page)), `${IMAGES}/image-library-managing`)
+	await shootPanel(primary(page), `${IMAGES}/image-library-managing`)
 
 	await primary(page).getByText('The Companion logo').click()
 	await expect(secondary(page).getByRole('img').first()).toBeVisible()
-	await shoot(page, await contentClip(secondary(page)), `${IMAGES}/image-library-edit`)
+	await shootPanel(secondary(page), `${IMAGES}/image-library-edit`)
 })

@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { contentClip, shoot, unionClip, withViewport } from './shoot.js'
+import { panelsClip, shoot, shootPanel, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/connect/surfaces.md, 7_surfaces/index.md and 6_interactive-buttons/*.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
@@ -21,7 +21,7 @@ test('surfaces', async ({ page }) => {
 		await gotoApp(page, '/surfaces')
 		await primary(page).locator('.surface-row', { hasText: 'emulator:studio' }).click()
 		await expect(secondary(page).getByText('Settings for Studio')).toBeVisible()
-		await shoot(page, page.locator('.split-panels'), '3_config/connect/images/surfaces')
+		await shoot(page, await panelsClip(page.locator('.split-panels')), '3_config/connect/images/surfaces')
 	})
 })
 
@@ -41,20 +41,25 @@ test('remote surfaces', async ({ page }) => {
 	await withViewport(page, { width: 1440, height: 560 }, async () => {
 		await openSurfacesTab(page, 'Remote & Discover')
 		await expect(secondary(page).getByText('Backstage panel')).toBeVisible()
-		await shoot(page, page.locator('.split-panels'), '3_config/connect/images/surfaces-remote')
+		await shoot(page, await panelsClip(page.locator('.split-panels')), '3_config/connect/images/surfaces-remote')
 	})
 })
 
 test('surface integrations', async ({ page }) => {
 	await openSurfacesTab(page, 'Integrations')
 	await expect(primary(page).getByText('Demo: Control Panel')).toBeVisible()
-	await shoot(page, await contentClip(primary(page)), '7_surfaces/images/surface-integrations-panel')
+	await shootPanel(primary(page), '7_surfaces/images/surface-integrations-panel')
 
 	await page.getByRole('button', { name: 'Add Surface Integration' }).click()
 	const dialog = page.getByRole('dialog')
 	await expect(dialog.getByText('Fader Bank')).toBeVisible()
-	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken
+	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken. The
+	// time is shown relative to a "now" which only moves on once a minute, so the dialog is reopened to show it afresh
 	await dialog.getByRole('button', { name: 'Refresh modules list' }).click()
+	await expect(dialog.locator('.last-updated')).toContainText('seconds')
+	await dialog.getByRole('button', { name: 'Close modal' }).click()
+	await expect(dialog).toBeHidden()
+	await page.getByRole('button', { name: 'Add Surface Integration' }).click()
 	await expect(dialog.locator('.last-updated')).toContainText('a few seconds ago')
 	await shoot(page, dialog, '7_surfaces/images/surface-integrations-add-panel')
 })
