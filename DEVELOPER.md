@@ -115,4 +115,4 @@ yarn playwright test -c e2e/docs-screenshots.config.ts
 
 The images of the What's New pages are not regenerated, as they show a feature as it was in that release.
 
-Screenshots differ a little between machines (fonts, antialiasing), so take all of a page's on the same one.
+Screenshots differ a little between machines (fonts, antialiasing), so try to minimise churn when updating a page.
