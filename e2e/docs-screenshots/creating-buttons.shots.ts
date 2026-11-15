@@ -27,7 +27,7 @@ test('presets', async ({ page }) => {
 	await gotoApp(page, '/buttons')
 	await page.getByRole('tab', { name: 'Presets' }).click()
 	await expect(panel(page).getByText('Blackmagic Design: ATEM')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/preset-modules`)
+	await shootPanel(panel(page), `${IMAGES}/preset-modules`, false)
 
 	// The presets of a real module, an ATEM
 	await panel(page).getByText('Blackmagic Design: ATEM').click()
@@ -49,13 +49,13 @@ test('presets', async ({ page }) => {
 		.getByRole('button', { name: /^Showcase/ })
 		.click()
 	await expect(panel(page).getByRole('button', { name: 'Camera with tally' })).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/preset-placement`)
+	await shootPanel(panel(page), `${IMAGES}/preset-placement`, false)
 })
 
 test('linked preset', async ({ page }) => {
 	await editButton(page, '1/0/1')
 	await expect(panel(page).getByText('Preset variables')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/linked-preset`)
+	await shootPanel(panel(page), `${IMAGES}/linked-preset`, false)
 })
 
 // These panels centre what they show, so are taken with a shorter window
@@ -78,7 +78,7 @@ test('convert to normal button', async ({ page }) => {
 test('button reference', async ({ page }) => {
 	await editButton(page, '1/2/1')
 	await expect(panel(page).getByText('Mirrored button')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/button-reference`)
+	await shootPanel(panel(page), `${IMAGES}/button-reference`, false)
 })
 
 test('button notes', async ({ page }) => {
@@ -95,13 +95,13 @@ test('button notes', async ({ page }) => {
 test('steps', async ({ page }) => {
 	await editButton(page, '1/2/2')
 	await panel(page).getByRole('button', { name: 'Step 2' }).click()
-	await shootPanel(panel(page), `${IMAGES}/button-step2`)
+	await shootPanel(panel(page), `${IMAGES}/button-step2`, false)
 })
 
 test('actions', async ({ page }) => {
 	await editButton(page, '1/2/6')
 	await expect(panel(page).getByText('Auto transition')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/button-actions`)
+	await shootPanel(panel(page), `${IMAGES}/button-actions`, false)
 
 	await editButton(page, '1/2/5')
 	const group = panel(page).locator('.entity-row', { hasText: 'Action Group' }).first()
@@ -118,14 +118,14 @@ test('generated image', async ({ page }) => {
 	await editButton(page, '1/3/0')
 	await openEditorTab(page, 'Feedbacks')
 	await expect(panel(page).getByText('Audio meters (image)')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/feedback-advanced-example`)
+	await shootPanel(panel(page), `${IMAGES}/feedback-advanced-example`, false)
 })
 
 test('feedbacks', async ({ page }) => {
 	await editButton(page, '1/2/4')
 	await openEditorTab(page, 'Feedbacks')
 	await expect(panel(page).getByText('Check boolean expression')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/feedback-list`)
+	await shootPanel(panel(page), `${IMAGES}/feedback-list`, false)
 	await shoot(
 		page,
 		panel(page).locator('.entity-row', { hasText: 'Check boolean expression' }).first(),
@@ -135,7 +135,7 @@ test('feedbacks', async ({ page }) => {
 	await editButton(page, '1/2/3')
 	await openEditorTab(page, 'Feedbacks')
 	await expect(panel(page).getByText('Audio level (dB)')).toBeVisible()
-	await shootPanel(panel(page), `${IMAGES}/feedback-value-override`)
+	await shootPanel(panel(page), `${IMAGES}/feedback-value-override`, false)
 })
 
 test('adding element properties to a feedback', async ({ page }) => {

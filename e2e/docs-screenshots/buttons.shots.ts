@@ -50,7 +50,7 @@ test('pages', async ({ page }) => {
 	await page.getByRole('tab', { name: 'Pages' }).click()
 	const panel = page.locator('.secondary-panel')
 	await expect(panel.locator('.pages-list-row')).toHaveCount(4)
-	await shootPanel(panel, `${IMAGES}/pages`)
+	await shootPanel(panel, `${IMAGES}/pages`, false)
 })
 
 test('page variables', async ({ page }) => {
@@ -58,5 +58,5 @@ test('page variables', async ({ page }) => {
 	await page.getByRole('tab', { name: 'Page Variables' }).click()
 	const panel = page.locator('.secondary-panel')
 	await expect(panel.getByRole('textbox', { name: 'Current Value' })).toHaveValue('Jane Smith')
-	await shootPanel(panel, `${IMAGES}/page-variables`)
+	await shootPanel(panel, `${IMAGES}/page-variables`, false)
 })

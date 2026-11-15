@@ -120,12 +120,14 @@ export async function fitWindowToPanel(panel: Locator, margin: number): Promise<
 const PANEL_PADDING = 8
 
 /**
- * Capture a panel which fills the height of the window, down to the end of its content, with its edges and some of the
- * page around it. The window is shrunk for it, so that the panel ends just below its content, and then put back
+ * Capture a panel which fills the height of the window, down to the end of its content, with its edges. The window is
+ * shrunk for it, so that the panel ends just below its content, and then put back
  * @param panel The panel
  * @param name The path of the image under `docs/user-guide`, without its extension
+ * @param padded Whether to show some of the page around it: needed where it holds several boxes (eg a list panel's
+ * toolbar and list), whose rounded corners look odd cut off at its edge, but not for a single box
  */
-export async function shootPanel(panel: Locator, name: string): Promise<void> {
+export async function shootPanel(panel: Locator, name: string, padded: boolean): Promise<void> {
 	const page = panel.page()
 	const viewport = page.viewportSize()
 	if (!viewport) throw new Error('The page has no viewport')
@@ -134,7 +136,9 @@ export async function shootPanel(panel: Locator, name: string): Promise<void> {
 	const hideHandle = await page.addStyleTag({ content: '.split-panels > .resize-handle { visibility: hidden; }' })
 	try {
 		await fitWindowToPanel(panel, 16)
-		await shoot(page, await panelsClip(panel), name)
+		const box = await stableBoundingBox(panel)
+		if (!box) throw new Error('The panel is not visible')
+		await shoot(page, padClip({ page, clip: box }, padded ? PANEL_PADDING : 0), name)
 	} finally {
 		await hideHandle.evaluate((style) => (style as HTMLStyleElement).remove())
 		await page.setViewportSize(viewport)

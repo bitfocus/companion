@@ -15,7 +15,7 @@ const secondary = (page: Page) => page.locator('.secondary-panel')
 test('variables page', async ({ page }) => {
 	await gotoApp(page, '/variables')
 	await expect(primary(page).getByText('Demo: Media Player')).toBeVisible()
-	await shootPanel(primary(page), `${IMAGES}/variables-page`)
+	await shootPanel(primary(page), `${IMAGES}/variables-page`, true)
 
 	await primary(page).getByText('Demo: Vision Mixer').click()
 	await expect(secondary(page).getByText('$(mixer:input_1_name)')).toBeVisible()
@@ -80,13 +80,13 @@ test('local variables', async ({ page }) => {
 
 	await secondary(page).getByRole('button', { name: 'Collapse all' }).click()
 	await expect(secondary(page).getByText('$(local:doubled)')).toBeVisible()
-	await shootPanel(secondary(page), `${IMAGES}/variables-page-collapsed`)
+	await shootPanel(secondary(page), `${IMAGES}/variables-page-collapsed`, false)
 })
 
 test('triggers', async ({ page }) => {
 	await gotoApp(page, '/triggers')
 	await expect(primary(page).getByText('Camera 2 ready')).toBeVisible()
-	await shootPanel(primary(page), `${IMAGES}/triggers`)
+	await shootPanel(primary(page), `${IMAGES}/triggers`, true)
 
 	await primary(page).getByText('Camera 2 ready').click()
 	const stages = secondary(page).locator('.trigger-stage')
@@ -99,9 +99,9 @@ test('triggers', async ({ page }) => {
 test('image library', async ({ page }) => {
 	await gotoApp(page, '/image-library')
 	await expect(primary(page).getByText('The Companion logo')).toBeVisible()
-	await shootPanel(primary(page), `${IMAGES}/image-library-managing`)
+	await shootPanel(primary(page), `${IMAGES}/image-library-managing`, true)
 
 	await primary(page).getByText('The Companion logo').click()
 	await expect(secondary(page).getByRole('img').first()).toBeVisible()
-	await shootPanel(secondary(page), `${IMAGES}/image-library-edit`)
+	await shootPanel(secondary(page), `${IMAGES}/image-library-edit`, false)
 })

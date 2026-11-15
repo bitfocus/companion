@@ -14,7 +14,7 @@ const FEEDBACKS_IMAGES = '3_config/program/building-blocks/images/custom-feedbac
  */
 async function shootEditPanel(page: Page, name: string): Promise<void> {
 	await withViewport(page, { width: 2200, height: page.viewportSize()?.height ?? 1800 }, async () => {
-		await shootPanel(page.locator('.secondary-panel'), name)
+		await shootPanel(page.locator('.secondary-panel'), name, false)
 	})
 }
 
@@ -34,7 +34,7 @@ test('custom actions', async ({ page, request }) => {
 	await gotoApp(page, '/custom-actions')
 	const lastRow = page.getByText('Count up to a target, a step at a time')
 	await expect(lastRow).toBeVisible()
-	await shootPanel(page.locator('.primary-panel'), `${ACTIONS_IMAGES}/list`)
+	await shootPanel(page.locator('.primary-panel'), `${ACTIONS_IMAGES}/list`, true)
 
 	await page.getByText('Select camera', { exact: true }).click()
 	await expect(page.locator('.entity-row', { hasText: 'Custom Variable: Set value' }).first()).toBeVisible()

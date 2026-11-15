@@ -81,10 +81,10 @@ test('modules', async ({ page }) => {
 	// Those available from the store too, not only those installed
 	await primary(page).getByRole('button', { name: 'Filter by Available' }).click()
 	await expect(primary(page).getByText('Lighting Desk', { exact: true })).toBeVisible()
-	await shootPanel(primary(page), `${IMAGES}/module-list`)
+	await shootPanel(primary(page), `${IMAGES}/module-list`, true)
 
 	// The versions of a real module, an ATEM
 	await primary(page).getByText('ATEM', { exact: true }).click()
 	await expect(secondary(page).getByText('4.3.0', { exact: true })).toBeVisible()
-	await shootPanel(secondary(page), `${IMAGES}/module-manage`)
+	await shootPanel(secondary(page), `${IMAGES}/module-manage`, false)
 })

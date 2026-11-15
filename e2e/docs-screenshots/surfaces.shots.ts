@@ -48,7 +48,7 @@ test('remote surfaces', async ({ page }) => {
 test('surface integrations', async ({ page }) => {
 	await openSurfacesTab(page, 'Integrations')
 	await expect(primary(page).getByText('Demo: Control Panel')).toBeVisible()
-	await shootPanel(primary(page), '7_surfaces/images/surface-integrations-panel')
+	await shootPanel(primary(page), '7_surfaces/images/surface-integrations-panel', true)
 
 	await page.getByRole('button', { name: 'Add Surface Integration' }).click()
 	const dialog = page.getByRole('dialog')

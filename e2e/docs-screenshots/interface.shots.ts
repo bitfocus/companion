@@ -55,17 +55,17 @@ test('installation name', async ({ page }) => {
 test('protocols', async ({ page }) => {
 	await gotoApp(page, '/settings/protocols/rest')
 	await expect(page.getByText('REST API').first()).toBeVisible()
-	await shootPanel(page.locator('.secondary-panel'), '3_config/system/images/settings-rest-api')
+	await shootPanel(page.locator('.secondary-panel'), '3_config/system/images/settings-rest-api', false)
 
 	await gotoApp(page, '/settings/protocols/metrics')
 	await expect(page.getByText('DocsExampleScrapeTokenNotReal000').first()).toBeVisible()
-	await shootPanel(page.locator('.secondary-panel'), '3_config/system/images/settings-prometheus')
+	await shootPanel(page.locator('.secondary-panel'), '3_config/system/images/settings-prometheus', false)
 })
 
 test('import and export', async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 1000 })
 	await gotoApp(page, '/import-export')
-	await shootPanel(page.locator('.page-container'), '3_config/system/images/import-export')
+	await shootPanel(page.locator('.page-container'), '3_config/system/images/import-export', true)
 
 	// Import one of the templates of the docs
 	const template = path.join(
@@ -74,5 +74,5 @@ test('import and export', async ({ page }) => {
 	)
 	await page.locator('input[type=file]').first().setInputFiles(template)
 	await expect(page.getByRole('button', { name: 'Import (Preserve Unselected)' })).toBeVisible()
-	await shootPanel(page.locator('.page-container'), '3_config/system/images/import')
+	await shootPanel(page.locator('.page-container'), '3_config/system/images/import', true)
 })
