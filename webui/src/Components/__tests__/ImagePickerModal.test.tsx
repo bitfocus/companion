@@ -9,6 +9,11 @@ vi.mock('~/ImageLibrary/ImageLibrarySelector.js', () => ({
 	ImageLibrarySelector: () => null,
 }))
 
+// jsdom takes seconds to handle a large data url as an <img> src, which made the large image test time out
+vi.mock('~/ImageLibrary/ImagePreviewBox.js', () => ({
+	ImagePreviewBox: () => null,
+}))
+
 vi.mock('~/ImageLibrary/useImageLibraryUpload.js', () => ({
 	useImageLibraryUpload: () => ({ uploadImageFile: vi.fn(), uploadDataUrl: vi.fn() }),
 }))
@@ -31,7 +36,7 @@ class MockImage {
 
 const SMALL_SVG =
 	'data:image/svg+xml;base64,' + btoa('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"/>')
-// Just over the size limit for custom images; jsdom is slow to parse a large data url, so keep it close
+// Just over the size limit for custom images
 const LARGE_GIF = 'data:image/gif;base64,' + btoa('G'.repeat(513 * 1024))
 
 function renderModal() {
