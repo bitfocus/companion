@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { panelsClip, shoot, shootPanel, unionClip, withViewport } from './shoot.js'
+import { panelsClip, shoot, shootPanel, shootUnthemed, unionClip, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/connect/surfaces.md, 7_surfaces/index.md and 6_interactive-buttons/*.md
 test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
@@ -64,6 +64,7 @@ test('surface integrations', async ({ page }) => {
 	await shoot(page, dialog, '7_surfaces/images/surface-integrations-add-panel')
 })
 
+// The emulator and web buttons are always dark, so are shot once
 test('emulator', async ({ page }) => {
 	// The grid is 8 by 4 buttons, with a margin all round. The emulator sizes it to fill the window (with an inline
 	// style), so it is made smaller than the window here, by the margin
@@ -78,7 +79,7 @@ test('emulator', async ({ page }) => {
 				width: calc((100dvh - ${margin * 2}px) * 2) !important;
 			}`,
 		})
-		await shoot(page, page.locator('body'), '6_interactive-buttons/images/emulator')
+		await shootUnthemed(page.locator('body'), '6_interactive-buttons/images/emulator')
 	})
 })
 
@@ -86,9 +87,9 @@ test('web buttons', async ({ page }) => {
 	await withViewport(page, { width: 1440, height: 760 }, async () => {
 		await page.goto('/tablet')
 		await expect(page.locator('.button-zone .button-control').first()).toBeVisible()
-		await shoot(page, page.locator('body'), '6_interactive-buttons/images/webbuttons')
+		await shootUnthemed(page.locator('body'), '6_interactive-buttons/images/webbuttons')
 
 		await page.getByRole('button', { name: 'Configure Web Buttons' }).click()
-		await shoot(page, page.locator('body'), '6_interactive-buttons/images/webbuttons_settings')
+		await shootUnthemed(page.locator('body'), '6_interactive-buttons/images/webbuttons_settings')
 	})
 })
