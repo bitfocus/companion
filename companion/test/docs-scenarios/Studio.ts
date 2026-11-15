@@ -37,7 +37,7 @@ import {
  * Page 2, "Audio": 0/1 plays a clip on the media player, which is failing to connect, 0/2 mutes a microphone on the
  * audio mixer, which has a warning, and 0/3 is running a long wait.
  *
- * Page 3, "Graphics", is empty. The image library has the Companion and Bitfocus logos.
+ * Page 3, "Graphics", is empty. The image library has the Companion and Bitfocus logos, the latter previewed on white.
  *
  * There are some custom and expression variables, and a trigger which puts Camera 2 on preview when Camera 1 goes on
  * program.
@@ -87,16 +87,18 @@ export async function seed(app: TestApp): Promise<void> {
 	await setConnectionConfig(app, playback, 'playback', { host: '192.168.0.30', port: 9993, simulate_status: 'failure' })
 
 	const repoRoot = path.join(import.meta.dirname, '../../..')
-	for (const [name, description, file] of [
-		['logo', 'The Companion logo', 'assets/linux/icon.png'],
-		['bitfocus', 'The Bitfocus logo', 'launcher/assets/bitfocus-logo.png'],
+	for (const [name, description, mimeType, file] of [
+		['logo', 'The Companion logo', 'image/png', 'assets/linux/icon.png'],
+		['bitfocus', 'The Bitfocus logo', 'image/svg+xml', 'companion/test/docs-scenarios/assets/bitfocus-logo-dark.svg'],
 	]) {
 		await app.trpc().imageLibrary.create({ name, description })
 		// The library shows when an image was last changed, so change them at a fixed time
 		await atFixedTime(IMAGES_MODIFIED_AT, async () =>
-			app.registry.graphics.imageLibrary.setImageData(name, 'image/png', fs.readFileSync(path.join(repoRoot, file)))
+			app.registry.graphics.imageLibrary.setImageData(name, mimeType, fs.readFileSync(path.join(repoRoot, file)))
 		)
 	}
+	// The Bitfocus logo is dark, so it is previewed on white to be seen in the dark theme too
+	await app.trpc().imageLibrary.setBackgroundColor({ imageName: 'bitfocus', backgroundColor: '#ffffff' })
 
 	await app.trpc().pages.setName({ pageNumber: 1, name: 'Studio' })
 	for (const [index, name] of ['Audio', 'Graphics'].entries()) {
