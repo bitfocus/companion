@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CompositeElementDefinitionsStore } from '~/Stores/CompositeElementDefinitionsStore.js'
@@ -32,6 +33,13 @@ describe('getMissingCompositeElementReason', () => {
 		const { definitions, connections } = makeStores()
 		const text = { id: 'el1', name: '', type: 'text' } as SomeButtonGraphicsElement
 		expect(getMissingCompositeElementReason(text, definitions, connections)).toBeNull()
+	})
+
+	test('says when a custom element no longer exists', () => {
+		const { definitions, connections } = makeStores()
+		expect(getMissingCompositeElementReason(composite(CUSTOM_CONNECTION_ID, 'gone'), definitions, connections)).toBe(
+			'Missing element: the custom element no longer exists'
+		)
 	})
 
 	test('names the connection when it no longer provides the element', () => {

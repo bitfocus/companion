@@ -19,6 +19,8 @@ import { ElementsList } from './ElementsList.js'
 import { PinnedPropertiesEditor } from './PinnedPropertiesEditor.js'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 import { LayeredStyleStore } from './StyleStore.js'
+// Also shown outside the button editor (eg for a custom element), so brings its own styles
+import '../EditButton.css'
 
 export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	config,
@@ -73,6 +75,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 										<LayeredButtonEditorStyle
 											controlId={controlId}
 											location={location}
+											bare={false}
 											styleStore={styleStore}
 											localVariablesStore={localVariablesStore}
 										/>
@@ -140,14 +143,20 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 interface LayeredButtonEditorStyleProps {
 	controlId: SomeControlId
-	location: ControlLocation
+	/** The location of the button, or null if the elements aren't those of a button */
+	location: ControlLocation | null
+	/** Draw the elements without the decoration of a button, as they are drawn inside another (eg a custom element) */
+	bare: boolean
 	styleStore: LayeredStyleStore
-	// previewImage: string | null
 	localVariablesStore: LocalVariablesStore
 }
-const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
+/**
+ * The editor of a tree of elements: a preview of them, the list of them, and the properties of the selected one
+ */
+export const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	controlId,
 	location,
+	bare,
 	styleStore,
 	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
@@ -167,7 +176,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 		<div ref={rootRef} className="button-layer-style-editor h-full" style={rootStyle}>
 			<div className="button-layer-top">
 				<div className="button-layer-preview">
-					<LayeredButtonPreviewRenderer controlId={controlId} location={location} styleStore={styleStore} />
+					<LayeredButtonPreviewRenderer controlId={controlId} location={location} bare={bare} styleStore={styleStore} />
 				</div>
 				<div className="button-layer-elementlist">
 					<ElementsList styleStore={styleStore} controlId={controlId} />

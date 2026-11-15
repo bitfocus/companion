@@ -20,7 +20,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
-import { BuildingBlockInputs } from '../BuildingBlocks/BuildingBlockInputs.js'
+import { BuildingBlockInputs, entityInputReferences } from '../BuildingBlocks/BuildingBlockInputs.js'
 import type { ControlPressSource } from '../ButtonPressEvents.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
@@ -129,7 +129,9 @@ export class ControlCustomFeedback
 			getDefaultInputVariables: () => buildCustomActionInputVariables(this.buildingBlockInputs.getDefaultValues()),
 		})
 
-		this.buildingBlockInputs = new BuildingBlockInputs(deps.internalModule, this.entities, () => this.commitChange())
+		this.buildingBlockInputs = new BuildingBlockInputs(entityInputReferences(deps.internalModule, this.entities), () =>
+			this.commitChange()
+		)
 
 		this.options = this.optionsSchema.parse({})
 

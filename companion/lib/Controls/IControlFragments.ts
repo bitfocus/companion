@@ -6,7 +6,12 @@ import type { SomeControlRuntimeProps } from '@companion-app/shared/Model/Contro
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type {
+	ButtonGraphicsElementUsage,
+	ButtonStyleProperties,
+	CompositeElementOptionKey,
+} from '@companion-app/shared/Model/StyleModel.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import type { BuildingBlockInputs } from './BuildingBlocks/BuildingBlockInputs.js'
 import type { ControlBase, SomeControlJson } from './ControlBase.js'
@@ -132,6 +137,28 @@ export interface ControlWithLayeredStyle extends ControlBase<SomeControlId, Some
 	 * Get the selected element IDs for each usage in the layered style
 	 */
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined }
+
+	/**
+	 * Rename or remove the value of an option of every use of a composite element in the layered style, after the
+	 * option has been renamed or removed from it
+	 * @param connectionId The connection of the composite element
+	 * @param elementId The id of the composite element
+	 * @param fromKey The old key of the option
+	 * @param toKey The new key of the option, or null if it was removed
+	 * @returns true if any changes were made
+	 */
+	layeredStyleRenameCompositeOption(
+		connectionId: string,
+		elementId: string,
+		fromKey: CompositeElementOptionKey,
+		toKey: CompositeElementOptionKey | null
+	): boolean
+
+	/**
+	 * The variables to draw the elements with when they are previewed in the editor, such as the default values of the
+	 * inputs of a custom element, or null if there are none
+	 */
+	layeredStylePreviewVariableValues(): VariableValues | null
 }
 
 export interface ControlWithEntities extends ControlBase<SomeControlId, SomeControlJson, SomeControlRuntimeProps> {

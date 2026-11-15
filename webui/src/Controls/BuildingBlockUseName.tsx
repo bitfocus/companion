@@ -6,7 +6,7 @@ import { assertNever } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { describeUseControl, type UseControlLink } from './BuildingBlockUses.js'
 
-/** What kind of control uses a custom action or feedback, and its name, linking to roughly where it is */
+/** What kind of control uses a custom action, feedback or element, and its name, linking to roughly where it is */
 export const BuildingBlockUseName = observer(function BuildingBlockUseName({
 	controlId,
 }: {
@@ -23,7 +23,7 @@ export const BuildingBlockUseName = observer(function BuildingBlockUseName({
 	)
 })
 
-/** The name of a control which uses a custom action or feedback, linking to roughly where it is */
+/** The name of a control which uses a custom action, feedback or element, linking to roughly where it is */
 function UseControlName({ name, link }: { name: string; link: UseControlLink | null }): React.JSX.Element {
 	if (!link) return <>{name}</>
 
@@ -56,6 +56,16 @@ function UseControlName({ name, link }: { name: string; link: UseControlLink | n
 					to="/custom-feedbacks/$controlId"
 					params={{ controlId: link.customFeedbackId }}
 					title="Edit the custom feedback"
+				>
+					{name}
+				</Link>
+			)
+		case 'custom-element':
+			return (
+				<Link
+					to="/custom-elements/$controlId"
+					params={{ controlId: link.customElementId }}
+					title="Edit the custom element"
 				>
 					{name}
 				</Link>
