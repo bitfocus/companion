@@ -357,6 +357,13 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	/**
+	 * Get the action definitions of every connection, keyed by connection id then definition id
+	 */
+	getAllActionDefinitions(): Readonly<Record<string, Readonly<Record<string, ClientEntityDefinition>> | undefined>> {
+		return this.#actionDefinitions
+	}
+
+	/**
 	 * Get an entity definition
 	 */
 	getEntityDefinition(
