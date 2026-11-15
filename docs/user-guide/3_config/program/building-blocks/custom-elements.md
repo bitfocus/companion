@@ -21,6 +21,8 @@ Click **Add Custom Element**, then select it in the list to open the editor. Giv
 
 The editor has three tabs: **Elements**, **Inputs** and **Uses**.
 
+![The custom element editor](images/custom-elements/editor-elements.png)
+
 ### Elements
 
 This is the same editor as the **Style** tab of a button: a preview, the list of elements, and the properties of the selected one. You can use any element, including groups, the composite elements of your connections, and other custom elements.
@@ -29,17 +31,29 @@ A custom element has no canvas. It is drawn inside the bounds that each button g
 
 The preview draws each input with its default value.
 
+A custom element has no feedbacks or local variables of its own. To change how it looks, give it inputs, and set them from the button.
+
 ### Inputs
 
 Inputs are the options that appear on the element when you add it to a button. Inside the custom element, you read them with `$(options:<id>)`, in any expression or text. They work in the same way as the [inputs of a custom action](./custom-actions.md#inputs). For example, a missing input uses its default, and renaming an input keeps the values that each button has set.
+
+![Inputs of a custom element](images/custom-elements/inputs.png)
 
 ### Uses
 
 The **Uses** tab lists every button and custom element that uses this custom element. An element that is disabled, or inside a disabled group, is marked as such.
 
+![Uses of a custom element](images/custom-elements/uses.png)
+
 ## Using a custom element
 
-A custom element shows up in a button's **Add element** list, under **Custom**. Each use has the usual position, size, opacity and rotation, and an option for each input. Like any other element property, an input can be an expression, and can be changed by a feedback's style overrides.
+A custom element shows up in a button's **Add element** list, under **Custom**, and in the same list in another custom element.
+
+![Adding a custom element to a button](images/custom-elements/add-element.png)
+
+Each use has the usual position, size, opacity and rotation, and a property for each input, under **Properties**. Like any other element property, an input can be an expression, and can be changed by a feedback's style overrides.
+
+![A button using a custom element](images/custom-elements/using-element.png)
 
 A custom element can't use itself, directly or through others. The list hides any custom element that would. If uses still loop (after an import, for example), the element that comes back round is drawn as `∞`.
 
@@ -57,7 +71,7 @@ Some things to know:
 
 - **Editing the custom element** redraws every button that uses it straight away.
 - **Deleting the custom element** draws every use of it as a missing element.
-- A custom element has no feedbacks or local variables of its own. To change how it looks, give it inputs, and set them from the button's feedbacks or expressions.
+- A button's feedbacks can change the inputs of a use, with style overrides, but not the elements inside it.
 
 ## Example: Channel label
 
@@ -65,7 +79,9 @@ This element draws a channel's name over a coloured bar.
 
 - **Inputs**: `name` (text, default `CH`), `color` (colour, default red)
 - **Elements**:
-  - a **Box** filling the element, with its colour set to the expression `$(options:color)`
-  - a **Text** filling the element, with its text set to `$(options:name)`
+  - **Bar**: a **Box** filling the element, with rounded corners and its colour set to the expression `$(options:color)`
+  - **Label text**: a **Text** filling the element, with its text set to `$(options:name)`
 
-Each button adds **Channel label** and sets **Name** and **Color** to suit its channel. A feedback on the button can override **Color**, to show that the channel is muted.
+Each of the buttons `CH 1` to `CH 3` adds **Channel label** along its bottom, and sets **Name** and **Color** to suit its channel. A feedback on a button could override **Color**, to show that the channel is muted.
+
+![Three buttons using the same custom element](images/custom-elements/buttons.png)
