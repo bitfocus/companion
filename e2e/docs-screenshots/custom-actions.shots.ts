@@ -1,6 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test'
 import { expect, gotoApp, test } from '../support/fixtures.js'
-import { gridClip, panelClip, shoot } from './shoot.js'
+import { gridClip, shoot, shootPanel, withViewport } from './shoot.js'
 
 // docs/user-guide/3_config/program/building-blocks/custom-actions.md and custom-feedbacks.md
 test.use({ scenario: 'companion/test/docs-scenarios/CustomActionsAndFeedbacks.ts' })
@@ -13,13 +13,9 @@ const FEEDBACKS_IMAGES = '3_config/program/building-blocks/images/custom-feedbac
  * as its actions and feedbacks wrap a lot in a panel of the usual width
  */
 async function shootEditPanel(page: Page, name: string): Promise<void> {
-	const viewport = page.viewportSize()
-	if (!viewport) throw new Error('The page has no viewport')
-
-	await page.setViewportSize({ width: 2200, height: viewport.height })
-	const panel = page.locator('.secondary-panel-simple')
-	await shoot(page, await panelClip(panel, panel.locator('.page-scroll > *').first()), name)
-	await page.setViewportSize(viewport)
+	await withViewport(page, { width: 2200, height: page.viewportSize()?.height ?? 1800 }, async () => {
+		await shootPanel(page.locator('.secondary-panel'), name)
+	})
 }
 
 /** Use the http api, which the scenario enables */
@@ -38,7 +34,7 @@ test('custom actions', async ({ page, request }) => {
 	await gotoApp(page, '/custom-actions')
 	const lastRow = page.getByText('Count up to a target, a step at a time')
 	await expect(lastRow).toBeVisible()
-	await shoot(page, await panelClip(page.locator('.primary-panel'), lastRow), `${ACTIONS_IMAGES}/list`)
+	await shootPanel(page.locator('.primary-panel'), `${ACTIONS_IMAGES}/list`)
 
 	await page.getByText('Select camera', { exact: true }).click()
 	await expect(page.locator('.entity-row', { hasText: 'Custom Variable: Set value' }).first()).toBeVisible()

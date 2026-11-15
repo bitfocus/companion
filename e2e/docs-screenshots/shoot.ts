@@ -71,23 +71,6 @@ export async function shootUnthemed(target: Locator, name: string): Promise<void
 }
 
 /**
- * The area of an edit panel down to the end of its content, rather than the full height of the panel
- * @param panel The panel, which fills the height of the page
- * @param content The content of the panel, which may be shorter
- */
-export async function panelClip(panel: Locator, content: Locator): Promise<ShotTarget> {
-	const panelBox = await panel.boundingBox()
-	const contentBox = await content.boundingBox()
-	if (!panelBox || !contentBox) throw new Error('The panel is not visible')
-
-	const bottom = Math.min(panelBox.y + panelBox.height, contentBox.y + contentBox.height + 16)
-	return {
-		page: panel.page(),
-		clip: { x: panelBox.x, y: panelBox.y, width: panelBox.width, height: bottom - panelBox.y },
-	}
-}
-
-/**
  * The area of a panel down to the end of what it shows, rather than the full height of the panel
  * @param panel The panel, which may fill the height of the page
  * @param margin Space to leave below its content
