@@ -21,7 +21,7 @@ function makeStorage(overrides: Partial<PresetButtonModel> = {}): PresetButtonMo
 		feedbacks: [],
 		steps: {
 			'0': {
-				options: { runWhileHeld: [] },
+				options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 				action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
 			},
 		},

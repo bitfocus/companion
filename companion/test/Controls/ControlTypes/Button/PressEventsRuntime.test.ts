@@ -46,7 +46,7 @@ function storage(options: {
 			'0': {
 				options: {
 					runWhileHeld: options.runWhileHeld ?? [],
-					controlEventsDisabledSets: options.controlEventsDisabledSets,
+					controlEventsDisabledSets: options.controlEventsDisabledSets ?? [],
 				},
 				action_sets: {
 					down: options.down ?? [],

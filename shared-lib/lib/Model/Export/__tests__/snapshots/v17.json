@@ -142,7 +142,8 @@
 																},
 																"options": {
 																	"default": {
-																		"runWhileHeld": []
+																		"runWhileHeld": [],
+																		"controlEventsDisabledSets": []
 																	},
 																	"type": "object",
 																	"properties": {
@@ -154,6 +155,7 @@
 																			}
 																		},
 																		"controlEventsDisabledSets": {
+																			"default": [],
 																			"type": "array",
 																			"items": {
 																				"anyOf": [
@@ -164,14 +166,6 @@
 																					{
 																						"type": "string",
 																						"const": "up"
-																					},
-																					{
-																						"type": "string",
-																						"const": "rotate_left"
-																					},
-																					{
-																						"type": "string",
-																						"const": "rotate_right"
 																					},
 																					{
 																						"type": "number"
@@ -308,7 +302,8 @@
 																},
 																"options": {
 																	"default": {
-																		"runWhileHeld": []
+																		"runWhileHeld": [],
+																		"controlEventsDisabledSets": []
 																	},
 																	"type": "object",
 																	"properties": {
@@ -320,6 +315,7 @@
 																			}
 																		},
 																		"controlEventsDisabledSets": {
+																			"default": [],
 																			"type": "array",
 																			"items": {
 																				"anyOf": [
@@ -330,14 +326,6 @@
 																					{
 																						"type": "string",
 																						"const": "up"
-																					},
-																					{
-																						"type": "string",
-																						"const": "rotate_left"
-																					},
-																					{
-																						"type": "string",
-																						"const": "rotate_right"
 																					},
 																					{
 																						"type": "number"
@@ -1675,7 +1663,8 @@
 															},
 															"options": {
 																"default": {
-																	"runWhileHeld": []
+																	"runWhileHeld": [],
+																	"controlEventsDisabledSets": []
 																},
 																"type": "object",
 																"properties": {
@@ -1687,6 +1676,7 @@
 																		}
 																	},
 																	"controlEventsDisabledSets": {
+																		"default": [],
 																		"type": "array",
 																		"items": {
 																			"anyOf": [
@@ -1697,14 +1687,6 @@
 																				{
 																					"type": "string",
 																					"const": "up"
-																				},
-																				{
-																					"type": "string",
-																					"const": "rotate_left"
-																				},
-																				{
-																					"type": "string",
-																					"const": "rotate_right"
 																				},
 																				{
 																					"type": "number"
@@ -1841,7 +1823,8 @@
 															},
 															"options": {
 																"default": {
-																	"runWhileHeld": []
+																	"runWhileHeld": [],
+																	"controlEventsDisabledSets": []
 																},
 																"type": "object",
 																"properties": {
@@ -1853,6 +1836,7 @@
 																		}
 																	},
 																	"controlEventsDisabledSets": {
+																		"default": [],
 																		"type": "array",
 																		"items": {
 																			"anyOf": [
@@ -1863,14 +1847,6 @@
 																				{
 																					"type": "string",
 																					"const": "up"
-																				},
-																				{
-																					"type": "string",
-																					"const": "rotate_left"
-																				},
-																				{
-																					"type": "string",
-																					"const": "rotate_right"
 																				},
 																				{
 																					"type": "number"

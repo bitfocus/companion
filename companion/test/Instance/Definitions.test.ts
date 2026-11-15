@@ -137,7 +137,7 @@ function makeButtonPresetModel(overrides: Partial<LayeredButtonModel> = {}): Lay
 		feedbacks: [],
 		steps: {
 			step1: {
-				options: { runWhileHeld: [] },
+				options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 				action_sets: {
 					down: [],
 					up: [],
@@ -1108,7 +1108,7 @@ describe('InstanceDefinitions', () => {
 						model: makeButtonPresetModel({
 							steps: {
 								step1: {
-									options: { runWhileHeld: [] },
+									options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 									action_sets: {
 										down: [actionEntity],
 										up: [actionEntity],
@@ -1149,7 +1149,7 @@ describe('InstanceDefinitions', () => {
 						model: makeButtonPresetModel({
 							steps: {
 								stepA: {
-									options: { runWhileHeld: [] },
+									options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 									action_sets: {
 										down: [actionEntity],
 										up: [],
@@ -1158,7 +1158,7 @@ describe('InstanceDefinitions', () => {
 									},
 								},
 								stepB: {
-									options: { runWhileHeld: [500] },
+									options: { runWhileHeld: [500], controlEventsDisabledSets: [] },
 									action_sets: {
 										down: [actionEntity],
 										up: [actionEntity],
@@ -1923,7 +1923,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2200,7 +2200,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2254,7 +2254,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2308,7 +2308,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2363,7 +2363,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2437,7 +2437,7 @@ describe('InstanceDefinitions', () => {
 					style: { layers: [makeTextLayer('l1', 'Page $(this:page) of $(label:total)')] },
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2536,7 +2536,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2591,7 +2591,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2631,7 +2631,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2815,7 +2815,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2889,7 +2889,7 @@ describe('InstanceDefinitions', () => {
 					...makeButtonPresetModel(),
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{
@@ -2971,7 +2971,7 @@ describe('InstanceDefinitions', () => {
 					],
 					steps: {
 						step1: {
-							options: { runWhileHeld: [] },
+							options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 							action_sets: {
 								down: [
 									{

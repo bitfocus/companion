@@ -314,18 +314,14 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		if (!definitions) return
 
 		for (const definition of definitions) {
-			try {
-				this.#ipcWrapper
-					.sendWithCb('controlEvent', {
-						surfaceId: this.#surfaceInfo.surfaceId,
-						connectionId,
-						controlId: definition.id,
-						event,
-					})
-					.catch((e) => this.#logger.debug(`Control event failed: ${stringifyError(e)}`))
-			} catch (e) {
-				this.#logger.debug(`Control event failed: ${stringifyError(e)}`)
-			}
+			this.#ipcWrapper
+				.sendWithCb('controlEvent', {
+					surfaceId: this.#surfaceInfo.surfaceId,
+					connectionId,
+					controlId: definition.id,
+					event,
+				})
+				.catch((e: unknown) => this.#logger.debug(`Control event failed: ${stringifyError(e)}`))
 		}
 	}
 

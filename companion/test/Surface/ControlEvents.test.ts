@@ -88,19 +88,14 @@ describe('surface control event routing', () => {
 		expect(controlEventCalls(legacy.ipc)).toHaveLength(0)
 	})
 
-	test('panel contains synchronous and asynchronous IPC failures', async () => {
+	test('panel contains IPC failures', async () => {
 		const logger = mockDeep<Logger>()
 		const createLogger = vi.spyOn(LogController, 'createLogger').mockReturnValue(logger)
 		const { panel, ipc } = makePanel('open1')
 		createLogger.mockRestore()
-		ipc.sendWithCb.mockImplementationOnce(() => {
-			throw new Error('closed')
-		})
-		expect(() => panel.controlEvent(0, 0, 'press')).not.toThrow()
 		ipc.sendWithCb.mockRejectedValueOnce(new Error('disconnected'))
 		panel.controlEvent(0, 0, 'press')
 		await vi.waitFor(() => expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('disconnected')))
-		expect(logger.debug).toHaveBeenCalledTimes(2)
 	})
 
 	test('events go to the pressed control, and release reuses the press after a page and offset change', () => {

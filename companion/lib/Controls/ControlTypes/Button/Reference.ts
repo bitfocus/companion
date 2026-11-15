@@ -219,7 +219,7 @@ export class ControlButtonReference
 			steps: {
 				'0': {
 					action_sets: { down: [], up: undefined, rotate_left: undefined, rotate_right: undefined },
-					options: { runWhileHeld: [] },
+					options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 				},
 			},
 			localVariables: [],

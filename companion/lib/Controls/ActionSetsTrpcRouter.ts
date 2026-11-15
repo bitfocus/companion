@@ -1,5 +1,6 @@
 import z from 'zod'
 import { zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import { ControlEventsActionSetIdSchema } from '@companion-app/shared/Model/ActionModel.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { ControlActionSetAndStepsEditor } from './Entities/ControlActionSetAndStepsManager.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -83,7 +84,7 @@ export function createActionSetsTrpcRouter(controlsMap: Map<SomeControlId, SomeC
 				z.object({
 					controlId: zodSomeControlId,
 					stepId: z.string(),
-					setId: z.union([z.literal('down'), z.literal('up'), z.number().finite()]),
+					setId: ControlEventsActionSetIdSchema,
 					enabled: z.boolean(),
 				})
 			)

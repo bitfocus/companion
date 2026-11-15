@@ -33,7 +33,7 @@ import { convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from 
 
 const DefaultStepOptions: Complete<ActionStepOptions> = {
 	runWhileHeld: [],
-	controlEventsDisabledSets: undefined,
+	controlEventsDisabledSets: [],
 	name: undefined,
 }
 

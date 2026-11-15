@@ -1,4 +1,4 @@
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId, ControlEventsActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 
 /**
  * The runtime step/action-set surface. These are runtime navigation/read operations that are safe on a
@@ -35,7 +35,7 @@ export interface ControlStepsRuntimeManager {
 	/**
 	 * Whether automatic surface cues (control events) are enabled for an action-set
 	 */
-	isActionSetControlEventsEnabled(stepId: string, setId: ActionSetId): boolean
+	isActionSetControlEventsEnabled(stepId: string, setId: ControlEventsActionSetId): boolean
 }
 
 /**
@@ -69,7 +69,7 @@ export interface ControlActionSetAndStepsEditor extends Omit<ControlStepsRuntime
 	/**
 	 * Set whether automatic surface cues (control events) are enabled for an action-set
 	 */
-	actionSetControlEvents(stepId: string, setId: ActionSetId, enabled: boolean): boolean
+	actionSetControlEvents(stepId: string, setId: ControlEventsActionSetId, enabled: boolean): boolean
 
 	/**
 	 * Add a step to this control

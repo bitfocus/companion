@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId, ControlEventsActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import {
 	type EntityOwner,
 	type FeedbackEntityStyleOverride,
@@ -590,10 +590,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			// Forget the step from the options
 			step.options.runWhileHeld = step.options.runWhileHeld.filter((id) => id !== setIdNumber)
-			step.options.controlEventsDisabledSets = step.options.controlEventsDisabledSets?.filter(
-				(id) => id !== setIdNumber
-			)
-			if (step.options.controlEventsDisabledSets?.length === 0) delete step.options.controlEventsDisabledSets
+			step.options.controlEventsDisabledSets = step.options.controlEventsDisabledSets.filter((id) => id !== setIdNumber)
 
 			// Assume it exists
 			step.sets.delete(setIdNumber)
@@ -629,33 +626,25 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
 			if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
 
-			const controlEventsDisabledIndex = step.options.controlEventsDisabledSets?.indexOf(oldSetIdNumber) ?? -1
+			const controlEventsDisabledIndex = step.options.controlEventsDisabledSets.indexOf(oldSetIdNumber)
 			if (controlEventsDisabledIndex !== -1)
-				step.options.controlEventsDisabledSets![controlEventsDisabledIndex] = newSetIdNumber
+				step.options.controlEventsDisabledSets[controlEventsDisabledIndex] = newSetIdNumber
 
 			this.reportChange({ redraw: false })
 
 			return true
 		}
 
-		actionSetControlEvents(stepId: string, setId: ActionSetId, enabled: boolean): boolean {
+		actionSetControlEvents(stepId: string, setId: ControlEventsActionSetId, enabled: boolean): boolean {
 			const step = this.steps.get(stepId)
-			if (!step) return false
+			if (!step || !step.sets.has(setId)) return false
 
-			if (setId !== 'down' && setId !== 'up' && (typeof setId !== 'number' || !Number.isFinite(setId))) return false
-			if (!step.sets.has(setId)) return false
+			const disabledSets = step.options.controlEventsDisabledSets
+			const disabledIndex = disabledSets.indexOf(setId)
+			if (enabled === (disabledIndex === -1)) return true
 
-			const controlEventsDisabledSets = step.options.controlEventsDisabledSets ?? []
-			const disabledIndex = controlEventsDisabledSets.indexOf(setId)
-			if ((enabled && disabledIndex === -1) || (!enabled && disabledIndex !== -1)) return true
-
-			if (!enabled) {
-				controlEventsDisabledSets.push(setId)
-				step.options.controlEventsDisabledSets = controlEventsDisabledSets
-			} else {
-				controlEventsDisabledSets.splice(disabledIndex, 1)
-				if (controlEventsDisabledSets.length === 0) delete step.options.controlEventsDisabledSets
-			}
+			if (enabled) disabledSets.splice(disabledIndex, 1)
+			else disabledSets.push(setId)
 
 			this.reportChange({ redraw: false })
 

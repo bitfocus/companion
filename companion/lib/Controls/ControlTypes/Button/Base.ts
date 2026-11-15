@@ -1,6 +1,6 @@
 import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { isControlEventsActionSetId, type ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	ButtonOptionsBase,
 	ButtonStatus,
@@ -341,14 +341,15 @@ export abstract class ButtonControlRuntimeBase<
 					if (
 						pressEvents &&
 						pressedStep &&
+						isControlEventsActionSetId(setId) &&
 						this.entities.isActionSetControlEventsEnabled(pressedStep, setId) &&
 						actions.some((action) => action.type === EntityModelType.Action && !action.disabled)
 					) {
-						if (typeof setId === 'number') {
-							// Release-selected duration feedback needs a timing decision before this draft ships.
-							if (pressed) pressEvents.request('held')
-						} else if (setId === 'down' || setId === 'up') {
+						if (typeof setId !== 'number') {
 							pressEvents.request(setId)
+						} else if (pressed) {
+							// Release-selected duration feedback needs a timing decision before this draft ships.
+							pressEvents.request('held')
 						}
 					}
 				}

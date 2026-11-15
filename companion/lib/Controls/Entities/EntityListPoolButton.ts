@@ -6,6 +6,7 @@ import {
 	type ActionSetId,
 	type ActionSetsModel,
 	type ActionStepOptions,
+	type ControlEventsActionSetId,
 } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
@@ -396,6 +397,8 @@ export abstract class ButtonEntityListPoolBase
 		existingOptions: ActionStepOptions | null,
 		isCloned: boolean
 	): ControlEntityListActionStep {
+		const options = existingOptions || ActionStepOptionsSchema.parse({})
+
 		const downList = this.createActionEntityList(existingActions?.down || [], isCloned)
 		const upList = this.createActionEntityList(existingActions?.up || [], isCloned)
 
@@ -415,36 +418,15 @@ export abstract class ButtonEntityListPoolBase
 			}
 		}
 
-		const options = existingOptions ? structuredClone(existingOptions) : ActionStepOptionsSchema.parse({})
-		const rawControlEventsDisabledSets: unknown = options.controlEventsDisabledSets
-		if (Array.isArray(rawControlEventsDisabledSets)) {
-			const controlEventsDisabledSets = rawControlEventsDisabledSets.filter(
-				(setId, index): setId is ActionSetId =>
-					(setId === 'down' ||
-						setId === 'up' ||
-						(typeof setId === 'number' && Number.isFinite(setId) && sets.has(setId))) &&
-					rawControlEventsDisabledSets.indexOf(setId) === index
-			)
-			if (controlEventsDisabledSets.length > 0) options.controlEventsDisabledSets = controlEventsDisabledSets
-			else delete options.controlEventsDisabledSets
-		} else {
-			delete options.controlEventsDisabledSets
-		}
-
 		return {
 			sets: sets,
 			options: options,
 		}
 	}
 
-	isActionSetControlEventsEnabled(stepId: string, setId: ActionSetId): boolean {
+	isActionSetControlEventsEnabled(stepId: string, setId: ControlEventsActionSetId): boolean {
 		const step = this.steps.get(stepId)
-		if (!step) return false
-
-		if (setId !== 'down' && setId !== 'up' && (typeof setId !== 'number' || !Number.isFinite(setId))) return false
-		if (!step.sets.has(setId)) return false
-
-		return !step.options.controlEventsDisabledSets?.includes(setId)
+		return !!step?.sets.has(setId) && !step.options.controlEventsDisabledSets.includes(setId)
 	}
 
 	/**
