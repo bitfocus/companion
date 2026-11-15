@@ -30,14 +30,8 @@ h5 {
 }
 
 code {
-	font-family: 'Fira Code', monospace;
+	font-family: var(--font-mono);
 	font-size: 1.05em;
-}
-
-@supports (font-variation-settings: normal) {
-	code {
-		font-family: 'Fira Code VF', monospace;
-	}
 }
 
 /* ── Headings with inline buttons ─────────────────────────────────────────── */

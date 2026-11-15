@@ -5,6 +5,7 @@
 
 /* The web UI's design tokens (colours, fonts, and their dark values), shared so these windows match it */
 @import '../../webui/src/theme-tokens.css';
+@import '../../webui/src/fonts.css';
 
 /* Like the web UI, the dark theme is applied with `data-theme="dark"` on <html> */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));

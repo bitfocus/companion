@@ -140,7 +140,7 @@
 
 /* Monospace variable-name token, shown in the variables table and other variable lists. */
 .variable-style {
-	font-family: monospace;
+	font-family: var(--font-mono);
 	padding: 1px 3px 0px;
 	color: var(--color-variable-text);
 	font-weight: 600;

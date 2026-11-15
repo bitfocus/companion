@@ -1,6 +1,4 @@
 import './Resources/Sentry.js'
-import '@fontsource/roboto'
-import '@fontsource/fira-code'
 import './tailwind.css'
 import './common.css'
 import './surface-card.css'

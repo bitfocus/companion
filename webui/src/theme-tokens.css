@@ -10,11 +10,12 @@
 	--container-readable: 56rem;
 
 	/* Fonts — the app's canonical UI and monospace stacks. Declared here so base.css and the
-	   font-sans/font-mono utilities all read one source. */
+	   font-sans/font-mono utilities all read one source. Both lead with a font bundled by fonts.css, so the UI looks
+	   the same on every machine; the rest only covers glyphs those lack. */
 	--font-sans:
-		system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif,
-		'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-	--font-mono: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+		'Inter Variable', system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+		'Noto Color Emoji';
+	--font-mono: 'Fira Code', ui-monospace, monospace;
 
 	/* Steps below Tailwind's `text-xs` (0.75rem), for badges, table meta lines and toolbar chips. */
 	--text-2xs: 0.6875rem;

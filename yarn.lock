@@ -1754,8 +1754,8 @@ __metadata:
     "@dnd-kit/helpers": "npm:^0.5.3"
     "@dnd-kit/react": "npm:^0.5.3"
     "@floating-ui/react": "npm:^0.27.20"
+    "@fontsource-variable/inter": "npm:^5.3.0"
     "@fontsource/fira-code": "npm:^5.3.0"
-    "@fontsource/roboto": "npm:^5.3.0"
     "@fortawesome/fontawesome-svg-core": "npm:^7.3.1"
     "@fortawesome/free-brands-svg-icons": "npm:^7.3.1"
     "@fortawesome/free-regular-svg-icons": "npm:^7.3.1"
@@ -3902,17 +3902,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/inter@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/inter@npm:5.3.0"
+  checksum: 10c0/46fbe41e8482a718f99634c8254346c6081d615415059be12e177224c903d688199125967825e75d4b8122668fd83f70880e11d4e02d08c20b503c65fe2a96d1
+  languageName: node
+  linkType: hard
+
 "@fontsource/fira-code@npm:^5.3.0":
   version: 5.3.0
   resolution: "@fontsource/fira-code@npm:5.3.0"
   checksum: 10c0/402416a8a645b4f7e5be72f223626a68c0a60fd836d5f7e8b840a07ed83637663abe70e8d05f88602225248df90bbd733807dab1e819aab65557e9fbdafed8d4
-  languageName: node
-  linkType: hard
-
-"@fontsource/roboto@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "@fontsource/roboto@npm:5.3.0"
-  checksum: 10c0/68420d2c669ba05f0ea466343151c6d2efff85b05cedbf0f990c58635d86035cae5e7c4904db9abc7b9fd21c5ad179788243ec9dff0c30dfab90679ae2d226f9
   languageName: node
   linkType: hard
 
