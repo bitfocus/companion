@@ -5,31 +5,36 @@ import { FIXED_TOKENS } from '../themeTokens.js'
 
 const srcDir = path.resolve(import.meta.dirname, '../..')
 const css = fs.readFileSync(path.join(srcDir, 'theme-tokens.css'), 'utf8')
+const sharedCss = fs.readFileSync(path.resolve(srcDir, '../../shared-lib/theme/tokens.css'), 'utf8')
 
-/** The `--color-*` declarations inside the first block that opens with `opener` */
-function colourTokensIn(opener: string): Map<string, string> {
-	const start = css.indexOf(opener)
+/** The custom property declarations inside the first block that opens with `opener` */
+function tokensIn(source: string, opener: string): Map<string, string> {
+	const start = source.indexOf(opener)
 	if (start < 0) throw new Error(`No block opening with ${opener}`)
 
 	let depth = 0
 	let end = start
-	for (let i = css.indexOf('{', start); i < css.length; i++) {
-		if (css[i] === '{') depth++
-		else if (css[i] === '}' && --depth === 0) {
+	for (let i = source.indexOf('{', start); i < source.length; i++) {
+		if (source[i] === '{') depth++
+		else if (source[i] === '}' && --depth === 0) {
 			end = i
 			break
 		}
 	}
 
 	const tokens = new Map<string, string>()
-	for (const match of css.slice(start, end).matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)) {
+	for (const match of source.slice(start, end).matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
 		tokens.set(match[1], match[2].trim())
 	}
 	return tokens
 }
 
-const lightTokens = colourTokensIn('@theme static {')
-const darkTokens = colourTokensIn(":root[data-theme='dark'] {")
+const darkSelector = ":root[data-theme='dark'] {"
+const lightTokens = tokensIn(css, '@theme static {')
+const darkTokens = tokensIn(css, darkSelector)
+const sharedLightTokens = tokensIn(sharedCss, ':root {')
+const sharedDarkTokens = tokensIn(sharedCss, darkSelector)
+const sharedAlias = /^var\((--companion-[\w-]+)\)$/
 
 describe('dark theme tokens', () => {
 	test('every themed token has a dark value', () => {
@@ -37,6 +42,7 @@ describe('dark theme tokens', () => {
 		const isDerived = (value: string) => value.includes('var(')
 
 		const missing = [...lightTokens]
+			.filter(([name]) => name.startsWith('--color-'))
 			.filter(([name, value]) => !isDerived(value) && !FIXED_TOKENS.includes(name) && !darkTokens.has(name))
 			.map(([name]) => name)
 
@@ -53,6 +59,15 @@ describe('dark theme tokens', () => {
 
 	test('every fixed token exists', () => {
 		expect(FIXED_TOKENS.filter((name) => !lightTokens.has(name))).toEqual([])
+	})
+
+	test('shared aliases resolve in both themes', () => {
+		for (const value of lightTokens.values()) {
+			const target = sharedAlias.exec(value)?.[1]
+			if (!target) continue
+			expect(sharedLightTokens.has(target), target).toBe(true)
+			if (!target.startsWith('--companion-font-')) expect(sharedDarkTokens.has(target), target).toBe(true)
+		}
 	})
 })
 
@@ -78,7 +93,8 @@ function contrast(a: string, b: string): number {
 
 describe('dark theme contrast', () => {
 	const token = (name: string) => {
-		const value = darkTokens.get(name)
+		const shared = sharedAlias.exec(lightTokens.get(name) ?? '')?.[1]
+		const value = shared ? sharedDarkTokens.get(shared) : darkTokens.get(name)
 		if (!value?.startsWith('#')) throw new Error(`${name} is not a plain hex colour in the dark theme`)
 		return value
 	}

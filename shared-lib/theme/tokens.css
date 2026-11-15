@@ -1,0 +1,43 @@
+/* Tokens shared by the Companion UI and the user guide. Both set data-theme on <html>. */
+:root {
+	--companion-font-sans:
+		'Inter Variable', system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+		'Noto Color Emoji';
+	--companion-font-mono: 'Fira Code', ui-monospace, monospace;
+
+	--companion-brand: #d50215;
+	--companion-brand-hover: rgb(170, 2, 17);
+	--companion-accent-active: #941d1b;
+	--companion-app-frame-bg: #f3f4f7;
+	--companion-app-bg: #f9f9f9;
+	--companion-surface: #fff;
+	--companion-surface-muted: #f0f0f0;
+	--companion-border: #ddd;
+	--companion-border-medium: #bbb;
+	--companion-text-strong: #000;
+	--companion-body-text: rgba(37, 42.92, 54.02, 0.95);
+	--companion-text-secondary: #666;
+	--companion-selection-bg: #e5e8eb;
+	--companion-selection-text: #303842;
+	--companion-action-hover: #e8ebee;
+	--companion-action-focus: #66788a;
+}
+
+:root[data-theme='dark'] {
+	--companion-brand: #f0444f;
+	--companion-brand-hover: #ff6b74;
+	--companion-accent-active: #e0434a;
+	--companion-app-frame-bg: #0e0e0e;
+	--companion-app-bg: #131313;
+	--companion-surface: #181818;
+	--companion-surface-muted: #202020;
+	--companion-border: #303030;
+	--companion-border-medium: #4b4b4b;
+	--companion-text-strong: #fff;
+	--companion-body-text: #dfdfdf;
+	--companion-text-secondary: #a9a9a9;
+	--companion-selection-bg: #303030;
+	--companion-selection-text: #e3e3e3;
+	--companion-action-hover: #2f2f2f;
+	--companion-action-focus: #999999;
+}
