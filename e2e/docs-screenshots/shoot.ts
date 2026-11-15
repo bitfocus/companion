@@ -62,12 +62,12 @@ function roundClip(clip: { x: number; y: number; width: number; height: number }
 }
 
 /**
- * Capture a screenshot for the docs of something which looks the same in both themes, as `<name>.png`
+ * Capture a screenshot for the docs of something which looks the same in both themes, as `<name>.unthemed.png`
  * @param target What to capture
  * @param name The path of the image under `docs/user-guide`, without its extension
  */
 export async function shootUnthemed(target: Locator, name: string): Promise<void> {
-	await expect(target).toHaveScreenshot(`${name}.png`.split('/'), { stylePath: SCREENSHOT_STYLE })
+	await expect(target).toHaveScreenshot(`${name}.unthemed.png`.split('/'), { stylePath: SCREENSHOT_STYLE })
 }
 
 /**
