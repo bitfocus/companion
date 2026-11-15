@@ -103,13 +103,15 @@ test('actions', async ({ page }) => {
 	await expect(panel(page).getByText('Auto transition')).toBeVisible()
 	await shoot(page, await contentClip(panel(page)), `${IMAGES}/button-actions`)
 
-	// Wide, as the actions in the group are indented
-	await withViewport(page, { width: 2200, height: 1800 }, async () => {
-		await editButton(page, '1/2/5')
-		const group = panel(page).locator('.entity-row', { hasText: 'Action Group' }).first()
-		await expect(group).toBeVisible()
-		await shoot(page, group, `${IMAGES}/action-group-sequential`)
-	})
+	await editButton(page, '1/2/5')
+	const group = panel(page).locator('.entity-row', { hasText: 'Action Group' }).first()
+	await expect(group).toBeVisible()
+	// With the actions in it collapsed, as what matters is the group
+	await group.getByRole('button', { name: 'Collapse all' }).click()
+	await expect(group.getByText('Put an input on preview, ready for the next transition')).toBeHidden()
+	// Off the button just clicked, so that it isn't shown hovered
+	await page.mouse.move(0, 0)
+	await shoot(page, group, `${IMAGES}/action-group-sequential`)
 })
 
 test('generated image', async ({ page }) => {
