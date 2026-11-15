@@ -60,9 +60,19 @@ test('surface integrations', async ({ page }) => {
 })
 
 test('emulator', async ({ page }) => {
-	await withViewport(page, { width: 1440, height: 760 }, async () => {
+	// The grid is 8 by 4 buttons, with a margin all round. The emulator sizes it to fill the window (with an inline
+	// style), so it is made smaller than the window here, by the margin
+	const margin = 24
+	const height = 760
+	await withViewport(page, { width: (height - margin * 2) * 2 + margin * 2, height }, async () => {
 		await page.goto('/emulator/studio')
 		await expect(page.locator('.emulatorgrid .button-control')).toHaveCount(32)
+		await page.addStyleTag({
+			content: `.page-emulator .buttongrid {
+				height: calc(100dvh - ${margin * 2}px) !important;
+				width: calc((100dvh - ${margin * 2}px) * 2) !important;
+			}`,
+		})
 		await shoot(page, page.locator('body'), '6_interactive-buttons/images/emulator')
 	})
 })
