@@ -71,10 +71,14 @@ test('custom actions', async ({ page, request }) => {
 	await post(request, '/api/location/1/0/2/press')
 	await post(request, '/api/custom-variable/fader_a/value?value=65')
 	await post(request, '/api/custom-variable/fader_b/value?value=50')
-	await gotoApp(page, '/buttons')
-	const buttons = await gridClip(page, '1/0/0', '1/1/3')
-	await shoot(page, buttons, `${ACTIONS_IMAGES}/buttons`)
-	await shoot(page, buttons, `${FEEDBACKS_IMAGES}/buttons`)
+	// Zoomed in, as the examples are only a few buttons, and wide enough for them to fit at that size
+	await page.addInitScript(() => window.localStorage.setItem('grid-zoom-scale:grid', '200'))
+	await withViewport(page, { width: 2200, height: 1000 }, async () => {
+		await gotoApp(page, '/buttons')
+		const buttons = await gridClip(page, '1/0/0', '1/1/3')
+		await shoot(page, buttons, `${ACTIONS_IMAGES}/buttons`)
+		await shoot(page, buttons, `${FEEDBACKS_IMAGES}/buttons`)
+	})
 
 	await page.getByTitle('1/1/0', { exact: true }).click()
 	await shoot(page, page.locator('.entity-row', { hasText: 'Ramp value' }).first(), `${ACTIONS_IMAGES}/calling-action`)
