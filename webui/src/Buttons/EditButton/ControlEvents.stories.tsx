@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { useRef, useState } from 'react'
 import { useArgs } from 'storybook/preview-api'
 import { Button } from '~/Components/Button'
-import { ActionSetControlEventsCheckbox } from './ActionSetControlEventsCheckbox'
+import { ActionSetPropertiesButton } from './ActionSetPropertiesButton'
 import {
 	EditDurationGroupPropertiesModal,
 	type EditDurationGroupPropertiesModalRef,
@@ -10,33 +10,36 @@ import {
 
 const meta = {
 	title: 'Buttons/Edit Button/Surface cue',
-	component: ActionSetControlEventsCheckbox,
+	component: ActionSetPropertiesButton,
 	args: {
-		enabled: true,
-		setEnabled: () => {},
+		controlEvents: true,
+		setControlEvents: () => {},
 	},
-} satisfies Meta<typeof ActionSetControlEventsCheckbox>
+} satisfies Meta<typeof ActionSetPropertiesButton>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const OnOff: Story = {
+export const PressOrReleaseGroup: Story = {
 	parameters: {
 		docs: {
 			description: {
 				story:
-					'Focused preference-control fixture. It does not render the complete press and release action-group headers.',
+					'The Configure button on the press and release groups, with its cut back properties modal. It does not render the complete action group headers.',
 			},
 		},
 	},
 	render: function Render() {
-		const [{ enabled }, setArgs] = useArgs<{ enabled: boolean }>()
+		const [{ controlEvents }, setArgs] = useArgs<{ controlEvents: boolean }>()
 
 		return (
 			<div>
-				<ActionSetControlEventsCheckbox enabled={enabled} setEnabled={(value) => setArgs({ enabled: value })} />
+				<ActionSetPropertiesButton
+					controlEvents={controlEvents}
+					setControlEvents={(value) => setArgs({ controlEvents: value })}
+				/>
 				<p className="mt-2" aria-live="polite">
-					Automatic surface cue: {enabled ? 'On' : 'Off'}
+					Automatic surface cue: {controlEvents ? 'On' : 'Off'}
 				</p>
 			</div>
 		)

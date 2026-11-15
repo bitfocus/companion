@@ -11,7 +11,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
-import { ActionSetControlEventsCheckbox } from './ActionSetControlEventsCheckbox.js'
+import { ActionSetPropertiesButton } from './ActionSetPropertiesButton.js'
 import {
 	EditDurationGroupPropertiesModal,
 	type EditDurationGroupPropertiesModalRef,
@@ -50,7 +50,7 @@ export function EditActionsRelease({
 				if (isNaN(oldIdNumber)) return
 
 				const runWhileHeld = stepOptions.runWhileHeld.includes(oldIdNumber)
-				const controlEvents = !stepOptions.controlEventsDisabledSets?.includes(oldIdNumber)
+				const controlEvents = !stepOptions.controlEventsDisabledSets.includes(oldIdNumber)
 				editRef.current?.show(
 					oldIdNumber,
 					runWhileHeld,
@@ -151,10 +151,10 @@ export function EditActionsRelease({
 						</div>
 					}
 					headingActions={[
-						<ActionSetControlEventsCheckbox
-							key="control-events"
-							enabled={!stepOptions.controlEventsDisabledSets?.includes('up')}
-							setEnabled={(enabled) => service.setControlEvents(stepId, 'up', enabled)}
+						<ActionSetPropertiesButton
+							key="properties"
+							controlEvents={!stepOptions.controlEventsDisabledSets.includes('up')}
+							setControlEvents={(enabled) => service.setControlEvents(stepId, 'up', enabled)}
 						/>,
 					]}
 					controlId={controlId}

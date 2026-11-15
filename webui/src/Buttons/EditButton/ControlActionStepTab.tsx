@@ -10,7 +10,7 @@ import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
-import { ActionSetControlEventsCheckbox } from './ActionSetControlEventsCheckbox.js'
+import { ActionSetPropertiesButton } from './ActionSetPropertiesButton.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
 
 export interface ControlActionStepTabProps {
@@ -46,8 +46,6 @@ export function ControlActionStepTab({
 			</InlineHelpIcon>
 		</>
 	)
-	const controlEventsEnabled = (setId: 'down' | 'up'): boolean =>
-		!selectedStepProps.options.controlEventsDisabledSets?.includes(setId)
 
 	return (
 		<>
@@ -106,10 +104,10 @@ export function ControlActionStepTab({
 									</div>
 								}
 								headingActions={[
-									<ActionSetControlEventsCheckbox
-										key="control-events"
-										enabled={controlEventsEnabled('down')}
-										setEnabled={(enabled) => service.setControlEvents(selectedKey, 'down', enabled)}
+									<ActionSetPropertiesButton
+										key="properties"
+										controlEvents={!selectedStepProps.options.controlEventsDisabledSets.includes('down')}
+										setControlEvents={(enabled) => service.setControlEvents(selectedKey, 'down', enabled)}
 									/>,
 								]}
 								controlId={controlId}
