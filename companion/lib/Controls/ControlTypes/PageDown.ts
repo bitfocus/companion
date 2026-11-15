@@ -13,6 +13,7 @@ import {
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
 } from '@companion-app/shared/Model/StyleModel.js'
+import type { ControlPressSource } from '../ButtonPressEvents.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import { CreateElementOfType } from './Button/LayerDefaults.js'
 import { ControlButtonPage } from './PageButton.js'
@@ -127,11 +128,11 @@ export class ControlButtonPageDown extends ControlButtonPage<PageDownButtonModel
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that initiated this press
+	 * @param source The surface that initiated this press, or null when there is none
 	 */
-	pressControl(pressed: boolean, surfaceId: string | undefined): void {
-		if (pressed && surfaceId) {
-			this.deps.surfaces.devicePageDown(surfaceId)
+	pressControl(pressed: boolean, source: ControlPressSource | null): void {
+		if (pressed && source) {
+			this.deps.surfaces.devicePageDown(source.surfaceId)
 		}
 	}
 

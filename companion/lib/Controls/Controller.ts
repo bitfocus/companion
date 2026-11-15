@@ -47,7 +47,7 @@ import type {
 } from '../Variables/VariablesAndExpressionParser.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
 import { createBuildingBlockInputsTrpcRouter } from './BuildingBlocks/BuildingBlockInputsTrpcRouter.js'
-import type { ButtonPressEvents } from './ButtonPressEvents.js'
+import type { ControlPressSource } from './ButtonPressEvents.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlExternalDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
@@ -355,11 +355,10 @@ export class ControlsController {
 	pressControl(
 		controlId: SomeControlId,
 		pressed: boolean,
-		surfaceId: string | undefined,
-		pressEvents: ButtonPressEvents | null,
+		source: ControlPressSource | null,
 		force?: boolean
 	): boolean {
-		return this.#store.pressControl(controlId, pressed, surfaceId, pressEvents, force)
+		return this.#store.pressControl(controlId, pressed, source, force)
 	}
 
 	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean {

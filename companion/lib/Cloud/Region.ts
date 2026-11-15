@@ -113,12 +113,12 @@ export class CloudRegion {
 		if (args.bank && args.page) {
 			const controlId = this.#cloud.pageStore.getControlIdAtOldBankIndex(args.page, args.bank)
 			if (controlId) {
-				this.#cloud.controls.pressControl(controlId, true, 'cloud', null)
+				this.#cloud.controls.pressControl(controlId, true, { surfaceId: 'cloud', pressEvents: null })
 			}
 		} else if (location) {
 			const controlId = this.#cloud.pageStore.getControlIdAt(location)
 			if (controlId) {
-				this.#cloud.controls.pressControl(controlId, true, 'cloud', null)
+				this.#cloud.controls.pressControl(controlId, true, { surfaceId: 'cloud', pressEvents: null })
 			}
 		}
 		return true
@@ -136,12 +136,12 @@ export class CloudRegion {
 		if (args.bank && args.page) {
 			const controlId = this.#cloud.pageStore.getControlIdAtOldBankIndex(args.page, args.bank)
 			if (controlId) {
-				this.#cloud.controls.pressControl(controlId, false, 'cloud', null)
+				this.#cloud.controls.pressControl(controlId, false, { surfaceId: 'cloud', pressEvents: null })
 			}
 		} else if (location) {
 			const controlId = this.#cloud.pageStore.getControlIdAt(location)
 			if (controlId) {
-				this.#cloud.controls.pressControl(controlId, false, 'cloud', null)
+				this.#cloud.controls.pressControl(controlId, false, { surfaceId: 'cloud', pressEvents: null })
 			}
 		}
 		return true

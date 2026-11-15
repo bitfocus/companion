@@ -13,7 +13,7 @@ import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/Styl
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
-import type { ButtonPressEvents } from '../../ButtonPressEvents.js'
+import type { ButtonPressEvents, ControlPressSource } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
@@ -249,16 +249,12 @@ export abstract class ButtonControlRuntimeBase<
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that initiated this press
-	 * @param pressEvents Control events for a physical press, or null for any other press
+	 * @param source The surface that initiated this press, or null when there is none
 	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(
-		pressed: boolean,
-		surfaceId: string | undefined,
-		pressEvents: ButtonPressEvents | null,
-		force: boolean
-	): void {
+	pressControl(pressed: boolean, source: ControlPressSource | null, force: boolean): void {
+		const surfaceId = source?.surfaceId
+		const pressEvents = source?.pressEvents ?? null
 		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNextProgression()
 
 		let pressedDuration = 0
@@ -267,6 +263,8 @@ export abstract class ButtonControlRuntimeBase<
 		if (surfaceId) {
 			// Calculate the press duration, or track when the press started
 			if (pressed) {
+				// A replaced press sends nothing more. This is not in abortRunningHoldTimers, as the release also calls that
+				// before running its group, and finishing there would drop the cue of a release-only group
 				this.#surfaceHoldState.get(surfaceId)?.pressEvents?.finish()
 				this.abortRunningHoldTimers(surfaceId)
 

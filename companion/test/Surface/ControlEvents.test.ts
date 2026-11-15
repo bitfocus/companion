@@ -106,14 +106,14 @@ describe('surface control event routing', () => {
 	test('events go to the pressed control, and release reuses the press after a page and offset change', () => {
 		const { panel, handler, deps, ipc } = makeHandler('open1')
 		panel.inputPress('other', true)
-		const context = deps.controls.pressControl.mock.lastCall?.[3]
+		const context = deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents
 		expect(context).toBeTruthy()
 		context?.request('down')
 		handler.storeNewDevicePage('page2', true)
 		deps.pageStore.getPageNumber.mockReturnValue(2)
 		handler.setPosition(3, 2)
 		panel.inputPress('other', false)
-		expect(deps.controls.pressControl.mock.lastCall?.[3]).toBe(context)
+		expect(deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents).toBe(context)
 		expect(deps.pageStore.getControlIdAt).toHaveBeenLastCalledWith({ pageNumber: 1, column: 1, row: 0 })
 		expect(controlEventCalls(ipc)).toEqual([
 			{ surfaceId: 'test:deck', connectionId: 'open1', controlId: 'other', event: 'press' },
@@ -123,7 +123,7 @@ describe('surface control event routing', () => {
 	test('a run-while-held group sends hold while the press is active', () => {
 		const { panel, deps, ipc } = makeHandler('open1')
 		panel.inputPress('key', true)
-		deps.controls.pressControl.mock.lastCall?.[3]?.request('held')
+		deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents?.request('held')
 		expect(controlEventCalls(ipc)).toEqual([
 			{ surfaceId: 'test:deck', connectionId: 'open1', controlId: 'key', event: 'hold' },
 		])
@@ -132,7 +132,7 @@ describe('surface control event routing', () => {
 	test.each(['replace', 'lock', 'unload'] as const)('%s invalidates a pending press', (reason) => {
 		const { panel, handler, deps, ipc } = makeHandler('open1')
 		panel.inputPress('key', true)
-		const context = deps.controls.pressControl.mock.lastCall?.[3]
+		const context = deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents
 		expect(context).toBeTruthy()
 		if (reason === 'replace') panel.inputPress('key', true)
 		else if (reason === 'lock') handler.setLocked(true, true)
@@ -144,7 +144,7 @@ describe('surface control event routing', () => {
 	test('release still invalidates the press when the current page no longer exists', () => {
 		const { panel, deps, ipc } = makeHandler('open1')
 		panel.inputPress('key', true)
-		const context = deps.controls.pressControl.mock.lastCall?.[3]
+		const context = deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents
 		deps.pageStore.getPageNumber.mockReturnValue(null)
 		panel.inputPress('key', false)
 		context?.request('held')
@@ -162,7 +162,7 @@ describe('surface control event routing', () => {
 		expect(controlEventCalls(ipc)).toHaveLength(0)
 		const legacy = makeHandler(null)
 		legacy.panel.inputPress('key', true)
-		expect(legacy.deps.controls.pressControl.mock.lastCall?.[3]).toBeNull()
+		expect(legacy.deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents).toBeNull()
 	})
 
 	test('explicit cues go to the control showing that location, only while it is shown', () => {

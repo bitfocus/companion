@@ -544,7 +544,10 @@ describe('LinkController buttons', () => {
 
 		const updates = ctx.transport().messagesOfType('button.update')
 		expect(updates).toMatchObject([{ peerId: 'peer' }])
-		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', true, 'link:peer:s', null)
+		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', true, {
+			surfaceId: 'link:peer:s',
+			pressEvents: null,
+		})
 	})
 
 	test('a button held by a peer stays held when it becomes unreachable, as with an unplugged surface', async () => {
@@ -587,7 +590,10 @@ describe('LinkController buttons', () => {
 		expect(ctx.transport().messagesOfType('access')).toMatchObject([
 			{ peerId: 'peer', message: { payload: { permissions: { buttons: false } } } },
 		])
-		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', false, 'link:peer:s', null)
+		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', false, {
+			surfaceId: 'link:peer:s',
+			pressEvents: null,
+		})
 	})
 
 	test('answers a pages request from a peer that is not allowed buttons with what it may use', () => {

@@ -415,9 +415,7 @@ export abstract class ButtonEntityListPoolBase
 			}
 		}
 
-		const options = existingOptions
-			? structuredClone(existingOptions)
-			: structuredClone(ButtonEntityListPoolBase.DefaultStepOptions)
+		const options = existingOptions ? structuredClone(existingOptions) : ActionStepOptionsSchema.parse({})
 		const rawControlEventsDisabledSets: unknown = options.controlEventsDisabledSets
 		if (Array.isArray(rawControlEventsDisabledSets)) {
 			const controlEventsDisabledSets = rawControlEventsDisabledSets.filter(

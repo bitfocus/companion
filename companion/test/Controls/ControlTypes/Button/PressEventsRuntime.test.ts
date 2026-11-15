@@ -133,7 +133,7 @@ describe('button automatic press event dispatch', () => {
 		const { control, runMultipleActions } = createControl(storage({ down: [action('down1')] }))
 		const send = vi.fn()
 
-		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
 
 		expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		expect(send).toHaveBeenCalledTimes(1)
@@ -147,7 +147,7 @@ describe('button automatic press event dispatch', () => {
 		const { control } = createControl(model)
 		const send = vi.fn()
 
-		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
 
 		expect(send).not.toHaveBeenCalled()
 		control.destroy()
@@ -156,7 +156,7 @@ describe('button automatic press event dispatch', () => {
 	test('does not send an event for a synthetic press with no physical context', () => {
 		const { control, runMultipleActions } = createControl(storage({ down: [action('down1')] }))
 
-		control.pressControl(true, 'synthetic-surface', null, false)
+		control.pressControl(true, { surfaceId: 'synthetic-surface', pressEvents: null }, false)
 
 		expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		control.destroy()
@@ -171,7 +171,7 @@ describe('button automatic press event dispatch', () => {
 		const { control } = createControl(storage({ down: [action('down1')] }), runMultipleActions)
 		const send = vi.fn()
 
-		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
 
 		expect(send).toHaveBeenCalledTimes(1)
 		resolveAction()
@@ -189,7 +189,7 @@ describe('button automatic press event dispatch', () => {
 		)
 		const send = vi.fn()
 
-		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
 		expect(send).toHaveBeenCalledTimes(1)
 
 		vi.advanceTimersByTime(100)
@@ -205,8 +205,8 @@ describe('button automatic press event dispatch', () => {
 		const firstFeedback = new ButtonPressEvents(firstSend)
 		const secondSend = vi.fn()
 
-		control.pressControl(true, 'surface1', firstFeedback, false)
-		control.pressControl(true, 'surface1', new ButtonPressEvents(secondSend), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: firstFeedback }, false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(secondSend) }, false)
 		firstFeedback.request('held')
 
 		expect(firstSend).toHaveBeenCalledTimes(1)
@@ -224,7 +224,7 @@ describe('button automatic press event dispatch', () => {
 		)
 		const send = vi.fn()
 
-		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
 		control.abortDelayedActions(false, null, 0)
 		vi.advanceTimersByTime(100)
 
@@ -238,7 +238,7 @@ describe('button automatic press event dispatch', () => {
 		const send = vi.fn()
 		const feedback = new ButtonPressEvents(send)
 
-		control.pressControl(true, 'surface1', feedback, false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: feedback }, false)
 		control.destroy()
 		feedback.request('held')
 
@@ -250,8 +250,8 @@ describe('button automatic press event dispatch', () => {
 		const send = vi.fn()
 		const feedback = new ButtonPressEvents(send)
 
-		control.pressControl(true, 'surface1', feedback, false)
-		control.pressControl(false, 'surface1', feedback, false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: feedback }, false)
+		control.pressControl(false, { surfaceId: 'surface1', pressEvents: feedback }, false)
 
 		expect(send).toHaveBeenCalledTimes(1)
 		control.destroy()
@@ -264,7 +264,9 @@ describe('button automatic press event dispatch', () => {
 		})
 		const send = vi.fn()
 
-		expect(() => control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)).toThrow('dispatch failed')
+		expect(() =>
+			control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
+		).toThrow('dispatch failed')
 		expect(send).not.toHaveBeenCalled()
 		control.destroy()
 	})
@@ -273,7 +275,7 @@ describe('button automatic press event dispatch', () => {
 		const { control, runMultipleActions } = createControl(storage({ down: [action('down1')] }))
 		runMultipleActions.mockImplementation(async () => control.abortDelayedActions(false, null, 0))
 		const send = vi.fn()
-		control.pressControl(true, 'surface1', new ButtonPressEvents(send), false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
 		expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		expect(send).not.toHaveBeenCalled()
 		control.destroy()
@@ -283,9 +285,9 @@ describe('button automatic press event dispatch', () => {
 		const { control } = createControl(storage({ up: [action('up1')] }))
 		const send = vi.fn()
 		const feedback = new ButtonPressEvents(send)
-		control.pressControl(true, 'surface1', feedback, false)
-		control.pressControl(true, 'surface1', null, false)
-		control.pressControl(false, 'surface1', feedback, false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: feedback }, false)
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: null }, false)
+		control.pressControl(false, { surfaceId: 'surface1', pressEvents: feedback }, false)
 		expect(send).not.toHaveBeenCalled()
 		control.destroy()
 	})

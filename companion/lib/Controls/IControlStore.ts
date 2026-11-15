@@ -5,7 +5,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
-import type { ButtonPressEvents } from './ButtonPressEvents.js'
+import type { ControlPressSource } from './ButtonPressEvents.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 
@@ -45,13 +45,7 @@ export interface IControlStore {
 	/**
 	 * Dispatch a press/release event to a control
 	 */
-	pressControl(
-		controlId: SomeControlId,
-		pressed: boolean,
-		surfaceId: string | undefined,
-		pressEvents: ButtonPressEvents | null,
-		force?: boolean
-	): boolean
+	pressControl(controlId: SomeControlId, pressed: boolean, source: ControlPressSource | null, force?: boolean): boolean
 
 	/**
 	 * Dispatch a rotate event to a control

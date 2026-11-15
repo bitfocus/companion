@@ -558,7 +558,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				const controlId = this.#pageStore.getControlIdAt(location)
 				try {
 					if (controlId) {
-						this.#controls.pressControl(controlId, pressed, this.surfaceId, pressEvents)
+						this.#controls.pressControl(controlId, pressed, { surfaceId: this.surfaceId, pressEvents })
 					}
 				} finally {
 					if (!pressed) pressEvents?.finish()

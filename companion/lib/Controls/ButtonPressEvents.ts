@@ -4,6 +4,16 @@ import LogController from '../Log/Controller.js'
 const logger = LogController.createLogger('Controls/ButtonPressEvents')
 
 /**
+ * Where a press came from
+ */
+export interface ControlPressSource {
+	/** The surface that initiated the press */
+	surfaceId: string
+	/** Control events for a physical press, or null for any other press */
+	pressEvents: ButtonPressEvents | null
+}
+
+/**
  * Control events for one physical press, shared by transparent button references.
  * The surface decides how to show them, such as a haptic click or a flash of the key.
  */
@@ -32,6 +42,12 @@ export class ButtonPressEvents {
 		}
 	}
 
+	/**
+	 * Stop sending events for this press.
+	 * The surface handler that created it calls this once the release has been handled, and when the surface locks or
+	 * unloads. A button calls it early when another press from the same surface replaces this one, when its delayed
+	 * actions are aborted, or when it is destroyed, so a pending hold cannot cue.
+	 */
 	finish(): void {
 		this.#active = false
 	}
