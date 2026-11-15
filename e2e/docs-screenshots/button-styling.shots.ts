@@ -140,6 +140,8 @@ test('canvas', async ({ page }) => {
 })
 
 test('status indicators', async ({ page }) => {
+	// Zoomed in, as the indicators are small
+	await page.addInitScript(() => window.localStorage.setItem('grid-zoom-scale:grid', '200'))
 	await gotoApp(page, '/buttons')
 	await page.getByRole('button', { name: 'Next page' }).click()
 	await expect(page.getByTitle('2/0/3', { exact: true })).toBeVisible()
