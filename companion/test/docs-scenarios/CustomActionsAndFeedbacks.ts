@@ -137,14 +137,14 @@ export async function seed(app: TestApp): Promise<void> {
 	app.addCustomActionCall(
 		rampA,
 		ramp,
-		{ target: exprVal(100), step: exprVal(5), delay: exprVal(500) },
+		{ target: exprVal(100), step: exprVal(5), delay: exprVal(1000) },
 		{ level: { type: 'custom-variable', variableName: exprVal('fader_a'), createIfNotExists: false } }
 	)
 	const rampB = await createButtonWithText(app, { pageNumber: 1, row: 1, column: 1 }, 'Ramp B\\n$(custom:fader_b)')
 	app.addCustomActionCall(
 		rampB,
 		ramp,
-		{ target: exprVal(50), step: exprVal(10), delay: exprVal(2000) },
+		{ target: exprVal(50), step: exprVal(10), delay: exprVal(4000) },
 		{ level: { type: 'custom-variable', variableName: exprVal('fader_b'), createIfNotExists: false } }
 	)
 }

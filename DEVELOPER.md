@@ -109,7 +109,7 @@ yarn playwright test -c e2e/docs-screenshots.config.ts
 ```
 
 - The examples are seeded by a scenario in `companion/test/docs-scenarios/`, which builds them with the integration-test fixture. Most pages share `Studio.ts`.
-- Connections and surfaces use demo modules (`companion/test/docs-scenarios/modules/`), installed from a stand-in for the module store, so no real modules or network access are needed.
+- Connections and surfaces use demo modules (`companion/test/docs-scenarios/modules/`), installed from a stand-in for the module store, along with a few real modules at pinned versions. The first run needs network access, to download the Node.js runtimes and those real modules into `.cache`; later runs reuse them.
 - The screenshots are taken by a `*.shots.ts` file in `e2e/docs-screenshots/`, with `shoot()`, which writes `<name>.light.png` and `<name>.dark.png` next to the page.
 - A page shows them as a normal image without the theme, `![…](images/my-page/name.png)`, and the site shows the one matching its theme.
 
