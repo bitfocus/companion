@@ -9,7 +9,6 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid.js'
-import type { InputFieldDefinitionsService } from '~/Components/InputFieldDefinitionsEditor/InputFieldDefinitionsEditor.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { BuildingBlockInputsEditor } from '~/Controls/BuildingBlockInputsEditor.js'
@@ -18,6 +17,7 @@ import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
+import { useBuildingBlockInputsService } from '~/Controls/useBuildingBlockInputsService.js'
 import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -91,31 +91,7 @@ function CustomActionPanelContent({
 		}),
 		[config.outputs, controlId, outputSetMutation]
 	)
-	const inputAddMutation = useMutationExt(trpc.controls.customActions.inputs.add.mutationOptions())
-	const inputRemoveMutation = useMutationExt(trpc.controls.customActions.inputs.remove.mutationOptions())
-	const inputMoveMutation = useMutationExt(trpc.controls.customActions.inputs.move.mutationOptions())
-	const inputUpdateMutation = useMutationExt(trpc.controls.customActions.inputs.update.mutationOptions())
-	const inputsService = useMemo(
-		(): InputFieldDefinitionsService => ({
-			addField: (field) => {
-				inputAddMutation.mutateAsync({ controlId, field }).catch((e) => console.error('Failed to add input', e))
-			},
-			removeField: (inputId) => {
-				inputRemoveMutation.mutateAsync({ controlId, inputId }).catch((e) => console.error('Failed to remove input', e))
-			},
-			moveField: (inputId, index) => {
-				inputMoveMutation
-					.mutateAsync({ controlId, inputId, index })
-					.catch((e) => console.error('Failed to move input', e))
-			},
-			updateField: (inputId, field) => {
-				inputUpdateMutation
-					.mutateAsync({ controlId, inputId, field })
-					.catch((e) => console.error('Failed to update input', e))
-			},
-		}),
-		[inputAddMutation, inputRemoveMutation, inputMoveMutation, inputUpdateMutation, controlId]
-	)
+	const inputsService = useBuildingBlockInputsService(controlId)
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, inputFields)
 
 	return (

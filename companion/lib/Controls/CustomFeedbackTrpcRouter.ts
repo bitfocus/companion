@@ -13,7 +13,6 @@ import type {
 } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import { publicProcedure, router, throttleIterator, toIterable } from '../UI/TRPC.js'
 import { getBuildingBlockUses } from './BuildingBlocks/BuildingBlockCallers.js'
-import { createBuildingBlockInputsTrpcRouter } from './BuildingBlocks/BuildingBlockInputsTrpcRouter.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
 import { moveControlInCollection } from './ControlOrder.js'
 import type { ControlStore } from './ControlStore.js'
@@ -122,8 +121,6 @@ export function createCustomFeedbackTrpcRouter(
 
 			return newControlId
 		}),
-
-		inputs: createBuildingBlockInputsTrpcRouter(controlStore, zodControlIds['custom-feedback'], getCustomFeedback),
 
 		reorder: publicProcedure
 			.input(

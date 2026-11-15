@@ -50,6 +50,7 @@ export abstract class ButtonControlRuntimeBase<
 {
 	readonly supportsEntities = true
 	readonly supportsPushed = true
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<TOptions>
 

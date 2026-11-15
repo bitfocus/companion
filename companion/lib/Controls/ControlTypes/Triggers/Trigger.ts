@@ -78,6 +78,7 @@ export class ControlTrigger
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<TriggerOptions> = TriggerOptionsSchema
 

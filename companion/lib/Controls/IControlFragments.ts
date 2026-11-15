@@ -8,6 +8,7 @@ import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
+import type { BuildingBlockInputs } from './BuildingBlocks/BuildingBlockInputs.js'
 import type { ControlBase, SomeControlJson } from './ControlBase.js'
 import type { SomeStepManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { SomeEntityPool } from './Entities/EntityListPoolEditingMixin.js'
@@ -20,7 +21,8 @@ export type SomeControl = ControlBase<SomeControlId, SomeControlJson, SomeContro
 	(ControlWithActionSets | ControlWithoutActionSets) &
 	(ControlWithOptions<Record<string, JsonValue | undefined>> | ControlWithoutOptions) &
 	(ControlWithPushed | ControlWithoutPushed) &
-	(ControlWithConvert | ControlWithoutConvert)
+	(ControlWithConvert | ControlWithoutConvert) &
+	(ControlWithBuildingBlockInputs | ControlWithoutBuildingBlockInputs)
 
 export interface ControlWithoutLayeredStyle extends ControlBase<
 	SomeControlId,
@@ -279,4 +281,25 @@ export interface ControlWithConvert extends ControlBase<SomeControlId, SomeContr
 
 export interface ControlWithoutConvert extends ControlBase<SomeControlId, SomeControlJson, SomeControlRuntimeProps> {
 	readonly supportsConvert: false
+}
+
+export interface ControlWithBuildingBlockInputs extends ControlBase<
+	SomeControlId,
+	SomeControlJson,
+	SomeControlRuntimeProps
+> {
+	readonly supportsBuildingBlockInputs: true
+
+	/**
+	 * The user defined inputs of this building block
+	 */
+	readonly buildingBlockInputs: BuildingBlockInputs
+}
+
+export interface ControlWithoutBuildingBlockInputs extends ControlBase<
+	SomeControlId,
+	SomeControlJson,
+	SomeControlRuntimeProps
+> {
+	readonly supportsBuildingBlockInputs: false
 }

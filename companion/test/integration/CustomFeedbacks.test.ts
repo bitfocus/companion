@@ -22,7 +22,7 @@ describe('custom feedbacks', () => {
 	/** Create a custom feedback which is true when the custom variable `level` is above its `min` input */
 	async function createAboveCustomFeedback(): Promise<string> {
 		const controlId = await app.trpc().controls.customFeedbacks.create({ name: 'Above' })
-		await app.trpc().controls.customFeedbacks.inputs.add({
+		await app.trpc().controls.buildingBlockInputs.add({
 			controlId,
 			field: { type: 'number', id: 'min', label: 'Min', default: 0, min: 0, max: 100 },
 		})
@@ -317,7 +317,7 @@ describe('custom feedbacks', () => {
 		if (!(original instanceof ControlCustomFeedback) || !(clone instanceof ControlCustomFeedback))
 			throw new Error('Expected custom feedbacks')
 		expect(clone.options.name).toBe('Above (copy)')
-		expect(clone.inputs).toEqual(original.inputs)
+		expect(clone.buildingBlockInputs.fields).toEqual(original.buildingBlockInputs.fields)
 		expect(clone.entities.getFeedbackEntities().map((entity) => entity.rawOptions)).toEqual(
 			original.entities.getFeedbackEntities().map((entity) => entity.rawOptions)
 		)
@@ -390,7 +390,7 @@ describe('custom feedbacks', () => {
 		const customFeedbackId = await createAboveCustomFeedback()
 
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Check' })
-		await app.trpc().controls.customActions.inputs.add({
+		await app.trpc().controls.buildingBlockInputs.add({
 			controlId: customActionId,
 			field: { type: 'number', id: 'limit', label: 'Limit', default: 0, min: 0, max: 100 },
 		})

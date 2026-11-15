@@ -13,24 +13,19 @@ import {
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
-import {
-	AuthorableInputFieldSchema,
-	toCompanionInputField,
-	type AuthorableInputField,
-	type ExpressionableOptionsObject,
-} from '@companion-app/shared/Model/Options.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
-import { VisitorVariableRenamer } from '../../Resources/Visitors/VariableRenamer.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlActionRunner } from '../ActionRunner.js'
+import { BuildingBlockInputs } from '../BuildingBlocks/BuildingBlockInputs.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import {
@@ -44,6 +39,7 @@ import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBas
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
 import type {
 	ControlWithActions,
+	ControlWithBuildingBlockInputs,
 	ControlWithEntities,
 	ControlWithOptions,
 	ControlWithoutActionSets,
@@ -79,7 +75,8 @@ export class ControlCustomAction
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions<CustomActionOptions>,
-		ControlWithoutPushed
+		ControlWithoutPushed,
+		ControlWithBuildingBlockInputs
 {
 	readonly type = 'custom-action'
 
@@ -91,6 +88,7 @@ export class ControlCustomAction
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = true
 
 	readonly optionsSchema: z.ZodType<CustomActionOptions> = CustomActionOptionsSchema
 
@@ -110,11 +108,6 @@ export class ControlCustomAction
 	options: CustomActionOptions
 
 	/**
-	 * The inputs of the custom action
-	 */
-	#inputs: AuthorableInputField[] = []
-
-	/**
 	 * The label of each local variable which is an output, by the id of the variable, so that renaming it keeps it
 	 */
 	#outputLabels = new Map<string, string>()
@@ -124,11 +117,9 @@ export class ControlCustomAction
 	 */
 	#callAnalysis: { analysis: CustomActionCallAnalysis; problem: string | null } | null = null
 
-	readonly entities: ControlEntityListPoolCustomAction
+	readonly buildingBlockInputs: BuildingBlockInputs
 
-	get inputs(): ReadonlyArray<AuthorableInputField> {
-		return this.#inputs
-	}
+	readonly entities: ControlEntityListPoolCustomAction
 
 	/**
 	 * The outputs, in the order of their local variables. Only a user value can be an output, as only that is set
@@ -174,9 +165,11 @@ export class ControlCustomAction
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
 			customFeedbackInstances: deps.customFeedbackInstances,
-			getDefaultInputVariables: () => buildCustomActionInputVariables(this.#getDefaultInputValues()),
+			getDefaultInputVariables: () => buildCustomActionInputVariables(this.buildingBlockInputs.getDefaultValues()),
 			localVariableRenamed: (fromName, toName) => this.#localVariableRenamed(fromName, toName),
 		})
+
+		this.buildingBlockInputs = new BuildingBlockInputs(deps.internalModule, this.entities, () => this.commitChange())
 
 		this.options = this.optionsSchema.parse({})
 
@@ -185,8 +178,7 @@ export class ControlCustomAction
 				throw new Error(`Invalid type given to ControlCustomAction: "${storage.type}"`)
 
 			this.options = { ...this.options, ...storage.options }
-			// The inputs are checked by the schema of the custom action when it is loaded
-			this.#inputs = storage.inputs
+			this.buildingBlockInputs.loadStorage(storage.inputs)
 			this.entities.loadStorage(storage, isImport)
 			for (const output of storage.outputs) {
 				const variable = this.#findLocalVariable(output.variableName)
@@ -229,17 +221,6 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * The values of the inputs when they have not been given
-	 */
-	#getDefaultInputValues(): VariableValues {
-		const values: VariableValues = {}
-		for (const input of this.#inputs) {
-			values[input.id] = 'default' in input ? structuredClone(input.default) : undefined
-		}
-		return values
-	}
-
-	/**
 	 * The definition of the action which runs this custom action
 	 */
 	toActionDefinition(): ClientEntityDefinition {
@@ -248,7 +229,7 @@ export class ControlCustomAction
 			label: this.options.name || 'Custom action',
 			sortKey: null,
 			description: this.options.description || undefined,
-			options: this.#inputs.map((input) => toCompanionInputField(structuredClone(input))),
+			options: this.buildingBlockInputs.toCompanionInputFields(),
 			optionsToMonitorForInvalidations: null,
 			feedbackType: null,
 			feedbackStyle: undefined,
@@ -287,12 +268,7 @@ export class ControlCustomAction
 	):
 		| { ok: true; inputValues: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> }
 		| { ok: false; optionErrors: Record<string, string | undefined>; referencedVariableIds: ReadonlySet<string> } {
-		const optionsWithDefaults: ExpressionableOptionsObject = { ...rawOptions }
-		for (const input of this.#inputs) {
-			if (optionsWithDefaults[input.id] === undefined && 'default' in input) {
-				optionsWithDefaults[input.id] = { isExpression: false, value: input.default }
-			}
-		}
+		const optionsWithDefaults = this.buildingBlockInputs.withDefaultOptions(rawOptions)
 
 		// Invalid inputs are refused, as the options of a module action are
 		const parseRes = parser.parseEntityOptions(this.toActionDefinition(), optionsWithDefaults, callerControlId)
@@ -309,7 +285,7 @@ export class ControlCustomAction
 
 		const frame: CustomActionRunFrame = {
 			customActionControlId: this.controlId,
-			inputValues: this.#getDefaultInputValues(),
+			inputValues: this.buildingBlockInputs.getDefaultValues(),
 			localValues: new Map(),
 			getLocalVariableEntities: () => this.entities.getLocalVariableEntities(),
 			// The entities of the custom action itself are not specific to a run
@@ -367,72 +343,6 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Add an input
-	 */
-	inputAdd(field: AuthorableInputField): boolean {
-		if (!AuthorableInputFieldSchema.safeParse(field).success) return false
-		if (this.#inputs.some((input) => input.id === field.id)) return false
-
-		this.#inputs.push(structuredClone(field))
-
-		this.commitChange()
-		return true
-	}
-
-	/**
-	 * Remove an input
-	 */
-	inputRemove(inputId: string): boolean {
-		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		if (index === -1) return false
-
-		this.#inputs.splice(index, 1)
-
-		this.commitChange()
-		return true
-	}
-
-	/**
-	 * Move an input to a new position in the list
-	 * @param inputId The id of the input
-	 * @param target The index to move it to
-	 */
-	inputMove(inputId: string, target: number): boolean {
-		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		if (index === -1 || target < 0 || target >= this.#inputs.length || target === index) return false
-
-		const [input] = this.#inputs.splice(index, 1)
-		this.#inputs.splice(target, 0, input)
-
-		this.commitChange()
-		return true
-	}
-
-	/**
-	 * Replace an input. If the new input has a different id, the references to it in the actions of this custom
-	 * action are updated. The caller is responsible for updating the actions which call this custom action
-	 * @returns Whether the input was updated
-	 */
-	inputUpdate(inputId: string, field: AuthorableInputField): boolean {
-		if (!AuthorableInputFieldSchema.safeParse(field).success) return false
-
-		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		if (index === -1) return false
-
-		if (field.id !== inputId) {
-			// Renaming, so the new id must be unused
-			if (this.#inputs.some((input) => input.id === field.id)) return false
-
-			this.#renameInputReferences(inputId, field.id)
-		}
-
-		this.#inputs[index] = structuredClone(field)
-
-		this.commitChange()
-		return true
-	}
-
-	/**
 	 * Make a local variable an output, change its label, or stop it being one
 	 * @param variableName The name of the local variable, which must be a user value
 	 * @param label The label of the output, or null for it not to be an output
@@ -470,19 +380,6 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Update the `$(options:<id>)` references to an input in the entities of this custom action
-	 */
-	#renameInputReferences(fromId: string, toId: string): void {
-		const changed = new VisitorVariableRenamer(this.deps.internalModule, `options:${fromId}`, `options:${toId}`)
-			.visitEntityInstances(this.entities.getAllEntities())
-			.recheckChangedFeedbacks()
-			.hasChanges()
-
-		// The entities were changed in place, so must be parsed again
-		if (changed) this.entities.resubscribeEntities()
-	}
-
-	/**
 	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
@@ -517,7 +414,7 @@ export class ControlCustomAction
 		return {
 			type: this.type,
 			options: this.options,
-			inputs: this.#inputs,
+			inputs: this.buildingBlockInputs.toJSON(),
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 			outputs: this.outputs,

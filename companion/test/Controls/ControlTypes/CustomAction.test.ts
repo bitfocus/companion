@@ -380,33 +380,39 @@ describe('ControlCustomAction', () => {
 			const { control } = createHarness({})
 			const checkbox: AuthorableInputField = { type: 'checkbox', id: 'flag', label: 'Flag', default: false }
 
-			expect(control.inputAdd(checkbox)).toBe(true)
-			expect(control.inputs.map((input) => input.id)).toEqual(['n', 'flag'])
+			expect(control.buildingBlockInputs.add(checkbox)).toBe(true)
+			expect(control.buildingBlockInputs.fields.map((input) => input.id)).toEqual(['n', 'flag'])
 
-			expect(control.inputMove('flag', 0)).toBe(true)
-			expect(control.inputs.map((input) => input.id)).toEqual(['flag', 'n'])
+			expect(control.buildingBlockInputs.move('flag', 0)).toBe(true)
+			expect(control.buildingBlockInputs.fields.map((input) => input.id)).toEqual(['flag', 'n'])
 			// Already there, or out of range
-			expect(control.inputMove('flag', 0)).toBe(false)
-			expect(control.inputMove('flag', 2)).toBe(false)
-			expect(control.inputMove('unknown', 1)).toBe(false)
+			expect(control.buildingBlockInputs.move('flag', 0)).toBe(false)
+			expect(control.buildingBlockInputs.move('flag', 2)).toBe(false)
+			expect(control.buildingBlockInputs.move('unknown', 1)).toBe(false)
 
-			expect(control.inputRemove('flag')).toBe(true)
-			expect(control.inputs.map((input) => input.id)).toEqual(['n'])
+			expect(control.buildingBlockInputs.remove('flag')).toBe(true)
+			expect(control.buildingBlockInputs.fields.map((input) => input.id)).toEqual(['n'])
 		})
 
 		test('rejects invalid inputs', () => {
 			const { control } = createHarness({})
 
 			// Duplicate id
-			expect(control.inputAdd({ ...numberInput })).toBe(false)
+			expect(control.buildingBlockInputs.add({ ...numberInput })).toBe(false)
 			// A type which a user can't author, from somewhere other than the editor
 			expect(
-				control.inputAdd({ type: 'secret-text', id: 'secret', label: 'Secret' } as unknown as AuthorableInputField)
+				control.buildingBlockInputs.add({
+					type: 'secret-text',
+					id: 'secret',
+					label: 'Secret',
+				} as unknown as AuthorableInputField)
 			).toBe(false)
 			// Bad id
-			expect(control.inputAdd({ type: 'checkbox', id: 'a b', label: 'Flag', default: false })).toBe(false)
+			expect(control.buildingBlockInputs.add({ type: 'checkbox', id: 'a b', label: 'Flag', default: false })).toBe(
+				false
+			)
 
-			expect(control.inputs).toHaveLength(1)
+			expect(control.buildingBlockInputs.fields).toHaveLength(1)
 		})
 
 		test('renaming an input updates the references to it', () => {
@@ -416,9 +422,9 @@ describe('ControlCustomAction', () => {
 			})
 			const { control } = createHarness({ actions: [setAction] })
 
-			expect(control.inputUpdate('n', { ...numberInput, id: 'count' })).toBe(true)
+			expect(control.buildingBlockInputs.update('n', { ...numberInput, id: 'count' })).toBe(true)
 
-			expect(control.inputs.map((input) => input.id)).toEqual(['count'])
+			expect(control.buildingBlockInputs.fields.map((input) => input.id)).toEqual(['count'])
 			expect(control.entities.getActionEntities()[0].rawOptions).toEqual({
 				text: exprVal('value $(options:count) $(options:nn)'),
 				other: exprExpr('$(options:count) + 1'),
@@ -440,7 +446,7 @@ describe('ControlCustomAction', () => {
 			}
 			const { control } = createHarness({ actions: [call] })
 
-			expect(control.inputUpdate('n', { ...numberInput, id: 'count' })).toBe(true)
+			expect(control.buildingBlockInputs.update('n', { ...numberInput, id: 'count' })).toBe(true)
 
 			const entity = control.entities.getActionEntities()[0]
 			expect(entity.rawStoreResult).toEqual({
@@ -621,7 +627,7 @@ describe('ControlCustomAction', () => {
 
 		test('a missing text input uses its default', async () => {
 			const { control, executeAction, evaluate, runAsButton } = createHarness({ actions: [action('record')] })
-			control.inputAdd({ type: 'textinput', id: 'text', label: 'Text', default: 'fallback' })
+			control.buildingBlockInputs.add({ type: 'textinput', id: 'text', label: 'Text', default: 'fallback' })
 			const seen: any[] = []
 			executeAction.mockImplementation(async (_action, extras) => {
 				seen.push(evaluate(extras, '$(options:text)'))

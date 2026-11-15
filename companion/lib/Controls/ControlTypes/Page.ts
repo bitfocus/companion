@@ -56,6 +56,7 @@ export class ControlPage
 	readonly supportsActionSets = false
 	readonly supportsOptions = false
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly entities: EntityListPoolPage
 

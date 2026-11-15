@@ -73,6 +73,7 @@ export class ControlButtonReference
 	readonly supportsLayeredStyle = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<ButtonReferenceButtonModel['options']> = ButtonReferenceButtonOptionsSchema
 

@@ -59,6 +59,7 @@ export abstract class ControlButtonPage<TJson extends PageUpButtonModel | PageDo
 	readonly supportsActionSets = false
 	readonly supportsOptions = false
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly #drawing: LayeredButtonDrawer
 	override get drawing(): LayeredButtonDrawer {

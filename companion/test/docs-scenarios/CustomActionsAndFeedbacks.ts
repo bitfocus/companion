@@ -34,7 +34,7 @@ export async function seed(app: TestApp): Promise<void> {
 		controlId: select,
 		change: { controlType: 'custom-action', key: 'description', value: 'Remember which camera is selected' },
 	})
-	await app.trpc().controls.customActions.inputs.add({
+	await app.trpc().controls.buildingBlockInputs.add({
 		controlId: select,
 		field: { type: 'number', id: 'camera', label: 'Camera', default: 1, min: 1, max: 8 },
 	})
@@ -54,15 +54,15 @@ export async function seed(app: TestApp): Promise<void> {
 		controlId: ramp,
 		change: { controlType: 'custom-action', key: 'description', value: 'Count up to a target, a step at a time' },
 	})
-	await app.trpc().controls.customActions.inputs.add({
+	await app.trpc().controls.buildingBlockInputs.add({
 		controlId: ramp,
 		field: { type: 'number', id: 'target', label: 'Target', default: 100, min: 0, max: 1000 },
 	})
-	await app.trpc().controls.customActions.inputs.add({
+	await app.trpc().controls.buildingBlockInputs.add({
 		controlId: ramp,
 		field: { type: 'number', id: 'step', label: 'Step', default: 10, min: 1, max: 1000 },
 	})
-	await app.trpc().controls.customActions.inputs.add({
+	await app.trpc().controls.buildingBlockInputs.add({
 		controlId: ramp,
 		field: { type: 'number', id: 'delay', label: 'Delay (ms)', default: 100, min: 0, max: 10000 },
 	})
@@ -87,7 +87,7 @@ export async function seed(app: TestApp): Promise<void> {
 		controlId: selected,
 		change: { controlType: 'custom-feedback', key: 'description', value: 'True while a camera is the selected one' },
 	})
-	await app.trpc().controls.customFeedbacks.inputs.add({
+	await app.trpc().controls.buildingBlockInputs.add({
 		controlId: selected,
 		field: { type: 'number', id: 'camera', label: 'Camera', default: 1, min: 1, max: 8 },
 	})

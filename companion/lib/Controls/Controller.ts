@@ -47,6 +47,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
+import { createBuildingBlockInputsTrpcRouter } from './BuildingBlocks/BuildingBlockInputsTrpcRouter.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlExternalDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
@@ -406,6 +407,7 @@ export class ControlsController {
 				this.#factory,
 				this.#deps.customFeedbackInstances
 			),
+			buildingBlockInputs: createBuildingBlockInputsTrpcRouter(this.#store),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,

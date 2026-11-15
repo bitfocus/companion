@@ -62,6 +62,7 @@ export class ControlButtonPreset
 	readonly supportsEntities = true
 	readonly supportsOptions = false
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 	readonly supportsConvert = false
 
 	readonly entities: ControlEntityListPoolButton

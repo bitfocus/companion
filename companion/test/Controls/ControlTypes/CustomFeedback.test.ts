@@ -467,7 +467,7 @@ describe('ControlCustomFeedback', () => {
 
 			const inner = new ControlCustomFeedback(deps, CreateCustomFeedbackControlId('inner'), null, false)
 			controlStore.controls.set(inner.controlId, inner)
-			inner.inputAdd(numberInput)
+			inner.buildingBlockInputs.add(numberInput)
 			inner.entities.entityAdd('feedbacks', null, check('$(options:n) == 6'))
 
 			const { callerEntity } = createCaller(useFeedback({ n: exprVal(5) }))
@@ -641,7 +641,7 @@ describe('ControlCustomFeedback', () => {
 				feedbacks: [{ ...check('$(options:n) == 5'), isInverted: exprExpr('$(options:n) != 5') }],
 			})
 
-			expect(control.inputUpdate('n', { ...numberInput, id: 'renamed' })).toBe(true)
+			expect(control.buildingBlockInputs.update('n', { ...numberInput, id: 'renamed' })).toBe(true)
 
 			const [feedback] = control.entities.getFeedbackEntities()
 			expect(feedback.rawOptions.expression).toEqual(exprVal('$(options:renamed) == 5'))
@@ -658,7 +658,7 @@ describe('ControlCustomFeedback', () => {
 			const { callerEntity } = createCaller(useFeedback({ n: exprVal(5) }))
 			await expectValue(callerEntity, true)
 
-			control.inputUpdate('n', { ...numberInput, id: 'renamed' })
+			control.buildingBlockInputs.update('n', { ...numberInput, id: 'renamed' })
 			renameBuildingBlockInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n', 'renamed')
 
 			expect(callerEntity.rawOptions).toEqual({ renamed: exprVal(5) })
@@ -670,7 +670,7 @@ describe('ControlCustomFeedback', () => {
 
 			const { callerEntity } = createCaller(useFeedback({ n: exprVal(5), other: exprVal(1) }))
 
-			expect(control.inputRemove('n')).toBe(true)
+			expect(control.buildingBlockInputs.remove('n')).toBe(true)
 			removeBuildingBlockInputInCallers(controlStore, CUSTOM_FEEDBACK_CONTROL_ID, 'n')
 
 			expect(callerEntity.rawOptions).toEqual({ other: exprVal(1) })
@@ -742,7 +742,7 @@ describe('ControlCustomFeedback', () => {
 
 			const inner = new ControlCustomFeedback(deps, CreateCustomFeedbackControlId('inner'), null, false)
 			controlStore.controls.set(inner.controlId, inner)
-			inner.inputAdd(numberInput)
+			inner.buildingBlockInputs.add(numberInput)
 			inner.entities.entityAdd('feedbacks', null, check("$(this:surface_id) == 'surface0' && $(options:n) == 6"))
 
 			deps.variableValues.setVariableValues('custom', [{ id: 'level', value: 1 }])
@@ -781,7 +781,7 @@ describe('ControlCustomFeedback', () => {
 
 			const inner = new ControlCustomFeedback(deps, CreateCustomFeedbackControlId('inner'), null, false)
 			controlStore.controls.set(inner.controlId, inner)
-			inner.inputAdd(numberInput)
+			inner.buildingBlockInputs.add(numberInput)
 			inner.entities.entityAdd('feedbacks', null, check('$(options:n) == 6'))
 
 			const { callerEntity } = createCaller(useFeedback({ n: exprExpr('$(this:delta)') }))

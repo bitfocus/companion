@@ -82,6 +82,7 @@ export class ControlButtonLink
 	readonly supportsLayeredStyle = false
 	readonly supportsOptions = true
 	readonly supportsPushed = true
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<LinkButtonModel['options']> = LinkButtonOptionsSchema
 

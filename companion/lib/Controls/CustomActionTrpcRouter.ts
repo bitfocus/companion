@@ -15,7 +15,6 @@ import {
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import { publicProcedure, router, throttleIterator, toIterable } from '../UI/TRPC.js'
 import { getBuildingBlockUses } from './BuildingBlocks/BuildingBlockCallers.js'
-import { createBuildingBlockInputsTrpcRouter } from './BuildingBlocks/BuildingBlockInputsTrpcRouter.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
 import { moveControlInCollection } from './ControlOrder.js'
 import type { ControlStore } from './ControlStore.js'
@@ -173,8 +172,6 @@ export function createCustomActionTrpcRouter(
 			control.testRun()
 			return true
 		}),
-
-		inputs: createBuildingBlockInputsTrpcRouter(controlStore, zodControlIds['custom-action'], getCustomAction),
 
 		outputSet: publicProcedure
 			.input(
