@@ -417,7 +417,6 @@ export class ServiceSatelliteApi {
 			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
 			ROTARY_AMOUNT: true,
 			BITMAP_CACHE: true,
-			CONTROL_EVENTS: true,
 		})
 
 		// Register the per-socket state only once the handshake has been sent, so a failure while

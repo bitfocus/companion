@@ -101,9 +101,9 @@ export const SATELLITE_FEATURES = {
 	},
 	controlEvents: {
 		since: '1.17.0',
-		capsFlag: 'CONTROL_EVENTS',
+		capsFlag: null,
 		description:
-			'A surface that sets CONTROL_EVENTS on ADD-DEVICE receives CONTROL-EVENT when a press or held group of one of its controls runs actions',
+			'ADD-DEVICE accepts CONTROL_EVENTS=1 to receive CONTROL-EVENT when a press or held group of one of its controls runs actions',
 	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 

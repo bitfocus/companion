@@ -141,15 +141,6 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData[1]).toContain('BITMAP_CACHE=1')
 		})
 
-		test('CAPS advertises control events', () => {
-			const { api, logger } = createService()
-			const socket = new TestSocketWrapper()
-
-			api.initSocket(logger, socket)
-
-			expect(socket.writtenData[1]).toContain('CONTROL_EVENTS=1')
-		})
-
 		test('returns processMessage and cleanupDevices', () => {
 			const { api, logger } = createService()
 			const socket = new TestSocketWrapper()
