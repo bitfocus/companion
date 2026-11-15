@@ -241,7 +241,7 @@ export async function getFreeUdpPort(): Promise<number> {
  * changes behaviour. They are downloaded via `yarn fetch-runtimes` (the same script `yarn dev` and
  * packaging run) when missing.
  */
-const prepareForModuleChildren = (() => {
+export const prepareForModuleChildren = (() => {
 	let prepared: Promise<void> | null = null
 	return async (): Promise<void> => {
 		prepared ??= (async () => {

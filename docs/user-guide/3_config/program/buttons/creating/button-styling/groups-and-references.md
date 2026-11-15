@@ -33,7 +33,7 @@ putting an arrow inside a group with **Square Aspect Ratio** turned on, the arro
 tall or wide surfaces. This is exactly how Companion's built-in page navigation buttons keep their
 arrows looking right.
 
-![Group with Square Aspect Ratio](images/group-square-aspect-ratio.png?raw=true)
+![Group with Square Aspect Ratio](images/group-square-aspect-ratio.png)
 
 ## Reference
 
@@ -54,4 +54,4 @@ In the element's **Source** section, set the **Location** to the button you want
 expressions, so you can reference a button dynamically — for example
 `$(this:page)/0/0` to always mirror the top-left button of the current page.
 
-![Reference element](images/reference-element.png?raw=true)
+![Reference element](images/reference-element.png)

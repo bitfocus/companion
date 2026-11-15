@@ -46,7 +46,7 @@ Along the bottom of the list are two buttons for the things which aren't layers:
 - **Canvas** — always present and can't be deleted; it controls the topbar, status icons and the
   empty-button look. See [The canvas & button indicators](./canvas.md) for more on it.
 
-![Layered button editor](images/layered-button-editor.png?raw=true 'Layered button editor')
+![Layered button editor](images/layered-button-editor.png 'Layered button editor')
 
 ### Adding an element
 
@@ -64,7 +64,7 @@ the one you have selected. The built-in element types are:
 | **Gauge**     | A bar or ring which shows a value, such as a level meter or a progress indicator |
 | **Reference** | Mirror the graphics of another button (great for reusable designs)               |
 
-![Add element menu](images/add-element-menu.png?raw=true 'Add element menu')
+![Add element menu](images/add-element-menu.png 'Add element menu')
 
 Some modules also provide their own ready-made **composite** elements — for example a meter or a
 status badge tailored to that device. When a connection offers these, they appear at the bottom of the
@@ -104,7 +104,7 @@ program:
 - **Drag a corner handle** to resize it.
 - A **Line** has a handle at each end instead, which you can drag to move that end of the line.
 
-![Editing on the preview](images/layered-button-editor.png?raw=true 'Editing on the preview')
+![Editing on the preview](images/layered-button-editor.png 'Editing on the preview')
 
 While dragging, you can hold:
 
@@ -136,7 +136,7 @@ design looks on other shapes of button, without needing that surface connected:
 - The pencil lets you enter any other **W** (width) and **H** (height). It also lists the shapes of buttons on
   any surfaces which Companion has seen, so you can pick those easily.
 
-![Custom aspect ratio](images/custom-aspect-ratio.png?raw=true 'Custom aspect ratio')
+![Custom aspect ratio](images/custom-aspect-ratio.png 'Custom aspect ratio')
 
 This only changes the preview in the editor, and is remembered by your browser. Positions and sizes are
 percentages of the button, so the same design works on every shape; see
@@ -154,7 +154,7 @@ square in the middle of the group, whatever shape the button is.
 Select an element to edit its properties. If you only want the handful of properties you change most
 often, use [Pinned properties](#pinned-properties) below instead of selecting the element at all.
 
-![Element property sections](./images/element-property-sections.png?raw=true)
+![Element property sections](./images/element-property-sections.png)
 
 At the top are two fields every element has:
 
@@ -200,7 +200,7 @@ an expression, Companion shows what the expression currently evaluates to undern
 makes it easy to check your expression is doing what you expect, and shows a warning if the expression is
 invalid or fails to run.
 
-![Expression value preview](images/expression-preview.png?raw=true 'Expression value preview')
+![Expression value preview](images/expression-preview.png 'Expression value preview')
 
 A property which is overridden by one of the button's [feedbacks](../feedbacks.md) is marked with a small
 layers icon next to its name, as a reminder that it won't always show the value set here.

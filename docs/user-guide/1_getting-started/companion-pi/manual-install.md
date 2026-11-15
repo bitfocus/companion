@@ -6,7 +6,7 @@ description: Install Companion manually on an existing Linux system.
 
 # Manual Installation
 
-:::caution Advanced Users Only
+:::caution[Advanced Users Only]
 Only users who are comfortable with Linux and debugging issues themselves should attempt this flow. We may not be able to help with any issues encountered unless it is something at fault with our tooling.
 :::
 

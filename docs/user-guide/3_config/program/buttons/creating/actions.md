@@ -9,7 +9,7 @@ The actions define the behaviour of the button when it is pressed or released (o
 
 Multiple actions, even those from multiple modules, can be linked to a button. Most actions have options to let you customize how it performs.
 
-![Button actions](images/button-actions.png?raw=true 'Button Actions')
+![Button actions](images/button-actions.png 'Button Actions')
 
 To add an action to a button, you can either search in the box below, or click the folder button to bring up a more detailed view of all the actions available.
 
@@ -42,7 +42,7 @@ An **Action Group** has three modes:
 
 Groups can be put inside each other. The actions inside a **Logic: If statement** or **Logic: While loop** use the mode of the place the If statement or While loop is in.
 
-![Action Group Sequential](images/action-group-sequential.png?raw=true 'Action Group Sequential')
+![Action Group Sequential](images/action-group-sequential.png 'Action Group Sequential')
 
 ## Conditional actions and loops
 

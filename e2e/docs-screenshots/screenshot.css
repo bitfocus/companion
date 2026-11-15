@@ -1,0 +1,17 @@
+/* Applied while the screenshots of the docs are taken (see shoot.ts) */
+
+/* The version, and its release channel, change from one build to the next */
+.sidebar-footer-full .version,
+.sidebar-footer-full .version + * {
+	visibility: hidden;
+}
+
+/* Whether usb is available depends on the machine the screenshots are taken on */
+.inline-note:has(.fa-plug-circle-xmark) {
+	display: none;
+}
+
+/* The version shown at the end of the help menu */
+.dropdown-item-version {
+	display: none;
+}

@@ -35,7 +35,7 @@ the [install script](../../1_getting-started/companion-pi/manual-install.md) set
 
 :::
 
-![Surfaces](images/surfaces.png?raw=true 'Surfaces')
+![Surfaces](images/surfaces.png 'Surfaces')
 
 Here you can see all your current surfaces, both local and connected over Satellite, as well as any available emulators.
 
@@ -70,7 +70,7 @@ The exact list of settings will vary based on surface type, but the common set o
 
 Starting with v4.2, individual surfaces or surface-groups provide the option to restrict which pages a device -- or devices in a group -- may access. For example:
 
-![Restrict Pages Setting](images/restrict_pages.png?raw=true 'Restrict Pages Setting')
+![Restrict Pages Setting](images/restrict_pages.png 'Restrict Pages Setting')
 
 This allows you to distribute a single site configuration but with access to particular pages defined by a person's role. Each device or group can then be limited to just one or a few pages relevant to their role.
 
@@ -97,6 +97,6 @@ It is possible to connect some surfaces over the network to Companion. This coul
 
 For some of these, Companion needs to connect to the surface which can be setup in this page.
 
-![Remote Surfaces](images/surfaces-remote.png?raw=true 'Remote Surfaces')
+![Remote Surfaces](images/surfaces-remote.png 'Remote Surfaces')
 
 On the left is the connections that have been setup, and on the right is discovered surfaces on your network that you can setup.

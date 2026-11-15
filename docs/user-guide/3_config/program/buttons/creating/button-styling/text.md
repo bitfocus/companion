@@ -59,7 +59,7 @@ A common pattern is to set a comfortable **Text Size** and turn on **Shrink to f
 hold variable-length text (like a track name or a timer), so short values look bold and long values
 still fit.
 
-![Text element properties](images/text-element-properties.png?raw=true)
+![Text element properties](images/text-element-properties.png)
 
 :::tip
 Because the size is a percentage of the _element_, not the whole button, you can make a small Text

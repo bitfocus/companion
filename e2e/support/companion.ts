@@ -14,13 +14,21 @@ const READY_MARKER = 'COMPANION_READY '
 /**
  * Launch a real Companion application (via the integration-test fixture) as a child process,
  * resolving once its http server is listening.
+ * @param scenario A module (relative to the repository root) whose `seed(app)` builds what the tests need before the
+ * app is reported ready, or null for an empty app
  */
-export async function launchCompanion(): Promise<CompanionServer> {
+export async function launchCompanion(scenario: string | null): Promise<CompanionServer> {
 	const repoRoot = path.join(import.meta.dirname, '../..')
 
 	const child: ChildProcess = spawn(
 		process.execPath,
-		['--conditions=companion:source', '--import', 'tsx', path.join(import.meta.dirname, 'launch-app.mts')],
+		[
+			'--conditions=companion:source',
+			'--import',
+			'tsx',
+			path.join(import.meta.dirname, 'launch-app.mts'),
+			...(scenario ? ['--scenario', scenario] : []),
+		],
 		{
 			cwd: repoRoot,
 			stdio: ['ignore', 'pipe', 'inherit'],

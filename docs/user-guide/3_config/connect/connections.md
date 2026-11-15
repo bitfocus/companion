@@ -7,7 +7,7 @@ slug: /config/connections
 
 From the Connections tab, you can add, configure and remove devices. You can also see the status of a connection, as well as other information about it in the table.
 
-![Connections Page](images/connection_list.png?raw=true 'Connections Page')
+![Connections Page](images/connection_list.png 'Connections Page')
 
 In 4.0, the modules have been moved to be downloadable plugins. This allows you to get updates to modules much quicker and easier than before. As part of this, we do not distribute modules anymore with Companion.
 
@@ -38,9 +38,9 @@ If you have multiple connections using the same module, they can now each be run
 
 Once you have added your connections, you can reorder or filter them in the table. In the rightmost column, you can expand a list of buttons:
 
-![Connections Popover](images/connections/connection-popover.png?raw=true 'Connections Popover')
+![Connections Popover](images/connections/connection-popover.png 'Connections Popover')
 
-- **Help** will open that module's help information. This is also possible in the list on the right before adding a connection.
+- **Docs** will open that module's help information. This is also possible in the list on the right before adding a connection.
 - **Known Issues** will take you to the GitHub page for the module. You should report any bugs you encounter with the module here, or any feature requests for missing functionality. Tip: The more detail you give on a bug or feature request, the more likely it is to be handled quickly.
 - **Variables** will show a list of all the variables that a connection provides. These can be used in various places either explained later on.
 - **View Logs** is a debug log for the module. When reporting a bug, module developers may want extra information from here to help figure out the bug. To most users this will not be interesting.

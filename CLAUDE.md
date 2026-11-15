@@ -150,6 +150,41 @@ utilities` (declared in `tailwind.css`). App CSS is assigned to a layer by path 
   lower-layer rule can never override a class defined in a higher layer — put a component override in
   that component's own CSS (the `components` layer), not in an `app-base` file like `common.css`.
 
+## Docs screenshots
+
+Screenshots of the Companion ui in the user guide are generated with Playwright, in light and dark, by
+`yarn docs:screenshots`. **Take new ones this way, not by hand**, so they can be regenerated as the ui changes: a scenario
+in `companion/test/docs-scenarios/` seeds the app via `TestApp`, and an `e2e/docs-screenshots/*.shots.ts` file captures
+them with `shoot()` into `docs/user-guide/**/images/<name>.{light,dark}.png`. Pages reference them as
+`![…](images/<name>.png)`; `docs/src/remark/remark-themed-image.ts` picks the theme (the website, bitfocus/website, has
+its own copy of this plugin, so keep them in step). When changing a page covered by a scenario, update the
+scenario/shots and re-run.
+
+- Most pages share the `Studio.ts` scenario (a page of buttons, variables, triggers, surfaces…): extend it rather than
+  adding another, and keep its doc comment listing what is where. A scenario exports `prepare()` (run before the app
+  starts; use `prepareDocsApp`) and `seed(app)`; shared helpers are in `docs-scenarios/Helpers.ts`.
+- Connections and surfaces use the demo modules in `docs-scenarios/modules/` (a vision mixer etc., and a control
+  panel), which a stand-in for the module store (it answers the store's requests from `fetch`) offers for install, so no
+  real module or network is needed. Add actions/presets/etc. to `modules/src/*.mjs` when a page needs them. The store
+  also offers a few popular real modules (`REAL_MODULES`: ATEM, vMix, Videohub) at pinned versions, downloaded once into
+  `.cache` (node's `fetch` must be able to reach the module builds host the first time); use them occasionally, where
+  the real thing helps, without an address so their status doesn't depend on a device.
+- The launcher's windows are shot from its vite dev server, with `window.api` (the electron main process) mocked
+  (`launcher.shots.ts`). A window with only one look is shot once with `shootUnthemed`.
+- Anything which changes from run to run must be fixed in the scenario (no random ids, fixed times and tokens) or hidden
+  by `e2e/docs-screenshots/screenshot.css` (build version, machine-specific notes), or the images churn.
+- Crop to what the page describes with the helpers in `shoot.ts` (`contentClip`, `unionClip`, `gridClip`), and widen or
+  shorten the window (`withViewport`) to avoid tall, over-wrapped images. Open menus with `clickWithCursor` so the
+  pointer is drawn. Check the images after a run.
+- The comparison tolerates small differences, so use `--update-snapshots=all` when a small change (eg text) must be
+  written.
+- Don't regenerate the What's New pages' images: they show a feature as it was in that release. Photos, and
+  screenshots of other software, are also out of scope.
+- The run reuses `webui/build` if it exists, so after ui changes set `E2E_FORCE_WEBUI_BUILD=1` or it shoots the old ui.
+- Images differ slightly between machines, so regenerate a page's images on one machine. To add a shot without
+  touching the others, run just its test with `--update-snapshots=missing`.
+- In a sandbox whose preinstalled chromium doesn't match the pinned Playwright, set `PLAYWRIGHT_CHROMIUM_PATH`.
+
 ## Testing notes
 
 - Framework is **Vitest** (not Jest). Prefer pure/unit tests where possible; heavy UI components

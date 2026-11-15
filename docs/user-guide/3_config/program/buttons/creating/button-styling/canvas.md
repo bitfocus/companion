@@ -40,7 +40,7 @@ bar** mode) or a colored border is drawn (in **Border when pressed** mode). This
 but it stays on if a button is pressed without being released — for example if an action used **Button
 Trigger Press** without a matching **Button Trigger Release**.
 
-![Canvas layer options](images/canvas-layer-options.png?raw=true)
+![Canvas layer options](images/canvas-layer-options.png)
 
 ## Status icons
 
@@ -59,7 +59,7 @@ automatically:
 | **Orange triangle**  | A connection used by this button is in a **warning** state.                                                                                                                          |
 | **Green play arrow** | Actions on this button are currently **running** or **queued** — for example a delayed sequence from an **internal: Wait** action or a **Sequential** [Action Group](../actions.md). |
 
-![Status indicators](images/status-indicators.png?raw=true)
+![Status indicators](images/status-indicators.png)
 
 ## Empty buttons
 

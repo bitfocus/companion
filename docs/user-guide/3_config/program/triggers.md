@@ -11,7 +11,7 @@ Triggers can provide an extra hand in making any setup more automated and allow 
 
 To add a new trigger, click the button **Add Trigger** and fill in the information mentioned below.
 
-![Triggers](images/triggers.png?raw=true 'Triggers')
+![Triggers](images/triggers.png 'Triggers')
 
 ## Configuring
 
@@ -29,7 +29,7 @@ This defines when the trigger will be executed.
  The trigger will be executed when any of these events occur.  
  Common events are **Time interval**, **At random time interval**, and **On variable change**
 
-![Events](images/triggers/events.png?raw=true 'Events')
+![Events](images/triggers/events.png 'Events')
 
 ### Condition
 
@@ -37,7 +37,7 @@ This allows you to apply a filter on the events.
  For example, if using the **On variable change** event, you can use a condition to limit the trigger to execute only when the variable has a value of `1`.  
  This is a subset of the feedbacks that can be used on buttons.
 
-![Condition](images/triggers/condition.png?raw=true 'Condition')
+![Condition](images/triggers/condition.png 'Condition')
 
 When the trigger fires from an event, the built-in (internal) conditions are checked again at that moment. This
 means a condition such as **Variable: Check boolean expression** with `randomInt(1, 10) > 7` is re-rolled every
@@ -51,4 +51,4 @@ This defines what will happen when the trigger executes and condition is met.
 
 They run in the same way as a button's actions, see [Execution order](./buttons/creating/actions.md#execution-order).
 
-![Actions](images/triggers/actions.png?raw=true 'Actions')
+![Actions](images/triggers/actions.png 'Actions')

@@ -6,7 +6,7 @@ description: The launch-level settings that control how the Companion server sta
 
 # Server configuration
 
-:::tip Running CompanionPi or a headless server?
+:::tip[Running CompanionPi or a headless server?]
 This page describes the options themselves. You will need to edit them from the command line as described in
 [Headless configuration](./companion-pi/config-tool.md).
 :::

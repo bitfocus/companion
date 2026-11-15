@@ -11,7 +11,7 @@ Steps have been supported in Companion since 3.0, to allow for creating powerful
 
 To start with steps, click the **Add step** tab on a button. You will now have a second tab of actions on the button
 
-![Button Step 2](images/button-step2.png?raw=true 'Button Step 2')
+![Button Step 2](images/button-step2.png 'Button Step 2')
 
 Now when you press the button, on the first press it will execute the actions from **Step 1**, the following press with execute the actions from **Step 2**. It will keep on cycling through between the two.
 
