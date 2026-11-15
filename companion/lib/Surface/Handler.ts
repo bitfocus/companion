@@ -23,7 +23,6 @@ import type {
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { resolveControlStylePreset, rotateXYForPanel, unrotateXYForPanel } from '@companion-app/shared/SurfaceLayout.js'
-import type { SurfaceControlEvent } from '@companion-surface/base'
 import { ButtonPressEvents } from '../Controls/ButtonPressEvents.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -457,26 +456,6 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		const newYOffset = currentOffset.yOffset + Math.floor(yAdjustment)
 
 		this.setPosition(newXOffset, newYOffset)
-	}
-
-	/**
-	 * Send a control event to the control showing this location, if this surface is showing it right now.
-	 * Used for explicit cues, which have no physical press to follow.
-	 */
-	sendControlEventAt(location: ControlLocation, event: SurfaceControlEvent): void {
-		if (this.#isSurfaceLocked || !this.panel?.info.supportsControlEvents || !this.panel.controlEvent) return
-
-		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
-		if (!pageNumber || location.pageNumber !== pageNumber) return
-
-		const { xOffset, yOffset } = this.#getCurrentOffset()
-		const [x, y] = rotateXYForPanel(
-			location.column - xOffset,
-			location.row - yOffset,
-			this.panelGridSize,
-			this.#surfaceConfig.config.rotation
-		)
-		this.panel.controlEvent(x, y, event)
 	}
 
 	#onDeviceRemove() {

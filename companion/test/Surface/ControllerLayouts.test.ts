@@ -1,7 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientSurfaceButtonSizesItem,
 	ClientSurfaceLayoutItem,
@@ -19,7 +18,6 @@ import type {
 import { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { SatelliteDeviceInfo } from '../../lib/Surface/IP/Satellite.js'
 import { SurfacePluginPanel } from '../../lib/Surface/PluginPanel.js'
-import { mangleReferenceSurfaceId } from '../../lib/Surface/ReferenceSurfaceId.js'
 import type { SurfaceHandlerDependencies } from '../../lib/Surface/Types.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
@@ -91,7 +89,7 @@ function createController() {
 
 	const controller = new SurfaceController(db as any, deps, true)
 
-	return { controller, db, deps }
+	return { controller, db }
 }
 
 function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): SatelliteDeviceInfo {
@@ -446,51 +444,9 @@ function addPluginPanel(controller: SurfaceController, surfaceId: string, connec
 	return { ipc, panel }
 }
 
-function controlEventCalls(ipc: ReturnType<typeof addPluginPanel>['ipc']) {
-	return ipc.sendWithCb.mock.calls.filter(([event]) => event === 'controlEvent').map(([, msg]) => msg)
-}
-
-describe('SurfaceController control event routing', () => {
-	let controller: SurfaceController
-
-	beforeEach(() => {
-		const created = createController()
-		controller = created.controller
-		created.deps.pageStore.getPageNumber.mockReturnValue(1)
-	})
-
-	test('routes an explicit cue to the connected panel and strips a reference surface id', () => {
-		const { ipc } = addPluginPanel(controller, 'test:deck', 'open-1')
-		const location = { pageNumber: 1, row: 1, column: 0 }
-
-		controller.sendDeviceControlEvent('test:deck', location, 'press')
-		controller.sendDeviceControlEvent(
-			mangleReferenceSurfaceId('test:deck', CreateBankControlId('1-0-0')),
-			location,
-			'hold'
-		)
-		expect(controlEventCalls(ipc)).toEqual([
-			{ surfaceId: 'test:deck', connectionId: 'open-1', controlId: '1/0', event: 'press' },
-			{ surfaceId: 'test:deck', connectionId: 'open-1', controlId: '1/0', event: 'hold' },
-		])
-	})
-
-	test('does not throw or broadcast for an unknown or group id', async () => {
-		const first = addPluginPanel(controller, 'test:first', 'open-1')
-		const second = addPluginPanel(controller, 'test:second', 'open-2')
-		const caller = t.createCallerFactory(controller.createTrpcRouter())(testCtx)
-		const groupId = await caller.groupAdd({ baseId: 'cues', name: 'Cues' })
-		await caller.surfaceSetGroup({ surfaceId: 'test:first', groupId })
-		await caller.surfaceSetGroup({ surfaceId: 'test:second', groupId })
-
-		const location = { pageNumber: 1, row: 0, column: 0 }
-		expect(() => controller.sendDeviceControlEvent('missing', location, 'press')).not.toThrow()
-		expect(() => controller.sendDeviceControlEvent(groupId, location, 'press')).not.toThrow()
-		expect(controlEventCalls(first.ipc)).toHaveLength(0)
-		expect(controlEventCalls(second.ipc)).toHaveLength(0)
-	})
-
+describe('SurfaceController control events', () => {
 	test('does not expose the connection id in the client device list', () => {
+		const { controller } = createController()
 		addPluginPanel(controller, 'test:deck', 'open-1')
 
 		const surface = controller

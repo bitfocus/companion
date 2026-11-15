@@ -164,25 +164,4 @@ describe('surface control event routing', () => {
 		legacy.panel.inputPress('key', true)
 		expect(legacy.deps.controls.pressControl.mock.lastCall?.[2]?.pressEvents).toBeNull()
 	})
-
-	test('explicit cues go to the control showing that location, only while it is shown', () => {
-		const { handler, deps, ipc } = makeHandler('open2')
-		handler.sendControlEventAt({ pageNumber: 1, row: 0, column: 1 }, 'hold')
-		expect(controlEventCalls(ipc)).toEqual([
-			{ surfaceId: 'test:deck', connectionId: 'open2', controlId: 'other', event: 'hold' },
-		])
-
-		handler.sendControlEventAt({ pageNumber: 2, row: 0, column: 1 }, 'press')
-		handler.sendControlEventAt({ pageNumber: 1, row: 3, column: 7 }, 'press')
-		expect(controlEventCalls(ipc)).toHaveLength(1)
-
-		handler.setPosition(1, 0)
-		handler.sendControlEventAt({ pageNumber: 1, row: 0, column: 1 }, 'press')
-		expect(controlEventCalls(ipc).at(-1)).toMatchObject({ controlId: 'key' })
-
-		handler.setLocked(true, true)
-		handler.sendControlEventAt({ pageNumber: 1, row: 0, column: 1 }, 'press')
-		expect(controlEventCalls(ipc)).toHaveLength(2)
-		expect(deps.controls.pressControl).not.toHaveBeenCalled()
-	})
 })
