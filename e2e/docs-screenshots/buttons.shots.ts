@@ -9,7 +9,8 @@ test.use({ viewport: { width: 1920, height: 1600 } })
 const IMAGES = '3_config/program/buttons/images'
 
 test('buttons page', async ({ page }) => {
-	await withViewport(page, { width: 1280, height: 620 }, async () => {
+	// Wide enough for the whole of the grid
+	await withViewport(page, { width: 1720, height: 560 }, async () => {
 		await gotoApp(page, '/buttons')
 		await expect(page.getByTitle('1/1/3', { exact: true })).toBeVisible()
 		await shoot(page, await panelsClip(page.locator('.buttons-page')), `${IMAGES}/buttons`)
