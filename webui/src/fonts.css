@@ -1,0 +1,9 @@
+/* The bundled UI and monospace fonts, so the UI looks the same on every machine. `--font-sans`/`--font-mono` in
+   theme-tokens.css name these first; the web UI's and the launcher's tailwind.css import both. The browser only
+   fetches a face once something is drawn in it. Inter is variable, one file per script covering every weight. */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter/wght-italic.css';
+@import '@fontsource/fira-code/400.css';
+@import '@fontsource/fira-code/500.css';
+@import '@fontsource/fira-code/600.css';
+@import '@fontsource/fira-code/700.css';

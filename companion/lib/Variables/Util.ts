@@ -19,7 +19,6 @@ import {
 } from '@companion-app/shared/Expressions.js'
 import { clockCycleOfPeriod, combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	isInternalUserValueFeedback,
@@ -39,7 +38,9 @@ import {
 } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import { buildCustomActionInputVariables } from '../Controls/CustomActionRunFrame.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { EntityDefinition } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
 
@@ -74,7 +75,7 @@ export interface VisitEntityOptionValueOptions {
  * @param visitor Function to call for each field. fieldType will be null for passthrough fields.
  */
 export function visitEntityOptionsForVariables<T>(
-	definition: ClientEntityDefinition,
+	definition: EntityDefinition,
 	options: ExpressionableOptionsObject,
 	visitor: (
 		field: SomeCompanionInputField,
@@ -84,7 +85,7 @@ export function visitEntityOptionsForVariables<T>(
 ): Record<string, T> {
 	const result: Record<string, T> = {}
 
-	if (definition.optionsSupportExpressions) {
+	if (!definition.legacyOptions) {
 		// Modern approach: check field types
 		for (const field of definition.options) {
 			const optionValue = options[field.id]
@@ -141,14 +142,14 @@ export function visitEntityOptionsForVariables<T>(
  * fails open (treated as visible) on any error, so this can only ever suppress spurious
  * validation - never hide a field that should be validated.
  *
- * Only meaningful for definitions with `optionsSupportExpressions` - legacy definitions pass
+ * Only meaningful for definitions without `legacyOptions` - legacy definitions pass
  * their fields through without validation, so there are no errors to suppress.
  */
 export function computeHiddenEntityOptionFields(
-	definition: ClientEntityDefinition,
+	definition: EntityDefinition,
 	options: ExpressionableOptionsObject
 ): Set<string> {
-	if (!definition.optionsSupportExpressions) return new Set()
+	if (definition.legacyOptions) return new Set()
 
 	return computeHiddenOptionFields(definition.options, (optionId) => options[optionId]?.value)
 }
@@ -524,12 +525,24 @@ export function injectOverriddenLocalVariableValues(
 }
 
 /**
- * The `$(this:*)` overrides derived from an action's execution context. Used when parsing the options of
- * internal and connection actions, and of an internal action's child feedbacks.
+ * The `$(this:*)` variables which only exist while an action is executing, such as the surface which pressed the
+ * button. Unlike the other overrides of an execution, these are passed on into a custom feedback evaluated by it.
  */
-export function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
+export function buildExecutionThisVariables(extras: RunActionExtras): VariableValues {
 	return {
 		'this:surface_id': extras.surfaceId,
 		'this:delta': extras.rotationDelta ?? undefined,
+	}
+}
+
+/**
+ * The overrides derived from an action's execution context: the `$(this:*)` variables, and the `$(options:*)` of
+ * the custom action being run. Used when parsing the options of internal and connection actions, and of an
+ * internal action's child feedbacks.
+ */
+export function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
+	return {
+		...(extras.frame ? buildCustomActionInputVariables(extras.frame.inputValues) : {}),
+		...buildExecutionThisVariables(extras),
 	}
 }

@@ -5,6 +5,7 @@ import path from 'node:path'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
 import PQueue from 'p-queue'
+import { RespawnMonitor } from 'thread-tools'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
@@ -13,7 +14,6 @@ import {
 	isModuleApiVersionCompatible,
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
@@ -660,6 +660,9 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				const str = data.toString()
 				child.logger.debug(`stderr: ${str}`)
 				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
+			})
+			monitor.on('warn', (err) => {
+				child.logger.warn(`Process monitor: ${stringifyError(err)}`)
 			})
 
 			child.monitor = monitor

@@ -5,12 +5,14 @@ import { useDocumentTitle } from 'usehooks-ts'
 import { StandalonePageError } from '~/Components/StandalonePageError'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
 import { trpc } from '~/Resources/TRPC'
+import { useForceDarkTheme } from '~/Theme/ThemeState.js'
 
 export const Route = createFileRoute('/_standalone/emulator')({
 	component: RouteComponent,
 })
 
 function RouteComponent() {
+	useForceDarkTheme()
 	const status = useTRPCConnectionStatus()
 
 	const emulatorPageConfig = useSubscription(trpc.surfaces.emulatorPageConfig.subscriptionOptions())

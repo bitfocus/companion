@@ -38,7 +38,7 @@ const PageVariablesEditor = observer(function PageVariablesEditor({ controlId }:
 
 	const localVariables = controlConfig?.config.localVariables ?? null
 
-	const localVariablesStore = useLocalVariablesStore(controlId, localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, localVariables, null, null)
 
 	const dataReady = !error && !!controlConfig
 
@@ -49,8 +49,7 @@ const PageVariablesEditor = observer(function PageVariablesEditor({ controlId }:
 			{dataReady && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
-						// Cancels the heading row's top margin, so the title sits where the other sections' titles do
-						className="-mt-2"
+						description={null}
 						heading={<h5 className="buttons-sidebar-heading">Page Variables</h5>}
 						controlId={controlId}
 						location={undefined}

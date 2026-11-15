@@ -5,6 +5,8 @@ import {
 	faBorderAll,
 	faClock,
 	faCode,
+	faCubes,
+	faCubesStacked,
 	faDollarSign,
 	faGamepad,
 	faGear,
@@ -87,6 +89,8 @@ export const CONFIG_OPTION_META = {
 	triggers: { icon: faClock, label: 'Triggers' },
 	customVariables: { icon: faDollarSign, label: 'Custom Variables' },
 	expressionVariables: { icon: faCode, label: 'Expression Variables' },
+	customActions: { icon: faCubes, label: 'Custom Actions' },
+	customFeedbacks: { icon: faCubesStacked, label: 'Custom Feedbacks' },
 	imageLibrary: { icon: faImages, label: 'Image Library' },
 	surfaces: { icon: faGamepad, label: 'Surfaces' },
 	userconfig: { icon: faGear, label: 'Settings' },
@@ -98,6 +102,8 @@ export const CONTENT_OPTION_KEYS = [
 	'triggers',
 	'customVariables',
 	'expressionVariables',
+	'customActions',
+	'customFeedbacks',
 	'imageLibrary',
 ] as const
 

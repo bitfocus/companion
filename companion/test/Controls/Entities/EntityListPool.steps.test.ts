@@ -73,6 +73,17 @@ describe('EntityListPool - stepDuplicate', () => {
 		expect(pool.getAllEntitiesInList(downSet('1'))[0].id).not.toBe(pool.getAllEntitiesInList(downSet('0'))[0].id)
 	})
 
+	test('subscribes the copied actions once', () => {
+		const { pool, processManager } = createPool()
+		pool.entityAdd(downSet('0'), null, actionModel())
+		processManager.connectionEntityUpdate.mockClear()
+
+		pool.stepDuplicate('0')
+
+		const copyId = pool.getAllEntitiesInList(downSet('1'))[0].id
+		expect(processManager.connectionEntityUpdate.mock.calls.map(([entity]: any[]) => entity.id)).toEqual([copyId])
+	})
+
 	test('returns false for an unknown step', () => {
 		const { pool } = createPool()
 

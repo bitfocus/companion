@@ -48,7 +48,13 @@ import { useMobileMode } from '~/Hooks/useLayoutMode'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { LinkTabNotifyIcon } from '~/Link/LinkNotifyIcon.js'
 import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
-import { matchedPageIdForPath, SETTINGS_SECTION, VARIABLES_SECTION, type NavSection } from './navRegistry.js'
+import {
+	BUILDING_BLOCKS_SECTION,
+	matchedPageIdForPath,
+	SETTINGS_SECTION,
+	VARIABLES_SECTION,
+	type NavSection,
+} from './navRegistry.js'
 import { SidebarFooter, SidebarHeader } from './SidebarHeader'
 
 function foldableIcon(foldable: boolean): ReactElement {
@@ -371,8 +377,9 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 					<SidebarSectionNavGroup section={VARIABLES_SECTION} />
-					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
+					<SidebarSectionNavGroup section={BUILDING_BLOCKS_SECTION} />
+					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 
 					{/* Category: Connect */}
 					<li className="nav-title">Connect</li>

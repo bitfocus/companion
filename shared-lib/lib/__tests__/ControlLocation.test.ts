@@ -22,12 +22,16 @@ describe('getFieldDefaultForControl', () => {
 	it.each(['trigger', 'expression-variable', 'page'] as const)('defaults local variables to "this" on a %s', (kind) => {
 		expect(getFieldDefaultForControl(LocalVariableLocationOption, kind)).toBe('this')
 	})
+
+	it('defaults local variables to "run" in a custom action, for its own', () => {
+		expect(getFieldDefaultForControl(LocalVariableLocationOption, 'custom-action')).toBe('run')
+	})
 })
 
 describe('defaultForControlType types', () => {
 	it('narrows the default to the values of the field', () => {
 		expectTypeOf(getFieldDefaultForControl(LocalVariableLocationOption, 'trigger')).toEqualTypeOf<
-			'this' | '$(this:page)/$(this:row)/$(this:column)'
+			'this' | 'run' | '$(this:page)/$(this:row)/$(this:column)'
 		>()
 	})
 

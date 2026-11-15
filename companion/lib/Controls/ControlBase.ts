@@ -81,6 +81,14 @@ export abstract class ControlBase<
 	}
 
 	/**
+	 * Start this control, once it has been added to the store. Called exactly once by whoever created it: at startup,
+	 * and for a new, imported or cloned control. Constructing a control neither subscribes its entities nor saves it,
+	 * this does both.
+	 * @param save Whether to save it: true for anything not already stored as it is, such as a new or imported control
+	 */
+	abstract start(save: boolean): void
+
+	/**
 	 * Post-process a change to this control
 	 * This includes, redrawing, writing to the db and informing any interested clients
 	 * @param redraw - whether to redraw the control
@@ -165,7 +173,7 @@ export abstract class ControlBase<
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
+	 * Never cloned: the result references the control's own state, so clone it before keeping or mutating it
 	 */
 	abstract toJSON(): TJson
 
@@ -219,7 +227,7 @@ export abstract class ControlBase<
 	 * @param exceptSignal A run to leave running
 	 * @param linkHops How many installations the abort has come through over Link, so that a loop of remote buttons ends
 	 */
-	abortDelayedActions(_skip_up: boolean, _exceptSignal: AbortSignal | null, _linkHops: number): void {
+	abortDelayedActions(_markReleased: boolean, _exceptSignal: AbortSignal | null, _linkHops: number): void {
 		// Nothing to do
 	}
 

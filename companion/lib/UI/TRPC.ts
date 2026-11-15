@@ -1,5 +1,6 @@
 import { EventEmitter, on } from 'node:events'
 import os from 'node:os'
+import { setTimeout as setTimeoutPromise } from 'node:timers/promises'
 import { trpcMiddleware as sentryTrpcMiddleware } from '@sentry/node'
 import { initTRPC, TRPCError, type inferRouterInputs, type inferRouterOutputs } from '@trpc/server'
 import type * as trpcExpress from '@trpc/server/adapters/express'
@@ -225,6 +226,44 @@ export function toIterable<TEmitter extends EventEmitter, TKey extends string & 
 	signal: AbortSignal | undefined
 ): NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]> {
 	return on(ee, key, { signal }) as NodeJS.AsyncIterator<TEventMap<TEmitter>[TKey]>
+}
+
+/**
+ * Pass on the values of an iterator at most once every `intervalMs`, dropping all but the latest of those which
+ * arrive in between. A value after a quiet interval is passed on straight away.
+ */
+export async function* throttleIterator<T>(
+	source: AsyncIterator<T>,
+	intervalMs: number
+): AsyncGenerator<T, void, undefined> {
+	try {
+		let pending = source.next()
+		while (true) {
+			const first = await pending
+			if (first.done) return
+			pending = source.next()
+
+			let latest: IteratorYieldResult<T> | null = first
+			while (latest) {
+				yield latest.value
+				latest = null
+
+				const intervalUp = setTimeoutPromise(intervalMs, null)
+				while (true) {
+					const next = await Promise.race([pending, intervalUp])
+					if (next === null) break
+					if (next.done) {
+						if (latest) yield latest.value
+						return
+					}
+					latest = next
+					pending = source.next()
+				}
+			}
+		}
+	} finally {
+		await source.return?.()
+	}
 }
 
 /**

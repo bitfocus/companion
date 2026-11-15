@@ -20,12 +20,14 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
+import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
+import type { CustomFeedbackInstancesForEntity } from '../CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { RenderClock } from '../RenderClock.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
-import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
+import type { EntityScope, InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
@@ -49,6 +51,10 @@ export interface ControlEntityListPoolProps {
 	variableDependencies: VariableDependencyRegistry
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
+	/** Builds the copy of a custom action held by an action which calls it */
+	customActionInstances: CustomActionInstancesForEntity
+	/** Builds the copy of a custom feedback held by a feedback which uses it */
+	customFeedbackInstances: CustomFeedbackInstancesForEntity
 }
 
 /**
@@ -81,7 +87,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #processManager: InstanceProcessManager
 	protected readonly variableValues: VariablesValues
 	readonly #isLayeredDrawing: boolean
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	protected readonly controlId: SomeControlId
 
@@ -92,7 +98,13 @@ export abstract class ControlEntityListPoolBase {
 
 	// Public (not protected) so the editing mixins can extend this base via a generic constructor constraint.
 	// The class is abstract, so it still cannot be instantiated directly.
-	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
+	/**
+	 * @param props The dependencies of the pool
+	 * @param isLayeredDrawing Whether the control is a layered button
+	 * @param customActionChain The custom actions the entities run inside, which is only the custom action itself for
+	 *   the pool of a custom action
+	 */
+	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean, customActionChain: ReadonlyArray<string>) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EntityPool/${props.controlId}`)
 
 		this.controlId = props.controlId
@@ -104,7 +116,7 @@ export abstract class ControlEntityListPoolBase {
 		this.variableValues = props.variableValues
 		this.#isLayeredDrawing = isLayeredDrawing
 
-		this.#specialExpressionManager = new EntityPoolSpecialExpressionManager(
+		const specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			props.controlId,
 			this.createVariablesAndExpressionParser.bind(this),
 			{
@@ -114,6 +126,16 @@ export abstract class ControlEntityListPoolBase {
 			props.renderClock,
 			props.variableDependencies
 		)
+		this.#scope = {
+			isTransient: false,
+			specialExpressionManager,
+			customActionChain,
+			customActionInstances: props.customActionInstances,
+			customFeedbackInstances: props.customFeedbackInstances,
+			// The pool reports the changes of its own local variables, in tryTriggerLocalVariablesChanged
+			localVariablesChanged: () => undefined,
+			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),
+		}
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -121,7 +143,7 @@ export abstract class ControlEntityListPoolBase {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.controlId,
 			null,
 			listDefinition
@@ -225,7 +247,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @access public
 	 */
 	destroy(): void {
-		this.#specialExpressionManager.destroy()
+		this.#scope.specialExpressionManager.destroy()
 
 		for (const list of this.getAllEntityLists()) {
 			list.cleanup()
@@ -284,6 +306,14 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
+	 * Recursively get all the entities, including those in transient child groups which are never persisted.
+	 * This is for things which run the entities, such as subscribing them to a connection.
+	 */
+	getAllEntitiesWithTransient(): ControlEntityInstance[] {
+		return this.getAllEntityLists().flatMap((entityList) => entityList.getAllEntitiesWithTransient())
+	}
+
+	/**
 	 *
 	 * @param listId
 	 * @returns
@@ -304,14 +334,14 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	resubscribeEntities(onlyType?: EntityModelType, onlyConnectionId?: string): void {
 		for (const list of this.getAllEntityLists()) {
-			list.subscribe(true, onlyType, onlyConnectionId)
+			list.subscribe(onlyType, onlyConnectionId)
 		}
 	}
 
 	/**
 	 * Replace an entity's stored props with a module-upgraded version.
 	 *
-	 * This is SOLELY the connection/module upgrade path (see {@link ../../Instance/Connection/EntityManager.js}
+	 * This is SOLELY the connection/module upgrade path (see {@link ../../Instance/Connection/EntityManagerBase.js}
 	 * and the legacy child handler) - it is invoked when a connection upgrades the definition of one of its
 	 * entities, never as a result of a user edit. That is why it lives on the read-only base (it must work on
 	 * every control, including read-only ones like a preset reference) and is not part of the editable mutator
@@ -327,6 +357,9 @@ export abstract class ControlEntityListPoolBase {
 
 			// Ignore if the types do not match
 			if (entity.type !== newProps.type) return undefined
+
+			// A copy is rebuilt from what it copies once that is upgraded, so an upgrade of it is dropped
+			if (entity.isTransient) return undefined
 
 			const oldElementIds = entity.styleOverrideAffectedElementIds
 
@@ -476,15 +509,19 @@ export abstract class ControlEntityListPoolBase {
 	): void
 
 	/**
-	 * Get all the connectionIds for entities which are active
+	 * The entities which are enabled, and those inside them which are. A disabled entity, and everything inside it, is
+	 * left out
+	 * @param includeTransient Whether to include the entities of transient child groups, such as the copy of a custom
+	 * action held by an action which calls it
+	 */
+	getAllEnabledEntities(includeTransient: boolean): ControlEntityInstance[] {
+		return this.getAllEntityLists().flatMap((list) => list.getAllEnabledEntities(includeTransient))
+	}
+
+	/**
+	 * Get all the connectionIds for entities which are active, including those used by the custom actions they call
 	 */
 	getAllEnabledConnectionIds(): Set<string> {
-		const connectionIds = new Set<string>()
-
-		for (const list of this.getAllEntityLists()) {
-			list.getAllEnabledConnectionIds(connectionIds)
-		}
-
-		return connectionIds
+		return new Set(this.getAllEnabledEntities(true).map((entity) => entity.connectionId))
 	}
 }

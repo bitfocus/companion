@@ -1,5 +1,13 @@
 import type { Locator } from '@playwright/test'
-import { expect, gotoApp, reloadApp, test, watchConsoleErrors, type Page } from '../support/fixtures.js'
+import {
+	clickListPageAdd,
+	expect,
+	gotoApp,
+	reloadApp,
+	test,
+	watchConsoleErrors,
+	type Page,
+} from '../support/fixtures.js'
 
 /** Each kind of control with notes keeps a note added through its editor */
 
@@ -52,7 +60,7 @@ test('a button reference keeps its note', async ({ page }) => {
 test('a trigger keeps its note', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
 	await gotoApp(page, '/triggers')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Trigger' }).click()
+	await clickListPageAdd(page, 'Add Trigger', 'Add your first trigger')
 	const editor = page.locator('.secondary-panel')
 	await page.getByRole('button', { name: 'Edit trigger name' }).click()
 	await editor.getByRole('textbox').first().fill('Noted trigger')
@@ -69,7 +77,7 @@ test('a trigger keeps its note', async ({ page }) => {
 test('an expression variable keeps its note', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
 	await gotoApp(page, '/variables/expression')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Expression Variable' }).click()
+	await clickListPageAdd(page, 'Add Expression Variable', 'Add your first expression variable')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByRole('textbox', { name: 'Name' }).fill('e2e_noted')
 	await dialog.getByRole('button', { name: 'Add' }).click()

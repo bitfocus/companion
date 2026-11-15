@@ -78,6 +78,7 @@ export class ControlTrigger
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<TriggerOptions> = TriggerOptionsSchema
 
@@ -154,7 +155,7 @@ export class ControlTrigger
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(deps: ControlDependencies, controlId: TriggerControlId, storage: TriggerModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
@@ -174,6 +175,8 @@ export class ControlTrigger
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
 		this.#eventBus = eventBus
@@ -186,28 +189,13 @@ export class ControlTrigger
 		this.options = this.optionsSchema.parse({})
 		this.events = []
 
-		if (!storage) {
-			// New control
-
-			// Save the change
-			this.commitChange()
-
-			// Notify interested
-		} else {
+		if (storage) {
 			if (storage.type !== 'trigger') throw new Error(`Invalid type given to ControlTriggerInterval: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 			this.events = storage.events || this.events
-
-			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.#postProcessImport())
 		}
-
-		// Ensure trigger is stored before setup
-		setImmediate(() => {
-			this.#setupEvents()
-		})
 	}
 
 	#entityListReportChange(options: ControlEntityListChangeProps): void {
@@ -222,12 +210,12 @@ export class ControlTrigger
 		}
 	}
 
-	override abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
+	override abortDelayedActions(_markReleased: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		this.#actionRunner.abortAll(exceptSignal)
 	}
 
-	abortDelayedActionsSingle(_skip_up: boolean, exceptSignal: AbortSignal): void {
-		this.#actionRunner.abortSingle(exceptSignal)
+	abortDelayedActionsSingle(_markReleased: boolean, onlySignal: AbortSignal): void {
+		this.#actionRunner.abortSingle(onlySignal)
 	}
 
 	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {
@@ -277,6 +265,7 @@ export class ControlTrigger
 				surfaceId: this.controlId,
 				location: undefined,
 				rotationDelta: null,
+				frame: null,
 			})
 			.catch((e: unknown) => {
 				this.logger.error(`Failed to run actions: ${stringifyError(e)}`)
@@ -301,7 +290,7 @@ export class ControlTrigger
 			foundVariables,
 			undefined
 		)
-			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEntityInstances(this.entities.getAllEntities())
 			.visitEvents(this.events)
 	}
 
@@ -315,14 +304,13 @@ export class ControlTrigger
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
 	 */
 	toRuntimeJSON(): NoRuntimeProps {
 		return {}
 	}
 
-	toJSON(clone = true): TriggerModel {
-		const obj: TriggerModel = {
+	toJSON(): TriggerModel {
+		return {
 			type: this.type,
 			options: this.options,
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
@@ -330,7 +318,6 @@ export class ControlTrigger
 			events: this.events,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	toTriggerJSON(): ClientTriggerData {
@@ -438,7 +425,7 @@ export class ControlTrigger
 			undefined,
 			undefined
 		)
-			.visitEntities(this.entities.getAllEntities(), [])
+			.visitEntityInstances(this.entities.getAllEntities())
 			.visitEvents(this.events)
 			.recheckChangedFeedbacks()
 			.hasChanges()
@@ -574,14 +561,13 @@ export class ControlTrigger
 		return true
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		// After the entities, as the condition of a trigger is checked from their values
+		this.#setupEvents()
+
+		if (save) this.commitChange()
 	}
 
 	/**

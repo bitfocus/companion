@@ -15,12 +15,18 @@ describe('parseThemePreference', () => {
 
 describe('resolveTheme', () => {
 	test('an explicit choice wins over the system', () => {
-		expect(resolveTheme('light', true)).toBe('light')
-		expect(resolveTheme('dark', false)).toBe('dark')
+		expect(resolveTheme('light', true, null)).toBe('light')
+		expect(resolveTheme('dark', false, null)).toBe('dark')
 	})
 
 	test('system follows the system', () => {
-		expect(resolveTheme('system', true)).toBe('dark')
-		expect(resolveTheme('system', false)).toBe('light')
+		expect(resolveTheme('system', true, null)).toBe('dark')
+		expect(resolveTheme('system', false, null)).toBe('light')
+	})
+
+	test('a forced theme wins over everything', () => {
+		expect(resolveTheme('light', false, 'dark')).toBe('dark')
+		expect(resolveTheme('system', false, 'dark')).toBe('dark')
+		expect(resolveTheme('dark', true, 'light')).toBe('light')
 	})
 })

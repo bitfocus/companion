@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it } from 'vitest'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { EntityEditorHeading } from '../EntityEditorHeadingProps.js'
+import { EntityEditorHeading } from '../EntityEditorHeading.js'
 
 function renderHeading(heading: string | null, childEntityIds: string[], subheading: string | null) {
 	return render(

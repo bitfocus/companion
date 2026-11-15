@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -14,12 +13,14 @@ import { ControlEntityList, type ControlEntityListDefinition } from '../../../li
 import type { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
 	NewFeedbackValue,
 	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
+import type { EntityDefinition } from '../../../lib/Instance/Definitions.js'
 import {
 	ActionTree,
 	ActionTreeEntityDefinitions,
@@ -54,6 +55,17 @@ function createList(
 		trackEntity: vi.fn(),
 		forgetEntity: vi.fn(),
 	} as any
+	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
+	const customFeedbackInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() }
+	const scope: EntityScope = {
+		isTransient: false,
+		specialExpressionManager,
+		customActionChain: [],
+		customActionInstances,
+		customFeedbackInstances,
+		localVariablesChanged: vi.fn(),
+		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+	}
 	const internalController: InternalControllerForEntity = {
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
@@ -66,7 +78,7 @@ function createList(
 		instanceDefinitions,
 		internalController,
 		processManager,
-		specialExpressionManager,
+		scope,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -86,7 +98,7 @@ function createList(
 		instanceDefinitions,
 		internalController,
 		processManager,
-		specialExpressionManager,
+		scope,
 		controlId,
 		newActionModel,
 		false
@@ -109,6 +121,8 @@ function createList(
 		internalController,
 		processManager,
 		specialExpressionManager,
+		customActionInstances,
+		scope,
 		newActionModel,
 		newAction,
 	}
@@ -127,7 +141,7 @@ describe('loadStorage', () => {
 
 		const inputModels = ActionTree
 
-		list.loadStorage(structuredClone(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 
@@ -151,7 +165,7 @@ describe('loadStorage', () => {
 
 		const inputModels = ActionTree
 
-		list.loadStorage(structuredClone(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 		delete inputModels[2].children?.group2?.[0]?.children
@@ -178,7 +192,7 @@ describe('loadStorage', () => {
 					label: 'Action',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Action,
 			supportsChildGroups: [
@@ -189,11 +203,11 @@ describe('loadStorage', () => {
 					label: 'Action',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const inputModels = ActionTree
 
-		list.loadStorage(structuredClone(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 
@@ -224,7 +238,7 @@ describe('loadStorage', () => {
 			}
 		}
 
-		list.loadStorage(structuredClone(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), false)
 
 		const compiled = list.getDirectEntities().map((e) => e.asEntityModel())
 
@@ -249,7 +263,7 @@ describe('loadStorage', () => {
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
-		list.loadStorage(structuredClone(inputModels), true, false)
+		list.loadStorage(structuredClone(inputModels), false)
 
 		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
 		const compiledIds = list.getAllEntities().map((e) => e.id)
@@ -258,13 +272,26 @@ describe('loadStorage', () => {
 		expect(getEntityDefinition).toHaveBeenCalledTimes(2)
 	})
 
+	test('ids derived from their own, including those of children', () => {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		const inputModels = ActionTree
+		list.loadStorage(structuredClone(inputModels), (id) => `copy/${id}`)
+
+		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
+		const compiledIds = list.getAllEntities().map((e) => e.id)
+		expect(compiledIds).toEqual(inputIds.map((id) => `copy/${id}`))
+	})
+
 	test('ids when cloned', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
-		list.loadStorage(structuredClone(inputModels), true, true)
+		list.loadStorage(structuredClone(inputModels), true)
 
 		const inputIds = getAllModelsInTree(inputModels).map((e) => e.id)
 		const inputIdsSet = new Set(inputIds)
@@ -278,7 +305,7 @@ describe('loadStorage', () => {
 		expect(getEntityDefinition).toHaveBeenCalledTimes(2)
 	})
 
-	test('subscribe when enabled', () => {
+	test('loading does not subscribe, the caller does', () => {
 		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList(
 			CreateBankControlId('test01')
 		)
@@ -286,7 +313,12 @@ describe('loadStorage', () => {
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
 		const inputModels = ActionTree
-		list.loadStorage(structuredClone(inputModels), false, false)
+		list.loadStorage(structuredClone(inputModels), false)
+
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+		expect(internalEntityUpdate).not.toHaveBeenCalled()
+
+		list.subscribe()
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(4)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
@@ -302,7 +334,7 @@ test('cleanup entities', () => {
 
 	const inputModels = ActionTree
 
-	list.loadStorage(structuredClone(inputModels), true, false)
+	list.loadStorage(structuredClone(inputModels), false)
 
 	list.cleanup()
 
@@ -321,7 +353,7 @@ describe('subscribe entities', () => {
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-	list.loadStorage(structuredClone(ActionTree), true, false)
+	list.loadStorage(structuredClone(ActionTree), false)
 
 	beforeEach(() => {
 		connectionEntityUpdate.mockClear()
@@ -333,50 +365,43 @@ describe('subscribe entities', () => {
 		expect(list.getDirectEntities()).toHaveLength(3)
 	})
 
-	test('non recursive', () => {
-		list.subscribe(false)
-
-		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
-		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-	})
-
-	test('recursive', () => {
-		list.subscribe(true)
+	test('everything', () => {
+		list.subscribe()
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(4)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
 	})
 
 	test('only actions', () => {
-		list.subscribe(true, EntityModelType.Action)
+		list.subscribe(EntityModelType.Action)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(3)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
 	})
 
 	test('only feedbacks', () => {
-		list.subscribe(true, EntityModelType.Feedback)
+		list.subscribe(EntityModelType.Feedback)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
 
 	test('only internal', () => {
-		list.subscribe(true, undefined, 'internal')
+		list.subscribe(undefined, 'internal')
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(2)
 	})
 
 	test('only conn01', () => {
-		list.subscribe(true, undefined, 'conn01')
+		list.subscribe(undefined, 'conn01')
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
 
 	test('only missing-connection', () => {
-		list.subscribe(true, undefined, 'missing-connection')
+		list.subscribe(undefined, 'missing-connection')
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(0)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
@@ -388,7 +413,7 @@ describe('findById', () => {
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-	list.loadStorage(structuredClone(ActionTree), true, false)
+	list.loadStorage(structuredClone(ActionTree), false)
 
 	test('find missing id', () => {
 		const entity = list.findById('missing-id')
@@ -413,7 +438,7 @@ describe('findParentAndIndex', () => {
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-	list.loadStorage(structuredClone(ActionTree), true, false)
+	list.loadStorage(structuredClone(ActionTree), false)
 
 	test('find missing id', () => {
 		const entity = list.findParentAndIndex('missing-id')
@@ -519,7 +544,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -569,7 +594,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Advanced,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -611,7 +636,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newInstance = list.addEntity(structuredClone(newFeedback))
 		expect(newInstance).not.toBeUndefined()
@@ -629,7 +654,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -685,7 +710,7 @@ describe('addEntity', () => {
 					label: 'Feedback',
 				},
 			],
-		} satisfies Partial<ClientEntityDefinition> as any)
+		} satisfies Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -748,7 +773,7 @@ describe('addEntity', () => {
 
 		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
-		} satisfies Partial<ClientEntityDefinition> as any)
+		} satisfies Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -785,7 +810,7 @@ describe('addEntity', () => {
 					label: 'Feedback',
 				},
 			],
-		} satisfies Partial<ClientEntityDefinition> as any)
+		} satisfies Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -831,7 +856,7 @@ describe('removeEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -857,7 +882,7 @@ describe('removeEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -882,7 +907,7 @@ describe('removeEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -916,7 +941,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -948,7 +973,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -973,7 +998,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -998,7 +1023,7 @@ describe('popEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(0)
 
@@ -1043,7 +1068,7 @@ describe('pushEntity', () => {
 	test('push front', () => {
 		const { list, newAction } = createList(CreateBankControlId('test01'))
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1059,7 +1084,7 @@ describe('pushEntity', () => {
 	test('push front - negative', () => {
 		const { list, newAction } = createList(CreateBankControlId('test01'))
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1075,7 +1100,7 @@ describe('pushEntity', () => {
 	test('push front - beyond end', () => {
 		const { list, newAction } = createList(CreateBankControlId('test01'))
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1091,7 +1116,7 @@ describe('pushEntity', () => {
 	test('push front - middle', () => {
 		const { list, newAction } = createList(CreateBankControlId('test01'))
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1111,7 +1136,7 @@ describe('duplicateEntity', () => {
 	test('duplicate missing', () => {
 		const { list, connectionEntityUpdate, internalEntityUpdate } = createList(CreateBankControlId('test01'))
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1130,7 +1155,7 @@ describe('duplicateEntity', () => {
 	test('duplicate at root ', () => {
 		const { list, connectionEntityUpdate, internalEntityUpdate } = createList(CreateBankControlId('test01'))
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(3)
@@ -1156,7 +1181,7 @@ describe('duplicateEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1177,7 +1202,11 @@ describe('duplicateEntity', () => {
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, CreateBankControlId('test01'))
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), CreateBankControlId('test01'))
+		expect(internalEntityUpdate).toHaveBeenCalledWith(
+			newEntity!.asEntityModel(),
+			CreateBankControlId('test01'),
+			expect.any(Function)
+		)
 	})
 
 	test('duplicate deep when root is full', () => {
@@ -1192,7 +1221,7 @@ describe('duplicateEntity', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length (3 root items)
 		expect(list.getDirectEntities()).toHaveLength(3)
@@ -1212,13 +1241,202 @@ describe('duplicateEntity', () => {
 	})
 })
 
+describe('changes which leave the children alone', () => {
+	function setup() {
+		const ctx = createList(CreateBankControlId('test01'))
+		ctx.getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(ActionTree), false)
+		ctx.connectionEntityUpdate.mockClear()
+		ctx.internalEntityUpdate.mockClear()
+		ctx.connectionEntityDelete.mockClear()
+		ctx.internalEntityDelete.mockClear()
+		return ctx
+	}
+
+	function subscribedIds(ctx: ReturnType<typeof setup>): string[] {
+		return [
+			...ctx.internalEntityUpdate.mock.calls.map(([entity]) => entity.id),
+			...ctx.connectionEntityUpdate.mock.calls.map(([entity]) => entity.id),
+		].sort()
+	}
+
+	test('setRawStoreResult only re-subscribes the entity, without deleting anything', () => {
+		const ctx = setup()
+
+		ctx.list.findById('int0')!.setRawStoreResult(undefined)
+
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+		expect(ctx.internalEntityDelete).not.toHaveBeenCalled()
+		expect(subscribedIds(ctx)).toEqual(['int0'])
+	})
+
+	test('setConnectionId moves a module entity from its old connection to its new one', () => {
+		const ctx = setup()
+
+		expect(ctx.list.findById('01')!.setConnectionId('conn99')).toBe(true)
+
+		expect(ctx.connectionEntityDelete).toHaveBeenCalledTimes(1)
+		expect(ctx.connectionEntityDelete.mock.calls[0][0]).toMatchObject({ id: '01', connectionId: 'conn01' })
+		expect(ctx.connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(ctx.connectionEntityUpdate.mock.calls[0][0]).toMatchObject({ id: '01', connectionId: 'conn99' })
+	})
+
+	test.each([
+		['from internal', 'int0', 'conn99'],
+		['to internal', '01', 'internal'],
+	])('setConnectionId refuses a change %s', (_name, id, connectionId) => {
+		const ctx = setup()
+		const entity = ctx.list.findById(id)!
+		const before = entity.connectionId
+
+		expect(entity.setConnectionId(connectionId)).toBe(false)
+
+		expect(entity.connectionId).toBe(before)
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+		expect(ctx.internalEntityDelete).not.toHaveBeenCalled()
+		expect(subscribedIds(ctx)).toEqual([])
+	})
+})
+
+describe('disabling an entity with children', () => {
+	function setup() {
+		const ctx = createList(CreateBankControlId('test01'))
+		ctx.getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(ActionTree), false)
+		ctx.list.subscribe()
+		ctx.connectionEntityUpdate.mockClear()
+		ctx.internalEntityUpdate.mockClear()
+		ctx.connectionEntityDelete.mockClear()
+		ctx.internalEntityDelete.mockClear()
+		return ctx
+	}
+
+	function ids(calls: Array<[{ id: string }, ...any[]]>): string[] {
+		return calls.map(([entity]) => entity.id)
+	}
+
+	test('only cleans up the entity itself', () => {
+		const ctx = setup()
+
+		ctx.list.findById('int1')!.setEnabled(false)
+
+		expect(ids(ctx.internalEntityDelete.mock.calls)).toEqual(['int1'])
+		// int1-b, inside it, keeps its own state
+		expect(ctx.connectionEntityDelete).not.toHaveBeenCalled()
+	})
+
+	test('re-enabling only subscribes the entity itself', () => {
+		const ctx = setup()
+		ctx.list.findById('int1')!.setEnabled(false)
+
+		ctx.list.findById('int1')!.setEnabled(true)
+
+		expect(ids(ctx.internalEntityUpdate.mock.calls)).toEqual(['int1'])
+		expect(ctx.connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a recursive subscribe leaves the disabled entity out, but not those inside it', () => {
+		const ctx = setup()
+		ctx.list.findById('int1')!.setEnabled(false)
+		vi.mocked(ctx.specialExpressionManager.trackEntity).mockClear()
+		vi.mocked(ctx.specialExpressionManager.forgetEntity).mockClear()
+
+		ctx.list.subscribe()
+
+		expect(vi.mocked(ctx.specialExpressionManager.forgetEntity).mock.calls.map(([id]) => id)).toEqual(['int1'])
+		expect(ids(vi.mocked(ctx.specialExpressionManager.trackEntity).mock.calls as any)).toEqual([
+			'01',
+			'02',
+			'int0',
+			'int1-b',
+			'int2',
+		])
+	})
+})
+
+describe('internal entity upgrades', () => {
+	test('constructing an entity that needs an upgrade does not subscribe it', () => {
+		const { list, internalEntityUpgrade, internalEntityUpdate, specialExpressionManager } = createList(
+			CreateBankControlId('test01'),
+			null,
+			{ type: EntityModelType.Feedback }
+		)
+		// createList constructs an entity of its own
+		internalEntityUpgrade.mockClear()
+		internalEntityUpgrade.mockReturnValueOnce({
+			type: EntityModelType.Feedback,
+			definitionId: 'upgraded',
+			options: { a: { isExpression: false, value: 'new' } },
+			upgradeIndex: undefined,
+		} as any)
+
+		list.loadStorage(
+			[
+				{
+					type: EntityModelType.Feedback,
+					id: 'old',
+					connectionId: 'internal',
+					definitionId: 'legacy',
+					options: {},
+					upgradeIndex: undefined,
+				},
+			],
+			false
+		)
+
+		expect(internalEntityUpgrade).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).not.toHaveBeenCalled()
+		expect(specialExpressionManager.trackEntity).not.toHaveBeenCalled()
+
+		list.subscribe()
+
+		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(internalEntityUpdate).toHaveBeenCalledWith(
+			expect.objectContaining({
+				id: 'old',
+				definitionId: 'upgraded',
+				options: { a: { isExpression: false, value: 'new' } },
+			}),
+			CreateBankControlId('test01'),
+			expect.any(Function)
+		)
+	})
+})
+
+describe('setEnabled', () => {
+	test('a user value feedback restarts from its startup value when re-enabled', () => {
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
+		list.loadStorage(
+			[
+				{
+					type: EntityModelType.Feedback,
+					id: 'uv',
+					connectionId: 'internal',
+					definitionId: 'user_value',
+					options: { startup_value: { isExpression: false, value: 'start' } },
+					upgradeIndex: undefined,
+				},
+			],
+			false
+		)
+		const entity = list.findById('uv')!
+		entity.setUserValue('changed')
+
+		entity.setEnabled(false)
+		expect(entity.feedbackValue).toBeUndefined()
+
+		entity.setEnabled(true)
+		expect(entity.feedbackValue).toBe('start')
+	})
+})
+
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1234,7 +1452,7 @@ describe('forgetForConnection', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1251,7 +1469,7 @@ describe('forgetForConnection', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1270,7 +1488,7 @@ describe('verifyConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1287,7 +1505,7 @@ describe('verifyConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1306,7 +1524,7 @@ describe('verifyConnectionIds', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1341,7 +1559,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('all disabled', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
@@ -1354,7 +1572,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('basic boolean values', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
@@ -1368,7 +1586,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('advanced value values', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('internal', translateFeedbackValues({ int0: 'abc' }))
 
@@ -1402,14 +1620,14 @@ describe('getBooleanFeedbackValue', () => {
 	})
 
 	test('empty list', () => {
-		list.loadStorage([], true, false)
+		list.loadStorage([], false)
 
 		// When empty disabled, should return true
 		expect(list.getBooleanFeedbackValue(null)).toBe(true)
 	})
 
 	test('all disabled', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
@@ -1423,7 +1641,7 @@ describe('getBooleanFeedbackValue', () => {
 	})
 
 	test('boolean values values', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 
 		// disable the one set to non-boolean
 		list.findById('int0')?.setEnabled(false)
@@ -1460,7 +1678,7 @@ describe('getChildBooleanFeedbackValues', () => {
 	})
 
 	test('all disabled', () => {
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 		// seed some values for boolean feedabcks
 		list.updateFeedbackValues('conn02', translateFeedbackValues({ '02': true }))
 
@@ -1474,7 +1692,11 @@ describe('getChildBooleanFeedbackValues', () => {
 })
 
 describe('lazy feedback evaluation (with context)', () => {
-	const booleanContext = (): FeedbackExecutionContext => ({ parser: { marker: 'the-parser' } as any })
+	const booleanContext = (): FeedbackExecutionContext => ({
+		parser: { marker: 'the-parser' } as any,
+		executionVariables: {},
+		parserOptions: {},
+	})
 
 	/** A boolean feedback list, exercised via the lazy (non-null context) read path. */
 	function createBooleanFeedbackList(showInvert = false) {
@@ -1497,13 +1719,13 @@ describe('lazy feedback evaluation (with context)', () => {
 							label: '',
 						},
 					],
-				} as Partial<ClientEntityDefinition> as any
+				} as Partial<EntityDefinition> as any
 			}
 			return {
 				entityType: EntityModelType.Feedback,
 				feedbackType: FeedbackEntitySubType.Boolean,
 				showInvert,
-			} as Partial<ClientEntityDefinition> as any
+			} as Partial<EntityDefinition> as any
 		})
 		return deps
 	}
@@ -1628,7 +1850,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1641,7 +1863,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1666,7 +1888,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1692,7 +1914,7 @@ describe('updateFeedbackValues', () => {
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
@@ -1710,22 +1932,19 @@ describe('updateFeedbackValues', () => {
 	})
 })
 
-describe('getAllEnabledConnectionIds', () => {
+describe('getAllEnabledEntities', () => {
 	test('default', () => {
 		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
-		list.loadStorage(structuredClone(ActionTree), true, false)
+		list.loadStorage(structuredClone(ActionTree), false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
-
-		const connectionIds = new Set<string>()
-		list.getAllEnabledConnectionIds(connectionIds)
-		expect(connectionIds).toHaveLength(allConnectionIds.size)
+		// Every entity is enabled
+		expect(list.getAllEnabledEntities(false)).toEqual(list.getAllEntities())
 	})
 
 	test('all disabled', () => {
@@ -1738,15 +1957,70 @@ describe('getAllEnabledConnectionIds', () => {
 			entity.disabled = true
 		}
 
-		list.loadStorage(actions, true, false)
+		list.loadStorage(actions, false)
 
 		// Starts with correct length
 		expect(list.getAllEntities()).toHaveLength(6)
 
-		// const allConnectionIds = new Set(list.getAllEntities().map((e) => e.connectionId))
-		const connectionIds = new Set<string>()
-		list.getAllEnabledConnectionIds(connectionIds)
-		expect(connectionIds).toHaveLength(0)
+		expect(list.getAllEnabledEntities(false)).toEqual([])
+	})
+
+	test('a disabled entity leaves out everything inside it', () => {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
+
+		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
+
+		const actions = structuredClone(ActionTree)
+		const group = actions.find((entity) => entity.id === 'int0')!
+		group.disabled = true
+
+		list.loadStorage(actions, false)
+
+		expect(list.getAllEnabledEntities(false).map((entity) => entity.id)).toEqual(['01', '02'])
+	})
+})
+
+describe('setInverted', () => {
+	function setup() {
+		const ctx = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
+		ctx.getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
+		ctx.list.loadStorage(structuredClone(FeedbackTree), false)
+		ctx.list.subscribe()
+		ctx.connectionEntityUpdate.mockClear()
+		vi.mocked(ctx.specialExpressionManager.trackEntity).mockClear()
+		vi.mocked(ctx.specialExpressionManager.forgetEntity).mockClear()
+		return { ...ctx, entity: ctx.list.findById('01')! }
+	}
+
+	test('an expression is tracked by the special expression manager, without notifying the module', () => {
+		const { entity, connectionEntityUpdate, specialExpressionManager } = setup()
+
+		entity.setInverted({ isExpression: true, value: '$(custom:a)' })
+
+		expect(specialExpressionManager.trackEntity).toHaveBeenCalledTimes(1)
+		expect(specialExpressionManager.trackEntity).toHaveBeenCalledWith(entity, 'isInverted')
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a value stops tracking any previous expression', () => {
+		const { entity, connectionEntityUpdate, specialExpressionManager } = setup()
+		entity.setInverted({ isExpression: true, value: '$(custom:a)' })
+
+		entity.setInverted({ isExpression: false, value: true })
+
+		expect(specialExpressionManager.forgetEntity).toHaveBeenCalledWith(entity.id)
+		expect(entity.rawIsInverted).toEqual({ isExpression: false, value: true })
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('an expression on a disabled feedback is not tracked', () => {
+		const { entity, specialExpressionManager } = setup()
+		entity.setEnabled(false)
+		vi.mocked(specialExpressionManager.trackEntity).mockClear()
+
+		entity.setInverted({ isExpression: true, value: '$(custom:a)' })
+
+		expect(specialExpressionManager.trackEntity).not.toHaveBeenCalled()
 	})
 })
 
@@ -1763,7 +2037,7 @@ describe('updateIsInvertedValues', () => {
 			return undefined
 		})
 
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 
 		// Setup initial value
 		const feedbackValues = translateFeedbackValues({
@@ -1811,7 +2085,7 @@ describe('updateIsInvertedValues', () => {
 			return undefined
 		})
 
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 
 		// Setup initial value
 		const feedbackValues = translateFeedbackValues({
@@ -1848,7 +2122,7 @@ describe('updateIsInvertedValues', () => {
 			return undefined
 		})
 
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 
 		const entity = list.findById('int1')
 		expect(entity).toBeTruthy()
@@ -1883,7 +2157,7 @@ describe('updateIsInvertedValues', () => {
 			return undefined
 		})
 
-		list.loadStorage(structuredClone(FeedbackTree), true, false)
+		list.loadStorage(structuredClone(FeedbackTree), false)
 
 		// Setup initial values
 		list.updateFeedbackValues('conn01', translateFeedbackValues({ '01': true }))
@@ -1932,8 +2206,8 @@ describe('updateIsInvertedValues', () => {
 			upgradeIndex: undefined,
 		}
 
-		// loadStorage calls subscribe(true) if skipSubscribe is false
-		list.loadStorage([newFeedback], false, false)
+		list.loadStorage([newFeedback], false)
+		list.subscribe()
 
 		expect(specialExpressionManager.trackEntity).toHaveBeenCalledTimes(1)
 
@@ -1953,7 +2227,6 @@ describe('moveEntity', () => {
 				{ id: '2', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
 				{ id: '3', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
 			],
-			true,
 			false
 		)
 
@@ -1974,7 +2247,6 @@ describe('moveEntity', () => {
 				{ id: '2', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
 				{ id: '3', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
 			],
-			true,
 			false
 		)
 
@@ -1991,7 +2263,6 @@ describe('moveEntity', () => {
 				{ id: '1', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
 				{ id: '2', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
 			],
-			true,
 			false
 		)
 
@@ -2030,3 +2301,270 @@ function translateFeedbackValues(oldValues: Record<string, any>): Map<string, Ne
 	}
 	return map
 }
+
+describe('scope', () => {
+	test('an entity parses its options in the scope of its list', () => {
+		const { list, scope, internalEntityUpdate, newActionModel } = createList(CreateBankControlId('test01'))
+		const parser = {} as any
+		vi.mocked(scope.createVariablesAndExpressionParser).mockReturnValue(parser)
+
+		list.loadStorage([{ ...newActionModel, type: EntityModelType.Feedback }], false)
+		list.subscribe()
+		const entity = list.findById(newActionModel.id)!
+
+		expect(entity.createVariablesAndExpressionParser({ 'a:b': 1 })).toBe(parser)
+		expect(scope.createVariablesAndExpressionParser).toHaveBeenCalledWith({ 'a:b': 1 }, undefined)
+
+		// The internal module is given the same scope
+		const createParser = internalEntityUpdate.mock.calls[0][2]
+		expect(createParser()).toBe(parser)
+	})
+})
+
+describe('transient child groups', () => {
+	const callerModel: ActionEntityModel = {
+		type: EntityModelType.Action,
+		id: 'caller',
+		connectionId: 'custom',
+		definitionId: 'custom-action-1',
+		options: {},
+		upgradeIndex: undefined,
+	}
+	const transientAction: ActionEntityModel = {
+		type: EntityModelType.Action,
+		id: 'caller:action',
+		connectionId: 'conn01',
+		definitionId: 'act01',
+		options: {},
+		upgradeIndex: undefined,
+	}
+	const transientFeedback: FeedbackEntityModel = {
+		type: EntityModelType.Feedback,
+		id: 'caller:feedback',
+		connectionId: 'conn01',
+		definitionId: 'fb01',
+		options: {},
+		upgradeIndex: undefined,
+	}
+
+	function createTransientScope(): EntityScope {
+		return {
+			isTransient: true,
+			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			customActionChain: ['custom-action:1'],
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
+			localVariablesChanged: vi.fn(),
+			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		}
+	}
+
+	function setup(caller: ActionEntityModel = callerModel) {
+		const res = createList(CreateBankControlId('test01'))
+		res.list.loadStorage([caller], false)
+		res.list.subscribe()
+		const callerEntity = res.list.findById(caller.id)!
+		res.connectionEntityUpdate.mockClear()
+
+		const transientScope = createTransientScope()
+		const group = callerEntity.createTransientList(
+			'instance',
+			transientScope,
+			{ type: EntityModelType.Action },
+			[transientAction, transientFeedback],
+			false
+		)
+		const copy = { lists: [group], valuesChanged: vi.fn() }
+		callerEntity.setTransientCopy('instance', copy)
+
+		return { ...res, callerEntity, transientScope, group, copy }
+	}
+
+	test('the enabled entities include those of a transient group only when asked', () => {
+		const { list } = setup()
+
+		expect(list.getAllEnabledEntities(false).map((entity) => entity.id)).toEqual(['caller'])
+		expect(list.getAllEnabledEntities(true).map((entity) => entity.id)).toEqual([
+			'caller',
+			transientAction.id,
+			transientFeedback.id,
+		])
+	})
+
+	test('entities are subscribed, parsing their options in the scope of the group', () => {
+		const { group, transientScope, connectionEntityUpdate, specialExpressionManager } = setup()
+
+		const action = group.findById(transientAction.id)!
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(action, CreateBankControlId('test01'))
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+
+		const parser = {} as any
+		vi.mocked(transientScope.createVariablesAndExpressionParser).mockReturnValue(parser)
+		expect(action.createVariablesAndExpressionParser(null)).toBe(parser)
+
+		// The special expressions are tracked in the scope of the group
+		expect(transientScope.specialExpressionManager.trackEntity).toHaveBeenCalledWith(action, 'storeResult')
+		expect(vi.mocked(specialExpressionManager.trackEntity).mock.calls.some(([entity]) => entity === action)).toBe(false)
+	})
+
+	test('entities are not persisted or listed, but can be found and run', () => {
+		const { list, callerEntity } = setup()
+
+		expect(callerEntity.asEntityModel()).toEqual(callerModel)
+		expect(list.getAllEntities().map((e) => e.id)).toEqual(['caller'])
+
+		expect(list.getAllEntitiesWithTransient().map((e) => e.id)).toEqual([
+			'caller',
+			transientAction.id,
+			transientFeedback.id,
+		])
+		expect(list.findById(transientFeedback.id)?.id).toBe(transientFeedback.id)
+		expect(callerEntity.getTransientCopy('instance')?.lists[0].getDirectEntities()).toHaveLength(2)
+	})
+
+	test('entities can not be edited through the list', () => {
+		const { list } = setup()
+
+		expect(list.removeEntity(transientAction.id)).toBeUndefined()
+		expect(list.findById(transientAction.id)).toBeTruthy()
+	})
+
+	test('feedback values reach the entities', () => {
+		const { list, group } = setup()
+
+		const changed = list.updateFeedbackValues(
+			'conn01',
+			new Map<string, NewFeedbackValue>([
+				[
+					transientFeedback.id,
+					{ entityId: transientFeedback.id, controlId: CreateBankControlId('test01'), value: 'abc' },
+				],
+			])
+		)
+
+		const feedback = group.findById(transientFeedback.id)!
+		expect(changed).toEqual([feedback])
+		expect(feedback.feedbackValue).toBe('abc')
+	})
+
+	test('the copy is told when the values of its entities change, and only then', () => {
+		const { list, copy } = setup()
+		const newValue = (value: string) =>
+			new Map<string, NewFeedbackValue>([
+				[transientFeedback.id, { entityId: transientFeedback.id, controlId: CreateBankControlId('test01'), value }],
+			])
+
+		list.updateFeedbackValues('conn01', newValue('abc'))
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(1)
+
+		// The same value again changes nothing
+		list.updateFeedbackValues('conn01', newValue('abc'))
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(1)
+
+		// Nor does a value for another connection
+		list.updateFeedbackValues('conn02', newValue('def'))
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(1)
+
+		// Clearing the values of the connection does
+		list.clearCachedValueForConnectionId('conn01')
+		expect(copy.valuesChanged).toHaveBeenCalledTimes(2)
+		expect(copy.valuesChanged.mock.lastCall?.[0].map((entity: ControlEntityInstance) => entity.id)).toContain(
+			transientFeedback.id
+		)
+	})
+
+	test('replacing the copy cleans up the old entities', () => {
+		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		const newGroup = callerEntity.createTransientList(
+			'instance',
+			createTransientScope(),
+			{
+				type: EntityModelType.Action,
+			},
+			[transientAction],
+			false
+		)
+		callerEntity.setTransientCopy('instance', { lists: [newGroup], valuesChanged: vi.fn() })
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(connectionEntityDelete).toHaveBeenCalledWith(
+			expect.objectContaining({ id: transientFeedback.id }),
+			CreateBankControlId('test01')
+		)
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(callerEntity.getTransientCopy('instance')?.lists).toEqual([newGroup])
+	})
+
+	test('removing the copy cleans up its entities', () => {
+		const { list, callerEntity, connectionEntityDelete } = setup()
+
+		callerEntity.removeTransientCopy('instance')
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(callerEntity.getTransientCopy('instance')).toBeUndefined()
+		expect(list.findById(transientAction.id)).toBeUndefined()
+
+		// Removing again does nothing
+		callerEntity.removeTransientCopy('instance')
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+	})
+
+	test('the group is cleaned up with its entity', () => {
+		const { callerEntity, connectionEntityDelete } = setup()
+
+		callerEntity.cleanup()
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+	})
+
+	test('enabling and disabling the entity has whatever built its copy rebuild or drop it', () => {
+		const { callerEntity, customActionInstances } = setup()
+		customActionInstances.entityUpdate.mockClear()
+
+		callerEntity.setEnabled(false)
+		expect(customActionInstances.entityDelete).toHaveBeenCalledWith(callerEntity)
+
+		callerEntity.setEnabled(true)
+		expect(customActionInstances.entityUpdate).toHaveBeenCalledWith(
+			callerEntity,
+			CreateBankControlId('test01'),
+			expect.anything()
+		)
+	})
+
+	test('changing the custom action called has whatever built its copy drop it and build the new one', () => {
+		const { callerEntity, customActionInstances } = setup()
+		customActionInstances.entityUpdate.mockClear()
+
+		expect(callerEntity.setCustomDefinitionId('custom-action-2')).toBe(true)
+
+		expect(customActionInstances.entityDelete).toHaveBeenCalledWith(callerEntity)
+		expect(customActionInstances.entityUpdate).toHaveBeenCalledTimes(1)
+		expect(callerEntity.definitionId).toBe('custom-action-2')
+	})
+
+	test('the group of a disabled entity is not subscribed', () => {
+		const { callerEntity, connectionEntityUpdate } = setup({ ...callerModel, disabled: true })
+		expect(callerEntity.disabled).toBe(true)
+
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+
+	test('a transient list is not subscribed until its copy is held', () => {
+		const { callerEntity, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		const list = callerEntity.createTransientList(
+			'other',
+			createTransientScope(),
+			{ type: EntityModelType.Action },
+			[{ ...transientAction, id: 'other:action' }],
+			false
+		)
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+
+		callerEntity.setTransientCopy('other', { lists: [list], valuesChanged: vi.fn() })
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+	})
+})

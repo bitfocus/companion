@@ -1,5 +1,6 @@
 import { useContext } from 'react'
-import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import { buildCollectionTree } from '~/Components/CollapsibleTree/buildCollectionTree.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { CollapsibleTreeNode } from '../../Components/CollapsibleTree/CollapsibleTree.js'
@@ -50,13 +51,15 @@ export function useConnectionTreeNodes<TLeafData>(
 	return useComputed(() => {
 		const allNodeIds: string[] = []
 
-		// Group connection nodes by collectionId
-		const connectionsByCollection = new Map<string | null, CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[]>()
+		const connectionNodes: Array<{
+			collectionId: string | null
+			node: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>
+		}> = []
 		for (const [connectionId, connectionInfo] of connections.connections) {
 			const leaves = getLeaves(connectionId, connectionInfo)
 			if (leaves.length === 0) continue
 
-			const connNode: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta> = {
+			const node: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta> = {
 				id: `connection:${connectionId}`,
 				children: [],
 				leaves,
@@ -67,56 +70,26 @@ export function useConnectionTreeNodes<TLeafData>(
 					moduleDisplayName: modules.getModuleFriendlyName(connectionInfo.moduleType, connectionInfo.moduleId),
 				},
 			}
-			allNodeIds.push(connNode.id)
-
-			const collectionId = connectionInfo.collectionId
-			let list = connectionsByCollection.get(collectionId)
-			if (!list) {
-				list = []
-				connectionsByCollection.set(collectionId, list)
-			}
-			list.push(connNode)
+			allNodeIds.push(node.id)
+			connectionNodes.push({ collectionId: connectionInfo.collectionId, node })
 		}
-
-		// Recursively build collection tree nodes
-		function buildCollectionNode(
-			collection: ConnectionCollection
-		): CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta> | null {
-			const childNodes: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[] = []
-			const sortedChildren = [...collection.children].sort((a, b) => a.sortOrder - b.sortOrder)
-
-			for (const child of sortedChildren) {
-				const childNode = buildCollectionNode(child)
-				if (childNode) childNodes.push(childNode)
+		const { nodes, ungrouped } = buildCollectionTree(
+			connections.rootCollections(),
+			connectionNodes,
+			(entry) => entry.collectionId,
+			(collection, childNodes, connectionEntries): CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta> => {
+				const id = `collection:${collection.id}`
+				allNodeIds.push(id)
+				return {
+					id,
+					// Connection nodes go as children (sub-groups), not as leaves
+					children: [...childNodes, ...connectionEntries.map((entry) => entry.node)],
+					leaves: [],
+					metadata: { type: 'collection', label: collection.label },
+				}
 			}
-
-			const connNodes = connectionsByCollection.get(collection.id) ?? []
-
-			// Skip collections that have no content anywhere in their subtree
-			if (childNodes.length === 0 && connNodes.length === 0) return null
-
-			const nodeId = `collection:${collection.id}`
-			allNodeIds.push(nodeId)
-
-			return {
-				id: nodeId,
-				// Connection nodes go as children (sub-groups), not as leaves
-				children: [...childNodes, ...connNodes],
-				leaves: [],
-				metadata: {
-					type: 'collection',
-					label: collection.label,
-				},
-			}
-		}
-
-		const nodes: CollapsibleTreeNode<TLeafData, ConnectionTreeNodeMeta>[] = []
-		for (const rootCollection of connections.rootCollections()) {
-			const node = buildCollectionNode(rootCollection)
-			if (node) nodes.push(node)
-		}
-
-		const ungroupedNodes = connectionsByCollection.get(null) ?? []
+		)
+		const ungroupedNodes = ungrouped.map((entry) => entry.node)
 
 		return { nodes, ungroupedNodes, allNodeIds }
 	}, [getLeaves, connections, modules])

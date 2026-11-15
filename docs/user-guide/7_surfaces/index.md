@@ -9,9 +9,9 @@ Each surface may have unique capabilities and limitations. See the individual su
 
 ## Surface Modules / Integrations
 
-Since Companion 4.3, surface support is delivered through a [module system](../3_config/modules.md) — the same approach used for [connections](../3_config/connections.md). This means that as new surface models are released, or bugs are fixed in existing ones, you can update just the relevant surface module without updating all of Companion.
+Since Companion 4.3, surface support is delivered through a [module system](../3_config/connect/modules.md) — the same approach used for [connections](../3_config/connect/connections.md). This means that as new surface models are released, or bugs are fixed in existing ones, you can update just the relevant surface module without updating all of Companion.
 
-Surface integration module settings are accessible from the right-hand panel of the [Surface Page](../3_config/surfaces.md). (If your browser window only shows a single panel, click the blue <span style={{color: "white", background: "#4a9aff", borderRadius: "5px", fontSize: "0.8em", padding: "0.5em"}}>Show Settings</span> button to get to the settings panel.)
+Surface integration module settings are accessible from the right-hand panel of the [Surface Page](../3_config/connect/surfaces.md). (If your browser window only shows a single panel, click the blue <span style={{color: "white", background: "#4a9aff", borderRadius: "5px", fontSize: "0.8em", padding: "0.5em"}}>Show Settings</span> button to get to the settings panel.)
 
 In the right panel, click the red <span style={{color: "white", background: "#CC0006", borderRadius: "5px", fontSize: "0.8em", padding: "0.5em"}}>Add Surface Integration</span> button.
 
@@ -21,12 +21,12 @@ If the "All Available" button isn't blue, click it to show modules you haven't y
 
 ![Add Surface integration panel](./images/surface-integrations-add-panel.png)
 
-From there, [Installing](../3_config/connections.md#adding-a-connection), [configuring](../3_config/connections.md#configuring-a-connection), and [updating](../3_config/connections.md#updating-a-connection) a surface module follows the same workflow as for Connections.
+From there, [Installing](../3_config/connect/connections.md#adding-a-connection), [configuring](../3_config/connect/connections.md#configuring-a-connection), and [updating](../3_config/connect/connections.md#updating-a-connection) a surface module follows the same workflow as for Connections.
 
-You can also add surface modules from the [Modules page](../3_config/modules.md), including importing offline surface modules.
+You can also add surface modules from the [Modules page](../3_config/connect/modules.md), including importing offline surface modules.
 
 A full list of available surface modules and supported device models is also available at the [Bitfocus Developer site](https://developer.bitfocus.io/modules/companion-surface/discover).
 
 ## General Surface Settings
 
-Global surface settings, such as watching for new USB devices and PIN lockout, are on the **Surfaces** tab of the Settings page. See the [surface settings](../3_config/settings.md#surfaces) help page for details, or the [surface configuration](../3_config/surfaces.md) help page.
+Global surface settings, such as watching for new USB devices and PIN lockout, are on the **Surfaces** tab of the Settings page. See the [surface settings](../3_config/system/settings.md#surfaces) help page for details, or the [surface configuration](../3_config/connect/surfaces.md) help page.

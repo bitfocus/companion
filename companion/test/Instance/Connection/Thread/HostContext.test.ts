@@ -98,10 +98,10 @@ describe('HostContext setActionDefinitions', () => {
 			hasLearn: true,
 			learnTimeout: 5000,
 			actionHasResult: true,
-			showInvert: false,
+			actionOutputs: null,
+			warning: null,
 			showButtonPreview: false,
-			feedbackType: null,
-			optionsSupportExpressions: true,
+			legacyOptions: false,
 		})
 	})
 
@@ -116,6 +116,8 @@ describe('HostContext setActionDefinitions', () => {
 			hasLearn: false,
 			hasLifecycleFunctions: false,
 			actionHasResult: false,
+			actionOutputs: null,
+			warning: null,
 			optionsToMonitorForInvalidations: null,
 		})
 	})
@@ -201,11 +203,10 @@ describe('HostContext setFeedbackDefinitions', () => {
 			sortKey: null,
 			feedbackType: 'boolean',
 			feedbackStyle: { color: 1 },
-			hasLifecycleFunctions: true,
 			hasLearn: true,
 			learnTimeout: 1000,
-			actionHasResult: undefined,
-			optionsSupportExpressions: true,
+			warning: null,
+			legacyOptions: false,
 		})
 	})
 

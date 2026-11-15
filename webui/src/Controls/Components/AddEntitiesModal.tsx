@@ -2,7 +2,9 @@ import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
+import { EntityModelType, type FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
 import {
@@ -10,6 +12,7 @@ import {
 	type CollapsibleTreeHeaderProps,
 	type CollapsibleTreeNode,
 } from '~/Components/CollapsibleTree/CollapsibleTree.js'
+import { countTreeLeaves } from '~/Components/CollapsibleTree/countTreeLeaves.js'
 import { Modal } from '~/Components/Modal'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
@@ -19,6 +22,7 @@ import { useComputed } from '~/Resources/util'
 import { type EntityLeafItem } from '~/Stores/EntityDefinitionsStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzySearchByKeys } from '~/util/fuzzy.js'
+import { useCustomEntitiesTreeNode } from './useCustomEntitiesTreeNode.js'
 import './AddEntitiesModal.css'
 
 const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
@@ -28,7 +32,8 @@ const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 
 	const meta = node.metadata
 	if (meta.type === 'connection') {
-		const itemCount = node.leaves.length
+		// Custom actions can be in collections, so count those inside them too
+		const itemCount = countTreeLeaves(node)
 		const itemLabel = itemCount === 1 ? entityTypeLabelContext : `${entityTypeLabelContext}s`
 		return (
 			<span className="collapsible-tree-connection-header">
@@ -50,8 +55,12 @@ const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 interface AddEntitiesModalProps {
 	addEntity: (connectionId: string, definitionId: string) => void
 	feedbackListType: FeedbackEntitySubType | null
+	/** The kind of control being edited, or null when the list isn't on a control */
+	controlKind: ControlIdKind | null
 	entityType: EntityModelType
 	entityTypeLabel: string
+	/** A definition which can't be added here, such as a custom action running itself */
+	excludedIds: ReadonlySet<string>
 	disabled: boolean
 }
 const EntityTypeLabelContext = createContext<string>('')
@@ -126,11 +135,13 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 export const AddEntitiesModal = observer(function AddEntitiesModal({
 	addEntity,
 	feedbackListType,
+	controlKind,
 	entityType,
 	entityTypeLabel,
+	excludedIds,
 	disabled,
 }: AddEntitiesModalProps) {
-	const { entityDefinitions } = useContext(RootAppStoreContext)
+	const { entityDefinitions, customActionsList, customFeedbacksList } = useContext(RootAppStoreContext)
 
 	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 	const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
@@ -144,23 +155,31 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	}, [])
 
 	const addAndTrackRecentUsage = useCallback(
-		(connectionAndDefinitionId: string) => {
-			recentlyUsed.trackId(connectionAndDefinitionId)
-
-			const [connectionId, definitionId] = connectionAndDefinitionId.split(':', 2)
-			addEntity(connectionId, definitionId)
+		(leaf: EntityLeafItem) => {
+			recentlyUsed.trackId(leaf.fullId)
+			addEntity(leaf.connectionId, leaf.definitionId)
 		},
 		[recentlyUsed, addEntity]
 	)
 
 	const getEntityLeaves = useCallback(
-		(connectionId: string): EntityLeafItem[] => definitions.buildConnectionLeaves(connectionId, feedbackListType),
-		[definitions, feedbackListType]
+		(connectionId: string): EntityLeafItem[] => {
+			const leaves = definitions.buildConnectionLeaves(connectionId, feedbackListType, controlKind)
+			return excludedIds.size === 0 ? leaves : leaves.filter((leaf) => !excludedIds.has(leaf.fullId))
+		},
+		[definitions, feedbackListType, controlKind, excludedIds]
 	)
 
 	const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
+	// Custom actions and custom feedbacks share a connection, so which this offers depends on what is being added
+	const customNode = useCustomEntitiesTreeNode(
+		CUSTOM_CONNECTION_ID,
+		entityType === EntityModelType.Action ? 'Custom actions' : 'Custom feedbacks',
+		entityType === EntityModelType.Action ? customActionsList : customFeedbacksList,
+		getEntityLeaves
+	)
 
-	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType)
+	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType, controlKind)
 	const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
 		if (internalLeaves.length === 0) return null
 		return {
@@ -183,7 +202,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	const collapseHelper = usePanelCollapseHelper(`add_entities_${entityType}`, null, defaultCollapsedFn)
 
 	const browseNodes = useComputed(() => {
-		const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
+		const rawNodes = [internalNode, customNode, ...nodes].filter((node) => !!node)
 
 		// If there are no collections visible, merge ungrouped nodes into the main list
 		// This hides the "Ungrouped Connections" header
@@ -196,7 +215,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		}
 
 		return { nodes: rawNodes, ungroupedNodes }
-	}, [nodes, ungroupedNodes, internalNode])
+	}, [nodes, ungroupedNodes, internalNode, customNode])
 
 	const allEntityResults = useComputed(() => {
 		const results: EntitySearchResult[] = []
@@ -246,7 +265,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 			} else if (event.key === 'Enter') {
 				event.preventDefault()
 				const result = searchResults[activeResultIndex]
-				if (result) addAndTrackRecentUsage(result.leaf.fullId)
+				if (result) addAndTrackRecentUsage(result.leaf)
 			}
 		},
 		[filter, searchResults, activeResultIndex, addAndTrackRecentUsage]
@@ -313,7 +332,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 													result={result}
 													active={index === activeResultIndex}
 													onActivate={() => setActiveResultIndex(index)}
-													onSelect={() => addAndTrackRecentUsage(result.leaf.fullId)}
+													onSelect={() => addAndTrackRecentUsage(result.leaf)}
 												/>
 											))}
 										</div>
@@ -330,7 +349,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 											selectedLeafKey={null}
 											HeaderComponent={AddEntityGroupHeader}
 											LeafComponent={AddEntityLeaf}
-											onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
+											onLeafClick={addAndTrackRecentUsage}
 										/>
 									</>
 								)}

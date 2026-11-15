@@ -13,7 +13,6 @@ import type EventEmitter from 'node:events'
 import { INTERNAL_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -21,11 +20,11 @@ import {
 	type FeedbackValue,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
+import { type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import type { CompanionOptionValues, Complete } from '@companion-module/base'
+import type { Complete } from '@companion-module/base'
 import type { JsonValue } from '@companion-module/host'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
@@ -38,10 +37,11 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
-import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import type { ActionDefinition, FeedbackDefinition, InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
+import { visitInputFieldReferences } from '../Resources/Visitors/InputFieldVisitor.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type {
@@ -50,6 +50,7 @@ import type {
 	VariableDependencyRegistry,
 } from '../Variables/DependencyRegistry.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
+import { buildExecutionThisVariables } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -66,10 +67,8 @@ import { InternalTime } from './Time.js'
 import { InternalTriggers } from './Triggers.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackExecutionContext,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalModuleFragment,
 	InternalVisitor,
 } from './Types.js'
@@ -89,6 +88,8 @@ interface FeedbackDependencyTracking {
 interface FeedbackEntityState extends FeedbackDependencyTracking {
 	controlId: SomeControlId
 	location: ControlLocation | undefined
+	/** Create a parser for the options of the feedback, in the scope of the feedback */
+	createParser: () => VariablesAndExpressionParser
 
 	entityModel: FeedbackEntityModel
 
@@ -191,18 +192,10 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	}
 
 	/**
-	 * Trigger the first update after launch of each action and feedback
+	 * Compute the initial values of the internal variables after launch
 	 */
-	firstUpdate(): void {
+	initVariables(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-
-		// Find all the feedbacks on controls
-		const allControls = this.#controlsStore.getAllControls()
-		for (const control of allControls.values()) {
-			if (!control.supportsEntities) continue
-
-			control.entities.resubscribeEntities(undefined, INTERNAL_CONNECTION_ID)
-		}
 
 		// Make all variables values
 		for (const fragment of this.#fragments) {
@@ -285,26 +278,45 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 		return undefined
 	}
 
-	entityUpdate(entity: SomeEntityModel, controlId: SomeControlId): void {
+	/**
+	 * An entity has changed, and state should be updated
+	 * @param entity The entity
+	 * @param controlId The control the entity belongs to
+	 * @param createParser Create a parser for the options of the entity, in the scope of the entity
+	 */
+	entityUpdate(
+		entity: SomeEntityModel,
+		controlId: SomeControlId,
+		createParser: () => VariablesAndExpressionParser
+	): void {
 		if (entity.type === EntityModelType.Feedback) {
-			this.#feedbackUpdate(entity, controlId)
+			this.#feedbackUpdate(entity, controlId, createParser)
 		}
 	}
 
 	/**
 	 * A feedback has changed, and state should be updated
 	 */
-	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: SomeControlId): void {
+	#feedbackUpdate(
+		feedback: FeedbackEntityModel,
+		controlId: SomeControlId,
+		createParser: () => VariablesAndExpressionParser
+	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
-		if (feedback.disabled) return
+		if (feedback.disabled) {
+			// Drop any state from when it was enabled, rather than relying on the caller to have deleted it first
+			this.entityDelete(feedback)
+			return
+		}
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
 		const feedbackState: FeedbackEntityState = {
 			controlId,
 			location,
+			createParser,
 			referencedVariables: null,
 			clockSensitive: false,
 
@@ -369,11 +381,11 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	}
 	/**
 	 * Get an updated value for a tracked (eagerly-cached) feedback.
-	 * Builds a parser for the control (with no execution-context overrides) and records the dependency
+	 * Builds a parser in the scope of the feedback (with no execution-context overrides) and records the dependency
 	 * tracking onto the {@link FeedbackEntityState} so it can be re-evaluated when its inputs change.
 	 */
 	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
-		const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
+		const parser = feedbackState.createParser()
 
 		const value = this.#computeFeedbackValue(
 			feedbackState.entityModel,
@@ -424,34 +436,23 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 				return undefined
 			}
 
-			// Parse the options if enabled
-			let parsedOptions: CompanionOptionValues
-			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
 
-				// Always track the dependencies, for accurate re-evaluation when something changes
-				if (tracking) {
-					tracking.referencedVariables = parseRes.referencedVariableIds
-					tracking.clockSensitive = parseRes.clockSensitive
-				}
-
-				if (!parseRes.ok) {
-					this.#logger.warn(
-						`Failed to parse options for feedback ${entityModel.definitionId} in control ${controlId}: ${JSON.stringify(parseRes.optionErrors)}`
-					)
-					throw new Error(
-						`Failed to parse options for feedback ${entityModel.definitionId}. One or more options were invalid`
-					)
-				} else {
-					parsedOptions = parseRes.parsedOptions
-				}
-			} else {
-				parsedOptions = convertExpressionOptionsWithoutParsing(entityModel.options)
-				if (tracking) {
-					tracking.referencedVariables = new Set<string>()
-					tracking.clockSensitive = false
-				}
+			// Always track the dependencies, for accurate re-evaluation when something changes
+			if (tracking) {
+				tracking.referencedVariables = parseRes.referencedVariableIds
+				tracking.clockSensitive = parseRes.clockSensitive
 			}
+
+			if (!parseRes.ok) {
+				this.#logger.warn(
+					`Failed to parse options for feedback ${entityModel.definitionId} in control ${controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(
+					`Failed to parse options for feedback ${entityModel.definitionId}. One or more options were invalid`
+				)
+			}
+			const parsedOptions = parseRes.parsedOptions
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
 				controlId: controlId,
@@ -499,66 +500,22 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	}
 
 	/**
-	 * Visit any references in some inactive internal actions and feedbacks
+	 * Visit the references in the options of an internal action or feedback, as described by its definition
 	 */
-	visitReferences(visitor: InternalVisitor, rawEntities: SomeEntityModel[], entities: ControlEntityInstance[]): void {
+	visitEntityReferences(
+		visitor: InternalVisitor,
+		entityType: EntityModelType,
+		definitionId: string,
+		entityId: string,
+		options: ExpressionableOptionsObject
+	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const simpleInternalFeedbacks: FeedbackForVisitor[] = []
-		const simpleInternalActions: ActionForVisitor[] = []
+		const definition = this.#instanceDefinitions.getEntityDefinition(entityType, INTERNAL_CONNECTION_ID, definitionId)
+		if (!definition) return
 
-		for (const entity of rawEntities) {
-			if (!isInternalConnectionId(entity.connectionId)) continue
-
-			switch (entity.type) {
-				case EntityModelType.Feedback:
-					simpleInternalFeedbacks.push({
-						id: entity.id,
-						type: entity.definitionId,
-						options: entity.options,
-					})
-					break
-				case EntityModelType.Action:
-					simpleInternalActions.push({
-						id: entity.id,
-						action: entity.definitionId,
-						options: entity.options,
-					})
-					break
-				default:
-					assertNever(entity)
-					break
-			}
-		}
-		for (const entity of entities) {
-			if (!isInternalConnectionId(entity.connectionId)) continue
-
-			switch (entity.type) {
-				case EntityModelType.Feedback:
-					simpleInternalFeedbacks.push({
-						id: entity.id,
-						type: entity.definitionId,
-						options: entity.rawOptions, // Ensure the options is not a copy/clone
-					})
-					break
-				case EntityModelType.Action:
-					simpleInternalActions.push({
-						id: entity.id,
-						action: entity.definitionId,
-						options: entity.rawOptions, // Ensure the options is not a copy/clone
-					})
-					break
-				default:
-					assertNever(entity.type)
-					break
-			}
-		}
-
-		for (const fragment of this.#fragments) {
-			if ('visitReferences' in fragment && typeof fragment.visitReferences === 'function') {
-				fragment.visitReferences(visitor, simpleInternalActions, simpleInternalFeedbacks)
-			}
-		}
+		const feedbackId = entityType === EntityModelType.Feedback ? entityId : undefined
+		visitInputFieldReferences(visitor, definition.options, options, feedbackId)
 	}
 
 	/**
@@ -586,22 +543,18 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
 				parser: this.#controlsStore.createActionExecutionParser(extras),
+				executionVariables: buildExecutionThisVariables(extras),
+				parserOptions: { allowClockSensitive: false },
 			})
 
-			let parsedOptions: CompanionOptionValues
-			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
-				if (!parseRes.ok) {
-					this.#logger.warn(
-						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
-					)
-					throw new Error(`Failed to parse options for action ${action.definitionId}. One or more options were invalid`)
-				} else {
-					parsedOptions = parseRes.parsedOptions
-				}
-			} else {
-				parsedOptions = convertExpressionOptionsWithoutParsing(action.rawOptions)
+			const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
+			if (!parseRes.ok) {
+				this.#logger.warn(
+					`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse options for action ${action.definitionId}. One or more options were invalid`)
 			}
+			const parsedOptions = parseRes.parsedOptions
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,
@@ -704,7 +657,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ActionDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getActionDefinitions' in fragment && typeof fragment.getActionDefinitions === 'function') {
@@ -718,23 +671,19 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 
 						actionHasResult: !!action.actionHasResult,
 						actionExecutionTimeout: undefined, // Not applicable for internal actions
+						actionOutputs: null,
+						warning: null,
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
 
 						entityType: EntityModelType.Action,
-						showInvert: false,
-						feedbackType: null,
-						feedbackStyle: undefined,
-						feedbackAffectedProperties: undefined,
-						feedbackDisableStyleOverrides: false,
-						feedbackStyleOverridesUnsupported: false,
 						hiddenFromPicker: action.hiddenFromPicker ?? false,
-
-						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
+						hiddenForControlTypes: action.hiddenForControlTypes,
 
 						optionsToMonitorForInvalidations: action.optionsToMonitorForInvalidations || null,
-					} satisfies Complete<ClientEntityDefinition>
+						legacyOptions: false,
+					} satisfies Complete<ActionDefinition>
 				}
 			}
 		}
@@ -744,7 +693,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	#regenerateFeedbacks(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getFeedbackDefinitions' in fragment && typeof fragment.getFeedbackDefinitions === 'function') {
@@ -752,13 +701,11 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 					feedbacks[id] = {
 						...feedback,
 						sortKey: feedback.sortKey ?? null,
-						hasLifecycleFunctions: false,
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,
 
-						actionHasResult: undefined,
-						actionExecutionTimeout: undefined,
+						warning: null,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,
@@ -767,12 +714,10 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
 						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
 						hiddenFromPicker: feedback.hiddenFromPicker ?? false,
-
-						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
-
-						// Always monitor everything
-						optionsToMonitorForInvalidations: null,
-					} satisfies Complete<ClientEntityDefinition>
+						hiddenForControlTypes: feedback.hiddenForControlTypes,
+						legacyOptions: false,
+						invertDisableAutoExpression: false,
+					} satisfies Complete<FeedbackDefinition>
 				}
 			}
 		}

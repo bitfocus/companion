@@ -31,7 +31,7 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props, false)
+		super(props, false, [])
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
@@ -44,10 +44,10 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 		})
 	}
 
-	loadStorage(storage: TriggerModel, skipSubscribe: boolean, isImport: boolean): void {
-		this.#feedbacks.loadStorage(storage.condition || [], skipSubscribe, isImport)
-		this.#actions.loadStorage(storage.actions || [], skipSubscribe, isImport)
-		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
+	loadStorage(storage: TriggerModel, isImport: boolean): void {
+		this.#feedbacks.loadStorage(storage.condition || [], isImport)
+		this.#actions.loadStorage(storage.actions || [], isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], isImport)
 	}
 
 	/**
@@ -56,8 +56,9 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 	 * expressions which don't depend on variables (eg randomInt()) are sampled fresh
 	 */
 	checkConditionValue(evaluateLive: boolean): boolean {
+		const parserOptions = { allowClockSensitive: true }
 		const context: FeedbackExecutionContext | null = evaluateLive
-			? { parser: this.createVariablesAndExpressionParser(null, { allowClockSensitive: true }) }
+			? { parser: this.createVariablesAndExpressionParser(null, parserOptions), executionVariables: {}, parserOptions }
 			: null
 		return this.#feedbacks.getBooleanFeedbackValue(context)
 	}

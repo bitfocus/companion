@@ -5,6 +5,8 @@ import {
 	faClock,
 	faCog,
 	faCogs,
+	faCubes,
+	faCubesStacked,
 	faDollarSign,
 	faFileImport,
 	faFloppyDisk,
@@ -86,6 +88,22 @@ export const VARIABLES_SECTION: NavSection = {
 	],
 }
 
+export const BUILDING_BLOCKS_SECTION: NavSection = {
+	id: 'building-blocks',
+	label: 'Building Blocks',
+	icon: faCubes,
+	pages: [
+		{ id: 'actions', label: 'Custom Actions', shortLabel: 'Actions', path: '/custom-actions', icon: faCubes },
+		{
+			id: 'feedbacks',
+			label: 'Custom Feedbacks',
+			shortLabel: 'Feedbacks',
+			path: '/custom-feedbacks',
+			icon: faCubesStacked,
+		},
+	],
+}
+
 export const SURFACES_SECTION: NavSection = {
 	id: 'surfaces',
 	label: 'Surfaces',
@@ -125,7 +143,13 @@ export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'import-export', label: 'Import / Export', path: '/import-export', icon: faFileImport },
 ]
 
-export const NAV_SECTIONS: readonly NavSection[] = [VARIABLES_SECTION, SURFACES_SECTION, LINK_SECTION, SETTINGS_SECTION]
+export const NAV_SECTIONS: readonly NavSection[] = [
+	VARIABLES_SECTION,
+	BUILDING_BLOCKS_SECTION,
+	SURFACES_SECTION,
+	LINK_SECTION,
+	SETTINGS_SECTION,
+]
 
 /** Every page reachable from the nav, flattened — what the command palette searches. */
 export const ALL_NAV_PAGES: readonly NavPage[] = [

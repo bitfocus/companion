@@ -6,6 +6,7 @@ import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandler
 import type { ActionForInternalExecution, FeedbackForInternalExecution } from '../../lib/Internal/Types.js'
 import { InternalVariables } from '../../lib/Internal/Variables.js'
 import LogController, { type Logger } from '../../lib/Log/Controller.js'
+import { visitInputFieldReferences } from '../../lib/Resources/Visitors/InputFieldVisitor.js'
 import type { LocalVariable, LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
@@ -57,6 +58,7 @@ const fakeExtras: RunActionExtras = {
 	abortDelayed: new AbortController().signal,
 	executionMode: 'sequential',
 	rotationDelta: null,
+	frame: null,
 }
 
 // ---- local_variable_set_value -----------------------------------------------
@@ -75,7 +77,7 @@ describe('local_variable_set_value deferred parse', () => {
 	}
 
 	it('sets variable to expression result using $(this:current)', () => {
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter', frame: null }
 		const context = { 'this:current': 5, 'target:counter': 5 }
 		const localVariables = makeLocalVariablesController(localVar, context)
 
@@ -98,7 +100,7 @@ describe('local_variable_set_value deferred parse', () => {
 	})
 
 	it('sets variable using $(target:foo) in text (non-expression) mode', () => {
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'msg' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'msg', frame: null }
 		const context = { 'this:current': '', 'target:greeting': 'hello' }
 		const localVariables = makeLocalVariablesController(localVar, context)
 
@@ -144,7 +146,7 @@ describe('local_variable_set_value deferred parse', () => {
 	})
 
 	it('logs when the variable cannot be written to', () => {
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter', frame: null }
 		const localVariables = makeLocalVariablesController(localVar, {})
 		vi.mocked(localVariables.setLocalVariable).mockReturnValue(false)
 
@@ -169,7 +171,7 @@ describe('local_variable_set_value deferred parse', () => {
 	it('falls back to empty context when the variable is found but context is null', () => {
 		// Exercises the `getLocalVariableContextFor(...) ?? {}` fallback: the variable resolves but
 		// has no context, so the value must still be written with this:current left unresolved.
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter', frame: null }
 		const localVariables = makeLocalVariablesController(localVar, null) // found, but no context
 
 		const module = new InternalVariables(localVariables)
@@ -195,7 +197,7 @@ describe('local_variable_set_value deferred parse', () => {
 		// The value field defers parsing to execution time, so a broken expression only fails here.
 		// The throw is contained by InternalController.executeAction's try/catch (logged, action
 		// becomes a no-op) — the contract we lock in is that it fails before any partial write.
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter', frame: null }
 		const context = { 'this:current': 5, 'target:counter': 5 }
 		const localVariables = makeLocalVariablesController(localVar, context)
 
@@ -232,7 +234,7 @@ function makeFullLocalVariablesController(localVariable: LocalVariable | null): 
 
 describe('local_variable_reset_to_default', () => {
 	it('resets the resolved local variable', () => {
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter', frame: null }
 		const localVariables = makeFullLocalVariablesController(localVar)
 		const module = new InternalVariables(localVariables)
 
@@ -268,6 +270,7 @@ describe('local_variable_reset_to_default', () => {
 		const localVariables = makeFullLocalVariablesController({
 			controlId: CreateBankControlId('ctrl1'),
 			name: 'counter',
+			frame: null,
 		})
 		vi.mocked(localVariables.resetLocalVariable).mockReturnValue(false)
 
@@ -288,7 +291,7 @@ describe('local_variable_reset_to_default', () => {
 
 describe('local_variable_sync_to_default', () => {
 	it('writes the current value to the startup value', () => {
-		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter' }
+		const localVar: LocalVariable = { controlId: CreateBankControlId('ctrl1'), name: 'counter', frame: null }
 		const localVariables = makeFullLocalVariablesController(localVar)
 		const module = new InternalVariables(localVariables)
 
@@ -324,6 +327,7 @@ describe('local_variable_sync_to_default', () => {
 		const localVariables = makeFullLocalVariablesController({
 			controlId: CreateBankControlId('ctrl1'),
 			name: 'counter',
+			frame: null,
 		})
 		vi.mocked(localVariables.writeLocalVariableStartupValue).mockReturnValue(false)
 
@@ -359,7 +363,7 @@ describe('page_variable_set_value deferred parse', () => {
 	}
 
 	it('sets the page variable to the expression result using $(this:current)', () => {
-		const pageVar: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'counter' }
+		const pageVar: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'counter', frame: null }
 		const context = { 'this:current': 5, 'target:counter': 5 }
 		const pageVariables = makePageVariablesController(pageVar, context)
 
@@ -398,7 +402,7 @@ describe('page_variable_set_value deferred parse', () => {
 
 describe('page_variable_reset_to_default', () => {
 	it('resets the resolved page variable', () => {
-		const pageVar: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'counter' }
+		const pageVar: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'counter', frame: null }
 		const pageVariables = makeFullLocalVariablesController(pageVar)
 		const module = new InternalVariables(pageVariables)
 
@@ -431,7 +435,7 @@ describe('page_variable_reset_to_default', () => {
 
 describe('page_variable_sync_to_default', () => {
 	it('writes the current value to the startup value', () => {
-		const pageVar: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'counter' }
+		const pageVar: LocalVariable = { controlId: CreatePageControlId('abc'), name: 'counter', frame: null }
 		const pageVariables = makeFullLocalVariablesController(pageVar)
 		const module = new InternalVariables(pageVariables)
 
@@ -546,7 +550,7 @@ describe('executeFeedback - expression based', () => {
 	})
 })
 
-// ---- definitions & visitReferences ------------------------------------------
+// ---- definitions // ---- definitions & visitReferences ------------------------------------------ reference fields -----------------------------------------
 
 describe('definitions', () => {
 	const module = new InternalVariables(makeFullLocalVariablesController(null))
@@ -576,16 +580,21 @@ describe('definitions', () => {
 			])
 		)
 	})
+
+	it('does not offer user_value in a custom feedback', () => {
+		expect(module.getFeedbackDefinitions().user_value.hiddenForControlTypes).toEqual(['custom-feedback'])
+	})
 })
 
-describe('visitReferences', () => {
+describe('reference fields', () => {
 	const module = new InternalVariables(makeFullLocalVariablesController(null))
+	const feedbackDefinitions = module.getFeedbackDefinitions()
 
 	it('visits the variable name option of variable_value feedbacks', () => {
 		const visitor = { visitVariableName: vi.fn(), visitString: vi.fn() } as any
 		const feedback = { id: 'fb1', type: 'variable_value', options: { variable: 'custom:foo' } } as any
 
-		module.visitReferences(visitor, [], [feedback])
+		visitInputFieldReferences(visitor, feedbackDefinitions.variable_value.options, feedback.options, feedback.id)
 
 		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable', 'fb1')
 	})
@@ -598,7 +607,7 @@ describe('visitReferences', () => {
 			options: { variable: 'custom:a', variable2: 'custom:b' },
 		} as any
 
-		module.visitReferences(visitor, [], [feedback])
+		visitInputFieldReferences(visitor, feedbackDefinitions.variable_variable.options, feedback.options, feedback.id)
 
 		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable', 'fb2')
 		expect(visitor.visitVariableName).toHaveBeenCalledWith(feedback.options, 'variable2', 'fb2')

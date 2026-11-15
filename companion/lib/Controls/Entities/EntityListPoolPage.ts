@@ -28,7 +28,7 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 	readonly #pageStore: IPageStore
 
 	constructor(props: ControlEntityListPoolProps) {
-		super(props, false)
+		super(props, false, [])
 
 		this.#pageStore = props.pageStore
 
@@ -54,8 +54,8 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 		)
 	}
 
-	loadStorage(storage: PageControlModel, skipSubscribe: boolean, isImport: boolean): void {
-		this.#localVariables.loadStorage(storage.localVariables, skipSubscribe, isImport)
+	loadStorage(storage: PageControlModel, isImport: boolean): void {
+		this.#localVariables.loadStorage(storage.localVariables, isImport)
 	}
 
 	getLocalVariableEntities(): ControlEntityInstance[] {
@@ -72,7 +72,7 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 
 		const removedNames = entities.map((e) => e.localVariableName).filter((name): name is string => !!name)
 
-		this.#localVariables.loadStorage([], false, false)
+		this.#localVariables.loadStorage([], false)
 
 		this.reportChange({ redraw: false })
 		this.tryTriggerLocalVariablesChanged(...removedNames)

@@ -1,7 +1,7 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import './Pages.css'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faGripVertical, faPlus, faShareFromSquare, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
@@ -194,7 +194,7 @@ const PageListRow = observer(function PageListRow({
 			className={`pages-list-row${current ? ' list-row-selected' : ''}${isDragging ? ' row-dragging' : ''}${index === pageCount - 1 ? ' pages-list-last-row' : ''}`}
 		>
 			<div ref={handleRef} className="pages-list-drag-handle" title="Drag to reorder page">
-				<FontAwesomeIcon icon={faSort} />
+				<FontAwesomeIcon icon={faGripVertical} />
 			</div>
 			<span className="pages-list-number">{pageNumber}</span>
 			<div className="pages-list-name">

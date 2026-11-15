@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -9,12 +12,15 @@ import type { ExpressionVariableModel } from '@companion-app/shared/Model/Expres
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
 	fixupButtonReferenceControl,
+	fixupCustomActionControl,
+	fixupCustomFeedbackControl,
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
 	fixupPageVariables,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
+	ImportReferencesUpdater,
 	type InstanceAppliedRemappings,
 } from '../../lib/ImportExport/ImportFixup.js'
 import type { InternalController } from '../../lib/Internal/Controller.js'
@@ -29,7 +35,7 @@ type LooseTrigger = any
 
 /**
  * The fixup helpers depend on a VisitorReferencesUpdater, which calls
- * `InternalController.visitReferences` to fix up references inside `internal`
+ * `InternalController.visitEntityReferences` to fix up references inside `internal`
  * connection entities. None of the ImportFixup logic under test lives there, so
  * a no-op mock is sufficient. Variable-reference ($(label:var)) and connectionId
  * remapping on the entity itself are handled by the generic visitor, not by the
@@ -37,8 +43,13 @@ type LooseTrigger = any
  */
 function mockInternalModule(): InternalController {
 	return {
-		visitReferences: vi.fn(),
+		visitEntityReferences: vi.fn(),
 	} as unknown as InternalController
+}
+
+/** Build an updater the way the importer does, derived from the instance map */
+function makeUpdater(map: InstanceAppliedRemappings): ImportReferencesUpdater {
+	return new ImportReferencesUpdater(mockInternalModule(), map, undefined)
 }
 
 function mockLogger(): Logger {
@@ -215,11 +226,6 @@ describe('fixupEntitiesRecursive', () => {
 // ── fixupTriggerControl ─────────────────────────────────────────────────────────
 
 describe('fixupTriggerControl', () => {
-	let internalModule: InternalController
-	beforeEach(() => {
-		internalModule = mockInternalModule()
-	})
-
 	function makeTrigger(overrides: Partial<LooseTrigger> = {}): LooseTrigger {
 		return {
 			type: 'trigger',
@@ -233,7 +239,7 @@ describe('fixupTriggerControl', () => {
 	}
 
 	test('produces a well-formed TriggerModel with all collections defaulting to empty arrays', () => {
-		const result = fixupTriggerControl(internalModule, makeTrigger(), standardMap(), undefined)
+		const result = fixupTriggerControl(makeTrigger(), makeUpdater(standardMap()))
 
 		expect(result.type).toBe('trigger')
 		expect(result.actions).toEqual([])
@@ -244,7 +250,7 @@ describe('fixupTriggerControl', () => {
 
 	test('clones options rather than aliasing the input', () => {
 		const control = makeTrigger()
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(result.options).toEqual(control.options)
 		expect(result.options).not.toBe(control.options)
@@ -257,7 +263,7 @@ describe('fixupTriggerControl', () => {
 			localVariables: [makeFeedback({ id: 'lv', connectionId: 'conn-old' })],
 		})
 
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(result.actions[0].connectionId).toBe('conn-new')
 		expect(result.condition[0].connectionId).toBe('conn-new')
@@ -269,7 +275,7 @@ describe('fixupTriggerControl', () => {
 			actions: [makeAction({ connectionId: 'conn-old', options: { msg: exprVal('value is $(OldLabel:foo)') } })],
 		})
 
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect((result.actions[0].options.msg as any).value).toBe('value is $(NewLabel:foo)')
 	})
@@ -282,7 +288,7 @@ describe('fixupTriggerControl', () => {
 			actions: [makeAction({ connectionId: 'conn-old', options: { msg: exprVal('$(SameLabel:foo)') } })],
 		})
 
-		const result = fixupTriggerControl(internalModule, control, map, undefined)
+		const result = fixupTriggerControl(control, makeUpdater(map))
 
 		expect((result.actions[0].options.msg as any).value).toBe('$(SameLabel:foo)')
 	})
@@ -292,7 +298,7 @@ describe('fixupTriggerControl', () => {
 			events: [{ id: 'e1', type: 'variable_changed', enabled: true, options: { variableId: 'OldLabel:foo' } }],
 		})
 
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(result.events[0].options.variableId).toBe('NewLabel:foo')
 	})
@@ -302,7 +308,7 @@ describe('fixupTriggerControl', () => {
 			events: [{ id: 'e1', type: 'custom', enabled: true, options: { text: 'hello $(OldLabel:bar)' } }],
 		})
 
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(result.events[0].options.text).toBe('hello $(NewLabel:bar)')
 	})
@@ -313,7 +319,7 @@ describe('fixupTriggerControl', () => {
 			events: [{ id: 'e1', type: 'variable_changed', enabled: true, options: { variableId: 'OldLabel:foo' } }],
 		})
 
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(result.events).not.toBe(control.events)
 		expect(control.events[0].options.variableId).toBe('OldLabel:foo')
@@ -323,7 +329,7 @@ describe('fixupTriggerControl', () => {
 		const control = makeTrigger()
 		delete control.events
 
-		const result = fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		const result = fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(result.events).toEqual([])
 	})
@@ -334,7 +340,7 @@ describe('fixupTriggerControl', () => {
 		})
 		const snapshot = structuredClone(control.actions)
 
-		fixupTriggerControl(internalModule, control, standardMap(), undefined)
+		fixupTriggerControl(control, makeUpdater(standardMap()))
 
 		expect(control.actions).toEqual(snapshot)
 	})
@@ -343,11 +349,6 @@ describe('fixupTriggerControl', () => {
 // ── fixupExpressionVariableControl ──────────────────────────────────────────────
 
 describe('fixupExpressionVariableControl', () => {
-	let internalModule: InternalController
-	beforeEach(() => {
-		internalModule = mockInternalModule()
-	})
-
 	function makeExpressionVariable(overrides: Partial<ExpressionVariableModel> = {}): ExpressionVariableModel {
 		return {
 			type: 'expression-variable',
@@ -360,7 +361,7 @@ describe('fixupExpressionVariableControl', () => {
 
 	test('clones options and defaults entity/localVariables', () => {
 		const control = makeExpressionVariable()
-		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
+		const result = fixupExpressionVariableControl(control, makeUpdater(standardMap()))
 
 		expect(result.type).toBe('expression-variable')
 		expect(result.options).toEqual(control.options)
@@ -374,7 +375,7 @@ describe('fixupExpressionVariableControl', () => {
 			entity: makeFeedback({ connectionId: 'conn-old', upgradeIndex: 0 }),
 		})
 
-		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
+		const result = fixupExpressionVariableControl(control, makeUpdater(standardMap()))
 
 		expect(result.entity).not.toBeNull()
 		expect(result.entity?.connectionId).toBe('conn-new')
@@ -386,7 +387,7 @@ describe('fixupExpressionVariableControl', () => {
 			entity: makeFeedback({ connectionId: 'unknown-connection' }),
 		})
 
-		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
+		const result = fixupExpressionVariableControl(control, makeUpdater(standardMap()))
 
 		// fixupEntitiesRecursive returns [] for the dropped entity, so [0] is undefined
 		expect(result.entity).toBeUndefined()
@@ -397,7 +398,7 @@ describe('fixupExpressionVariableControl', () => {
 			localVariables: [makeFeedback({ connectionId: 'conn-old' })],
 		})
 
-		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
+		const result = fixupExpressionVariableControl(control, makeUpdater(standardMap()))
 
 		expect(result.localVariables[0].connectionId).toBe('conn-new')
 	})
@@ -407,37 +408,114 @@ describe('fixupExpressionVariableControl', () => {
 			entity: makeFeedback({ connectionId: 'conn-old', options: { src: exprVal('$(OldLabel:x)') } }),
 		})
 
-		const result = fixupExpressionVariableControl(internalModule, control, standardMap(), {})
+		const result = fixupExpressionVariableControl(control, makeUpdater(standardMap()))
 
 		expect((result.entity?.options.src as any).value).toBe('$(NewLabel:x)')
+	})
+})
+
+describe('fixupCustomActionControl', () => {
+	function makeCustomAction(overrides: Partial<CustomActionModel> = {}): CustomActionModel {
+		return {
+			type: 'custom-action',
+			options: { name: 'Custom', description: '', sortOrder: 0, notes: '' },
+			inputs: [{ type: 'textinput', id: 'text', label: 'Text', default: '' }],
+			actions: [],
+			localVariables: [],
+			outputs: [{ variableName: 'result', label: 'Result' }],
+			...overrides,
+		}
+	}
+
+	test('remaps connections and label references in its actions and local variables', () => {
+		const control = makeCustomAction({
+			actions: [makeAction({ id: 'a', connectionId: 'conn-old', options: { msg: exprVal('$(OldLabel:x)') } })],
+			localVariables: [makeFeedback({ id: 'lv', connectionId: 'conn-old', upgradeIndex: 0 })],
+		})
+
+		const result = fixupCustomActionControl(control, makeUpdater(standardMap()))
+
+		expect(result.actions[0].connectionId).toBe('conn-new')
+		expect((result.actions[0].options.msg as any).value).toBe('$(NewLabel:x)')
+		expect(result.localVariables[0].connectionId).toBe('conn-new')
+		expect(result.localVariables[0].upgradeIndex).toBe(3)
+		expect(result.inputs).toEqual(control.inputs)
+		expect(result.outputs).toEqual(control.outputs)
+	})
+
+	test('keeps only the first of the inputs with the same id', () => {
+		const control = makeCustomAction({
+			inputs: [
+				{ type: 'textinput', id: 'text', label: 'First', default: '' },
+				{ type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 10 },
+				{ type: 'textinput', id: 'text', label: 'Second', default: '' },
+			],
+		})
+
+		const result = fixupCustomActionControl(control, makeUpdater(standardMap()))
+
+		expect(result.inputs.map((input) => [input.id, input.label])).toEqual([
+			['text', 'First'],
+			['n', 'N'],
+		])
+	})
+
+	test('keeps the calls to other custom actions', () => {
+		const control = makeCustomAction({
+			actions: [makeAction({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'other' })],
+		})
+
+		// As the import maps each connection provided by Companion itself to itself
+		const map = { ...standardMap(), [CUSTOM_CONNECTION_ID]: { id: CUSTOM_CONNECTION_ID, label: '' } }
+		const result = fixupCustomActionControl(control, makeUpdater(map))
+
+		expect(result.actions).toEqual([
+			expect.objectContaining({ id: 'call', connectionId: CUSTOM_CONNECTION_ID, definitionId: 'other' }),
+		])
+	})
+})
+
+describe('fixupCustomFeedbackControl', () => {
+	test('keeps only the first of the inputs with the same id', () => {
+		const control: CustomFeedbackModel = {
+			type: 'custom-feedback',
+			options: { name: 'Custom', description: '', sortOrder: 0, notes: '' },
+			inputs: [
+				{ type: 'textinput', id: 'text', label: 'First', default: '' },
+				{ type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 10 },
+				{ type: 'textinput', id: 'text', label: 'Second', default: '' },
+			],
+			feedbacks: [],
+			localVariables: [],
+		}
+
+		const result = fixupCustomFeedbackControl(control, makeUpdater(standardMap()))
+
+		expect(result.inputs.map((input) => [input.id, input.label])).toEqual([
+			['text', 'First'],
+			['n', 'N'],
+		])
 	})
 })
 
 // ── fixupPageVariables ──────────────────────────────────────────────────────────
 
 describe('fixupPageVariables', () => {
-	let internalModule: InternalController
-	beforeEach(() => {
-		internalModule = mockInternalModule()
-	})
-
 	test('defaults to an empty list', () => {
-		expect(fixupPageVariables(internalModule, undefined, standardMap(), {})).toEqual([])
-		expect(fixupPageVariables(internalModule, [], standardMap(), {})).toEqual([])
+		expect(fixupPageVariables(undefined, makeUpdater(standardMap()))).toEqual([])
+		expect(fixupPageVariables([], makeUpdater(standardMap()))).toEqual([])
 	})
 
 	test('remaps connectionId on page variables', () => {
-		const result = fixupPageVariables(internalModule, [makeFeedback({ connectionId: 'conn-old' })], standardMap(), {})
+		const result = fixupPageVariables([makeFeedback({ connectionId: 'conn-old' })], makeUpdater(standardMap()))
 
 		expect(result[0].connectionId).toBe('conn-new')
 	})
 
 	test('drops a page variable whose connection is unknown', () => {
 		const result = fixupPageVariables(
-			internalModule,
 			[makeFeedback({ connectionId: 'unknown-connection' })],
-			standardMap(),
-			{}
+			makeUpdater(standardMap())
 		)
 
 		expect(result).toEqual([])
@@ -445,10 +523,8 @@ describe('fixupPageVariables', () => {
 
 	test('rewrites label references inside page variable options', () => {
 		const result = fixupPageVariables(
-			internalModule,
 			[makeFeedback({ connectionId: 'conn-old', options: { src: exprVal('$(OldLabel:x)') } })],
-			standardMap(),
-			{}
+			makeUpdater(standardMap())
 		)
 
 		expect((result[0].options.src as any).value).toBe('$(NewLabel:x)')
@@ -457,7 +533,7 @@ describe('fixupPageVariables', () => {
 	test('does not mutate the input', () => {
 		const input = [makeFeedback({ connectionId: 'conn-old' })]
 
-		fixupPageVariables(internalModule, input, standardMap(), {})
+		fixupPageVariables(input, makeUpdater(standardMap()))
 
 		// original untouched (structuredClone inside)
 		expect(input[0].connectionId).toBe('conn-old')
@@ -467,24 +543,11 @@ describe('fixupPageVariables', () => {
 // ── fixupLayeredButtonControl ───────────────────────────────────────────────────
 
 describe('fixupLayeredButtonControl', () => {
-	let internalModule: InternalController
 	let logger: Logger
 
 	beforeEach(() => {
-		internalModule = mockInternalModule()
 		logger = mockLogger()
 	})
-
-	/** Build an updater the way #performPageImport does, derived from the instance map */
-	function makeUpdater(map: InstanceAppliedRemappings): VisitorReferencesUpdater {
-		const labelRemap: Record<string, string> = {}
-		const idRemap: Record<string, string> = {}
-		for (const [oldId, info] of Object.entries(map)) {
-			if (info.oldLabel && info.label !== info.oldLabel) labelRemap[info.oldLabel] = info.label
-			if (info.id && info.id !== oldId) idRemap[oldId] = info.id
-		}
-		return new VisitorReferencesUpdater(internalModule, labelRemap, idRemap, undefined)
-	}
 
 	function makeButton(overrides: Partial<LooseControl> = {}): LooseControl {
 		return {
@@ -499,7 +562,7 @@ describe('fixupLayeredButtonControl', () => {
 	}
 
 	test('produces a well-formed LayeredButtonModel', () => {
-		const result = fixupLayeredButtonControl(logger, makeButton(), makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, makeButton(), makeUpdater(standardMap()))
 
 		expect(result.type).toBe('button-layered')
 		expect(result.feedbacks).toEqual([])
@@ -509,7 +572,7 @@ describe('fixupLayeredButtonControl', () => {
 
 	test('clones style and options', () => {
 		const control = makeButton()
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect(result.style).not.toBe(control.style)
 		expect(result.options).not.toBe(control.options)
@@ -521,7 +584,7 @@ describe('fixupLayeredButtonControl', () => {
 			localVariables: [makeFeedback({ id: 'lv', connectionId: 'conn-old' })],
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect(result.feedbacks[0].connectionId).toBe('conn-new')
 		expect(result.localVariables[0].connectionId).toBe('conn-new')
@@ -537,7 +600,7 @@ describe('fixupLayeredButtonControl', () => {
 			},
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		const sets = result.steps['0'].action_sets
 		expect(sets.down).toHaveLength(1)
@@ -557,7 +620,7 @@ describe('fixupLayeredButtonControl', () => {
 			},
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect(result.steps['0'].action_sets[1000]).toHaveLength(1)
 		expect(result.steps['0'].action_sets[1000]?.[0].connectionId).toBe('conn-new')
@@ -576,7 +639,7 @@ describe('fixupLayeredButtonControl', () => {
 			},
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect(result.steps['0'].action_sets.down).toHaveLength(1)
 		expect((result.steps['0'].action_sets as any).bogus).toBeUndefined()
@@ -589,7 +652,7 @@ describe('fixupLayeredButtonControl', () => {
 			steps: { '0': { options: stepOptions, action_sets: { down: [] } } },
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect(result.steps['0'].options).toEqual(stepOptions)
 		expect(result.steps['0'].options).not.toBe(stepOptions)
@@ -609,7 +672,7 @@ describe('fixupLayeredButtonControl', () => {
 			},
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect((result.style.layers[0] as any).text.value).toBe('$(NewLabel:title)')
 	})
@@ -628,7 +691,7 @@ describe('fixupLayeredButtonControl', () => {
 			},
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect((result.style.layers[0] as any).children[0].text.value).toBe('$(NewLabel:x)')
 	})
@@ -648,7 +711,7 @@ describe('fixupLayeredButtonControl', () => {
 			},
 		})
 
-		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()), standardMap())
+		const result = fixupLayeredButtonControl(logger, control, makeUpdater(standardMap()))
 
 		expect((result.style.layers[0] as any).connectionId).toBe('conn-new')
 		expect((result.style.layers[0] as any).elementId).toBe('meter')
@@ -677,16 +740,11 @@ describe('fixupPresetReferenceControl', () => {
 		}
 	}
 
-	function makeUpdater(connectionIdRemap: Record<string, string>) {
-		const internalModule = { visitReferences: vi.fn() } as any
-		return new VisitorReferencesUpdater(internalModule, {}, connectionIdRemap, undefined)
-	}
-
 	test('remaps the referenced connection id and keeps it a reference', () => {
 		const control = makeReferenceExport()
 		const instanceIdMap: InstanceAppliedRemappings = { 'old-conn': { id: 'new-conn', label: 'New' } }
 
-		const result = fixupPresetReferenceControl(logger, control, makeUpdater({ 'old-conn': 'new-conn' }), instanceIdMap)
+		const result = fixupPresetReferenceControl(logger, control, makeUpdater(instanceIdMap))
 
 		expect(result.type).toBe('preset-reference')
 		expect(result.presetRef).toEqual({
@@ -701,7 +759,7 @@ describe('fixupPresetReferenceControl', () => {
 		const control = makeReferenceExport()
 		const instanceIdMap: InstanceAppliedRemappings = {}
 
-		const result = fixupPresetReferenceControl(logger, control, makeUpdater({}), instanceIdMap)
+		const result = fixupPresetReferenceControl(logger, control, makeUpdater(instanceIdMap))
 
 		expect(result.presetRef.connectionId).toBe('old-conn')
 		expect(result.presetRef.moduleId).toBe('mod1')
@@ -711,7 +769,7 @@ describe('fixupPresetReferenceControl', () => {
 
 describe('fixupButtonReferenceControl', () => {
 	function makeUpdater(labelRemap: Record<string, string> = {}): VisitorReferencesUpdater {
-		const internalModule = { visitReferences: vi.fn() } as any
+		const internalModule = { visitEntityReferences: vi.fn() } as any
 		return new VisitorReferencesUpdater(internalModule, labelRemap, {}, undefined)
 	}
 

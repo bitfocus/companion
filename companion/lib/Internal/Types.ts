@@ -2,17 +2,20 @@ import type { EventEmitter } from 'node:events'
 import type { SetOptional } from 'type-fest'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
-import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { ActionDefinition, FeedbackDefinition } from '../Instance/Definitions.js'
 import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type { VisitorVariableRenamerVisitor } from '../Resources/Visitors/VariableRenamer.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 
 export interface FeedbackForInternalExecution {
 	controlId: SomeControlId
@@ -43,27 +46,17 @@ export interface ActionForInternalExecution {
  */
 export interface FeedbackExecutionContext {
 	readonly parser: VariablesAndExpressionParser
+	/**
+	 * The `$(this:*)` variables which only exist for this execution (eg the surface which pressed the button), so
+	 * that a custom feedback can pass them on to its own feedbacks, which are parsed in a scope of their own
+	 */
+	readonly executionVariables: VariableValues
+	/** The options the parser was created with, for any further parser created for the same evaluation */
+	readonly parserOptions: ExpressionParserOptions
 }
 
-export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
-
-/**
- * A minimal representation of a feedback, for visiting internal feedbacks.
- */
-export interface FeedbackForVisitor {
-	id: string
-	type: string
-	options: ExpressionableOptionsObject
-}
-
-/**
- * A minimal representation of a action, for visiting internal actions.
- */
-export interface ActionForVisitor {
-	id: string
-	action: string
-	options: ExpressionableOptionsObject
-}
+export type InternalVisitor =
+	VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor | VisitorVariableRenamerVisitor
 
 export interface InternalModuleFragmentEvents {
 	checkFeedbacks: [...feedbackType: string[]]
@@ -126,11 +119,6 @@ export interface InternalModuleFragment extends EventEmitter<InternalModuleFragm
 
 	forgetFeedback?: (feedback: FeedbackEntityModel) => void
 
-	/**
-	 *
-	 */
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void
-
 	getVariableDefinitions?: () => VariableDefinition[]
 	updateVariables?: () => void
 }
@@ -142,14 +130,8 @@ export interface ExecuteFeedbackResultWithReferences {
 
 export type InternalActionDefinition = SetOptional<
 	Omit<
-		ClientEntityDefinition,
-		| 'entityType'
-		| 'showInvert'
-		| 'feedbackType'
-		| 'feedbackStyle'
-		| 'hasLifecycleFunctions'
-		| 'feedbackAffectedProperties'
-		| 'actionExecutionTimeout'
+		ActionDefinition,
+		'entityType' | 'hasLifecycleFunctions' | 'actionExecutionTimeout' | 'actionOutputs' | 'warning' | 'legacyOptions'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -161,13 +143,6 @@ export type InternalActionDefinition = SetOptional<
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<
-		ClientEntityDefinition,
-		| 'entityType'
-		| 'hasLifecycleFunctions'
-		| 'optionsToMonitorForInvalidations'
-		| 'actionHasResult'
-		| 'actionExecutionTimeout'
-	>,
+	Omit<FeedbackDefinition, 'entityType' | 'warning' | 'legacyOptions' | 'invertDisableAutoExpression'>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

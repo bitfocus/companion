@@ -152,6 +152,15 @@ describe('AuthorableInputFieldSchema', () => {
 		expect(AuthorableInputFieldSchema.safeParse(field).success).toBe(false)
 	})
 
+	test.each(['__proto__', 'constructor', 'prototype'])(
+		'rejects %s as an id, as the value given for it is keyed by the id',
+		(id) => {
+			expect(AuthorableInputFieldSchema.safeParse({ type: 'checkbox', id, label: 'A', default: false }).success).toBe(
+				false
+			)
+		}
+	)
+
 	test.each([
 		[
 			'a number which can be auto',

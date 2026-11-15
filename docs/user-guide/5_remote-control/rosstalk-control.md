@@ -3,7 +3,7 @@ title: RossTalk Control
 description: Control Companion via RossTalk protocol.
 ---
 
-RossTalk is [Ross Video's](https://help.rossvideo.com/acuity-device/Topics/Protocol/RossTalk.html) simple text-based control protocol. Companion can be triggered by sending RossTalk commands over TCP to port `7788`. This port is fixed and cannot be changed. The listener must first be enabled in the [Settings](../3_config/settings.md#rosstalk).
+RossTalk is [Ross Video's](https://help.rossvideo.com/acuity-device/Topics/Protocol/RossTalk.html) simple text-based control protocol. Companion can be triggered by sending RossTalk commands over TCP to port `7788`. This port is fixed and cannot be changed. The listener must first be enabled in the [Settings](../3_config/system/settings.md#rosstalk).
 
 :::warning
 RossTalk commands must be terminated with a newline character, i.e., \n (0x0A) or \r\n (0x0D, 0x0A).

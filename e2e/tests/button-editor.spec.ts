@@ -1,4 +1,4 @@
-import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
+import { clickListPageAdd, expect, gotoApp, test, type Page } from '../support/fixtures.js'
 import { createCustomVariable, navigateToCustomVariables, openCustomVariableValue } from '../support/variables.js'
 
 /** Create a button and give it an internal custom_variable_set_value action, all through the ui */
@@ -49,7 +49,7 @@ test('the full user loop: configure a button, press it in the emulator, see the 
 
 	// Add an emulator and press the button through it
 	await gotoApp(page, '/surfaces')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Emulator' }).click()
+	await clickListPageAdd(page, 'Add Emulator', 'Add an emulator')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByLabel(/^Id/).fill('e2eloop')
 	await dialog.getByRole('button', { name: 'Add' }).click()

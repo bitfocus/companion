@@ -74,6 +74,7 @@ export class ControlButtonReference
 	readonly supportsLayeredStyle = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<ButtonReferenceButtonModel['options']> = ButtonReferenceButtonOptionsSchema
 
@@ -88,29 +89,23 @@ export class ControlButtonReference
 		this.#drawing.invalidate()
 	}
 
-	constructor(
-		deps: ControlDependencies,
-		controlId: BankControlId,
-		storage: ButtonReferenceButtonModel | null,
-		isImport: boolean
-	) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: ButtonReferenceButtonModel | null) {
 		super(deps, controlId, 'Controls/Button/Reference')
 
 		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new MirrorButtonDrawer(deps, controlId, () => this.#resolveTargetLocation())
 
-		if (!storage) {
-			// New control
-			this.commitChange()
-		} else {
+		if (storage) {
 			if (storage.type !== 'button-reference')
 				throw new Error(`Invalid type given to ControlButtonReference: "${storage.type}"`)
 
 			this.options = { location: storage.options.location, notes: storage.options.notes }
-
-			if (isImport) this.commitChange()
 		}
+	}
+
+	override start(save: boolean): void {
+		if (save) this.commitChange()
 	}
 
 	destroy(): void {
@@ -271,11 +266,10 @@ export class ControlButtonReference
 		return {}
 	}
 
-	toJSON(clone = true): ButtonReferenceButtonModel {
-		const obj: ButtonReferenceButtonModel = {
+	toJSON(): ButtonReferenceButtonModel {
+		return {
 			type: this.type,
 			options: this.options,
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 }

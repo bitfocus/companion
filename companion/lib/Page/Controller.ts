@@ -310,7 +310,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 
 		// Create the control that owns each new page's local variables
 		for (const page of insertedPages) {
-			this.#controlsController.createPageControl(page.id)
+			this.#controlsController.createPageControl(page.id, null, false)
 		}
 
 		// Update cache for controls on later pages
@@ -466,7 +466,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 */
 	ensurePageControlsExist(): void {
 		for (const pageId of this.#store.getPageIds()) {
-			this.#controlsController.createPageControl(pageId)
+			this.#controlsController.createPageControl(pageId, null, false)
 		}
 	}
 

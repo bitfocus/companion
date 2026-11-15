@@ -56,6 +56,7 @@ export class ControlPage
 	readonly supportsActionSets = false
 	readonly supportsOptions = false
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly entities: EntityListPoolPage
 
@@ -63,7 +64,7 @@ export class ControlPage
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control (`page:<pageId>`)
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a control, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(
 		deps: ControlDependencies,
@@ -84,18 +85,14 @@ export class ControlPage
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
-		if (!storage) {
-			// New control
-			this.commitChange()
-		} else {
+		if (storage) {
 			if (storage.type !== 'page') throw new Error(`Invalid type given to ControlPage: "${storage.type}"`)
 
-			this.entities.loadStorage(storage, true, isImport)
-
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
+			this.entities.loadStorage(storage, isImport)
 		}
 	}
 
@@ -120,7 +117,7 @@ export class ControlPage
 			foundConnectionLabels,
 			foundVariables,
 			undefined
-		).visitEntities(this.entities.getAllEntities(), [])
+		).visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -133,18 +130,16 @@ export class ControlPage
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
 	 */
 	toRuntimeJSON(): NoRuntimeProps {
 		return {}
 	}
 
-	toJSON(clone = true): PageControlModel {
-		const obj: PageControlModel = {
+	toJSON(): PageControlModel {
+		return {
 			type: this.type,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	/**
@@ -162,7 +157,7 @@ export class ControlPage
 			undefined,
 			undefined
 		)
-			.visitEntities(allEntities, [])
+			.visitEntityInstances(allEntities)
 			.recheckChangedFeedbacks()
 			.hasChanges()
 
@@ -170,14 +165,10 @@ export class ControlPage
 		this.commitChange(changed)
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**

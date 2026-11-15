@@ -1,7 +1,12 @@
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
-import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
+import {
+	ActionStepOptionsSchema,
+	type ActionSetId,
+	type ActionSetsModel,
+	type ActionStepOptions,
+} from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
@@ -59,13 +64,6 @@ export abstract class ButtonEntityListPoolBase
 	extends ControlEntityListPoolBase
 	implements VariableDependencyListener<null>
 {
-	/**
-	 * The defaults options for a step
-	 */
-	static DefaultStepOptions: ActionStepOptions = {
-		runWhileHeld: [], // array of set ids
-	}
-
 	readonly #feedbacks: ControlEntityList
 	readonly #localVariables: ControlEntityList
 
@@ -98,7 +96,7 @@ export abstract class ButtonEntityListPoolBase
 	}
 
 	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void, isLayeredButton: boolean) {
-		super(props, isLayeredButton)
+		super(props, isLayeredButton, [])
 
 		this.#pageStore = props.pageStore
 		this.#getPageVariableEntities = props.getPageVariableEntities
@@ -119,11 +117,16 @@ export abstract class ButtonEntityListPoolBase
 		this.steps.set('0', this.getNewStepValue(null, null, false))
 	}
 
-	loadStorage(storage: ButtonModelBase, skipSubscribe: boolean, isImport: boolean): void {
-		this.#feedbacks.loadStorage(storage.feedbacks || [], skipSubscribe, isImport)
-		this.#localVariables.loadStorage(storage.localVariables || [], skipSubscribe, isImport)
+	loadStorage(storage: ButtonModelBase, isImport: boolean): void {
+		this.#feedbacks.loadStorage(storage.feedbacks || [], isImport)
+		this.#localVariables.loadStorage(storage.localVariables || [], isImport)
 
-		// Future:	cleanup the steps/sets
+		// Inform modules of the cleanup of the actions being replaced, as EntityList.loadStorage does for the other lists
+		for (const step of this.steps.values()) {
+			for (const set of step.sets.values()) {
+				set.cleanup()
+			}
+		}
 		this.steps.clear()
 
 		for (const [id, stepObj] of Object.entries(storage.steps ?? {})) {
@@ -280,7 +283,7 @@ export abstract class ButtonEntityListPoolBase
 
 			// Get the definition, to know how to handle it
 			const entityDefinition = feedback.getEntityDefinition()
-			if (!entityDefinition) return
+			if (entityDefinition?.entityType !== EntityModelType.Feedback) return
 
 			switch (entityDefinition.feedbackType) {
 				case FeedbackEntitySubType.Boolean:
@@ -329,7 +332,6 @@ export abstract class ButtonEntityListPoolBase
 					break
 				}
 				case FeedbackEntitySubType.StyleOverride:
-				case null:
 					// Not a real feedback
 					break
 				default:
@@ -359,8 +361,8 @@ export abstract class ButtonEntityListPoolBase
 		for (const step of this.steps.values()) {
 			if (ensureCreated) {
 				// ensure they exist
-				if (!step.sets.has('rotate_left')) step.sets.set('rotate_left', this.createActionEntityList([], false, false))
-				if (!step.sets.has('rotate_right')) step.sets.set('rotate_right', this.createActionEntityList([], false, false))
+				if (!step.sets.has('rotate_left')) step.sets.set('rotate_left', this.createActionEntityList([], false))
+				if (!step.sets.has('rotate_right')) step.sets.set('rotate_right', this.createActionEntityList([], false))
 			} else {
 				// remove the sets
 				const rotateLeftSet = step.sets.get('rotate_left')
@@ -380,13 +382,9 @@ export abstract class ButtonEntityListPoolBase
 		if (!skipCommit) this.reportChange({ redraw: true })
 	}
 
-	protected createActionEntityList(
-		entities: SomeEntityModel[],
-		skipSubscribe: boolean,
-		isCloned: boolean
-	): ControlEntityList {
+	protected createActionEntityList(entities: SomeEntityModel[], isCloned: boolean): ControlEntityList {
 		const list = this.createEntityList({ type: EntityModelType.Action })
-		list.loadStorage(entities, skipSubscribe, isCloned)
+		list.loadStorage(entities, isCloned)
 		return list
 	}
 
@@ -398,22 +396,22 @@ export abstract class ButtonEntityListPoolBase
 		existingOptions: ActionStepOptions | null,
 		isCloned: boolean
 	): ControlEntityListActionStep {
-		const downList = this.createActionEntityList(existingActions?.down || [], false, isCloned)
-		const upList = this.createActionEntityList(existingActions?.up || [], false, isCloned)
+		const downList = this.createActionEntityList(existingActions?.down || [], isCloned)
+		const upList = this.createActionEntityList(existingActions?.up || [], isCloned)
 
 		const sets = new Map<ActionSetId, ControlEntityList>()
 		sets.set('down', downList)
 		sets.set('up', upList)
 
 		if (this.#hasRotaryActions) {
-			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], false, isCloned))
-			sets.set('rotate_right', this.createActionEntityList(existingActions?.rotate_right || [], false, isCloned))
+			sets.set('rotate_left', this.createActionEntityList(existingActions?.rotate_left || [], isCloned))
+			sets.set('rotate_right', this.createActionEntityList(existingActions?.rotate_right || [], isCloned))
 		}
 
 		for (const setId in existingActions || {}) {
 			const setIdNumber = validateActionSetId(setId as ActionSetId)
 			if (typeof setIdNumber === 'number') {
-				sets.set(setIdNumber, this.createActionEntityList(existingActions?.[setIdNumber] || [], false, isCloned))
+				sets.set(setIdNumber, this.createActionEntityList(existingActions?.[setIdNumber] || [], isCloned))
 			}
 		}
 

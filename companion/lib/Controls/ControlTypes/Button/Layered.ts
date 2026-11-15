@@ -154,9 +154,6 @@ export class ControlButtonLayered
 		if (!storage) {
 			// New control
 			this.drawing.loadElements(structuredClone(ControlButtonLayered.DefaultElements))
-
-			this.commitChange()
-			this.sendRuntimePropsChange()
 		} else {
 			if (storage.type !== 'button-layered')
 				throw new Error(`Invalid type given to ControlButtonLayered: "${storage.type}"`)
@@ -164,11 +161,8 @@ export class ControlButtonLayered
 			this.drawing.loadElements(structuredClone(storage.style.layers))
 			this.options = Object.assign(this.options, storage.options || {})
 			this.entities.setupRotaryActionSets(!!this.options.rotaryActions, true)
-			this.entities.loadStorage(storage, true, isImport)
+			this.entities.loadStorage(storage, isImport)
 			this.entities.stepExpressionUpdate(this.options)
-
-			// Ensure control is stored before setup
-			if (isImport) setImmediate(() => this.postProcessImport())
 		}
 	}
 
@@ -218,7 +212,7 @@ export class ControlButtonLayered
 			foundVariables,
 			undefined
 		)
-		collector.visitEntities(this.entities.getAllEntities(), [])
+		collector.visitEntityInstances(this.entities.getAllEntities())
 		this.drawing.visit(collector)
 	}
 
@@ -284,7 +278,7 @@ export class ControlButtonLayered
 			undefined,
 			undefined
 		)
-		updater.visitEntities(this.entities.getAllEntities(), [])
+		updater.visitEntityInstances(this.entities.getAllEntities())
 		this.drawing.visit(updater)
 		const changed = updater.recheckChangedFeedbacks().hasChanges()
 

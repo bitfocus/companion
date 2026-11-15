@@ -1,0 +1,77 @@
+.trigger-stages {
+	.trigger-stage {
+		padding: 0.75rem;
+		overflow: hidden;
+		border: 1px solid var(--color-border);
+		border-radius: 0.75rem;
+		background: var(--color-surface);
+		box-shadow: 0 1px 2px var(--color-shadow-6);
+
+		/* The stage's list heading is the card's header, bleeding to its edges over the padding */
+		> .entity-editor-heading,
+		> .entity-category > .entity-editor-heading {
+			margin: -0.75rem -0.75rem 0;
+			padding: 0.625rem 0.875rem;
+			border-bottom: 1px solid var(--color-border);
+			background: var(--color-surface-subtle);
+		}
+	}
+
+	.trigger-stage-badge {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.125rem 0.375rem;
+		border: 1px solid;
+		border-radius: 0.25rem;
+		font-family: var(--font-mono);
+		font-size: var(--text-3xs);
+		font-weight: 700;
+		text-transform: uppercase;
+
+		&.tone-warning {
+			color: var(--color-tone-warning-text);
+			background: color-mix(in srgb, var(--color-tone-warning-fill) 15%, transparent);
+			border-color: color-mix(in srgb, var(--color-tone-warning-fill) 20%, transparent);
+		}
+		&.tone-info {
+			color: var(--color-tone-info-text);
+			background: color-mix(in srgb, var(--color-tone-info-fill) 15%, transparent);
+			border-color: color-mix(in srgb, var(--color-tone-info-fill) 20%, transparent);
+		}
+		&.tone-good {
+			color: var(--color-tone-good-text);
+			background: color-mix(in srgb, var(--color-tone-good-fill) 15%, transparent);
+			border-color: color-mix(in srgb, var(--color-tone-good-fill) 20%, transparent);
+		}
+	}
+
+	.trigger-stage-count {
+		margin-inline: 0.5rem;
+		color: var(--color-muted);
+		font-size: var(--text-3xs);
+		font-weight: 500;
+	}
+
+	.trigger-stage-connector {
+		position: relative;
+		z-index: 10;
+		display: flex;
+		justify-content: center;
+		margin-block: -0.5rem;
+		color: color-mix(in srgb, var(--color-muted) 50%, transparent);
+	}
+
+	.trigger-stage-connector-arrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border: 1px solid var(--color-border);
+		border-radius: 9999px;
+		background: var(--color-surface);
+		box-shadow: 0 1px 2px var(--color-shadow-6);
+		font-size: 0.75rem;
+	}
+}

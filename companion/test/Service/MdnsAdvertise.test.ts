@@ -11,11 +11,15 @@ const hoisted = vi.hoisted(() => ({ instances: [] as any[] }))
 
 vi.mock('@julusian/bonjour-service', async () => {
 	const { vi } = await import('vitest')
+	const { EventEmitter } = await import('node:events')
 	class Bonjour {
-		publish = vi.fn()
+		publish = vi.fn(() => new EventEmitter())
 		unpublishAll = vi.fn()
 		destroy = vi.fn()
-		constructor() {
+		constructor(
+			_opts: unknown,
+			readonly errorCallback: (err: unknown) => void
+		) {
 			hoisted.instances.push(this)
 		}
 	}
@@ -143,5 +147,27 @@ describe('ServiceMdnsAdvertise', () => {
 		ctx.setListening(true)
 		await vi.advanceTimersByTimeAsync(100)
 		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'comp-link-ws' }))
+	})
+
+	it('logs when a name is in use on the network, and is advertised under another', () => {
+		const ctx = createService({ link_direct_enabled: false })
+		const warn = vi.spyOn((ctx.service as any).logger, 'warn')
+
+		const bonjour = hoisted.instances.at(-1)
+		const satTcp = bonjour.publish.mock.calls.findIndex(([svc]: any[]) => svc.type === 'comp-sat-tcp')
+		bonjour.publish.mock.results[satTcp].value.emit('rename', 'Studio (2)')
+
+		expect(warn).toHaveBeenCalledWith(
+			'"Studio" is in use on the network, so comp-sat-tcp is advertised as "Studio (2)"'
+		)
+	})
+
+	it('logs mDNS errors rather than throwing them', () => {
+		const ctx = createService({})
+		const warn = vi.spyOn((ctx.service as any).logger, 'warn')
+
+		hoisted.instances.at(-1).errorCallback(new Error('send failed'))
+
+		expect(warn).toHaveBeenCalledWith(expect.stringContaining('send failed'))
 	})
 })

@@ -13,13 +13,7 @@ import { EventEmitter } from 'node:events'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { getZonedDateParts } from '@companion-app/shared/Timezone.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
-import type {
-	ActionForVisitor,
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalModuleFragmentEvents,
-	InternalVisitor,
-} from './Types.js'
+import type { InternalModuleFragment, InternalModuleFragmentEvents } from './Types.js'
 
 export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #startTime = Math.floor(Date.now() / 1000)
@@ -175,9 +169,5 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 			// timezone depend on this variable, so changing it re-evaluates them.
 			timezone: effectiveTz ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
 		})
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }

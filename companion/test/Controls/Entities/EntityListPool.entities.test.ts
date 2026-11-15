@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CUSTOM_CONNECTION_ID, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
+import type { EntityScope } from '../../../lib/Controls/Entities/Types.js'
 import { actionModel, createPool, downSet, feedbackModel } from './EntityListPoolTestHelpers.js'
 
 // The pool schedules debounced timers (e.g. for local-variable/special-expression processing) that
@@ -183,6 +185,78 @@ describe('EntityListPool - entitySetConnection', () => {
 
 		expect(pool.entitySetConnection(downSet(), 'nope', 'conn')).toBe(false)
 	})
+
+	test.each([INTERNAL_CONNECTION_ID, CUSTOM_CONNECTION_ID])(
+		'does not change an action to or from the %s connection',
+		(virtualConnectionId) => {
+			const { pool } = createPool()
+			const action = actionModel({ connectionId: 'conn-old' })
+			const virtual = actionModel({ connectionId: virtualConnectionId, definitionId: 'def-virtual' })
+			pool.entityAdd(downSet(), null, action, virtual)
+
+			expect(pool.entitySetConnection(downSet(), action.id, virtualConnectionId)).toBe(false)
+			expect(pool.findEntityById(action.id)?.connectionId).toBe('conn-old')
+
+			expect(pool.entitySetConnection(downSet(), virtual.id, 'conn-new')).toBe(false)
+			expect(pool.findEntityById(virtual.id)?.connectionId).toBe(virtualConnectionId)
+		}
+	)
+})
+
+describe('EntityListPool - entitySetCustomDefinition', () => {
+	test.each([
+		['a custom action call', 'down', actionModel, 'customActionInstances'],
+		['a custom feedback use', 'feedbacks', feedbackModel, 'customFeedbackInstances'],
+	] as const)('changes what %s uses, keeping the options, and redraws', (_name, listId, makeModel, instancesKey) => {
+		const { pool, reportChange, deps } = createPool()
+		const instances = deps[instancesKey]
+		const location = listId === 'down' ? downSet() : listId
+		const entityModel = makeModel({
+			connectionId: CUSTOM_CONNECTION_ID,
+			definitionId: 'old',
+			options: { n: { isExpression: false, value: 1 } },
+		})
+		pool.entityAdd(location, null, entityModel)
+		reportChange.mockClear()
+		vi.mocked(instances.entityUpdate).mockClear()
+
+		expect(pool.entitySetCustomDefinition(location, entityModel.id, 'new')).toBe(true)
+
+		const entity = pool.findEntityById(entityModel.id)
+		// Whatever built its copy drops it and builds one of the new custom action or feedback
+		expect(instances.entityDelete).toHaveBeenCalledWith(entity)
+		expect(instances.entityUpdate).toHaveBeenCalledTimes(1)
+		expect(entity?.definitionId).toBe('new')
+		expect(entity?.rawOptions).toEqual({ n: { isExpression: false, value: 1 } })
+		expect(reportChange).toHaveBeenCalledWith({ redraw: true })
+	})
+
+	test('does nothing when it already uses that one', () => {
+		const { pool, reportChange } = createPool()
+		const call = actionModel({ connectionId: CUSTOM_CONNECTION_ID, definitionId: 'old' })
+		pool.entityAdd(downSet(), null, call)
+		reportChange.mockClear()
+
+		expect(pool.entitySetCustomDefinition(downSet(), call.id, 'old')).toBe(false)
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+
+	test('returns false for an unknown entity', () => {
+		const { pool } = createPool()
+
+		expect(pool.entitySetCustomDefinition(downSet(), 'nope', 'new')).toBe(false)
+	})
+
+	test('does not change an action which is not a custom action call', () => {
+		const { pool, reportChange } = createPool()
+		const action = actionModel({ connectionId: 'conn-old', definitionId: 'def-old' })
+		pool.entityAdd(downSet(), null, action)
+		reportChange.mockClear()
+
+		expect(pool.entitySetCustomDefinition(downSet(), action.id, 'new')).toBe(false)
+		expect(pool.findEntityById(action.id)?.definitionId).toBe('def-old')
+		expect(reportChange).not.toHaveBeenCalled()
+	})
 })
 
 describe('EntityListPool - entitySetInverted', () => {
@@ -304,6 +378,42 @@ describe('EntityListPool - entityReplaceForUpgrade', () => {
 		expect(result).toBeUndefined()
 	})
 
+	test('ignores a copy in a transient group, as it is rebuilt once what it copies is upgraded', () => {
+		const { pool } = createPool()
+		const caller = actionModel()
+		pool.entityAdd(downSet(), null, caller)
+		const copy = actionModel({ definitionId: 'def-old' })
+		const copyScope: EntityScope = {
+			isTransient: true,
+			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			customActionChain: [],
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
+			localVariablesChanged: vi.fn(),
+			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		}
+		const callerEntity = pool.findEntityById(caller.id)!
+		const copyList = callerEntity.createTransientList(
+			'copy',
+			copyScope,
+			{ type: EntityModelType.Action },
+			[copy],
+			false
+		)
+		callerEntity.setTransientCopy('copy', { lists: [copyList], valuesChanged: vi.fn() })
+
+		const result = pool.entityReplaceForUpgrade({
+			id: copy.id,
+			type: EntityModelType.Action,
+			definitionId: 'def-new',
+			options: {},
+			upgradeIndex: undefined,
+		})
+
+		expect(result).toBeUndefined()
+		expect(pool.findEntityById(caller.id)!.findChildById(copy.id)?.definitionId).toBe('def-old')
+	})
+
 	test('returns undefined for an unknown entity', () => {
 		const { pool } = createPool()
 
@@ -386,6 +496,16 @@ describe('EntityListPool - entityReplaceAll', () => {
 		expect(ok).toBe(true)
 		expect(pool.getAllEntitiesInList(downSet())).toHaveLength(2)
 		expect(reportChange).toHaveBeenCalledWith({ redraw: true, invalidateAllElements: false })
+	})
+
+	test('subscribes each new entity once', () => {
+		const { pool, processManager } = createPool()
+		const a = actionModel()
+		const b = actionModel()
+
+		pool.entityReplaceAll(downSet(), [a, b])
+
+		expect(processManager.connectionEntityUpdate.mock.calls.map(([entity]: any[]) => entity.id)).toEqual([a.id, b.id])
 	})
 
 	test('returns false for an unknown list', () => {

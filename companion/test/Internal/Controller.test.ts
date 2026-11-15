@@ -8,6 +8,7 @@ import {
 	INVALID_ENTITY_DEFINITION_ID,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { RenderClock } from '../../lib/Controls/RenderClock.js'
 import { InternalController } from '../../lib/Internal/Controller.js'
@@ -82,7 +83,6 @@ describe('evaluateFeedbackValue', () => {
 		instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: true,
 		} as any)
 
 		const model: FeedbackEntityModel = {
@@ -111,7 +111,6 @@ describe('evaluateFeedbackValue', () => {
 		instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: true,
 		} as any)
 
 		const model: FeedbackEntityModel = {
@@ -168,7 +167,6 @@ describe("the placeholder for an entity that couldn't be loaded", () => {
 		instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: false,
 		} as any)
 
 		const model: FeedbackEntityModel = {
@@ -181,6 +179,19 @@ describe("the placeholder for an entity that couldn't be loaded", () => {
 		}
 
 		expect(controller.evaluateFeedbackValue(model, CreateBankControlId('control1'), stubParser({}))).toBe(false)
+	})
+})
+
+describe('initVariables', () => {
+	test('does not subscribe any entities', () => {
+		const { controller, controlStore } = createController()
+		const control = { supportsEntities: true, entities: { resubscribeEntities: vi.fn() } }
+		controlStore.getAllControls.mockReturnValue(new Map([[CreateBankControlId('a'), control as any]]))
+
+		controller.initVariables()
+
+		// Subscribing entities at startup is owned by ControlsController.startAll
+		expect(control.entities.resubscribeEntities).not.toHaveBeenCalled()
 	})
 })
 
@@ -203,7 +214,6 @@ describe('onVariablesChanged', () => {
 		ctx.instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: true,
 		} as any)
 		ctx.controlStore.createVariablesAndExpressionParser.mockReturnValue({
 			parseEntityOptions: vi.fn(() => ({
@@ -214,8 +224,12 @@ describe('onVariablesChanged', () => {
 			})),
 		} as any)
 
-		ctx.controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'))
-		ctx.controller.entityUpdate(makeFeedback('fb2'), CreateBankControlId('control2'))
+		ctx.controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'), () =>
+			ctx.controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
+		ctx.controller.entityUpdate(makeFeedback('fb2'), CreateBankControlId('control2'), () =>
+			ctx.controlStore.createVariablesAndExpressionParser(CreateBankControlId('control2'), null)
+		)
 		ctx.controlStore.updateFeedbackValues.mockClear()
 
 		return ctx
@@ -282,6 +296,21 @@ describe('onVariablesChanged', () => {
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
 	})
 
+	test('a feedback updated as disabled is no longer re-evaluated', () => {
+		const { controller, controlStore, variableDependencies } = setup()
+
+		controller.entityUpdate({ ...makeFeedback('fb1'), disabled: true }, CreateBankControlId('control1'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
+		controller.onVariablesChanged(
+			new Set(['local:x']),
+			new Set([CreateBankControlId('control1'), CreateBankControlId('control2')])
+		)
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+		expect(variableDependencies.stats().dependencies).toBe(1)
+	})
+
 	test('stops tracking the variables of every feedback when destroyed', () => {
 		const { controller, controlStore, variableDependencies } = setup()
 
@@ -293,11 +322,13 @@ describe('onVariablesChanged', () => {
 	})
 
 	test('stops tracking the variables of deleted and replaced feedbacks', () => {
-		const { controller, variableDependencies } = setup()
+		const { controller, controlStore, variableDependencies } = setup()
 		expect(variableDependencies.stats().dependencies).toBe(2)
 
 		// Replacing a feedback swaps its tracking rather than adding to it
-		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'))
+		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control1'), null)
+		)
 		expect(variableDependencies.stats().dependencies).toBe(2)
 
 		controller.entityDelete(makeFeedback('fb1'))
@@ -308,7 +339,9 @@ describe('onVariablesChanged', () => {
 	test('a feedback re-tracked on a different control follows it', () => {
 		const { controller, controlStore } = setup()
 
-		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control2'))
+		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control2'), () =>
+			controlStore.createVariablesAndExpressionParser(CreateBankControlId('control2'), null)
+		)
 		controlStore.updateFeedbackValues.mockClear()
 
 		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control1')]))
@@ -317,5 +350,48 @@ describe('onVariablesChanged', () => {
 		controlStore.updateFeedbackValues.mockClear()
 		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control2')]))
 		expect(updatedEntityIds(controlStore).sort()).toEqual(['fb1', 'fb2'])
+	})
+})
+
+describe('visitEntityReferences', () => {
+	const fields = [{ type: 'internal:connection_id', id: 'conn', label: 'Connection', multiple: false }]
+
+	test('visits the options described by the definition, rechecking a feedback by its id', () => {
+		const { controller, instanceController } = createController()
+		instanceController.definitions.getEntityDefinition.mockReturnValue({ options: fields } as any)
+		const visitor = { visitConnectionId: vi.fn() } as any
+		const options = { conn: exprVal('conn-1') }
+
+		controller.visitEntityReferences(visitor, EntityModelType.Feedback, 'my_feedback', 'fb-1', options)
+
+		expect(instanceController.definitions.getEntityDefinition).toHaveBeenCalledWith(
+			EntityModelType.Feedback,
+			'internal',
+			'my_feedback'
+		)
+		expect(visitor.visitConnectionId).toHaveBeenCalledWith(options, 'conn', 'fb-1')
+	})
+
+	test('does not pass an id for an action', () => {
+		const { controller, instanceController } = createController()
+		instanceController.definitions.getEntityDefinition.mockReturnValue({ options: fields } as any)
+		const visitor = { visitConnectionId: vi.fn() } as any
+		const options = { conn: exprVal('conn-1') }
+
+		controller.visitEntityReferences(visitor, EntityModelType.Action, 'my_action', 'act-1', options)
+
+		expect(visitor.visitConnectionId).toHaveBeenCalledWith(options, 'conn', undefined)
+	})
+
+	test('does nothing for an unknown definition', () => {
+		const { controller, instanceController } = createController()
+		instanceController.definitions.getEntityDefinition.mockReturnValue(undefined)
+		const visitor = { visitConnectionId: vi.fn() } as any
+
+		controller.visitEntityReferences(visitor, EntityModelType.Action, 'missing', 'act-1', {
+			conn: exprVal('conn-1'),
+		})
+
+		expect(visitor.visitConnectionId).not.toHaveBeenCalled()
 	})
 })

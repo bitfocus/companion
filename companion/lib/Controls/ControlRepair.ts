@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import { EntityModelType, INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
-import { INPUT_FIELD_ID_PATTERN } from '@companion-app/shared/Model/Options.js'
+import { isAuthorableFieldId } from '@companion-app/shared/Model/Options.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 
 /** The lists of feedbacks in a control, by the key they are stored under */
@@ -211,9 +211,7 @@ function headlineOf(original: unknown): string {
 function createInputPlaceholder(original: unknown): Record<string, unknown> {
 	// Keep the id where it is usable, so that the values given for it are kept
 	const id =
-		isRecord(original) && typeof original.id === 'string' && INPUT_FIELD_ID_PATTERN.test(original.id)
-			? original.id
-			: nanoid()
+		isRecord(original) && typeof original.id === 'string' && isAuthorableFieldId(original.id) ? original.id : nanoid()
 	const label = isRecord(original) && typeof original.label === 'string' && original.label ? original.label : id
 
 	return {

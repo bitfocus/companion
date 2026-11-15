@@ -51,6 +51,7 @@ export abstract class ButtonControlRuntimeBase<
 {
 	readonly supportsEntities = true
 	readonly supportsPushed = true
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<TOptions>
 
@@ -110,6 +111,8 @@ export abstract class ButtonControlRuntimeBase<
 				renderClock: deps.renderClock,
 				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
+				customActionInstances: deps.customActionInstances,
+				customFeedbackInstances: deps.customFeedbackInstances,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			isLayered
@@ -122,22 +125,22 @@ export abstract class ButtonControlRuntimeBase<
 	 */
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
-	override abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
+	override abortDelayedActions(markReleased: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		this.#finishPressEvents()
-		if (skip_up) {
+		if (markReleased) {
 			this.setPushed(false)
 		}
 
 		this.actionRunner.abortAll(exceptSignal)
 	}
 
-	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void {
+	abortDelayedActionsSingle(markReleased: boolean, onlySignal: AbortSignal): void {
 		this.#finishPressEvents()
-		if (skip_up) {
+		if (markReleased) {
 			this.setPushed(false)
 		}
 
-		this.actionRunner.abortSingle(exceptSignal)
+		this.actionRunner.abortSingle(onlySignal)
 	}
 
 	#finishPressEvents(): void {
@@ -237,14 +240,10 @@ export abstract class ButtonControlRuntimeBase<
 		return result
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	protected postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**
@@ -335,6 +334,7 @@ export abstract class ButtonControlRuntimeBase<
 							surfaceId,
 							location,
 							rotationDelta: null,
+							frame: null,
 						})
 						.catch((e: unknown) => {
 							this.logger.error(`action execution failed: ${stringifyError(e)}`)
@@ -396,6 +396,7 @@ export abstract class ButtonControlRuntimeBase<
 				surfaceId,
 				location,
 				rotationDelta: delta,
+				frame: null,
 			})
 			.catch((e: unknown) => {
 				this.logger.error(`action execution failed: ${stringifyError(e)}`)

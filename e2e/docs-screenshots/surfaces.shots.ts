@@ -1,0 +1,95 @@
+import type { Page } from '@playwright/test'
+import { expect, gotoApp, test } from '../support/fixtures.js'
+import { panelsClip, shoot, shootPanel, shootUnthemed, unionClip, withViewport } from './shoot.js'
+
+// docs/user-guide/3_config/connect/surfaces.md, 7_surfaces/index.md and 6_interactive-buttons/*.md
+test.use({ scenario: 'companion/test/docs-scenarios/Studio.ts' })
+// Wide, so that the edit panels don't wrap their content too much
+test.use({ viewport: { width: 1920, height: 1600 } })
+
+const primary = (page: Page) => page.locator('.primary-panel')
+const secondary = (page: Page) => page.locator('.secondary-panel')
+
+/** Open a tab of the surfaces page */
+async function openSurfacesTab(page: Page, name: string): Promise<void> {
+	await gotoApp(page, '/surfaces')
+	await page.getByText(name, { exact: true }).click()
+}
+
+test('surfaces', async ({ page }) => {
+	await withViewport(page, { width: 1440, height: 760 }, async () => {
+		await gotoApp(page, '/surfaces')
+		await primary(page).locator('.surface-row', { hasText: 'emulator:studio' }).click()
+		await expect(secondary(page).getByText('Settings for Studio')).toBeVisible()
+		await shoot(page, await panelsClip(page.locator('.split-panels')), '3_config/connect/images/surfaces')
+	})
+})
+
+test('restricting the pages of a group', async ({ page }) => {
+	await gotoApp(page, '/surfaces')
+	await primary(page).locator('.surface-group-row').click()
+	const row = (label: string) => secondary(page).locator('.edit-field-row, .row', { hasText: label }).last()
+	await expect(row('Allowed pages')).toContainText('Audio')
+	await shoot(
+		page,
+		await unionClip(page, [row('Restrict pages'), row('Allowed pages')]),
+		'3_config/connect/images/restrict_pages'
+	)
+})
+
+test('remote surfaces', async ({ page }) => {
+	await withViewport(page, { width: 1440, height: 560 }, async () => {
+		await openSurfacesTab(page, 'Remote & Discover')
+		await expect(secondary(page).getByText('Backstage panel')).toBeVisible()
+		await shoot(page, await panelsClip(page.locator('.split-panels')), '3_config/connect/images/surfaces-remote')
+	})
+})
+
+test('surface integrations', async ({ page }) => {
+	await openSurfacesTab(page, 'Integrations')
+	await expect(primary(page).getByText('Demo: Control Panel')).toBeVisible()
+	await shootPanel(primary(page), '7_surfaces/images/surface-integrations-panel', true)
+
+	await page.getByRole('button', { name: 'Add Surface Integration' }).click()
+	const dialog = page.getByRole('dialog')
+	await expect(dialog.getByText('Fader Bank')).toBeVisible()
+	// Refresh the list from the store, so it was last updated a few seconds ago, however long the run has taken. The
+	// time is shown relative to a "now" which only moves on once a minute, so the dialog is reopened to show it afresh
+	await dialog.getByRole('button', { name: 'Refresh modules list' }).click()
+	await expect(dialog.locator('.last-updated')).toContainText('seconds')
+	await dialog.getByRole('button', { name: 'Close modal' }).click()
+	await expect(dialog).toBeHidden()
+	await page.getByRole('button', { name: 'Add Surface Integration' }).click()
+	await expect(dialog.locator('.last-updated')).toContainText('a few seconds ago')
+	await shoot(page, dialog, '7_surfaces/images/surface-integrations-add-panel')
+})
+
+// The emulator and web buttons are always dark, so are shot once
+test('emulator', async ({ page }) => {
+	// The grid is 8 by 4 buttons, with a margin all round. The emulator sizes it to fill the window (with an inline
+	// style), so it is made smaller than the window here, by the margin
+	const margin = 24
+	const height = 760
+	await withViewport(page, { width: (height - margin * 2) * 2 + margin * 2, height }, async () => {
+		await page.goto('/emulator/studio')
+		await expect(page.locator('.emulatorgrid .button-control')).toHaveCount(32)
+		await page.addStyleTag({
+			content: `.page-emulator .buttongrid {
+				height: calc(100dvh - ${margin * 2}px) !important;
+				width: calc((100dvh - ${margin * 2}px) * 2) !important;
+			}`,
+		})
+		await shootUnthemed(page.locator('body'), '6_interactive-buttons/images/emulator')
+	})
+})
+
+test('web buttons', async ({ page }) => {
+	await withViewport(page, { width: 1440, height: 760 }, async () => {
+		await page.goto('/tablet')
+		await expect(page.locator('.button-zone .button-control').first()).toBeVisible()
+		await shootUnthemed(page.locator('body'), '6_interactive-buttons/images/webbuttons')
+
+		await page.getByRole('button', { name: 'Configure Web Buttons' }).click()
+		await shootUnthemed(page.locator('body'), '6_interactive-buttons/images/webbuttons_settings')
+	})
+})

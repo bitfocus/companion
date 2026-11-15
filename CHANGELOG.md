@@ -1,8 +1,84 @@
 # Bitfocus Companion
 
-## Companion v5.1.2 - Release Notes
+## Companion v5.2.0 - Release Notes
 
 <!-- DRAFT -->
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- UI/UX
+  - label linked preset variables by their headline
+  - updated installer art (#4582)
+  - launcher + advanced settings ui refresh (#4536)
+  - add an internal placeholder for an entity that couldn't be loaded
+  - use the new config layout for all modules
+  - track and show when a surface was last seen (#4524)
+  - view as surface (#4469)
+  - web ui design refresh (#4474)
+  - press a button from any grid tool with ctrl+shift+click or Enter
+  - use bundled Inter and Fira Code fonts everywhere
+
+- Import / Export
+  - let an export carry notes for whoever imports it
+  - stricter validation of import files, to ensure system predictability
+
+- Graphics
+  - animated GIF, APNG and WebP images on buttons #262 (#4533)
+
+- Building Blocks
+  - add custom feedbacks (#4607)
+  - custom actions (#4576)
+
+- Companion Link
+  - Next generation of Companion Cloud
+  - Companion Cloud is scheduled for removal in Companion 5.3
+  - TODO: fill out more here
+
+- Satellite
+  - allow variable values to be sent as json (API 1.16.0)
+  - let satellite clients cache bitmaps, so repeated frames are sent once (#4534)
+  - extract satellite protocol into @companion-app/satellite-protocol (#4511)
+  - check a satellite subscription's STYLE against its schema
+
+- REST API
+  - add image library resource to the REST API
+
+- Misc
+  - force node18 based modules to be run on node22
+  - stricter validation of db data
+
+### 🐞 BUG FIXES
+
+- Graphics
+  - clamp the topbar label's inset by the bar height, so wide buttons aren't over-padded
+
+- only set a custom variable over OSC to a string, number or boolean
+- don't update the surfaces list after quit, when the db is closed
+- discard an invalid instance change rather than keeping it unsaved
+- only warn once about an invalid api key
+- don't mark images as modified when they are reordered
+- disable surface integrations in a child of a disabled collection
+- persist sibling order when removing a collection, and merge by nested ids
+- keep importing remote surfaces after an invalid one
+
+## Companion v5.1.3 - Release Notes
+
+### 🐞 BUG FIXES
+
+- renaming a connection updates its variables in where an action stores its result and in a feedback's inversion
+- keep the button editor on a button after moving it
+- resolve symlinks before serving module help assets
+- list a device once in the Bonjour dropdown when it announces several service types
+- keep mDNS service types within the 15 characters RFC 6763 allows
+- keep the selection that page up/down moves to the new page
+- remap the connection id of composite elements on import
+- keep the ids of a button's actions when it is loaded
+- stop the running actions of a button or trigger when it is deleted
+- stop the running actions of a button when it is moved or swapped
+- hot abort from the button editor only aborts that button's delayed actions
+- grant the macOS audio-input entitlement so modules can read audio inputs
+
+## Companion v5.1.2 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 

@@ -1,6 +1,5 @@
 import { describe, expect, it, test } from 'vitest'
-import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { CreateBankControlId, CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CompanionFieldVariablesSupport,
@@ -10,6 +9,7 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
+import type { ActionDefinition } from '../../lib/Instance/Definitions.js'
 import {
 	buildActionExecutionOverrides,
 	injectOverriddenLocalVariableValues,
@@ -17,35 +17,33 @@ import {
 } from '../../lib/Variables/Util.js'
 
 function createDefinition(
-	partial: Pick<ClientEntityDefinition, 'label' | 'options'> & Partial<ClientEntityDefinition>
-): ClientEntityDefinition {
+	partial: Pick<ActionDefinition, 'label' | 'options'> & Partial<ActionDefinition>
+): ActionDefinition {
 	return {
 		entityType: EntityModelType.Action,
 		sortKey: null,
 		description: '',
 		optionsToMonitorForInvalidations: [],
-		feedbackType: null,
-		feedbackStyle: undefined,
 		hasLifecycleFunctions: false,
 		hasLearn: false,
 		learnTimeout: undefined,
-		showInvert: false,
 		actionHasResult: false,
 		actionExecutionTimeout: undefined,
-		optionsSupportExpressions: false,
+		actionOutputs: null,
+		warning: null,
+		legacyOptions: true,
 		showButtonPreview: false,
 		supportsChildGroups: [],
-		feedbackAffectedProperties: undefined,
 		...partial,
 	}
 }
 
 describe('visitEntityOptionsForVariables', () => {
-	describe('legacy mode (optionsSupportExpressions: false)', () => {
+	describe('legacy mode (legacyOptions: true)', () => {
 		it('should process textinput with useVariables', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -76,9 +74,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should pass through textinput without useVariables', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -105,9 +103,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should pass through non-textinput fields with null', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -152,9 +150,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle mixed fields', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -201,11 +199,27 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 	})
 
-	describe('modern mode (optionsSupportExpressions: true)', () => {
-		it('should set allowExpression for all fields by default', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+	describe('modern mode (legacyOptions: false)', () => {
+		it('is used when legacyOptions is not set', () => {
+			const { legacyOptions: _legacyOptions, ...definition } = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0 }],
+			})
+
+			const fieldTypes: any[] = []
+			visitEntityOptionsForVariables(definition, { field1: exprVal(50) }, (_field, value, fieldType) => {
+				fieldTypes.push(fieldType)
+				return value
+			})
+
+			// The legacy path would pass a number field through, with no field type
+			expect(fieldTypes).toEqual([{ allowExpression: true, parseVariables: false }])
+		})
+
+		it('should set allowExpression for all fields by default', () => {
+			const definition: ActionDefinition = createDefinition({
+				label: 'Test',
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -259,9 +273,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should set parseVariables for textinput with useVariables', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -291,9 +305,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should set forceExpression for expression type fields', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -323,9 +337,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should respect disableAutoExpression flag', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -368,9 +382,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle textinput with useVariables and disableAutoExpression', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -401,9 +415,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle all field combinations in modern mode', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -482,9 +496,9 @@ describe('visitEntityOptionsForVariables', () => {
 
 	describe('visitor function behavior', () => {
 		it('should call visitor for each field with correct parameters', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -522,9 +536,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should return object with visitor results keyed by field id', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -559,9 +573,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle undefined option values', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -599,9 +613,9 @@ describe('visitEntityOptionsForVariables', () => {
 
 	describe('edge cases', () => {
 		it('should handle definition with no options', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [],
 			})
 
@@ -615,9 +629,9 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle empty options object', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -640,8 +654,8 @@ describe('visitEntityOptionsForVariables', () => {
 			expect(visitorCalls[0].value).toBeUndefined()
 		})
 
-		it('should handle optionsSupportExpressions: undefined (treated as legacy)', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+		it('should handle the default of the test definition (legacy)', () => {
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				options: [
 					{
@@ -690,6 +704,7 @@ describe('buildActionExecutionOverrides', () => {
 			abortDelayed: new AbortController().signal,
 			executionMode: 'concurrent',
 			rotationDelta: null,
+			frame: null,
 			...overrides,
 		}
 	}
@@ -704,6 +719,27 @@ describe('buildActionExecutionOverrides', () => {
 		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: null }))
 		expect(overrides['this:surface_id']).toBe('surface0')
 		expect(overrides['this:delta']).toBeUndefined()
+	})
+
+	test('exposes the inputs of a custom action as options:*', () => {
+		const overrides = buildActionExecutionOverrides(
+			makeExtras({
+				frame: {
+					customActionControlId: CreateCustomActionControlId('abc'),
+					inputValues: { count: 3, name: 'cam' },
+					localValues: new Map(),
+					getLocalVariableEntities: () => [],
+					localValueChanged: () => {},
+				},
+			})
+		)
+		expect(overrides['options:count']).toBe(3)
+		expect(overrides['options:name']).toBe('cam')
+	})
+
+	test('has no options:* outside of a custom action', () => {
+		const overrides = buildActionExecutionOverrides(makeExtras({}))
+		expect(Object.keys(overrides).filter((key) => key.startsWith('options:'))).toEqual([])
 	})
 })
 

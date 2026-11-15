@@ -21,15 +21,12 @@ import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalActionRecorder
@@ -69,7 +66,7 @@ export class InternalActionRecorder
 		return {
 			action_recorder_set_recording: {
 				label: 'Action Recorder: Set recording',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'dropdown',
@@ -84,11 +81,10 @@ export class InternalActionRecorder
 						expressionDescription: `Valid values are 'true', 'false', or 'toggle'`,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			action_recorder_set_connections: {
 				label: 'Action Recorder: Set connections',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'dropdown',
@@ -114,11 +110,10 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			action_recorder_save_to_button: {
 				label: 'Action Recorder: Finish recording and save to button',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'textinput',
@@ -165,13 +160,11 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			action_recorder_discard_actions: {
 				label: 'Action Recorder: Discard actions',
-				description: undefined,
+				description: null,
 				options: [],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -291,7 +284,7 @@ export class InternalActionRecorder
 			action_recorder_check_connections: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Action Recorder: Check if specified connections are selected',
-				description: undefined,
+				description: null,
 				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
@@ -331,7 +324,6 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -367,19 +359,6 @@ export class InternalActionRecorder
 				return matches && session.isRunning
 			} else {
 				return matches
-			}
-		}
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			if (action.action === 'action_recorder_set_connections') {
-				visitor.visitConnectionIdArray(action.options, 'connections')
-			}
-		}
-		for (const feedback of feedbacks) {
-			if (feedback.type === 'action_recorder_check_connections') {
-				visitor.visitConnectionIdArray(feedback.options, 'connections', feedback.id)
 			}
 		}
 	}

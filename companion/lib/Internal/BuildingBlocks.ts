@@ -25,15 +25,12 @@ import LogController from '../Log/Controller.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackExecutionContext,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalBuildingBlocks
@@ -84,7 +81,6 @@ export class InternalBuildingBlocks
 						label: '',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			logic_conditionalise_advanced: {
@@ -114,7 +110,6 @@ export class InternalBuildingBlocks
 						label: 'Feedbacks',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -151,7 +146,6 @@ export class InternalBuildingBlocks
 						label: '',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			wait: {
 				label: 'Wait',
@@ -168,7 +162,6 @@ export class InternalBuildingBlocks
 				],
 				hasLearn: false,
 				learnTimeout: undefined,
-				optionsSupportExpressions: true,
 			},
 			logic_if: {
 				label: 'Logic: If statement',
@@ -197,7 +190,6 @@ export class InternalBuildingBlocks
 						entityTypeLabel: 'action',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			logic_while: {
 				label: 'Logic: While loop',
@@ -220,7 +212,6 @@ export class InternalBuildingBlocks
 						entityTypeLabel: 'action',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -357,10 +348,6 @@ export class InternalBuildingBlocks
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }
 

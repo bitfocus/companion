@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
-import { isInternalConnectionId } from '../ConnectionId.js'
+import { CUSTOM_CONNECTION_ID, isCustomConnectionId, isInternalConnectionId } from '../ConnectionId.js'
 import type { ActionSetId } from './ActionModel.js'
 import {
 	createExpressionOrValueSchema,
@@ -103,6 +103,12 @@ export interface ActionEntityModel extends EntityModelBase {
 	 * to.  (Absent means any result is discarded.)
 	 */
 	storeResult?: RawStoreResult
+
+	/**
+	 * When the action runs a custom action, the target each of its outputs is written to, by the id of the output.
+	 * (Absent means that output is discarded.)
+	 */
+	outputTargets?: Record<string, RawStoreResult>
 }
 
 export interface FeedbackEntityModel extends EntityModelBase {
@@ -187,14 +193,24 @@ function entityChildrenSchema() {
 	return z.record(z.string(), z.array(SomeEntityModelSchema).optional()).optional()
 }
 
+/** The connection id custom actions had in the betas, before it became `custom` */
+const BETA_CUSTOM_ACTIONS_CONNECTION_ID = '__custom-actions__'
+
 // Kept as object schemas for the discriminated union, and exported with the hand-written types below
 const actionEntityObjectSchema = z.object({
 	type: z.literal(EntityModelType.Action),
 	...entityBaseShape,
+	// Calls to custom actions saved by a beta are given the connection id they have now
+	connectionId: z
+		.string()
+		.transform((connectionId) =>
+			connectionId === BETA_CUSTOM_ACTIONS_CONNECTION_ID ? CUSTOM_CONNECTION_ID : connectionId
+		),
 	get children() {
 		return entityChildrenSchema()
 	},
 	storeResult: zodRawStoreResult.optional(),
+	outputTargets: z.record(z.string(), zodRawStoreResult).optional(),
 })
 
 const feedbackEntityObjectSchema = z.object({
@@ -214,6 +230,19 @@ export const FeedbackEntityModelSchema: z.ZodType<FeedbackEntityModel> = feedbac
 export const SomeEntityModelSchema: z.ZodType<SomeEntityModel> = z
 	.discriminatedUnion('type', [actionEntityObjectSchema, feedbackEntityObjectSchema])
 	.meta({ id: 'EntityModel' })
+
+/** Whether an entity is an action which calls a custom action */
+export function isCustomActionCall(entity: { readonly type: EntityModelType; readonly connectionId: string }): boolean {
+	return entity.type === EntityModelType.Action && isCustomConnectionId(entity.connectionId)
+}
+
+/** Whether an entity is a feedback which uses a custom feedback */
+export function isCustomFeedbackUse(entity: {
+	readonly type: EntityModelType
+	readonly connectionId: string
+}): boolean {
+	return entity.type === EntityModelType.Feedback && isCustomConnectionId(entity.connectionId)
+}
 
 export interface EntityOwner {
 	parentId: string
@@ -250,6 +279,7 @@ const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
 export const zodEntityLocation = z.union([
 	z.literal('feedbacks'),
 	z.literal('trigger_actions'),
+	z.literal('custom_action_actions'),
 	z.literal('local-variables'),
 	z.object({
 		stepId: z.string(),

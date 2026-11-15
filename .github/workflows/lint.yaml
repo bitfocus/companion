@@ -85,4 +85,4 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Spell Check Repo
-        uses: crate-ci/typos@v1
+        uses: crate-ci/typos@v1.52.2

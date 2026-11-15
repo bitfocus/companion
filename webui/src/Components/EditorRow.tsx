@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { faChevronDown, faPencil, faSort, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faGripVertical, faPencil, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -35,7 +35,7 @@ function Root({
 			className={classNames('entity-row', { 'entity-disabled': disabled, 'entity-row-grabbing': isDragging })}
 		>
 			<div ref={dragRef} className="entity-row-reorder">
-				<FontAwesomeIcon icon={faSort} />
+				<FontAwesomeIcon icon={faGripVertical} />
 			</div>
 			<div className="entity-row-content">{children}</div>
 		</div>

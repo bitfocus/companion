@@ -21,13 +21,10 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalCustomVariables
@@ -48,7 +45,7 @@ export class InternalCustomVariables
 		return {
 			custom_variable_set_value: {
 				label: 'Custom Variable: Set value',
-				description: undefined,
+				description: null,
 				options: [
 					CustomVariableSelectorOption,
 					CustomVariableCreateIfNotExistsOption,
@@ -66,12 +63,11 @@ export class InternalCustomVariables
 						contextVariableResolution: { type: 'customVariable', nameFieldId: 'name' },
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			custom_variable_reset_to_default: {
 				label: 'Custom Variable: Reset to startup value',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:custom_variable',
@@ -81,11 +77,10 @@ export class InternalCustomVariables
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			custom_variable_sync_to_default: {
 				label: 'Custom Variable: Write current value to startup value',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:custom_variable',
@@ -95,7 +90,6 @@ export class InternalCustomVariables
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -145,9 +139,5 @@ export class InternalCustomVariables
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }

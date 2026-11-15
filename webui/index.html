@@ -11,8 +11,11 @@
 				try {
 					preference = window.localStorage.getItem('companion_theme')
 				} catch (e) {}
+				// The emulator and tablet views are always dark (useForceDarkTheme)
 				var dark =
-					preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+					/^\/(emulator|tablet)(\/|$)/.test(window.location.pathname) ||
+					preference === 'dark' ||
+					(preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
 				var theme = dark ? 'dark' : 'light'
 				document.documentElement.dataset.theme = theme
 				document.documentElement.style.colorScheme = theme

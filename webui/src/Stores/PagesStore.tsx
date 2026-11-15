@@ -43,6 +43,18 @@ export class PagesStore {
 		return this.getControlIdAt(location.pageNumber, location.row, location.column)
 	}
 
+	/** Where a control is on the grid, or undefined if it isn't placed. This searches every page */
+	public getLocationOfControlId(controlId: BankControlId): ControlLocation | undefined {
+		for (const [pageIndex, page] of this.store.entries()) {
+			for (const [row, rowObj] of page.controls) {
+				for (const [column, id] of rowObj) {
+					if (id === controlId) return { pageNumber: pageIndex + 1, row, column }
+				}
+			}
+		}
+		return undefined
+	}
+
 	public updateStore = action((change: PageModelChanges | null) => {
 		if (!change) {
 			this.store.clear()

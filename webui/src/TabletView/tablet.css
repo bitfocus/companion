@@ -4,7 +4,7 @@
 	background-color: var(--remote-bg);
 	color: var(--remote-fg);
 
-	height: 100vh;
+	height: 100dvh;
 
 	.scroller {
 		height: 100%;

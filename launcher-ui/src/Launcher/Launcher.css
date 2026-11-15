@@ -69,7 +69,7 @@ body {
 	}
 
 	.launcher-version {
-		padding: 1px 8px;
+		padding: 3px 8px 1px;
 		border: 1px solid var(--launcher-tint);
 		border-radius: 999px;
 		background: var(--launcher-tint);

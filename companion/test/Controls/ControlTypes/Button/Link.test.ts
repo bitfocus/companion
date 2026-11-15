@@ -73,7 +73,7 @@ describe('ControlButtonLink', () => {
 			getPageVariableEntities: () => null,
 			triggerEvents: null as any,
 			expressionVariableNamesMap: null as any,
-			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
+			internalModule: { entityUpgrade: vi.fn(() => undefined), visitEntityReferences: vi.fn() } as any,
 			instance: {} as any,
 			variableValues: { createVariablesAndExpressionParser: vi.fn(() => parser) } as any,
 			userconfig: {} as any,
@@ -87,11 +87,13 @@ describe('ControlButtonLink', () => {
 			controlsAccessor: null as any,
 			linkButtons: linkButtons as unknown as LinkButtonClient,
 			referencedLocations: new ReferencedLocationsIndex(),
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() } as any,
 		}
 	})
 
 	it('tells the link client what to show', () => {
-		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '2/0/1'), false)
+		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '2/0/1'))
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(
 			MY_CONTROL_ID,
 			{ peerId: 'peer', location: { pageNumber: 2, row: 0, column: 1 } },
@@ -101,7 +103,7 @@ describe('ControlButtonLink', () => {
 
 	it('tells the link client the sizes it is shown at, again when it moves', () => {
 		displayedLocations.acquire(MY_LOCATION, { width: 200, height: 100 })
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '2/0/1'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '2/0/1'))
 		expect(linkButtons.setDisplayedSizes).toHaveBeenLastCalledWith(MY_CONTROL_ID, [{ width: 200, height: 100 }])
 
 		vi.mocked(deps.pageStore.getLocationOfControlId).mockReturnValue({ ...MY_LOCATION, column: 4 })
@@ -110,7 +112,7 @@ describe('ControlButtonLink', () => {
 	})
 
 	it('resolves `this` to the location of the button itself', () => {
-		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', 'this'), false)
+		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', 'this'))
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(
 			MY_CONTROL_ID,
 			{ peerId: 'peer', location: MY_LOCATION },
@@ -119,7 +121,7 @@ describe('ControlButtonLink', () => {
 	})
 
 	it('says when the location given is not a button location, rather than that nothing is set', async () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', 'nonsense'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', 'nonsense'))
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))
 		expect(control.toRuntimeJSON().status).toBe('bad_location')
 		expect((await control.drawing.getDrawStyle()).elements).toMatchObject([
@@ -134,13 +136,13 @@ describe('ControlButtonLink', () => {
 	})
 
 	it.each(['1.5/0/0', '1/0/20000'])('says %s is a bad location, as it is not one a peer accepts', (location) => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', location), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', location))
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))
 		expect(control.toRuntimeJSON().status).toBe('bad_location')
 	})
 
 	it('has no target until both the peer and location are set', () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null)
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))
 
 		control.optionsSetField({ key: 'peerId', value: 'peer' })
@@ -161,12 +163,12 @@ describe('ControlButtonLink', () => {
 		})
 	})
 
-	it('replaces invalid stored options by their defaults, and saves the result', () => {
+	it('replaces invalid stored options by their defaults, without saving them', () => {
 		const storage = {
 			type: 'link-button',
 			options: { peerId: 'peer', location: { value: 5, isExpression: false }, notes: 'kept' },
 		} as unknown as LinkButtonModel
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, storage, false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, storage)
 
 		expect(control.toJSON().options).toEqual({
 			peerId: 'peer',
@@ -175,11 +177,13 @@ describe('ControlButtonLink', () => {
 			decoration: 'default',
 			showStatusIcons: 'default',
 		})
-		expect(deps.dbTable.set).toHaveBeenCalledWith(MY_CONTROL_ID, control.toJSON())
+		// Loading repairs them the same way every time, so an already stored control is not saved again for it
+		control.start(false)
+		expect(deps.dbTable.set).not.toHaveBeenCalled()
 	})
 
 	it('rejects invalid options', () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null)
 		expect(control.optionsSetField({ key: 'peerId', value: 5 } as any)).toBe(false)
 		expect(control.optionsSetField({ key: 'location', value: 'nope' } as any)).toBe(false)
 		expect(control.optionsSetField({ key: 'location', value: { value: 5, isExpression: false } } as any)).toBe(false)
@@ -189,7 +193,7 @@ describe('ControlButtonLink', () => {
 
 	it('resolves the location again when a variable it uses changes', () => {
 		parseVariables.mockImplementation(() => ({ text: '3/0/0', variableIds: new Set(['custom:page']) }))
-		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'), false)
+		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'))
 		linkButtons.setTarget.mockClear()
 
 		deps.variableDependencies.dispatch(new Set(['custom:other']), null)
@@ -200,7 +204,7 @@ describe('ControlButtonLink', () => {
 	})
 
 	it('forwards presses and rotation with its id appended to the surface id', () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 
 		control.pressControl(true, 'deck')
 		expect(linkButtons.press).toHaveBeenCalledWith(MY_CONTROL_ID, true, mangleReferenceSurfaceId('deck', MY_CONTROL_ID))
@@ -210,14 +214,14 @@ describe('ControlButtonLink', () => {
 	})
 
 	it('forwards aborts, as its actions run on the remote installation', () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 
 		control.abortDelayedActions(true, null, 1)
 		expect(linkButtons.abort).toHaveBeenCalledWith(MY_CONTROL_ID, true, 1)
 	})
 
 	it('draws the remote image, or a placeholder', async () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 
 		// Nothing to show yet: a link icon and why
 		const placeholder = await control.drawing.getDrawStyle()
@@ -285,7 +289,7 @@ describe('ControlButtonLink', () => {
 	})
 
 	it('is decorated as set, and tells the link client so', async () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'default')
 
 		expect(control.optionsSetField({ key: 'decoration', value: 'bogus' } as any)).toBe(false)
@@ -313,7 +317,7 @@ describe('ControlButtonLink', () => {
 	}
 
 	it('draws the remote image as a remote element, fetched for the size it is drawn at', async () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 
 		linkButtons.getState.mockReturnValue({
 			status: 'ok',
@@ -352,7 +356,7 @@ describe('ControlButtonLink', () => {
 		const reported: unknown[][] = []
 		deps.events.on('updateButtonState', (...args: unknown[]) => reported.push(args))
 
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 		const onChange = linkButtons.setTarget.mock.lastCall![2] as () => void
 		expect(control.supportsPushed).toBe(true)
 		expect(control.pushed).toBe(false)
@@ -379,7 +383,7 @@ describe('ControlButtonLink', () => {
 		const reported: unknown[][] = []
 		deps.events.on('updateButtonState', (...args: unknown[]) => reported.push(args))
 
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 		linkButtons.getState.mockReturnValue({
 			status: 'ok',
 			peerName: 'Peer',
@@ -398,14 +402,14 @@ describe('ControlButtonLink', () => {
 	})
 
 	it('releases its subscription when destroyed', () => {
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 		control.destroy()
 		expect(linkButtons.removeTarget).toHaveBeenCalledWith(MY_CONTROL_ID)
 	})
 
 	it('stops tracking the variables its location reads when destroyed', () => {
 		parseVariables.mockImplementation(() => ({ text: '3/0/0', variableIds: new Set(['custom:page']) }))
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'), false)
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'))
 		expect(deps.variableDependencies.stats().keys).toBe(1)
 
 		control.destroy()

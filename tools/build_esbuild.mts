@@ -42,6 +42,7 @@ const sentryPlugins: BuildOptions['plugins'] = sentryAuthToken
 	? [
 			sentryEsbuildPlugin({
 				authToken: sentryAuthToken,
+				url: 'https://sentry2.bitfocus.io/',
 				org: 'bitfocus',
 				project: 'companion',
 				release: {

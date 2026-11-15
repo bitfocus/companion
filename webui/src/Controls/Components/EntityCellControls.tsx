@@ -1,3 +1,5 @@
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -28,6 +30,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
 	entity,
+	entityDefinition,
 	connectionLabel,
 	ownerId,
 	isPanelCollapsed,
@@ -143,6 +146,13 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						isCollapsed={isPanelCollapsed}
 						readonly={readonly}
 					/>
+				)}
+
+				{entityDefinition?.warning && (
+					<span className="text-3xs text-tone-warning-text leading-snug">
+						<FontAwesomeIcon icon={faTriangleExclamation} className="me-1" />
+						{entityDefinition.warning}
+					</span>
 				)}
 			</div>
 		</EditorRow.Header>

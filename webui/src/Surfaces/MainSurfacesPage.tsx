@@ -6,8 +6,8 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc } from '~/Resources/TRPC'
@@ -71,13 +71,52 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 	)
 
 	const { surfaces } = useContext(RootAppStoreContext)
-	const emptyList: PanelEmptyListState | null =
-		surfaces.store.size === 0
+	const notices = (
+		<>
+			{scanError && (
+				<StaticAlert color="warning" role="alert">
+					{scanError}
+				</StaticAlert>
+			)}
+
+			<UsbUnavailableNote />
+
+			<UdevRulesAlert />
+		</>
+	)
+
+	const empty: PageEmptyStateProps | null =
+		surfaces.store.size === 0 && !selectedSurfaceId
 			? {
+					icon: faGamepad,
 					title: 'No surfaces yet',
-					description: 'Plug in a USB surface, or add an emulator to press buttons from a browser.',
-					actionLabel: 'Add emulator',
-					onAction: addEmulator,
+					description: (
+						<>
+							<p>
+								Surfaces are the hardware and software you press buttons on: Stream Decks and other USB control panels,
+								tablets and phones, or the emulator in your browser.
+							</p>
+							<p>
+								Supported USB surfaces appear here as soon as they are plugged in. To try Companion without any
+								hardware, add an emulator.
+							</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={addEmulator}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add an emulator
+							</Button>
+							<Button color="secondary" onClick={refreshUSB}>
+								<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} className="me-1.5" />
+								{rescanUsbMutation.isPending ? 'Rescanning USB...' : 'Rescan USB'}
+							</Button>
+							<Button color="secondary" onClick={addGroup}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add a group
+							</Button>
+						</>
+					),
+					notices,
 				}
 			: null
 
@@ -87,18 +126,17 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 
 			<SurfacesNav />
 
-			<SplitPanels.Root showing={selectedSurfaceId ? 'secondary' : 'primary'} resize={{ storageKey: 'surfaces' }}>
+			<AddSurfaceGroupModal ref={addGroupModalRef} />
+			<AddEmulatorModal ref={addEmulatorModalRef} />
+
+			<SplitPanels.Root
+				empty={empty}
+				showing={selectedSurfaceId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'surfaces' }}
+			>
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2.5 w-full">
-						{scanError && (
-							<StaticAlert color="warning" role="alert">
-								{scanError}
-							</StaticAlert>
-						)}
-
-						<UsbUnavailableNote />
-
-						<UdevRulesAlert />
+						{notices}
 
 						{/* Top Header Card: Actions & Rescan */}
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex items-center justify-between gap-2 flex-wrap shrink-0">
@@ -116,9 +154,6 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 							</div>
 						</div>
 
-						<AddSurfaceGroupModal ref={addGroupModalRef} />
-						<AddEmulatorModal ref={addEmulatorModalRef} />
-
 						{/* Surfaces Table Container */}
 						<div className="flex-1 min-h-0 scrollable-container list-card">
 							<KnownSurfacesTable selectedItemId={selectedSurfaceId} selectItem={selectKnownSurface} />
@@ -129,9 +164,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						<MyErrorBoundary>
-							<PanelEmptyListProvider value={emptyList}>
-								<Outlet />
-							</PanelEmptyListProvider>
+							<Outlet />
 						</MyErrorBoundary>
 					</div>
 				</SplitPanels.Secondary>

@@ -14,6 +14,8 @@ import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
+import { CustomActionInstanceManager } from './Controls/CustomActions/CustomActionInstanceManager.js'
+import { CustomFeedbackInstanceManager } from './Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
@@ -303,7 +305,26 @@ export class Registry {
 			LINK_BUILTIN_TRANSPORTS
 		)
 
-		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
+		const customFeedbackInstances = new CustomFeedbackInstanceManager(
+			controlStore,
+			this.#renderClock,
+			this.variables.dependencies
+		)
+		const customActionInstances = new CustomActionInstanceManager(
+			controlStore,
+			this.#renderClock,
+			this.variables.dependencies,
+			customFeedbackInstances
+		)
+
+		const actionRunner = new ActionRunner(
+			this.instance,
+			controlStore,
+			this.internalModule,
+			this.variables,
+			localVariables,
+			customActionInstances
+		)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
 			surfaces: this.surfaces,
@@ -317,6 +338,8 @@ export class Registry {
 			actionRunner: actionRunner,
 			renderClock: this.#renderClock,
 			linkButtons: this.link.buttonClient,
+			customActionInstances,
+			customFeedbackInstances,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -519,15 +542,19 @@ export class Registry {
 
 			this.controls.init()
 
-			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs)
-			this.page.ensurePageControlsExist()
-
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
 			for (const id of getVirtualConnectionIds()) knownConnectionIds.add(id)
 			this.controls.verifyConnectionIds(knownConnectionIds)
 
 			this.variables.custom.init()
-			this.internalModule.firstUpdate()
+			// Now that everything the controls depend on is loaded, start them
+			this.controls.startAll()
+
+			// Ensure every page has its `page:<pageId>` control (creates missing ones for older configs). Each is
+			// started as it is created
+			this.page.ensurePageControlsExist()
+
+			this.internalModule.initVariables()
 			this.graphics.triggerRegenerateAll()
 
 			// We are ready to start the instances/connections

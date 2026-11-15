@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useContext, useId } from 'react'
-import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
@@ -20,14 +20,14 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 }: EntityCellLeftMainProps) {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const connectionChoices = useComputed((): DropdownChoicesOrGroups | null => {
+	const connectionChoices = useComputed((): DropdownChoicesOrGroups<string> | null => {
 		const connectionInfo = connections.getInfo(entityConnectionId)
 		if (!connectionInfo) return null
 
 		// Convert connections map to array
 		const allConnections = Array.from(connections.connections.values())
 
-		const getItemChoice = (config: ClientConnectionConfig): DropdownChoice => ({
+		const getItemChoice = (config: ClientConnectionConfig): DropdownChoice<string> => ({
 			id: config.id,
 			label: config.label,
 		})
@@ -61,7 +61,7 @@ export const EntityChangeConnection = observer(function EntityCellLeftMain({
 					htmlName={connectionFieldId}
 					choices={connectionChoices}
 					value={entityConnectionId}
-					setValue={setConnectionId as (value: DropdownChoiceId) => void}
+					setValue={setConnectionId}
 				/>
 			</Grid.Col>
 		</>

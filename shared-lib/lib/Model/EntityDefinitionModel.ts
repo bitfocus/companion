@@ -1,55 +1,35 @@
-import type { CompanionButtonStyleProps } from '@companion-module/base'
+import type { ControlIdKind } from '../ControlId.js'
 import type { ObjectsDiff } from './Common.js'
 import type { EntityModelType, EntitySupportedChildGroupDefinition, FeedbackEntitySubType } from './EntityModel.js'
 import type { SomeCompanionInputField } from './Options.js'
 
-export interface ClientEntityDefinition {
-	entityType: EntityModelType
+/**
+ * An output of an action, which the action can be told where to write
+ */
+export interface ClientEntityOutputDefinition {
+	id: string
+	label: string
+}
+
+/**
+ * What the definitions of actions and feedbacks have in common, as the ui needs it
+ */
+export interface ClientEntityDefinitionBase {
 	label: string
 	sortKey: string | null
-	description: string | undefined
+	description: string | null
 	options: SomeCompanionInputField[]
-	/**
-	 * The options that should be monitored for triggering invalidations
-	 * If null, all options are monitored
-	 */
-	optionsToMonitorForInvalidations: string[] | null
-	feedbackType: FeedbackEntitySubType | null
-	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
-	/**
-	 * Special case for 'conditionalise existing feedbacks' to avoid the root getting style overrides, as we defer that to the children feedbacks
-	 */
-	feedbackDisableStyleOverrides?: boolean
 	/** When true, this entity is never offered for adding, as it only stands in for one that couldn't be loaded. Defaults to false */
 	hiddenFromPicker?: boolean
-	/** When true, this feedback cannot be used as a style override: it is hidden from the add menu and rejected by validation. */
-	feedbackStyleOverridesUnsupported?: boolean
-	hasLifecycleFunctions: boolean
+	/** Never offered for adding to a control of these types; existing ones still work. Defaults to none */
+	hiddenForControlTypes?: ControlIdKind[]
 	hasLearn: boolean
-	learnTimeout: number | undefined
-	showInvert: boolean
 
 	/**
-	 * When an action, whether the action specifies that its callback returns a
-	 * `JsonValue` result.
+	 * Why the entity won't do all it says, such as a custom action which calls back into itself, to show the user.
+	 * Null when there is nothing wrong
 	 */
-	actionHasResult: boolean | undefined
-
-	/**
-	 * When an action, how long (in ms) its callback may run before it is cancelled. The host clamps this to a
-	 * maximum. Defaults to 5000ms when not set.
-	 */
-	actionExecutionTimeout: number | undefined
-
-	/**
-	 * When an advanced feedback, the properties that should have overrides assigned
-	 */
-	feedbackAffectedProperties: string[] | undefined
-
-	/**
-	 * Whether this entity definition uses the auto-parser for options
-	 */
-	optionsSupportExpressions: boolean
+	warning: string | null
 
 	/**
 	 * Whether this entity supports button previewing a reference in the UI
@@ -63,27 +43,65 @@ export interface ClientEntityDefinition {
 	supportsChildGroups: EntitySupportedChildGroupDefinition[]
 }
 
-export type EntityDefinitionUpdate =
-	| EntityDefinitionUpdateInit
-	| EntityDefinitionUpdateForgetConnection
-	| EntityDefinitionUpdateAddConnection
-	| EntityDefinitionUpdateUpdateConnection
+/**
+ * The definition of an action, as the ui needs it. The backend holds more about each, in `ActionDefinition`
+ */
+export interface ClientActionDefinition extends ClientEntityDefinitionBase {
+	entityType: EntityModelType.Action
 
-export interface EntityDefinitionUpdateInit {
+	/**
+	 * Whether the action specifies that its callback returns a `JsonValue` result.
+	 */
+	actionHasResult: boolean
+
+	/**
+	 * When an action which runs a custom action, its outputs. Each can be written to a target chosen on the action
+	 */
+	actionOutputs: ClientEntityOutputDefinition[] | null
+}
+
+/**
+ * The definition of a feedback, as the ui needs it. The backend holds more about each, in `FeedbackDefinition`
+ */
+export interface ClientFeedbackDefinition extends ClientEntityDefinitionBase {
+	entityType: EntityModelType.Feedback
+	feedbackType: FeedbackEntitySubType
+	/**
+	 * Special case for 'conditionalise existing feedbacks' to avoid the root getting style overrides, as we defer that to the children feedbacks
+	 */
+	feedbackDisableStyleOverrides?: boolean
+	/** When true, this feedback cannot be used as a style override: it is hidden from the add menu and rejected by validation. */
+	feedbackStyleOverridesUnsupported?: boolean
+	showInvert: boolean
+	/** When true, the invert option can't be an expression, as the module applies it. Defaults to false */
+	invertDisableAutoExpression?: boolean
+}
+
+export type ClientEntityDefinition = ClientActionDefinition | ClientFeedbackDefinition
+
+export type EntityDefinitionUpdate<TDefinition extends ClientEntityDefinition> =
+	| EntityDefinitionUpdateInit<TDefinition>
+	| EntityDefinitionUpdateForgetConnection
+	| EntityDefinitionUpdateAddConnection<TDefinition>
+	| EntityDefinitionUpdateUpdateConnection<TDefinition>
+
+export interface EntityDefinitionUpdateInit<TDefinition extends ClientEntityDefinition> {
 	type: 'init'
-	definitions: Record<string, Record<string, ClientEntityDefinition>>
+	definitions: Record<string, Record<string, TDefinition>>
 }
 export interface EntityDefinitionUpdateForgetConnection {
 	type: 'forget-connection'
 	connectionId: string
 }
-export interface EntityDefinitionUpdateAddConnection {
+export interface EntityDefinitionUpdateAddConnection<TDefinition extends ClientEntityDefinition> {
 	type: 'add-connection'
 	connectionId: string
 
-	entities: Record<string, ClientEntityDefinition | undefined>
+	entities: Record<string, TDefinition | undefined>
 }
-export interface EntityDefinitionUpdateUpdateConnection extends ObjectsDiff<ClientEntityDefinition> {
+export interface EntityDefinitionUpdateUpdateConnection<
+	TDefinition extends ClientEntityDefinition,
+> extends ObjectsDiff<TDefinition> {
 	type: 'update-connection'
 	connectionId: string
 }

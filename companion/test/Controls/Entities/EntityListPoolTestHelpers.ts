@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
 import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -16,6 +15,7 @@ import { EditableControlEntityListPoolButton } from '../../../lib/Controls/Entit
 import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities/EntityListPoolExpressionVariable.js'
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
 import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
+import type { EntityDefinition } from '../../../lib/Instance/Definitions.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
 import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import type { VariablesValuesEvents } from '../../../lib/Variables/Values.js'
@@ -36,7 +36,7 @@ export interface CreatePoolOptions {
 		entityType: EntityModelType,
 		connectionId: string,
 		definitionId: string
-	) => ClientEntityDefinition | undefined
+	) => EntityDefinition | undefined
 }
 
 /** A permissive definition lookup: booleans for feedbacks, plain actions otherwise. */
@@ -44,11 +44,11 @@ export function defaultGetEntityDefinition(
 	entityType: EntityModelType,
 	_connectionId: string,
 	_definitionId: string
-): ClientEntityDefinition | undefined {
+): EntityDefinition | undefined {
 	if (entityType === EntityModelType.Feedback) {
-		return { entityType, feedbackType: FeedbackEntitySubType.Boolean } as Partial<ClientEntityDefinition> as any
+		return { entityType, feedbackType: FeedbackEntitySubType.Boolean } as Partial<EntityDefinition> as any
 	}
-	return { entityType } as Partial<ClientEntityDefinition> as any
+	return { entityType } as Partial<EntityDefinition> as any
 }
 
 /**
@@ -81,7 +81,9 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	const executeExpression = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 	const variableValues = {
 		emit: vi.fn<(event: 'variablesChanged', ...args: VariablesValuesEvents['variablesChanged']) => boolean>(),
-		createVariablesAndExpressionParser: vi.fn(() => ({ executeExpression }) as any),
+		createVariablesAndExpressionParser: vi.fn(
+			() => ({ executeExpression, parseVariables: (text: string) => ({ text, variableIds: new Set<string>() }) }) as any
+		),
 	}
 	const pageStore = {
 		getLocationOfControlId: vi.fn(() => null),
@@ -98,6 +100,8 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 		variableDependencies: new VariableDependencyRegistry(),
 		getPageVariableEntities: () => null,
+		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+		customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
 	}
 
 	return {

@@ -55,7 +55,7 @@ describe('executeAction', () => {
 	const module = new InternalDebug()
 
 	it('debug_action_result returns the evaluated expression as the action result', () => {
-		// optionsSupportExpressions parses the expression before executeAction, so options.expression
+		// The normal option path parses the expression before executeAction, so options.expression
 		// is already the evaluated blob.
 		expect(module.executeAction(makeAction('debug_action_result', { expression: { foo: 1 } }))).toEqual({
 			result: { foo: 1 },

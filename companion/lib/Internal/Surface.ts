@@ -27,15 +27,12 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const CHOICES_SURFACE_ID: SomeCompanionInputField = {
@@ -318,7 +315,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			},
 			set_brightness: {
 				label: 'Surface: Set to brightness',
-				description: undefined,
+				description: null,
 				options: [
 					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
@@ -334,13 +331,11 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						clampValues: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 
 			adjust_brightness: {
 				label: 'Surface: Adjust brightness',
-				description: undefined,
+				description: null,
 				options: [
 					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
@@ -354,20 +349,16 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						step: 1,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 
 			set_page: {
 				label: 'Surface: Set to page',
-				description: undefined,
+				description: null,
 				options: [CHOICES_SURFACE_GROUP, CHOICES_PAGE],
-
-				optionsSupportExpressions: true,
 			},
 			set_page_byindex: {
 				label: 'Surface: Set by index to page',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'number',
@@ -382,61 +373,45 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 					CHOICES_PAGE,
 				],
-
-				optionsSupportExpressions: true,
 			},
 
 			inc_page: {
 				label: 'Surface: Increment page number',
-				description: undefined,
+				description: null,
 				options: [CHOICES_SURFACE_GROUP],
-
-				optionsSupportExpressions: true,
 			},
 			dec_page: {
 				label: 'Surface: Decrement page number',
-				description: undefined,
+				description: null,
 				options: [CHOICES_SURFACE_GROUP],
-
-				optionsSupportExpressions: true,
 			},
 
 			lockout_device: {
 				label: 'Surface: Lockout specified surface immediately.',
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [CHOICES_SURFACE_GROUP],
-
-				optionsSupportExpressions: true,
 			},
 			unlockout_device: {
 				label: 'Surface: Unlock specified surface immediately.',
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [CHOICES_SURFACE_GROUP],
-
-				optionsSupportExpressions: true,
 			},
 
 			lockout_all: {
 				label: 'Surface: Lockout all immediately.',
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [],
-
-				optionsSupportExpressions: true,
 			},
 			unlockout_all: {
 				label: 'Surface: Unlock all immediately.',
 				description: 'This requires the `PIN Lockout` setting to be enabled and configured',
 				options: [],
-
-				optionsSupportExpressions: true,
 			},
 
 			rescan: {
 				label: 'Surface: Rescan USB for devices',
-				description: undefined,
+				description: null,
 				options: [],
-
-				optionsSupportExpressions: true,
 			},
 
 			surface_set_position: {
@@ -464,8 +439,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						step: 1,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 
 			surface_adjust_position: {
@@ -493,13 +466,11 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						step: 1,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 
 			outbound_surface_set_enabled: {
 				label: 'Remote surface: Enable/Disable',
-				description: undefined,
+				description: null,
 				options: [
 					CHOICES_OUTBOUND_SURFACE_ID,
 					{
@@ -515,8 +486,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -754,7 +723,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						default: 0,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			surface_connected: {
@@ -776,7 +744,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						listMode: 'surfaces',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			outbound_surface_enabled: {
@@ -789,7 +756,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				},
 				showInvert: true,
 				options: [CHOICES_OUTBOUND_SURFACE_ID],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -816,19 +782,6 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			if (!surfaceId) return false
 
 			return this.#surfaceController.outbound.getById(surfaceId)?.enabled ?? false
-		}
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			if (action.action === 'outbound_surface_set_enabled') {
-				visitor.visitOutboundSurfaceId(action.options, 'surfaceId')
-			}
-		}
-		for (const feedback of feedbacks) {
-			if (feedback.type === 'outbound_surface_enabled') {
-				visitor.visitOutboundSurfaceId(feedback.options, 'surfaceId', feedback.id)
-			}
 		}
 	}
 }

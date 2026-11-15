@@ -6,15 +6,12 @@ import type { JsonValue } from '@companion-module/host'
 import { isPackaged } from '../Resources/Util.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const CHOICES = [
@@ -131,13 +128,11 @@ export class InternalDebug extends EventEmitter<InternalModuleFragmentEvents> im
 					},
 				],
 				actionHasResult: true,
-				optionsSupportExpressions: true,
 			},
 			debug_all_fields: {
 				label: '(Debug) All Option Fields',
 				description: 'Has an option of each kind of input field, and does nothing',
 				options: ALL_FIELDS,
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -145,7 +140,7 @@ export class InternalDebug extends EventEmitter<InternalModuleFragmentEvents> im
 	executeAction(action: ActionForInternalExecution): InternalActionResult {
 		switch (action.definitionId) {
 			case 'debug_action_result':
-				// The expression option is already evaluated (optionsSupportExpressions), so its value is the result.
+				// The expression option is already evaluated, so its value is the result.
 				return { result: action.options.expression as JsonValue }
 			case 'debug_all_fields':
 				return { result: undefined }
@@ -174,7 +169,6 @@ export class InternalDebug extends EventEmitter<InternalModuleFragmentEvents> im
 						allowInvalidValues: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			debug_all_fields: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -183,7 +177,6 @@ export class InternalDebug extends EventEmitter<InternalModuleFragmentEvents> im
 				feedbackStyle: undefined,
 				showInvert: true,
 				options: ALL_FIELDS,
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -200,9 +193,5 @@ export class InternalDebug extends EventEmitter<InternalModuleFragmentEvents> im
 			default:
 				return
 		}
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Any references in the options are followed by the generic options visitor
 	}
 }

@@ -63,6 +63,7 @@ export class ControlExpressionVariable
 	readonly supportsActionSets = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 
 	readonly optionsSchema: z.ZodType<ExpressionVariableOptions> = ExpressionVariableOptionsSchema
 
@@ -84,7 +85,7 @@ export class ControlExpressionVariable
 	 * @param deps - the control dependencies
 	 * @param controlId - id of the control
 	 * @param storage - persisted storage object
-	 * @param isImport - if this is importing a button, not creating at startup
+	 * @param isImport - whether this is an import (or a clone), so its entities need new ids
 	 */
 	constructor(
 		deps: ControlDependencies,
@@ -107,26 +108,18 @@ export class ControlExpressionVariable
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
 		this.options = this.optionsSchema.parse({})
 
-		if (!storage) {
-			// New control
-
-			// Save the change
-			this.commitChange()
-
-			// Notify interested
-		} else {
+		if (storage) {
 			if (storage.type !== 'expression-variable')
 				throw new Error(`Invalid type given to ControlExpressionVariable: "${storage.type}"`)
 
 			this.options = storage.options || this.options
-			this.entities.loadStorage(storage, true, isImport)
-
-			if (isImport) setImmediate(() => this.#postProcessImport())
-			else this.commitChange()
+			this.entities.loadStorage(storage, isImport)
 		}
 	}
 
@@ -172,7 +165,7 @@ export class ControlExpressionVariable
 			foundConnectionLabels,
 			foundVariables,
 			undefined
-		).visitEntities(this.entities.getAllEntities(), [])
+		).visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -185,20 +178,18 @@ export class ControlExpressionVariable
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
 	 */
 	toRuntimeJSON(): NoRuntimeProps {
 		return {}
 	}
 
-	toJSON(clone = true): ExpressionVariableModel {
-		const obj: ExpressionVariableModel = {
+	toJSON(): ExpressionVariableModel {
+		return {
 			type: this.type,
 			options: this.options,
 			entity: this.entities.getRootEntity()?.asEntityModel(true) || null,
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 		}
-		return clone ? structuredClone(obj) : obj
 	}
 
 	toClientJSON(): ClientExpressionVariableData {
@@ -225,7 +216,7 @@ export class ControlExpressionVariable
 			undefined,
 			undefined
 		)
-			.visitEntities(allEntities, [])
+			.visitEntityInstances(allEntities)
 			.recheckChangedFeedbacks()
 			.hasChanges()
 
@@ -260,14 +251,10 @@ export class ControlExpressionVariable
 		return true
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	#postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**

@@ -62,6 +62,7 @@ export class ControlButtonPreset
 	readonly supportsEntities = true
 	readonly supportsOptions = false
 	readonly supportsPushed = false
+	readonly supportsBuildingBlockInputs = false
 	readonly supportsConvert = false
 
 	readonly entities: ControlEntityListPoolButton
@@ -127,6 +128,8 @@ export class ControlButtonPreset
 				renderClock: deps.renderClock,
 				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
+				customActionInstances: deps.customActionInstances,
+				customFeedbackInstances: deps.customFeedbackInstances,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			false
@@ -204,30 +207,27 @@ export class ControlButtonPreset
 		if (updatedPreset.checksum !== undefined && updatedPreset.checksum === this.#lastPresetChecksum) return
 
 		this.#applyPresetModel(updatedPreset)
+		this.entities.resubscribeEntities()
+
+		this.commitChange()
+		this.sendRuntimePropsChange()
 	}
 
 	#applyPresetModel(storage: PresetButtonModel): void {
 		this.#drawing.loadElements(structuredClone(storage.style.layers))
 
 		this.options = Object.assign(this.options, storage.options || {})
-		this.entities.loadStorage(storage, true, true)
+		this.entities.loadStorage(storage, true)
 		this.entities.stepExpressionUpdate(this.options)
 
 		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.
 		this.#lastPresetChecksum = storage.checksum ?? null
-
-		// Ensure control is stored before setup
-		setImmediate(() => this.postProcessImport())
 	}
 
-	/**
-	 * If this control was imported to a running system, do some data cleanup/validation
-	 */
-	protected postProcessImport(): void {
+	override start(save: boolean): void {
 		this.entities.resubscribeEntities()
 
-		this.commitChange()
-		this.sendRuntimePropsChange()
+		if (save) this.commitChange()
 	}
 
 	/**
@@ -246,7 +246,7 @@ export class ControlButtonPreset
 			undefined
 		)
 		this.#drawing.visit(collector)
-		collector.visitEntities(this.entities.getAllEntities(), [])
+		collector.visitEntityInstances(this.entities.getAllEntities())
 	}
 
 	/**
@@ -260,7 +260,7 @@ export class ControlButtonPreset
 			undefined
 		)
 		this.#drawing.visit(updater)
-		const changed = updater.visitEntities(this.entities.getAllEntities(), []).recheckChangedFeedbacks().hasChanges()
+		const changed = updater.visitEntityInstances(this.entities.getAllEntities()).recheckChangedFeedbacks().hasChanges()
 
 		if (changed) {
 			// Purge all cache, as we don't know what could have changed
@@ -364,7 +364,6 @@ export class ControlButtonPreset
 	/**
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
-	 * @param clone - Whether to return a cloned object
 	 */
 	override toJSON(): PresetButtonModel {
 		return {

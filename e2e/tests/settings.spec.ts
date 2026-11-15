@@ -1,4 +1,12 @@
-import { expect, gotoApp, reloadApp, test, watchConsoleErrors, type Page } from '../support/fixtures.js'
+import {
+	clickListPageAdd,
+	expect,
+	gotoApp,
+	reloadApp,
+	test,
+	watchConsoleErrors,
+	type Page,
+} from '../support/fixtures.js'
 
 const SETTING_LABEL = 'Flip counting direction on page up/down buttons'
 
@@ -103,7 +111,7 @@ test('a surface bigger than the grid prompts to grow it', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
 
 	await gotoApp(page, '/surfaces')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Emulator' }).click()
+	await clickListPageAdd(page, 'Add Emulator', 'Add an emulator')
 	const dialog = page.getByRole('dialog')
 	await dialog.getByLabel(/^Name/).fill('Tall Emulator')
 	await dialog.getByLabel(/^Id/).fill('tall')

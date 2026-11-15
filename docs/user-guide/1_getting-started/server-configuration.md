@@ -6,14 +6,14 @@ description: The launch-level settings that control how the Companion server sta
 
 # Server configuration
 
-:::tip Running CompanionPi or a headless server?
+:::tip[Running CompanionPi or a headless server?]
 This page describes the options themselves. You will need to edit them from the command line as described in
 [Headless configuration](./companion-pi/config-tool.md).
 :::
 
 These are the settings that control **how the Companion server itself starts up** — things like which
 network port it listens on and which security features are allowed. They're separate from the
-[Settings](../3_config/settings.md) page inside the admin interface, which configures Companion once
+[Settings](../3_config/system/settings.md) page inside the admin interface, which configures Companion once
 it's already running.
 
 You set these in one of two places, depending on how you run Companion:
@@ -93,6 +93,6 @@ accept the risk.
 - **Header notifications** — whether to show version-related notifications in the admin interface
   header. You can turn these off if you don't want to see update prompts.
 - **Installation name** — a fixed name for this Companion installation. When set, it replaces the
-  **Installation Name** in [Settings](../3_config/settings.md#general) and can no longer be changed there, and it
+  **Installation Name** in [Settings](../3_config/system/settings.md#general) and can no longer be changed there, and it
   isn't lost if the database is reset. This is useful when deploying many Companion installations from a script
   or image. On a desktop install this can be set with the `COMPANION_INSTALL_NAME` environment variable.

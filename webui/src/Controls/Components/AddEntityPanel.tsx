@@ -1,8 +1,14 @@
 import classNames from 'classnames'
-import { useCallback } from 'react'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext } from 'react'
+import { getControlIdKind } from '@companion-app/shared/ControlId.js'
+import { getCustomActionCallsExcludedFrom } from '@companion-app/shared/Model/CustomActionModel.js'
+import { getCustomFeedbackCallsExcludedFrom } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { useComputed } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { AddEntitiesModal } from './AddEntitiesModal.js'
 import { AddEntityDropdown } from './AddEntityDropdown.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
@@ -15,14 +21,27 @@ interface AddEntityPanelProps {
 	anyEntities: boolean
 }
 
-export function AddEntityPanel({
+export const AddEntityPanel = observer(function AddEntityPanel({
 	ownerId,
 	entityType,
 	feedbackListType,
 	entityTypeLabel,
 	anyEntities,
 }: AddEntityPanelProps): React.JSX.Element {
-	const { serviceFactory, readonly } = useEntityEditorContext()
+	const { serviceFactory, readonly, controlId } = useEntityEditorContext()
+
+	// A custom action or feedback can't contain one which would come back to itself, directly or through others
+	const { customActionsList, customFeedbacksList } = useContext(RootAppStoreContext)
+	const excludedIds = useComputed(
+		() =>
+			new Set([
+				...getCustomActionCallsExcludedFrom(controlId, customActionsList.customActions.entries()),
+				...getCustomFeedbackCallsExcludedFrom(controlId, customFeedbacksList.customFeedbacks.entries()),
+			]),
+		[controlId, customActionsList, customFeedbacksList]
+	)
+
+	const controlKind = (controlId && getControlIdKind(controlId)) ?? null
 
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 
@@ -54,6 +73,8 @@ export function AddEntityPanel({
 				entityType={entityType}
 				entityTypeLabel={entityTypeLabel}
 				feedbackListType={feedbackListType}
+				controlKind={controlKind}
+				excludedIds={excludedIds}
 				disabled={readonly}
 			/>
 
@@ -62,10 +83,12 @@ export function AddEntityPanel({
 					addEntity={addEntity}
 					entityType={entityType}
 					feedbackListType={feedbackListType}
+					controlKind={controlKind}
 					entityTypeLabel={entityTypeLabel}
+					excludedIds={excludedIds}
 					disabled={readonly}
 				/>
 			</MyErrorBoundary>
 		</div>
 	)
-}
+})

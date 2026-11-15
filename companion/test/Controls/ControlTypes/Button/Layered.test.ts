@@ -123,7 +123,7 @@ describe('ControlButtonLayered', () => {
 			getPageVariableEntities: () => null,
 			triggerEvents: null as any,
 			expressionVariableNamesMap: null as any,
-			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
+			internalModule: { entityUpgrade: vi.fn(() => undefined), visitEntityReferences: vi.fn() } as any,
 			instance: {
 				definitions,
 				processManager: {
@@ -148,6 +148,8 @@ describe('ControlButtonLayered', () => {
 			variableDependencies: new VariableDependencyRegistry(),
 			linkButtons: null as any,
 			referencedLocations: new ReferencedLocationsIndex(),
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() } as any,
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),
@@ -219,9 +221,11 @@ describe('ControlButtonLayered', () => {
 			expect(control.drawing.getAllElementIds()).toEqual(DEFAULT_ELEMENT_IDS)
 		})
 
-		it('persists a brand new control to the db on construction', () => {
-			createControl(null)
+		it('persists a brand new control to the db when started, not on construction', () => {
+			const control = createControl(null)
+			expect(dbSet).not.toHaveBeenCalled()
 
+			control.start(true)
 			expect(dbSet).toHaveBeenCalledWith(CONTROL_ID, expect.objectContaining({ type: 'button-layered' }))
 		})
 

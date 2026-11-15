@@ -22,6 +22,7 @@ export const LinkInstallationsPage = observer(function LinkInstallationsPage(): 
 			<LinkNav />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedPeerId || selfSelected ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'link-installations' }}
 			>

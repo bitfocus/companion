@@ -35,6 +35,7 @@ export interface IEntityEditorService {
 	performDelete: (entityId: string, entityTypeLabel: string) => void
 	performDuplicate: (entityId: string) => void
 	setConnection: (entityId: string, connectionId: string) => void
+	setCustomDefinition: (entityId: string, definitionId: string) => void
 	moveCard: (
 		dragListId: SomeSocketEntityLocation,
 		dragEntityId: string,
@@ -47,6 +48,7 @@ export interface IEntityEditorService {
 	setHeadline: ((entityId: string, headline: string) => void) | undefined
 
 	setRawStoreResult: ((entityId: string, target: RawStoreResult | undefined) => void) | undefined
+	setRawOutputTarget: ((entityId: string, outputId: string, target: RawStoreResult | null) => void) | undefined
 
 	setInverted: (entityId: string, inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (entityId: string, name: string) => void
@@ -61,12 +63,14 @@ export interface IEntityEditorActionService {
 	performDelete: () => void
 	performDuplicate: () => void
 	setConnection: (connectionId: string) => void
+	setCustomDefinition: (definitionId: string) => void
 	performLearn: (() => void) | undefined
 	cancelLearn: (() => void) | undefined
 	setEnabled: ((enabled: boolean) => void) | undefined
 	setHeadline: ((headline: string) => void) | undefined
 
 	setRawStoreResult: ((target: RawStoreResult | undefined) => void) | undefined
+	setRawOutputTarget: ((outputId: string, target: RawStoreResult | null) => void) | undefined
 
 	setInverted: (inverted: ExpressionOrValue<boolean>) => void
 	setVariableName: (name: string) => void
@@ -85,6 +89,7 @@ export function useControlEntitiesEditorService(
 	const moveMutation = useMutationExt(trpc.controls.entities.move.mutationOptions())
 	const setOptionMutation = useMutationExt(trpc.controls.entities.setOption.mutationOptions())
 	const setConnectionMutation = useMutationExt(trpc.controls.entities.setConnection.mutationOptions())
+	const setCustomDefinitionMutation = useMutationExt(trpc.controls.entities.setCustomDefinition.mutationOptions())
 	const removeMutation = useMutationExt(trpc.controls.entities.remove.mutationOptions())
 	const duplicateMutation = useMutationExt(trpc.controls.entities.duplicate.mutationOptions())
 	const learnOptionsMutation = useMutationExt(trpc.controls.entities.learnOptions.mutationOptions())
@@ -93,6 +98,7 @@ export function useControlEntitiesEditorService(
 	const setHeadlineMutation = useMutationExt(trpc.controls.entities.setHeadline.mutationOptions())
 	const setInvertedMutation = useMutationExt(trpc.controls.entities.setInverted.mutationOptions())
 	const setRawStoreResultMutation = useMutationExt(trpc.controls.entities.setRawStoreResult.mutationOptions())
+	const setRawOutputTargetMutation = useMutationExt(trpc.controls.entities.setRawOutputTarget.mutationOptions())
 	const setVariableNameMutation = useMutationExt(trpc.controls.entities.setVariableName.mutationOptions())
 	const setVariableValueMutation = useMutationExt(trpc.controls.entities.setVariableValue.mutationOptions())
 	const replaceStyleOverrideMutation = useMutationExt(trpc.controls.entities.replaceStyleOverride.mutationOptions())
@@ -170,6 +176,19 @@ export function useControlEntitiesEditorService(
 					})
 					.catch((e) => {
 						console.error('Failed to set control entity connection', e)
+					})
+			},
+
+			setCustomDefinition: (entityId: string, definitionId: string) => {
+				setCustomDefinitionMutation
+					.mutateAsync({
+						controlId,
+						entityLocation: listId,
+						entityId,
+						definitionId,
+					})
+					.catch((e) => {
+						console.error('Failed to set control entity custom definition', e)
 					})
 			},
 
@@ -268,6 +287,14 @@ export function useControlEntitiesEditorService(
 					})
 			},
 
+			setRawOutputTarget: (entityId: string, outputId: string, target: RawStoreResult | null) => {
+				setRawOutputTargetMutation
+					.mutateAsync({ controlId, entityLocation: listId, entityId, outputId, target })
+					.catch((e) => {
+						console.error('Failed to set the target of an output', e)
+					})
+			},
+
 			setVariableName: (entityId: string, name: string) => {
 				setVariableNameMutation
 					.mutateAsync({
@@ -324,6 +351,7 @@ export function useControlEntitiesEditorService(
 			moveMutation,
 			setOptionMutation,
 			setConnectionMutation,
+			setCustomDefinitionMutation,
 			removeMutation,
 			duplicateMutation,
 			learnOptionsMutation,
@@ -331,6 +359,7 @@ export function useControlEntitiesEditorService(
 			setEnabledMutation,
 			setHeadlineMutation,
 			setInvertedMutation,
+			setRawOutputTargetMutation,
 			setVariableNameMutation,
 			setVariableValueMutation,
 			replaceStyleOverrideMutation,
@@ -361,6 +390,7 @@ export function useControlEntityService(
 			performDelete: () => serviceFactory.performDelete(entityId, entityTypeLabel),
 			performDuplicate: () => serviceFactory.performDuplicate(entityId),
 			setConnection: (connectionId: string) => serviceFactory.setConnection(entityId, connectionId),
+			setCustomDefinition: (definitionId: string) => serviceFactory.setCustomDefinition(entityId, definitionId),
 			performLearn: serviceFactory.performLearn ? () => serviceFactory.performLearn?.(entityId) : undefined,
 			cancelLearn: serviceFactory.cancelLearn ? () => serviceFactory.cancelLearn?.(entityId) : undefined,
 			setEnabled: serviceFactory.setEnabled
@@ -371,6 +401,10 @@ export function useControlEntityService(
 				: undefined,
 			setRawStoreResult: serviceFactory.setRawStoreResult
 				? (target: RawStoreResult | undefined) => serviceFactory.setRawStoreResult?.(entityId, target)
+				: undefined,
+			setRawOutputTarget: serviceFactory.setRawOutputTarget
+				? (outputId: string, target: RawStoreResult | null) =>
+						serviceFactory.setRawOutputTarget?.(entityId, outputId, target)
 				: undefined,
 			setInverted: (inverted: ExpressionOrValue<boolean>) => serviceFactory.setInverted(entityId, inverted),
 			setVariableName: (name: string) => serviceFactory.setVariableName(entityId, name),

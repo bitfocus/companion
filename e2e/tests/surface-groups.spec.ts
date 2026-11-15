@@ -1,4 +1,4 @@
-import { expect, gotoApp, reloadApp, test, watchConsoleErrors } from '../support/fixtures.js'
+import { clickListPageAdd, expect, gotoApp, reloadApp, test, watchConsoleErrors } from '../support/fixtures.js'
 
 test('a surface group holds an emulator, with its own startup and allowed pages', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
@@ -12,7 +12,7 @@ test('a surface group holds an emulator, with its own startup and allowed pages'
 	await gotoApp(page, '/surfaces')
 	const list = page.locator('.primary-panel')
 
-	await list.getByRole('button', { name: 'Add Group' }).click()
+	await clickListPageAdd(page, 'Add Group', 'Add a group')
 	let dialog = page.getByRole('dialog')
 	await dialog.getByRole('textbox', { name: 'Name' }).fill('E2E Group')
 	await dialog.getByRole('button', { name: 'Add' }).click()

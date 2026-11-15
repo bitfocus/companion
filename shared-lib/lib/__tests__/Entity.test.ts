@@ -83,6 +83,23 @@ describe('canAddEntityToFeedbackList', () => {
 			expect(canAddEntityToFeedbackList(null, feedbackDefinition(FeedbackEntitySubType.Value))).toBe(false)
 		})
 	})
+
+	describe('actions', () => {
+		const actionDefinition = { entityType: EntityModelType.Action } as ClientEntityDefinition
+
+		test('allows them in a list with no feedback type', () => {
+			expect(canAddEntityToFeedbackList(null, actionDefinition)).toBe(true)
+		})
+
+		test.each([
+			FeedbackEntitySubType.Boolean,
+			FeedbackEntitySubType.Value,
+			FeedbackEntitySubType.Advanced,
+			FeedbackEntitySubType.StyleOverride,
+		])('rejects them in a %s list', (feedbackListType) => {
+			expect(canAddEntityToFeedbackList(feedbackListType, actionDefinition)).toBe(false)
+		})
+	})
 })
 
 describe('SomeEntityModelSchema', () => {
@@ -135,6 +152,14 @@ describe('SomeEntityModelSchema', () => {
 		expect(SomeEntityModelSchema.safeParse(parent).success).toBe(false)
 	})
 
+	test('a call to a custom action saved by a beta is given the connection id it has now', () => {
+		const call = { ...action, connectionId: '__custom-actions__', definitionId: 'abc' }
+		const parent = { ...action, connectionId: 'internal', children: { default: [call] } }
+
+		expect(SomeEntityModelSchema.parse(call)).toMatchObject({ connectionId: 'custom', definitionId: 'abc' })
+		expect(SomeEntityModelSchema.parse(parent).children?.default?.[0]).toMatchObject({ connectionId: 'custom' })
+	})
+
 	test('action fields are not accepted on a feedback, and the reverse', () => {
 		expect(SomeEntityModelSchema.parse({ ...action, variableName: 'x' })).not.toHaveProperty('variableName')
 		expect(
@@ -148,7 +173,16 @@ describe('canOfferEntityInPicker', () => {
 		const hidden = feedbackDefinition(FeedbackEntitySubType.Boolean, { hiddenFromPicker: true })
 
 		for (const listType of [null, ...Object.values(FeedbackEntitySubType)]) {
-			expect(canOfferEntityInPicker(listType, hidden)).toBe(false)
+			expect(canOfferEntityInPicker(listType, null, hidden)).toBe(false)
+		}
+	})
+
+	test('hides a definition from the control kinds it is hidden for', () => {
+		const definition = feedbackDefinition(FeedbackEntitySubType.Value, { hiddenForControlTypes: ['custom-feedback'] })
+
+		expect(canOfferEntityInPicker(FeedbackEntitySubType.Value, 'custom-feedback', definition)).toBe(false)
+		for (const controlKind of ['custom-action', 'bank', 'trigger', null] as const) {
+			expect(canOfferEntityInPicker(FeedbackEntitySubType.Value, controlKind, definition)).toBe(true)
 		}
 	})
 
@@ -156,7 +190,9 @@ describe('canOfferEntityInPicker', () => {
 		for (const listType of [null, ...Object.values(FeedbackEntitySubType)]) {
 			for (const feedbackType of [null, ...Object.values(FeedbackEntitySubType)]) {
 				const definition = feedbackDefinition(feedbackType)
-				expect(canOfferEntityInPicker(listType, definition)).toBe(canAddEntityToFeedbackList(listType, definition))
+				expect(canOfferEntityInPicker(listType, null, definition)).toBe(
+					canAddEntityToFeedbackList(listType, definition)
+				)
 			}
 		}
 	})

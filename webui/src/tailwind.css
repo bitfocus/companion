@@ -33,6 +33,7 @@
 @import './layout-grid.css' layer(layout-grid);
 @import 'tailwindcss/utilities.css' layer(utilities);
 @import './theme-tokens.css';
+@import './fonts.css';
 
 /* `Grid.Col` builds these by interpolation, so the source scanner cannot find them — safelist them
    here. `col-start-*` starts at 2 because an offset of 0 emits `col-start-auto`. */

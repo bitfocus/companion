@@ -1,4 +1,4 @@
-import { expect, gotoApp, test } from '../support/fixtures.js'
+import { clickListPageAdd, expect, gotoApp, test } from '../support/fixtures.js'
 import { createCustomVariable, openCustomVariableValue } from '../support/variables.js'
 
 test('configure and fire a variable-change trigger through the ui', async ({ page }) => {
@@ -6,7 +6,7 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 	await createCustomVariable(page, 'watch_dst')
 
 	await gotoApp(page, '/triggers')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Trigger' }).click()
+	await clickListPageAdd(page, 'Add Trigger', 'Add your first trigger')
 
 	// Rename it, so the list row can be identified
 	await page.getByRole('button', { name: 'Edit trigger name' }).click()
@@ -46,7 +46,7 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 
 test('interval event options persist', async ({ page }) => {
 	await gotoApp(page, '/triggers')
-	await page.locator('.primary-panel').getByRole('button', { name: 'Add Trigger' }).click()
+	await clickListPageAdd(page, 'Add Trigger', 'Add your first trigger')
 	await page.getByRole('button', { name: 'Edit trigger name' }).click()
 	await page.getByPlaceholder('Trigger Name...').fill('Interval trigger')
 

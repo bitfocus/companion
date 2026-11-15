@@ -4,14 +4,16 @@ import z from 'zod'
 import { CreateExpressionVariableControlId, zodControlIds } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ClientExpressionVariableData,
-	ExpressionVariableUpdate,
-	ExpressionVariableUpdateInitOp,
+import {
+	ExpressionVariableOptionsSchema,
+	type ClientExpressionVariableData,
+	type ExpressionVariableUpdate,
+	type ExpressionVariableUpdateInitOp,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
+import { moveControlInCollection } from './ControlOrder.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
@@ -61,15 +63,6 @@ export function createExpressionVariableTrpcRouter(
 			)
 			if (!rootEntity) throw new Error('Failed to get initial entity for expression variable')
 
-			const controlId = CreateExpressionVariableControlId(nanoid())
-			const newControl = factory.createExpressionVariable(controlId)
-
-			if (!newControl.entities.entityAdd('feedbacks', null, rootEntity)) {
-				throw new Error('Failed to add feedback entity to expression variable')
-			}
-
-			controlStore.controls.set(controlId, newControl)
-
 			// Add variable to the end of the list
 			const allExpressionVariables: ControlExpressionVariable[] = []
 			for (const control of controlStore.controls.values()) {
@@ -78,13 +71,22 @@ export function createExpressionVariableTrpcRouter(
 				}
 			}
 			const maxRank = Math.max(0, ...allExpressionVariables.map((control) => control.options.sortOrder))
-			newControl.optionsSetField({ key: 'sortOrder', value: maxRank }, true)
 
+			// Built complete, root entity included, so that it is never stored without one
+			const controlId = CreateExpressionVariableControlId(nanoid())
+			const newControl = factory.createExpressionVariable(controlId, {
+				type: 'expression-variable',
+				options: ExpressionVariableOptionsSchema.parse({ variableName: input.variableName, sortOrder: maxRank }),
+				entity: rootEntity,
+				localVariables: [],
+			})
+
+			controlStore.controls.set(controlId, newControl)
+
+			// Registered before it is saved, as the saved client state includes whether it is active
 			expressionVariableNamesMap.addExpressionVariable(controlId, newControl.options.variableName)
-			newControl.optionsSetField({ key: 'variableName', value: input.variableName })
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			return controlId
 		}),
@@ -115,12 +117,15 @@ export function createExpressionVariableTrpcRouter(
 
 				const fromControl = controlStore.controls.get(controlId)
 				if (fromControl && fromControl instanceof ControlExpressionVariable) {
-					const controlJson = fromControl.toJSON(true)
+					const controlJson = structuredClone(fromControl.toJSON())
 
 					const newControl = factory.createExpressionVariable(newControlId, controlJson)
 					controlStore.controls.set(newControlId, newControl)
 
+					// Register the name before it is saved, as the saved client state includes whether it is active
 					expressionVariableNamesMap.addExpressionVariable(newControlId, newControl.options.variableName)
+
+					newControl.start(true)
 
 					return newControlId
 				}
@@ -144,37 +149,11 @@ export function createExpressionVariableTrpcRouter(
 
 				if (!expressionVariableCollections.doesCollectionIdExist(collectionId)) return false
 
-				// update the collectionId of the expression variable being moved if needed
-				if (thisExpressionVariable.options.collectionId !== (collectionId ?? undefined)) {
-					thisExpressionVariable.optionsSetField({ key: 'collectionId', value: collectionId ?? undefined }, true)
-				}
-
-				// find all the other triggers with the matching collectionId
-				const sortedExpressionVariables = controlStore.controls
+				const allExpressionVariables = controlStore.controls
 					.values()
-					.filter(
-						(control): control is ControlExpressionVariable =>
-							control.controlId !== controlId &&
-							control instanceof ControlExpressionVariable &&
-							((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
-					)
+					.filter((control) => control instanceof ControlExpressionVariable)
 					.toArray()
-					.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
-
-				if (dropIndex < 0) {
-					// Push the trigger to the end of the array
-					sortedExpressionVariables.push(thisExpressionVariable)
-				} else {
-					// Insert the trigger at the drop index
-					sortedExpressionVariables.splice(dropIndex, 0, thisExpressionVariable)
-				}
-
-				// update the sort order of the connections in the store, tracking which ones changed
-				sortedExpressionVariables.forEach((expressionVariable, index) => {
-					if (expressionVariable.options.sortOrder === index) return // No change
-
-					expressionVariable.optionsSetField({ key: 'sortOrder', value: index }, true)
-				})
+				moveControlInCollection(allExpressionVariables, thisExpressionVariable, collectionId, dropIndex)
 
 				return true
 			}),

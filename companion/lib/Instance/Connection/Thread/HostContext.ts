@@ -1,4 +1,3 @@
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	SharedUdpSocketMessageJoin,
@@ -25,7 +24,7 @@ import {
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
 import { randomIdGenerator } from '../../../Resources/IdGenerator.js'
-import type { CompositeElementDefinition } from '../../Definitions.js'
+import type { ActionDefinition, CompositeElementDefinition, FeedbackDefinition } from '../../Definitions.js'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
 import { VariableValueBatcher } from '../VariableValueBatcher.js'
 import { translateEntityInputFields } from './ConfigFields.js'
@@ -78,14 +77,14 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	}
 	/** The actions available in the connection have changed */
 	setActionDefinitions(rawActions: HostActionDefinition[]): void {
-		const actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ActionDefinition> = {}
 
 		for (const rawAction of rawActions) {
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				sortKey: rawAction.sortName ? String(rawAction.sortName) : null,
-				description: rawAction.description,
+				description: rawAction.description ?? null,
 				options: translateEntityInputFields(rawAction.options || [], EntityModelType.Action),
 				optionsToMonitorForInvalidations: rawAction.optionsToMonitorForSubscribe || null,
 				hasLifecycleFunctions: !!rawAction.hasLifecycleFunctions,
@@ -94,27 +93,23 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				actionHasResult: !!rawAction.hasResult,
 				actionExecutionTimeout: parseActionExecutionTimeout(rawAction.executionTimeout),
+				actionOutputs: null,
+				warning: null,
 
-				showInvert: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
 
-				feedbackType: null,
-				feedbackStyle: undefined,
-				feedbackAffectedProperties: undefined,
-				feedbackDisableStyleOverrides: false,
-				feedbackStyleOverridesUnsupported: false,
-
 				hiddenFromPicker: false,
-				optionsSupportExpressions: true,
-			} satisfies Complete<ClientEntityDefinition>
+				hiddenForControlTypes: undefined,
+				legacyOptions: false,
+			} satisfies Complete<ActionDefinition>
 		}
 
 		this.#ipcWrapper.sendWithNoCb('setActionDefinitions', { actions })
 	}
 	/** The feedbacks available in the connection have changed */
 	setFeedbackDefinitions(rawFeedbacks: HostFeedbackDefinition[]): void {
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 		const affectedProperties = new Map<string, string[] | undefined>()
 
 		for (const rawFeedback of rawFeedbacks) {
@@ -126,28 +121,27 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				sortKey: rawFeedback.sortName ? String(rawFeedback.sortName) : null,
-				description: rawFeedback.description,
+				description: rawFeedback.description ?? null,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
-				optionsToMonitorForInvalidations: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				feedbackAffectedProperties: rawFeedback.affectedProperties,
 				feedbackDisableStyleOverrides: false,
 				feedbackStyleOverridesUnsupported: false,
-				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
-				actionHasResult: undefined,
-				actionExecutionTimeout: undefined,
+				warning: null,
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
 
 				hiddenFromPicker: false,
-				optionsSupportExpressions: true,
-			} satisfies Complete<ClientEntityDefinition>
+				hiddenForControlTypes: undefined,
+				legacyOptions: false,
+				invertDisableAutoExpression: false,
+			} satisfies Complete<FeedbackDefinition>
 		}
 
 		const affectedPropertiesChanged = !areAffectedPropertiesEqual(this.#feedbackAffectedProperties, affectedProperties)

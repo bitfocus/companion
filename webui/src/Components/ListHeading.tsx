@@ -15,7 +15,7 @@ interface ListHeadingProps {
 	heading: React.ReactNode
 	/** Shown below the heading, such as a description of the list */
 	subheading: React.ReactNode
-	/** Buttons for the list, shown after expand and collapse all */
+	/** Buttons for the list, shown before expand and collapse all */
 	actions: React.ReactNode
 	collapse: ListHeadingCollapse | null
 }
@@ -35,13 +35,14 @@ export function ListHeading({ heading, subheading, actions, collapse }: ListHead
 		<>
 			{showHeadingRow && (
 				<div
-					className={classNames('entity-editor-heading flex items-center justify-between gap-2 my-2', {
-						'mb-0': !!subheading,
+					className={classNames('entity-editor-heading flex items-center justify-between gap-2', {
+						'mb-2': !subheading,
 					})}
 				>
 					<div className="entity-editor-heading-title text-base font-semibold text-body">{heading}</div>
 
 					<div className="entity-editor-heading-actions flex items-center gap-1 shrink-0">
+						{actions}
 						{canExpandAll && (
 							<Button
 								variant="ghost"
@@ -66,7 +67,6 @@ export function ListHeading({ heading, subheading, actions, collapse }: ListHead
 								<span className="text-3xs font-medium">Collapse all</span>
 							</Button>
 						)}
-						{actions}
 					</div>
 				</div>
 			)}

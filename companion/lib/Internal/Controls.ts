@@ -35,15 +35,12 @@ import type { IPageStore } from '../Page/Store.js'
 import { parseColorToNumber } from '../Resources/Util.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 import { ParseLocationString } from './Util.js'
 
@@ -145,7 +142,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			button_pressrelease: {
 				label: 'Button: Trigger press and release',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -166,11 +163,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						description: 'How long to hold the button down before releasing it. 0 releases immediately',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			button_press: {
 				label: 'Button: Trigger press',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -182,11 +178,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			button_release: {
 				label: 'Button: Trigger release',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -198,7 +193,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			button_rotate: {
@@ -218,7 +212,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 							'1 rotates one step clockwise (right), -1 one step counter-clockwise (left). Larger magnitudes rotate by that many steps. Tip: switch to an expression and use $(this:delta) to forward the amount of a physical rotation.',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			button_text: {
@@ -235,7 +228,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						default: '',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			textcolor: {
 				label: 'Button: Set text color (Deprecated)',
@@ -253,7 +245,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						returnType: 'number',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			bgcolor: {
 				label: 'Button: Set background color (Deprecated)',
@@ -271,12 +262,11 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						returnType: 'number',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			panic_bank: {
 				label: 'Actions: Abort button runs',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					{
@@ -294,11 +284,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			panic_page: {
 				label: 'Actions: Abort all button runs on a page',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:page',
@@ -329,11 +318,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			panic_trigger: {
 				label: 'Actions: Abort trigger runs',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:trigger',
@@ -344,11 +332,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			panic: {
 				label: 'Actions: Abort all button and trigger runs',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'checkbox',
@@ -359,12 +346,11 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			bank_current_step: {
 				label: 'Button: Set current step',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -377,11 +363,10 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			bank_current_step_delta: {
 				label: 'Button: Skip step',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -395,7 +380,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -411,7 +395,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				feedbackStyle: undefined,
 				showInvert: false,
 				options: [ControlLocationOption],
-				optionsSupportExpressions: true,
 			},
 			bank_pushed: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -433,7 +416,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			bank_current_step: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -457,7 +439,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -774,9 +755,5 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }

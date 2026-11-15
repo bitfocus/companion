@@ -2,7 +2,7 @@ import type { JsonValue } from 'type-fest'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import {
 	CompanionFieldVariablesSupport,
-	INPUT_FIELD_ID_PATTERN,
+	isAuthorableFieldId,
 	type AuthorableInputField,
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
@@ -249,7 +249,7 @@ export function makeInputFieldIdFromLabel(label: string): string {
  * Check if a field id is usable, and is not used by another field
  */
 export function isInputFieldIdValid(id: string, otherIds: ReadonlySet<string>): boolean {
-	return INPUT_FIELD_ID_PATTERN.test(id) && !otherIds.has(id)
+	return isAuthorableFieldId(id) && !otherIds.has(id)
 }
 
 /**

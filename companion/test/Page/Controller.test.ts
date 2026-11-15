@@ -165,8 +165,8 @@ describe('PageController', () => {
 			expect(newIds).toHaveLength(2)
 
 			// Each new page gets its own variables control
-			expect(controls.createPageControl).toHaveBeenCalledWith(newIds[0])
-			expect(controls.createPageControl).toHaveBeenCalledWith(newIds[1])
+			expect(controls.createPageControl).toHaveBeenCalledWith(newIds[0], null, false)
+			expect(controls.createPageControl).toHaveBeenCalledWith(newIds[1], null, false)
 
 			expect(store.getPageIds()).toEqual(['page-a', newIds[0], newIds[1], 'page-b', 'page-c'])
 			expect(store.getPageName(2)).toBe('X')

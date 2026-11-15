@@ -111,7 +111,8 @@
 		padding: 0.625rem 0.875rem;
 		min-width: 0;
 
-		&:has(.editor-grid) .editor-grid-header {
+		/* Direct children only, so a collapsed row nested in an expanded group doesn't match */
+		&:has(> .editor-grid) > .editor-grid-header {
 			padding-bottom: 0.5rem;
 			margin-bottom: 0.5rem;
 			border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);

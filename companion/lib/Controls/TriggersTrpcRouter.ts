@@ -9,6 +9,7 @@ import type {
 } from '@companion-app/shared/Model/TriggerModel.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
+import { moveControlInCollection } from './ControlOrder.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
@@ -62,8 +63,7 @@ export function createTriggersTrpcRouter(
 			const maxRank = Math.max(0, ...allTriggers.map((control) => control.options.sortOrder))
 			newControl.optionsSetField({ key: 'sortOrder', value: maxRank }, true)
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			// No collectionId yet so mark as enabled
 			newControl.setCollectionEnabled(true)
@@ -91,15 +91,13 @@ export function createTriggersTrpcRouter(
 
 			const fromControl = controlStore.controls.get(controlId)
 			if (fromControl && fromControl instanceof ControlTrigger) {
-				const controlJson = fromControl.toJSON(true)
+				const controlJson = structuredClone(fromControl.toJSON())
 
 				const newControl = factory.createTrigger(newControlId, controlJson)
 				controlStore.controls.set(newControlId, newControl)
+				newControl.start(true)
 
-				setImmediate(() => {
-					// Ensure the trigger is enabled, on a slight debounce
-					newControl.setCollectionEnabled(triggerCollections.isCollectionEnabled(newControl.options.collectionId))
-				})
+				newControl.setCollectionEnabled(triggerCollections.isCollectionEnabled(newControl.options.collectionId))
 
 				return newControlId
 			}
@@ -132,38 +130,15 @@ export function createTriggersTrpcRouter(
 
 				if (!triggerCollections.doesCollectionIdExist(collectionId)) return false
 
-				// update the collectionId of the trigger being moved if needed
-				if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
-					thisTrigger.optionsSetField({ key: 'collectionId', value: collectionId ?? undefined }, true)
-					thisTrigger.setCollectionEnabled(triggerCollections.isCollectionEnabled(collectionId))
-				}
+				const collectionChanged = thisTrigger.options.collectionId !== (collectionId ?? undefined)
 
-				// find all the other triggers with the matching collectionId
-				const sortedTriggers = controlStore.controls
+				const allTriggers = controlStore.controls
 					.values()
-					.filter(
-						(control): control is ControlTrigger =>
-							control.controlId !== controlId &&
-							control instanceof ControlTrigger &&
-							((!control.options.collectionId && !collectionId) || control.options.collectionId === collectionId)
-					)
+					.filter((control) => control instanceof ControlTrigger)
 					.toArray()
-					.sort((a, b) => (a.options.sortOrder || 0) - (b.options.sortOrder || 0))
+				moveControlInCollection(allTriggers, thisTrigger, collectionId, dropIndex)
 
-				if (dropIndex < 0) {
-					// Push the trigger to the end of the array
-					sortedTriggers.push(thisTrigger)
-				} else {
-					// Insert the trigger at the drop index
-					sortedTriggers.splice(dropIndex, 0, thisTrigger)
-				}
-
-				// update the sort order of the connections in the store, tracking which ones changed
-				sortedTriggers.forEach((trigger, index) => {
-					if (trigger.options.sortOrder === index) return // No change
-
-					trigger.optionsSetField({ key: 'sortOrder', value: index }, true)
-				})
+				if (collectionChanged) thisTrigger.setCollectionEnabled(triggerCollections.isCollectionEnabled(collectionId))
 
 				return true
 			}),

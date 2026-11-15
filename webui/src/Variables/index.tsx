@@ -125,6 +125,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 			<VariablesNav activeTab="connections" />
 
 			<SplitPanels.Root
+				empty={null}
 				showing={selectedLabel ? 'secondary' : 'primary'}
 				resize={{ storageKey: 'connection-variables' }}
 			>

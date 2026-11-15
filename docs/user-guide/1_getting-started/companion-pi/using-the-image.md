@@ -22,7 +22,7 @@ This isn't always going to be _the best_ one to use, but it is a very good, adeq
 
 Once you've got your fast microSD card in hand, you'll need a tool for flashing the image to the card. One of the most popular tools is [Raspberry Pi Imager](https://www.raspberrypi.com/software/) (Windows, Mac, and Linux). It's very easy to use, and can configure ssh while writing the image.
 
-:::info First Boot
+:::info[First Boot]
 On first boot, it'll take a few minutes for the Admin User Interface to be available. The OS has to resize itself to the capacity of your SD card and that takes an extra reboot.
 :::
 

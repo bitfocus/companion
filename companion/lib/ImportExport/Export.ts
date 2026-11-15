@@ -388,7 +388,7 @@ export class ExportController {
 		for (const control of triggerControls) {
 			const parsedId = ParseControlId(control.controlId)
 			if (parsedId?.type === 'trigger') {
-				triggersExport[parsedId.trigger] = control.toJSON(false)
+				triggersExport[parsedId.trigger] = control.toJSON()
 
 				control.collectReferencedConnectionsAndVariables(
 					referencedConnectionIds,
@@ -610,7 +610,7 @@ export class ExportController {
 			for (const control of triggerControls) {
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type === 'trigger') {
-					triggersExport[parsedId.trigger] = control.toJSON(false)
+					triggersExport[parsedId.trigger] = control.toJSON()
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,
@@ -639,7 +639,7 @@ export class ExportController {
 			for (const control of expressionVariableControls) {
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type === 'expression-variable') {
-					exp.expressionVariables[parsedId.variableId] = control.toJSON(false)
+					exp.expressionVariables[parsedId.variableId] = control.toJSON()
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,
@@ -648,6 +648,46 @@ export class ExportController {
 					)
 				} else {
 					this.#logger.warn(`Control ${control.controlId} is not a valid expression variable control!`)
+				}
+			}
+		}
+
+		if (!config || config.customActions) {
+			exp.customActions = {}
+			exp.customActionCollections = this.#controlsController.exportCustomActionCollections()
+
+			for (const control of this.#controlsController.getAllCustomActions()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-action') {
+					exp.customActions[parsedId.customActionId] = control.toJSON()
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom action control!`)
+				}
+			}
+		}
+
+		if (!config || config.customFeedbacks) {
+			exp.customFeedbacks = {}
+			exp.customFeedbackCollections = this.#controlsController.exportCustomFeedbackCollections()
+
+			for (const control of this.#controlsController.getAllCustomFeedbacks()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-feedback') {
+					exp.customFeedbacks[parsedId.customFeedbackId] = control.toJSON()
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom feedback control!`)
 				}
 			}
 		}

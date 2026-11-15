@@ -247,7 +247,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 	return (
 		<ButtonGridViewProvider value={gridView}>
-			<SplitPanels.Root showing={null} className="buttons-page" resize={{ storageKey: 'buttons' }}>
+			<SplitPanels.Root empty={null} showing={null} className="buttons-page" resize={{ storageKey: 'buttons' }}>
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ContextMenu
 					open={contextMenuOpen}

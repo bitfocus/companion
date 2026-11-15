@@ -91,6 +91,7 @@ typings/
 
 # dotenv environment variables file
 .env
+.env.yarn
 .devcontainer/docker-compose.override.yml
 .devcontainer/devcontainer-lock.json
 

@@ -1,5 +1,6 @@
 import dgram from 'node:dgram'
 import path from 'node:path'
+import semver from 'semver'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -296,6 +297,156 @@ describe('real module children across module-api versions', () => {
 			}, 30_000)
 			await app.trpc().instances.connections.setEnabled({ connectionId, enabled: true })
 			await waitForStatusCategory(connectionId, 'good')
+		}
+	)
+
+	test.each(fixtureVersions.versions.map((v, index) => ({ ...v, index })))(
+		'module built with @companion-module/base@$apiVersion is subscribed and learns by the ids it is told about',
+		async ({ apiVersion, index }) => {
+			const label = `track_${apiVersion.replaceAll('.', '_')}`
+			const connectionId = await app
+				.trpc()
+				.instances.connections.add({ module: { type: fixtureModuleId(apiVersion) }, label, versionId: 'dev' })
+			await waitForStatusCategory(connectionId, 'good')
+			await vi.waitFor(() => {
+				expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeTruthy()
+				expect(
+					app.registry.instance.definitions.getEntityDefinition(EntityModelType.Feedback, connectionId, 'track_fb')
+				).toBeTruthy()
+			}, 30_000)
+
+			// From 1.13 the host shares one subscription between identical entities in a control, and the module knows
+			// them by that. Before then the module knows each entity by its own id
+			const sharesSubscriptions = semver.gte(apiVersion, '1.13.0')
+
+			// Rows 1 and 2 hold the buttons of the test above
+			const location = { pageNumber: 1, row: 3, column: index }
+			const controlId = app.createButton(location)
+			const control = app.registry.controls.getControl(controlId)!
+			if (!control.supportsEntities || !control.entities.isEditable) throw new Error('Expected an editable button')
+			const stepId = (control.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+
+			const addEntity = async (
+				entityType: EntityModelType,
+				entityLocation: 'feedbacks' | { stepId: string; setId: 'down' },
+				definitionId: string,
+				value: string
+			) => {
+				const entityId = await app.trpc().controls.entities.add({
+					controlId,
+					entityLocation,
+					ownerId: null,
+					connectionId,
+					entityType,
+					entityDefinition: definitionId,
+				})
+				if (!entityId) throw new Error('Failed to add the entity')
+				await app.trpc().controls.entities.setOption({
+					controlId,
+					entityLocation,
+					entityId,
+					key: 'value',
+					value: exprVal(value),
+				})
+				return entityId
+			}
+			const down = { stepId, setId: 'down' } as const
+			const actionIds = [
+				await addEntity(EntityModelType.Action, down, 'track', 'a'),
+				await addEntity(EntityModelType.Action, down, 'track', 'a'),
+				await addEntity(EntityModelType.Action, down, 'track', 'b'),
+			]
+			const feedbackIds = [
+				await addEntity(EntityModelType.Feedback, 'feedbacks', 'track_fb', 'a'),
+				await addEntity(EntityModelType.Feedback, 'feedbacks', 'track_fb', 'a'),
+				await addEntity(EntityModelType.Feedback, 'feedbacks', 'track_fb', 'b'),
+			]
+
+			const trackedIds = (variableId: string) => {
+				const value = app.registry.variables.values.getVariableValue(label, variableId)
+				return typeof value === 'string' ? value.split(',').filter(Boolean) : []
+			}
+			for (const [variableId, entityIds] of [
+				['tracked_actions', actionIds],
+				['tracked_feedbacks', feedbackIds],
+			] as const) {
+				await vi.waitFor(() => {
+					if (sharesSubscriptions) {
+						// The identical pair shares one subscription, whose id is not that of either entity
+						expect(trackedIds(variableId)).toHaveLength(2)
+						expect(trackedIds(variableId).filter((id) => entityIds.includes(id))).toEqual([])
+					} else {
+						expect(trackedIds(variableId)).toEqual([...entityIds].sort())
+					}
+				}, 30_000)
+			}
+			const trackedActions = trackedIds('tracked_actions')
+			const trackedFeedbacks = trackedIds('tracked_feedbacks')
+
+			// Learning is by the same id as the module was subscribed with
+			const setterLocation = { pageNumber: 1, row: 0, column: index }
+			const setterId = app.createButton(setterLocation)
+			const setter = app.registry.controls.getControl(setterId)!
+			if (!setter.supportsEntities) throw new Error('Expected a button')
+			const setterStepId = (setter.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+			const setVarId = await app.trpc().controls.entities.add({
+				controlId: setterId,
+				entityLocation: { stepId: setterStepId, setId: 'down' },
+				ownerId: null,
+				connectionId,
+				entityType: EntityModelType.Action,
+				entityDefinition: 'set_var',
+			})
+			await app.trpc().controls.entities.setOption({
+				controlId: setterId,
+				entityLocation: { stepId: setterStepId, setId: 'down' },
+				entityId: setVarId!,
+				key: 'value',
+				value: exprVal('learnt'),
+			})
+			app.pressButton(setterLocation, true)
+			app.pressButton(setterLocation, false)
+			await vi.waitFor(() => {
+				expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('learnt')
+			}, 30_000)
+
+			expect(
+				await app.trpc().controls.entities.learnOptions({ controlId, entityLocation: down, entityId: actionIds[0] })
+			).toBe(true)
+			expect(control.entities.findEntityById(actionIds[0])?.asEntityModel(false).options.value).toEqual(
+				exprVal('learnt')
+			)
+			// The module reports it as a variable, which can arrive after the learnt options
+			await vi.waitFor(() => {
+				const learnedId = app.registry.variables.values.getVariableValue(label, 'learned_id')
+				if (sharesSubscriptions) {
+					expect(trackedActions).toContain(learnedId)
+				} else {
+					expect(learnedId).toBe(actionIds[0])
+				}
+			}, 30_000)
+
+			expect(
+				await app
+					.trpc()
+					.controls.entities.learnOptions({ controlId, entityLocation: 'feedbacks', entityId: feedbackIds[0] })
+			).toBe(true)
+			expect(control.entities.findEntityById(feedbackIds[0])?.asEntityModel(false).options.value).toEqual(
+				exprVal('learnt')
+			)
+			// The module reports it as a variable, which can arrive after the learnt options
+			await vi.waitFor(() => {
+				const learnedFeedbackId = app.registry.variables.values.getVariableValue(label, 'learned_feedback_id')
+				if (sharesSubscriptions) {
+					expect(trackedFeedbacks).toContain(learnedFeedbackId)
+				} else {
+					expect(learnedFeedbackId).toBe(feedbackIds[0])
+				}
+			}, 30_000)
+
+			// The learnt feedback has moved to a subscription of its own, and is told the value for it
+			await vi.waitFor(() => expect(app.getFeedbackValue(controlId, feedbackIds[0])).toBe(true), 30_000)
+			expect(app.getFeedbackValue(controlId, feedbackIds[1])).toBe(false)
 		}
 	)
 

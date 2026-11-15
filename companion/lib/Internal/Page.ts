@@ -13,13 +13,7 @@ import { EventEmitter } from 'node:events'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { VariableDefinition, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { IPageStore } from '../Page/Store.js'
-import type {
-	ActionForVisitor,
-	FeedbackForVisitor,
-	InternalModuleFragment,
-	InternalModuleFragmentEvents,
-	InternalVisitor,
-} from './Types.js'
+import type { InternalModuleFragment, InternalModuleFragmentEvents } from './Types.js'
 
 export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	// #logger = LogController.createLogger('Internal/Page')
@@ -58,9 +52,5 @@ export class InternalPage extends EventEmitter<InternalModuleFragmentEvents> imp
 			variables[`page_number_${i}_name`] = this.#pageStore.getPageName(i)
 		}
 		this.emit('setVariables', variables)
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }

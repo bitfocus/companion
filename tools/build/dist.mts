@@ -132,7 +132,6 @@ const copyPrebuildsFromDependencies = [
 	'node-hid',
 	'@julusian/image-rs',
 	'@julusian/segfault-raub',
-	'bufferutil', // Technically @julusian/bufferutil
 ]
 for (const name of copyPrebuildsFromDependencies) {
 	await fs.mkdirp('dist/prebuilds')

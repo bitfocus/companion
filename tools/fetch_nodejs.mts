@@ -1,9 +1,10 @@
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
+import { unzipSync } from 'fflate'
 import { $, fetch, fs, path, usePowerShell } from 'zx'
 import nodeVersionsJson from '../assets/nodejs-versions.json' with { type: 'json' }
-import { determinePlatformInfo, toPosix, type PlatformInfo } from './build/util.mts'
+import { determinePlatformInfo, type PlatformInfo } from './build/util.mts'
 
 const streamPipeline = promisify(pipeline)
 
@@ -58,11 +59,7 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 		if (isZip) {
 			const tmpDir = path.join(cacheRuntimeDir, `tmp-${nodeVersion}`)
 			await fs.remove(tmpDir)
-			if (process.platform === 'win32') {
-				await $`Expand-Archive ${toPosix(tarPath)} -DestinationPath ${toPosix(tmpDir)}`
-			} else {
-				await $`unzip ${toPosix(tarPath)} -d ${toPosix(tmpDir)}`
-			}
+			await extractZip(tarPath, tmpDir)
 			await fs.move(
 				path.join(tmpDir, `node-v${nodeVersion}-${platformInfo.runtimePlatform}-${downloadArch}`),
 				runtimeDir
@@ -89,6 +86,21 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 	}
 
 	return runtimeDir
+}
+
+// Unzipped in-process, as Expand-Archive fails in PowerShell 7.6.10 (Microsoft.PowerShell.Archive 1.2.7)
+async function extractZip(zipPath: string, destDir: string) {
+	const entries = unzipSync(await fs.readFile(zipPath))
+	for (const [name, data] of Object.entries(entries)) {
+		const target = path.resolve(destDir, name)
+		if (!target.startsWith(path.resolve(destDir) + path.sep)) throw new Error(`Unsafe path in ${zipPath}: ${name}`)
+		if (name.endsWith('/')) {
+			await fs.mkdirp(target)
+		} else {
+			await fs.mkdirp(path.dirname(target))
+			await fs.writeFile(target, data)
+		}
+	}
 }
 
 // Also usable directly (yarn fetch-runtimes) to provision the module-child runtimes without a

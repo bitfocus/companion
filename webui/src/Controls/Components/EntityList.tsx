@@ -1,13 +1,17 @@
 import { observer } from 'mobx-react-lite'
 import './EntityList.css'
 import { useRef } from 'react'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { EntityModelType, EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type {
+	EntityModelType,
+	EntityOwner,
+	FeedbackEntitySubType,
+	SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
-import { EntityEditorHeading } from './EntityEditorHeadingProps.js'
+import { EntityEditorHeading } from './EntityEditorHeading.js'
 import { EntityTableRow } from './EntityEditorRow.js'
 import { EntityDropPlaceholderZone } from './EntityListDropZone.js'
 import { EntityListHeightCacheProvider, useEntityListHeightCache } from './EntityListHeightCacheContext.js'
@@ -20,7 +24,7 @@ interface EditableEntityListProps {
 	ownerId: EntityOwner | null
 	entityType: EntityModelType
 	entityTypeLabel: string
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 }
 export const EditableEntityList = observer(function EditableEntityList({
 	heading,
@@ -65,7 +69,7 @@ interface MinimalEntityListProps {
 	entities: SomeEntityModel[] | undefined
 	entityType: EntityModelType
 	entityTypeLabel: string
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 }
 
 export const MinimalEntityList = observer(function MinimalEntityList(props: MinimalEntityListProps) {

@@ -18,15 +18,12 @@ import type { ControlsController } from '../Controls/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
 	FeedbackForInternalExecution,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalFeedbackDefinition,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
@@ -66,12 +63,13 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			trigger_enabled: {
 				label: 'Trigger: Enable or disable trigger',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:trigger',
 						label: 'Trigger',
 						id: 'trigger_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -83,19 +81,19 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: false,
 			},
 			trigger_collection_enabled: {
 				label: 'Trigger: Enable or disable trigger collection',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:trigger_collection',
 						label: 'Collection',
 						id: 'collection_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -107,10 +105,9 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: false,
 			},
 		}
 	}
@@ -154,7 +151,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 			trigger_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Trigger: When enabled or disabled',
-				description: undefined,
+				description: null,
 				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
@@ -165,6 +162,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger',
 						label: 'Trigger',
 						id: 'trigger_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -175,15 +173,14 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: false,
 			},
 			trigger_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Trigger: When collection enabled or disabled',
-				description: undefined,
+				description: null,
 				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,
@@ -194,6 +191,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger_collection',
 						label: 'Collection',
 						id: 'collection_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -204,10 +202,9 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: false,
 			},
 		}
 	}
@@ -231,9 +228,5 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 			const target = feedback.options.enable == 'true'
 			return state == target
 		}
-	}
-
-	visitReferences(_visitor: InternalVisitor, _actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		// Nothing to do
 	}
 }

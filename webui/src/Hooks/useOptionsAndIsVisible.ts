@@ -17,16 +17,17 @@ export type IsVisibleFn = (
 
 export function useOptionsVisibility(
 	itemOptions: Array<SomeCompanionInputField> | undefined | null,
-	optionsSupportExpressions: boolean,
 	optionValues: ExpressionableOptionsObject | undefined | null
 ): ReadonlyMap<string, boolean> {
 	const [isVisibleFns, allowedReferences] = useComputed(() => {
-		const isVisibleFns = new Map<string, IsVisibleFn>()
+		const isVisibleFns = new Map<string, { fn: IsVisibleFn; readsAllOptions: boolean }>()
 		const allowedReferences = new Set<string>()
 
 		for (const option of itemOptions ?? []) {
 			const isVisibleFn = parseIsVisibleFn(option)
-			if (isVisibleFn) isVisibleFns.set(option.id, isVisibleFn)
+			// A function (only from 1.x modules) is given every option, all of which are plain values
+			if (isVisibleFn)
+				isVisibleFns.set(option.id, { fn: isVisibleFn, readsAllOptions: option.isVisibleUi?.type === 'function' })
 			if (option.disableAutoExpression && option.type !== 'expression') allowedReferences.add(option.id)
 		}
 
@@ -38,21 +39,19 @@ export function useOptionsVisibility(
 
 		if (!optionValues) return visibility
 
-		for (const [id, entry] of isVisibleFns) {
+		let allOptions: CompanionOptionValues | undefined
+		const restrictedGetOptionValue = createRestrictedGetOptionValue(
+			allowedReferences,
+			(optionId) => optionValues[optionId]?.value
+		)
+
+		for (const [id, { fn, readsAllOptions }] of isVisibleFns) {
 			try {
-				if (entry && typeof entry === 'function') {
-					if (optionsSupportExpressions) {
-						// We only support the expression syntax functions here
-						const restrictedGetOptionValue = createRestrictedGetOptionValue(
-							allowedReferences,
-							(optionId) => optionValues[optionId]?.value
-						)
-						visibility.set(id, entry({}, restrictedGetOptionValue))
-					} else {
-						// Fallback to simpler behaviour
-						const simpleOptions = convertExpressionOptionsWithoutParsing(structuredClone(toJS(optionValues)))
-						visibility.set(id, entry(simpleOptions))
-					}
+				if (readsAllOptions) {
+					allOptions ??= convertExpressionOptionsWithoutParsing(structuredClone(toJS(optionValues)))
+					visibility.set(id, fn(allOptions))
+				} else {
+					visibility.set(id, fn({}, restrictedGetOptionValue))
 				}
 			} catch (e) {
 				console.error('Failed to check visibility', e)
@@ -60,7 +59,7 @@ export function useOptionsVisibility(
 		}
 
 		return visibility
-	}, [isVisibleFns, optionValues, allowedReferences, optionsSupportExpressions])
+	}, [isVisibleFns, optionValues, allowedReferences])
 }
 
 /**

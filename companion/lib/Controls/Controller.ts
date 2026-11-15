@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreatePageControlId,
@@ -11,6 +12,8 @@ import {
 	formatLocation,
 	ParseControlId,
 	type BankControlId,
+	type CustomActionControlId,
+	type CustomFeedbackControlId,
 	type ExpressionVariableControlId,
 	type ParsedControlIdType,
 	type SomeControlId,
@@ -19,6 +22,8 @@ import {
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionCollection, CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbackCollection, CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -29,7 +34,7 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { CompositeElementIdString } from '../Instance/Definitions.js'
+import type { ActionDefinition, CompositeElementIdString, FeedbackDefinition } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { yieldToEventLoop } from '../Resources/Util.js'
@@ -41,6 +46,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
 import { createActionSetsTrpcRouter } from './ActionSetsTrpcRouter.js'
+import { createBuildingBlockInputsTrpcRouter } from './BuildingBlocks/BuildingBlockInputsTrpcRouter.js'
 import type { ButtonPressEvents } from './ButtonPressEvents.js'
 import type { ControlChangeEvents, ControlCommonEvents, ControlExternalDependencies } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
@@ -48,12 +54,24 @@ import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import type { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
+import { ControlCustomAction } from './ControlTypes/CustomAction.js'
+import { ControlCustomFeedback } from './ControlTypes/CustomFeedback.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
+import { CustomActionCollections } from './CustomActionCollections.js'
+import { MAX_CUSTOM_ACTION_DEPTH } from './CustomActionRunFrame.js'
+import {
+	pruneCustomActionOutputTargetsInCallers,
+	renameCustomActionOutputInCallers,
+} from './CustomActions/CustomActionCallers.js'
+import { analyseCustomCalls, type CustomActionCallAnalysis } from './CustomActions/CustomActionCalls.js'
+import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
+import { CustomFeedbackCollections } from './CustomFeedbackCollections.js'
+import { createCustomFeedbackTrpcRouter } from './CustomFeedbackTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
@@ -113,6 +131,16 @@ export class ControlsController {
 
 	readonly #expressionVariableNamesMap: ExpressionVariableNameMap
 
+	/**
+	 * The custom action collections
+	 */
+	readonly #customActionCollections: CustomActionCollections
+
+	/**
+	 * The custom feedback collections
+	 */
+	readonly #customFeedbackCollections: CustomFeedbackCollections
+
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
 	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
@@ -156,7 +184,131 @@ export class ControlsController {
 		this.#expressionVariableCollections = new ExpressionVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
+
+		this.#customActionCollections = new CustomActionCollections(db, (validCollectionIds) =>
+			this.#cleanUnknownCustomActionCollectionIds(validCollectionIds)
+		)
+
+		this.#controlEvents.on('customActionDefinitionChanged', (controlId, customAction) => {
+			this.#publishCustomActionDefinitions()
+			this.#deps.customActionInstances.onCustomActionChanged(controlId)
+
+			// Callers stop writing outputs which have gone. Not when it is deleted, so that they are whole again if it
+			// is imported
+			if (customAction) {
+				const outputIds = new Set(customAction.outputs.map((output) => output.variableName))
+				pruneCustomActionOutputTargetsInCallers(this.#store, controlId, outputIds)
+			}
+		})
+		this.#controlEvents.on('customActionOutputRenamed', (controlId, fromId, toId) =>
+			renameCustomActionOutputInCallers(this.#store, controlId, fromId, toId)
+		)
+
+		this.#customFeedbackCollections = new CustomFeedbackCollections(db, (validCollectionIds) =>
+			this.#cleanUnknownCustomFeedbackCollectionIds(validCollectionIds)
+		)
+
+		this.#controlEvents.on('customFeedbackDefinitionChanged', (controlId) => {
+			this.#publishCustomFeedbackDefinitions()
+			// How deeply the custom actions nest includes the custom feedbacks they use
+			this.#publishCustomActionDefinitions()
+			this.#deps.customFeedbackInstances.onCustomFeedbackChanged(controlId)
+		})
 	}
+
+	#cleanUnknownCustomFeedbackCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomFeedback) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	/**
+	 * Publish each custom feedback as a feedback, so that it can be used by other controls
+	 */
+	#publishCustomFeedbackDefinitions = debounceFn(
+		(): void => {
+			const { customFeedbacks, analysis } = this.#analyseCustomCalls()
+
+			const definitions: Record<string, FeedbackDefinition> = {}
+			for (const [id, control] of customFeedbacks) {
+				const callAnalysis = analysis.customFeedbacks.get(id)
+				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeUseProblem(customFeedbacks, callAnalysis))
+
+				definitions[id] = control.toFeedbackDefinition()
+			}
+
+			this.#deps.instance.definitions.setFeedbackDefinitions(CUSTOM_CONNECTION_ID, definitions)
+		},
+		{
+			before: false,
+			after: true,
+			wait: 10,
+			maxWait: 50,
+		}
+	)
+
+	/**
+	 * Which custom actions and custom feedbacks call each other, so that the calls which can never run can be shown as
+	 * such. They are analysed together, as the depth of a custom action includes the custom feedbacks it uses
+	 */
+	#analyseCustomCalls(): {
+		customActions: Map<string, ControlCustomAction>
+		customFeedbacks: Map<string, ControlCustomFeedback>
+		analysis: ReturnType<typeof analyseCustomCalls>
+	} {
+		const customActions = new Map<string, ControlCustomAction>()
+		const customFeedbacks = new Map<string, ControlCustomFeedback>()
+		for (const control of this.#store.controls.values()) {
+			const parsedId = ParseControlId(control.controlId)
+			if (control instanceof ControlCustomAction && parsedId?.type === 'custom-action') {
+				customActions.set(parsedId.customActionId, control)
+			} else if (control instanceof ControlCustomFeedback && parsedId?.type === 'custom-feedback') {
+				customFeedbacks.set(parsedId.customFeedbackId, control)
+			}
+		}
+
+		const analysis = analyseCustomCalls(
+			new Map([...customActions].map(([id, control]) => [id, control.getDirectCalls()])),
+			new Map([...customFeedbacks].map(([id, control]) => [id, control.getCalledCustomFeedbackIds()]))
+		)
+
+		return { customActions, customFeedbacks, analysis }
+	}
+
+	#cleanUnknownCustomActionCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomAction) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	/**
+	 * Publish each custom action as an action, so that it can be used by other controls
+	 */
+	#publishCustomActionDefinitions = debounceFn(
+		(): void => {
+			const { customActions, analysis } = this.#analyseCustomCalls()
+
+			const definitions: Record<string, ActionDefinition> = {}
+			for (const [id, control] of customActions) {
+				const callAnalysis = analysis.customActions.get(id)
+				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))
+
+				definitions[id] = control.toActionDefinition()
+			}
+
+			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_CONNECTION_ID, definitions)
+		},
+		{
+			before: false,
+			after: true,
+			wait: 10,
+			maxWait: 50,
+		}
+	)
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#store.controls.values()) {
@@ -247,6 +399,21 @@ export class ControlsController {
 				this.#store,
 				this.#factory
 			),
+			customActions: createCustomActionTrpcRouter(
+				this.#controlChangeEvents,
+				this.#customActionCollections,
+				this.#store,
+				this.#factory,
+				this.#deps.customActionInstances
+			),
+			customFeedbacks: createCustomFeedbackTrpcRouter(
+				this.#controlChangeEvents,
+				this.#customFeedbackCollections,
+				this.#store,
+				this.#factory,
+				this.#deps.customFeedbackInstances
+			),
+			buildingBlockInputs: createBuildingBlockInputsTrpcRouter(this.#store),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,
@@ -362,6 +529,32 @@ export class ControlsController {
 	}
 
 	/**
+	 * Get all of the custom action controls
+	 */
+	getAllCustomActions(): ControlCustomAction[] {
+		const customActions: ControlCustomAction[] = []
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomAction) {
+				customActions.push(control)
+			}
+		}
+		return customActions
+	}
+
+	/**
+	 * Get all of the custom feedback controls
+	 */
+	getAllCustomFeedbacks(): ControlCustomFeedback[] {
+		const customFeedbacks: ControlCustomFeedback[] = []
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomFeedback) {
+				customFeedbacks.push(control)
+			}
+		}
+		return customFeedbacks
+	}
+
+	/**
 	 * Count the controls of a given type
 	 */
 	getControlCountOfType(type: string): number {
@@ -425,8 +618,7 @@ export class ControlsController {
 			// It was made before it was placed, so anything relative to its location must be resolved again
 			newControl.triggerLocationHasChanged()
 
-			// Ensure it is stored to the db
-			newControl.commitChange(true)
+			newControl.start(true)
 
 			return newControlId
 		}
@@ -443,16 +635,11 @@ export class ControlsController {
 		const newControl = this.#factory.createClassForControl(controlId, 'trigger', definition, true)
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
+			newControl.start(true)
 
 			if (newControl instanceof ControlTrigger) {
-				setImmediate(() => {
-					// Ensure the trigger is enabled, on a slight debounce
-					newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
-				})
+				newControl.setCollectionEnabled(this.#triggerCollections.isCollectionEnabled(newControl.options.collectionId))
 			}
-
-			// Ensure it is stored to the db
-			newControl.commitChange()
 
 			return true
 		}
@@ -473,17 +660,50 @@ export class ControlsController {
 		if (newControl) {
 			this.#store.controls.set(controlId, newControl)
 
-			// Add to names map
+			// Add to names map before it is saved, as the saved client state includes whether it is active
 			const expressionVariableControl = newControl as ControlExpressionVariable
 			this.#expressionVariableNamesMap.addExpressionVariable(controlId, expressionVariableControl.options.variableName)
 
-			// Ensure it is stored to the db
-			newControl.commitChange()
+			newControl.start(true)
 
 			return newControl as ControlExpressionVariable
 		}
 
 		return undefined
+	}
+
+	/**
+	 * Import a custom action
+	 */
+	importCustomAction(controlId: CustomActionControlId, definition: CustomActionModel): boolean {
+		if (this.#store.controls.has(controlId)) throw new Error(`Custom action ${controlId} already exists`)
+
+		const newControl = this.#factory.createClassForControl(controlId, 'custom-action', definition, true)
+		if (newControl) {
+			this.#store.controls.set(controlId, newControl)
+			newControl.start(true)
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
+	 * Import a custom feedback
+	 */
+	importCustomFeedback(controlId: CustomFeedbackControlId, definition: CustomFeedbackModel): boolean {
+		if (this.#store.controls.has(controlId)) throw new Error(`Custom feedback ${controlId} already exists`)
+
+		const newControl = this.#factory.createClassForControl(controlId, 'custom-feedback', definition, true)
+		if (newControl) {
+			this.#store.controls.set(controlId, newControl)
+			newControl.start(true)
+
+			return true
+		}
+
+		return false
 	}
 
 	/**
@@ -511,8 +731,29 @@ export class ControlsController {
 
 		this.#cleanUnknownExpressionVariableCollectionIds(this.#expressionVariableCollections.collectAllCollectionIds())
 
+		this.#cleanUnknownCustomActionCollectionIds(this.#customActionCollections.collectAllCollectionIds())
+
+		this.#cleanUnknownCustomFeedbackCollectionIds(this.#customFeedbackCollections.collectAllCollectionIds())
+
+		this.#publishCustomActionDefinitions()
+		this.#publishCustomFeedbackDefinitions()
+
 		// Initialize expression variable names map
 		this.#expressionVariableNamesMap.rebuildMap()
+	}
+
+	/**
+	 * Start every control loaded by init, subscribing their entities and applying their side effects (internal
+	 * module, special expressions, module notify, and building the copies held by entities which use custom
+	 * actions and feedbacks). Controls are loaded without being started, so this must be called once at startup after everything
+	 * they depend on (eg custom variables and the custom actions and feedbacks) has been loaded. They are already stored, so are
+	 * not saved again.
+	 * Connections that start later pick up their entities themselves.
+	 */
+	startAll(): void {
+		for (const control of this.#store.controls.values()) {
+			control.start(false)
+		}
 	}
 
 	/**
@@ -638,6 +879,22 @@ export class ControlsController {
 		this.#expressionVariableCollections.replaceCollections(collections)
 	}
 
+	exportCustomActionCollections(): CustomActionCollection[] {
+		return this.#customActionCollections.collectionData
+	}
+
+	replaceCustomActionCollections(collections: CustomActionCollection[]): void {
+		this.#customActionCollections.replaceCollections(collections)
+	}
+
+	exportCustomFeedbackCollections(): CustomFeedbackCollection[] {
+		return this.#customFeedbackCollections.collectionData
+	}
+
+	replaceCustomFeedbackCollections(collections: CustomFeedbackCollection[]): void {
+		this.#customFeedbackCollections.replaceCollections(collections)
+	}
+
 	/**
 	 * Create a control
 	 * Danger: This will not delete an existing control from the specified location
@@ -655,6 +912,7 @@ export class ControlsController {
 
 		this.#store.controls.set(controlId, newControl)
 		this.#controlEvents.emit('controlPlacedAt', location, controlId)
+		newControl.start(true)
 
 		// Notify interested parties
 		this.#controlEvents.emit('updateButtonState', location, false, undefined)
@@ -673,11 +931,11 @@ export class ControlsController {
 	 * There is exactly one per page, keyed by the page's stable id. Safe to call for a page that already
 	 * has one during reconciliation (it becomes a no-op unless a `storage` model is given to import).
 	 * @param pageId Stable id of the page
-	 * @param storage Persisted model to import, or null/undefined to create an empty one
+	 * @param storage Persisted model to import, or null to create an empty one
 	 * @param isImport Whether this is an import, and needs additional processing
 	 * @returns the page controlId
 	 */
-	createPageControl(pageId: string, storage?: PageControlModel | null, isImport = false): string {
+	createPageControl(pageId: string, storage: PageControlModel | null, isImport: boolean): string {
 		const controlId = CreatePageControlId(pageId)
 
 		const existing = this.#store.getControl(controlId)
@@ -693,6 +951,7 @@ export class ControlsController {
 		if (!newControl) throw new Error(`Failed to create page control for page "${pageId}"`)
 
 		this.#store.controls.set(controlId, newControl)
+		newControl.start(true)
 
 		return controlId
 	}
@@ -749,6 +1008,7 @@ export class ControlsController {
 		const newControl = this.#factory.createPresetControl(connectionId, presetId, variablesHash, presetModel)
 
 		this.#store.controls.set(controlId, newControl)
+		newControl.start(true)
 
 		// Force a redraw
 		this.#controlEvents.emit('invalidateControlRender', controlId)
@@ -783,4 +1043,48 @@ export class ControlsController {
 	): VariablesAndExpressionParser {
 		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues ?? null, options)
 	}
+}
+
+/**
+ * Describe why some of the calls of a custom action can never run, for the user
+ */
+function describeCallProblem(
+	customActions: ReadonlyMap<string, ControlCustomAction>,
+	analysis: CustomActionCallAnalysis
+): string | null {
+	if (analysis.loop) {
+		const through = analysis.loop
+			.slice(1, -1)
+			.map((id) => `"${customActions.get(id)?.options.name || id}"`)
+			.join(', then ')
+		return through
+			? `It calls back into itself through ${through}. That call back does nothing.`
+			: 'It calls itself. That call does nothing.'
+	}
+	if (analysis.tooDeep) {
+		return `Its calls to other custom actions, with the custom feedbacks they use, are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest do nothing.`
+	}
+	return null
+}
+
+/**
+ * Describe why some of the uses of a custom feedback can never work, for the user
+ */
+function describeUseProblem(
+	customFeedbacks: ReadonlyMap<string, ControlCustomFeedback>,
+	analysis: CustomActionCallAnalysis
+): string | null {
+	if (analysis.loop) {
+		const through = analysis.loop
+			.slice(1, -1)
+			.map((id) => `"${customFeedbacks.get(id)?.options.name || id}"`)
+			.join(', then ')
+		return through
+			? `It uses itself through ${through}. That use is always false.`
+			: 'It uses itself. That use is always false.'
+	}
+	if (analysis.tooDeep) {
+		return `Its uses of other custom feedbacks are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest are always false.`
+	}
+	return null
 }

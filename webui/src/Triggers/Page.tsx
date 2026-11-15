@@ -1,5 +1,6 @@
 import {
 	faAdd,
+	faBook,
 	faClock,
 	faDownload,
 	faFileExport,
@@ -19,7 +20,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
@@ -32,14 +33,14 @@ import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import type { PageEmptyStateProps } from '~/Layout/PageEmptyState.js'
 import { PageHeader } from '~/Layout/PageHeader'
-import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { useComputed } from '~/Resources/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
@@ -123,24 +124,45 @@ export const TriggersPage = observer(function Triggers() {
 		void navigate({ to: '/triggers' })
 	}, [navigate])
 
-	const emptyList: PanelEmptyListState | null =
-		triggersList.triggers.size === 0
+	const empty: PageEmptyStateProps | null =
+		triggersList.triggers.size === 0 && triggersList.collections.size === 0 && !selectedTriggerId
 			? {
+					icon: faClock,
 					title: 'No triggers yet',
-					description: 'Triggers run actions on a schedule, or when an event or variable changes.',
-					actionLabel: 'Add trigger',
-					onAction: doAddNew,
+					description: (
+						<>
+							<p>
+								Triggers run actions automatically, without anyone pressing a button: on a schedule, when Companion
+								starts up, when a variable changes, or when a condition becomes true.
+							</p>
+							<p>Use them to automate routine tasks, keep devices in sync, or react to events as they happen.</p>
+						</>
+					),
+					actions: (
+						<>
+							<Button color="primary" onClick={doAddNew}>
+								<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add your first trigger
+							</Button>
+							<LinkButtonExternal color="secondary" href={makeAbsolutePath(triggersHelpPage)}>
+								<FontAwesomeIcon icon={faBook} className="me-1.5" /> Read the guide
+							</LinkButtonExternal>
+						</>
+					),
 				}
 			: null
 
 	return (
 		<div className="page-shell">
-			<PageHeader icon={faClock} title="Triggers" helpAction="/user-guide/config/triggers" />
+			<PageHeader icon={faClock} title="Triggers" helpAction={triggersHelpPage} />
 
-			<SplitPanels.Root showing={selectedTriggerId ? 'secondary' : 'primary'} resize={{ storageKey: 'triggers' }}>
-				<GenericConfirmModal ref={confirmModalRef} />
-				<ConfirmExportModal ref={exportModalRef} />
+			<GenericConfirmModal ref={confirmModalRef} />
+			<ConfirmExportModal ref={exportModalRef} />
 
+			<SplitPanels.Root
+				showing={selectedTriggerId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'triggers' }}
+				empty={empty}
+			>
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
 						{/* Top Header Card: Toolbar & Search */}
@@ -201,9 +223,7 @@ export const TriggersPage = observer(function Triggers() {
 						{!!selectedTriggerId && (
 							<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
 						)}
-						<PanelEmptyListProvider value={emptyList}>
-							<Outlet />
-						</PanelEmptyListProvider>
+						<Outlet />
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
@@ -217,6 +237,8 @@ export interface TriggerDataWithId extends Omit<ClientTriggerData, 'collectionId
 }
 
 const tableDateFormat = 'MM/DD HH:mm:ss'
+
+const triggersHelpPage = '/user-guide/config/triggers'
 
 function TriggerListNoContent() {
 	return <NonIdealState icon={faList} text="No triggers yet" />

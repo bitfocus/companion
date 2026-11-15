@@ -328,7 +328,7 @@ describe('EntityListPool - read-only by construction', () => {
 		)
 
 		const variable = feedbackModel({ connectionId: 'internal', definitionId: 'user_value', variableName: 'tap' })
-		pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [variable] }, true, false)
+		pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [variable] }, false)
 
 		expect(pool.entitySetVariableValue('local-variables', variable.id, 500)).toBe(true)
 		expect(pool.findEntityById(variable.id)?.feedbackValue).toBe(500)
@@ -342,7 +342,7 @@ describe('EntityListPool - read-only by construction', () => {
 		)
 
 		// Loading the cached data must work on a read-only pool
-		expect(() => pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [] }, true, false)).not.toThrow()
+		expect(() => pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [] }, false)).not.toThrow()
 
 		// Runtime step navigation (used by pressControl) must work
 		expect(() => pool.stepSelectCurrent('0')).not.toThrow()
@@ -600,7 +600,6 @@ describe('EntityListPool - storage round-trip (button)', () => {
 					},
 				},
 			}),
-			true,
 			false
 		)
 
@@ -623,7 +622,6 @@ describe('EntityListPool - storage round-trip (button)', () => {
 					},
 				},
 			}),
-			true,
 			false
 		)
 
@@ -631,6 +629,28 @@ describe('EntityListPool - storage round-trip (button)', () => {
 		expect(Object.keys(steps)).toEqual(['0'])
 		expect(steps['0'].action_sets.down).toHaveLength(1)
 		expect(steps['0'].action_sets.down?.[0].definitionId).toBe('round-trip-action')
+	})
+
+	test('loadStorage cleans up the actions it replaces', () => {
+		const { pool, processManager } = createPool()
+		const oldAction = actionModel()
+		const steps = (action: ReturnType<typeof actionModel>) => ({
+			'0': {
+				action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
+				options: { runWhileHeld: [] },
+			},
+		})
+
+		pool.loadStorage(buttonStorage({ steps: steps(oldAction) }), false)
+		processManager.connectionEntityDelete.mockClear()
+
+		pool.loadStorage(buttonStorage({ steps: steps(actionModel()) }), false)
+
+		expect(processManager.connectionEntityDelete).toHaveBeenCalledTimes(1)
+		expect(processManager.connectionEntityDelete).toHaveBeenCalledWith(
+			expect.objectContaining({ id: oldAction.id }),
+			expect.anything()
+		)
 	})
 
 	test.each([
@@ -651,7 +671,6 @@ describe('EntityListPool - storage round-trip (button)', () => {
 					},
 				},
 			}),
-			true,
 			isImport
 		)
 

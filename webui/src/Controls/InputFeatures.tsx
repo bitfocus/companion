@@ -46,3 +46,12 @@ export function InputFeatureIcons(props: InputFeatureIconsProps): React.JSX.Elem
 
 	return featureIcons.length ? <span className="feature-icons">{featureIcons}</span> : null
 }
+
+/** Which fields of an action or feedback something like a local variable can be used in */
+export function LocalVariablesSupportHint({ subject }: { subject: string }): React.JSX.Element {
+	return (
+		<span className="text-xs text-muted">
+			{subject} are supported on fields featuring the <FontAwesomeIcon icon={faGlobe} className="mx-0.5" /> icon.
+		</span>
+	)
+}

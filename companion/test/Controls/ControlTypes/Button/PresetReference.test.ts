@@ -68,7 +68,7 @@ describe('ControlButtonPresetReference', () => {
 			getPageVariableEntities: () => null,
 			triggerEvents: null as any,
 			expressionVariableNamesMap: null as any,
-			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
+			internalModule: { entityUpgrade: vi.fn(() => undefined), visitEntityReferences: vi.fn() } as any,
 			instance: {
 				definitions,
 				processManager: {
@@ -91,6 +91,8 @@ describe('ControlButtonPresetReference', () => {
 			variableDependencies: new VariableDependencyRegistry(),
 			linkButtons: null as any,
 			referencedLocations: new ReferencedLocationsIndex(),
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() } as any,
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),
@@ -102,6 +104,25 @@ describe('ControlButtonPresetReference', () => {
 	function createControl(model = makeModel()) {
 		return new ControlButtonPresetReference(deps, CreateBankControlId('test01'), model, false)
 	}
+
+	describe('import', () => {
+		it('constructing an imported control does not subscribe its entities, start does', async () => {
+			const processManager = deps.instance.processManager as any
+			const control = new ControlButtonPresetReference(
+				deps,
+				CreateBankControlId('test01'),
+				makeModel({ feedbacks: [makeDefinitionFeedback('fb')] }),
+				true
+			)
+
+			// Nothing is deferred from the constructor any more
+			await new Promise((resolve) => setImmediate(resolve))
+			expect(processManager.connectionEntityUpdate).not.toHaveBeenCalled()
+
+			control.start(true)
+			expect(processManager.connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		})
+	})
 
 	describe('preset definition ids', () => {
 		// A preset definition allocates deterministic ids so its content checksum is stable across re-reports.
@@ -412,8 +433,8 @@ describe('ControlButtonPresetReference', () => {
 
 			// The preset changed, so the reference rebuilt: the imageBuffer is cleared until refetched...
 			expect(control.entities.getFeedbackStyleOverrides(undefined).get('imageBuffers')).toBeUndefined()
-			// ...and the refreshed feedback was re-subscribed so the module provides it again
-			expect(processManager.connectionEntityUpdate).toHaveBeenCalled()
+			// ...and the refreshed feedback was re-subscribed (once) so the module provides it again
+			expect(processManager.connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		})
 	})
 

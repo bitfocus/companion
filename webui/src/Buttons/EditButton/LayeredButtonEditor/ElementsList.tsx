@@ -1,7 +1,7 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDragDropMonitor, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faCog, faSort, faThumbtack, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faGripVertical, faThumbtack, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -312,7 +312,7 @@ const ElementListItem = observer(function ElementListItem({
 				}}
 			>
 				<div ref={handleRef} className="td-reorder">
-					<FontAwesomeIcon icon={faSort} />
+					<FontAwesomeIcon icon={faGripVertical} />
 				</div>
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedEntryId(element.id)}>

@@ -1,8 +1,8 @@
 import type express from 'express'
 import semver from 'semver'
+import type { RespawnMonitor } from 'thread-tools'
 import { isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	isValidFeedbackEntitySubType,
@@ -21,7 +21,6 @@ import {
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'
@@ -67,7 +66,9 @@ import type { CompanionOptionValues as CompanionOptionValuesNew } from '@compani
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
+import type { ActionDefinition, FeedbackDefinition } from '../Definitions.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import { ActionEntityManager } from './ActionEntityManager.js'
 import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
 import type {
 	ConnectionChildHandlerApi,
@@ -75,12 +76,8 @@ import type {
 	RunActionExtras,
 } from './ChildHandlerApi.js'
 import { translateConnectionConfigFields, translateEntityInputFields } from './ConfigFieldsLegacy.js'
-import {
-	ConnectionEntityManager,
-	type EntityManagerActionEntity,
-	type EntityManagerAdapter,
-	type EntityManagerFeedbackEntity,
-} from './EntityManager.js'
+import type { EntityManagerAdapter, EntityManagerEntity, EntityManagerUpgradeEntity } from './EntityManagerBase.js'
+import { FeedbackEntityManager } from './FeedbackEntityManager.js'
 import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 import { VariableValueBatcher } from './VariableValueBatcher.js'
@@ -110,7 +107,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 	#expectsLabelUpdates: boolean = false
 
-	readonly #entityManager: ConnectionEntityManager | null
+	readonly #usesSeparateUpgradeMethod: boolean
+	readonly #actionManager: ActionEntityManager | null
+	readonly #feedbackManager: FeedbackEntityManager | null
 
 	readonly sendVariablesChanged: ((changedVariableIds: string[]) => void) | undefined
 
@@ -183,17 +182,26 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			5000
 		)
 
-		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
-			? new ConnectionEntityManager(
-					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
+		this.#usesSeparateUpgradeMethod = doesModuleUseSeparateUpgradeMethod(apiVersion)
+		this.#actionManager = this.#usesSeparateUpgradeMethod
+			? new ActionEntityManager(
+					new ConnectionLegacyActionManagerAdapter(this.#ipcWrapper),
 					this.#deps.controls,
 					this.connectionId,
-					this.#deps.renderClock,
 					this.#deps.variables.dependencies
 				)
 			: null
-		// With an entity manager, the variable dependency registry tells it about the changes it reads
-		this.sendVariablesChanged = this.#entityManager ? undefined : this.#sendVariablesChanged.bind(this)
+		this.#feedbackManager = this.#usesSeparateUpgradeMethod
+			? new FeedbackEntityManager(
+					new ConnectionLegacyFeedbackManagerAdapter(this.#ipcWrapper, this.#deps.controls),
+					this.#deps.controls,
+					this.connectionId,
+					this.#deps.variables.dependencies,
+					this.#deps.renderClock
+				)
+			: null
+		// With entity managers, the variable dependency registry tells them about the changes they read
+		this.sendVariablesChanged = this.#usesSeparateUpgradeMethod ? undefined : this.#sendVariablesChanged.bind(this)
 
 		const messageHandler = (msg: any) => {
 			// payload is an EJSON string here (parsed inside receivedMessage); count it before that
@@ -205,6 +213,19 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 		this.#unsubListeners = () => {
 			monitor.off('message', messageHandler)
+		}
+	}
+
+	/** The manager of the entities of a type, if the module uses the separate upgrade method */
+	#getEntityManager(entityType: EntityModelType): ActionEntityManager | FeedbackEntityManager | null {
+		switch (entityType) {
+			case EntityModelType.Action:
+				return this.#actionManager
+			case EntityModelType.Feedback:
+				return this.#feedbackManager
+			default:
+				assertNever(entityType)
+				return null
 		}
 	}
 
@@ -220,14 +241,14 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
 
-			for (const entity of control.entities.getAllEntities()) {
+			for (const entity of control.entities.getAllEntitiesWithTransient()) {
 				if (entity.connectionId !== this.connectionId) continue
 
 				if (entity.upgradeIndex === undefined) {
 					entity.setMissingUpgradeIndex(config.lastUpgradeIndex)
 				}
 
-				this.#entityManager?.trackEntity(entity, controlId)
+				this.#getEntityManager(entity.type)?.trackEntity(entity, controlId)
 			}
 		}
 
@@ -242,8 +263,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				lastUpgradeIndex: config.lastUpgradeIndex,
 
 				// If using the old flow, pass all actions and feedbacks for upgrading and initial subscribe calls
-				actions: this.#entityManager ? {} : this.#getAllActionInstances(),
-				feedbacks: this.#entityManager ? {} : this.#getAllFeedbackInstances(),
+				actions: this.#actionManager ? {} : this.#getAllActionInstances(),
+				feedbacks: this.#feedbackManager ? {} : this.#getAllFeedbackInstances(),
 			},
 			undefined,
 			10000 // Allow more time before timeout, as init is likely to have a lot to do or high cpu contention
@@ -256,7 +277,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
-		this.#entityManager?.start(config.lastUpgradeIndex)
+		this.#actionManager?.start(config.lastUpgradeIndex)
+		this.#feedbackManager?.start(config.lastUpgradeIndex)
 
 		// Inform action recorder
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, true)
@@ -338,8 +360,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * @access public - needs to be re-run when the topbar setting changes
 	 */
 	async sendAllFeedbackInstances(): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.resendFeedbacks()
+		if (this.#feedbackManager) {
+			this.#feedbackManager.resendFeedbacks()
 			return
 		}
 
@@ -392,10 +414,11 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 
 	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
-		if (this.#entityManager) {
+		const entityManager = this.#getEntityManager(entity.type)
+		if (entityManager) {
 			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 
-			this.#entityManager.trackEntity(entity, controlId)
+			entityManager.trackEntity(entity, controlId)
 			return
 		}
 
@@ -464,7 +487,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 							'learnAction',
 							{
 								action: {
-									id: entity.id,
+									// The module knows the entity by its subscription, if it has one
+									id: this.#getEntityManager(entity.type)?.getSubscriptionId(entity.id) ?? entity.id,
 									controlId: controlId,
 									actionId: entity.definitionId,
 									options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
@@ -491,7 +515,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 							'learnFeedback',
 							{
 								feedback: {
-									id: entity.id,
+									// The module knows the entity by its subscription, if it has one
+									id: this.#getEntityManager(entity.type)?.getSubscriptionId(entity.id) ?? entity.id,
 									controlId: controlId,
 									feedbackId: entity.definitionId,
 									options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
@@ -530,8 +555,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Inform the child instance class about an entity that has been deleted
 	 */
 	async entityDelete(oldEntity: SomeEntityModel): Promise<void> {
-		if (this.#entityManager) {
-			this.#entityManager.forgetEntity(oldEntity.id)
+		const entityManager = this.#getEntityManager(oldEntity.type)
+		if (entityManager) {
+			entityManager.forgetEntity(oldEntity.id)
 			return
 		}
 
@@ -590,7 +616,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 		try {
 			let actionOptions: CompanionOptionValuesNew
-			if (this.#entityManager) {
+			if (this.#actionManager) {
 				// This means the new flow is being done, and the options must be parsed at this stage
 				const actionDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
 					EntityModelType.Action,
@@ -615,7 +641,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
-					id: action.id,
+					// The module knows the action by its subscription, if it has one
+					id: this.#actionManager?.getSubscriptionId(action.id) ?? action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
 					options: actionOptions as OptionsObject,
@@ -647,7 +674,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async destroy(): Promise<void> {
 		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
-		this.#entityManager?.destroy()
+		this.#actionManager?.destroy()
+		this.#feedbackManager?.destroy()
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
@@ -672,7 +700,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		this.#deps.actionRecorder.connectionAvailabilityChange(this.connectionId, false)
 		this.#deps.sharedUdpManager.leaveAllFromOwner(this.connectionId)
 
-		this.#entityManager?.destroy()
+		this.#actionManager?.destroy()
+		this.#feedbackManager?.destroy()
 
 		this.#deps.instanceDefinitions.forgetConnection(this.connectionId)
 		this.#deps.variables.values.forgetConnection(this.connectionId, this.#label)
@@ -769,49 +798,46 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle settings action definitions from the child process
 	 */
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
-		const actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ActionDefinition> = {}
 
 		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
 
 		for (const rawAction of msg.actions || []) {
 			if (BANNED_PROPS.has(rawAction.id)) continue
 			const optionsToIgnoreForSubscribeSet = new Set<string>(rawAction.optionsToIgnoreForSubscribe || [])
-			const options = translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#entityManager)
+			const options = translateEntityInputFields(rawAction.options || [], EntityModelType.Action, !!this.#actionManager)
 
 			actions[rawAction.id] = {
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				sortKey: null,
-				description: rawAction.description,
+				description: rawAction.description ?? null,
 				options: options,
 				optionsToMonitorForInvalidations: options
 					.map((o) => o.id)
 					.filter((o) => !optionsToIgnoreForSubscribeSet.has(o)),
-				hasLifecycleFunctions: !this.#entityManager || !!rawAction.hasLifecycleFunctions,
+				hasLifecycleFunctions: !this.#actionManager || !!rawAction.hasLifecycleFunctions,
 				hasLearn: !!rawAction.hasLearn,
 				learnTimeout: rawAction.learnTimeout,
 
 				actionHasResult: false,
 				actionExecutionTimeout: undefined, // not supported from 1.x modules
+				actionOutputs: null,
+				warning: null,
 
-				showInvert: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
 
-				feedbackType: null,
-				feedbackStyle: undefined,
-				feedbackAffectedProperties: undefined,
-				feedbackDisableStyleOverrides: false,
-				feedbackStyleOverridesUnsupported: false,
 				hiddenFromPicker: false,
-				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
-			} satisfies Complete<ClientEntityDefinition>
+				hiddenForControlTypes: undefined,
+				legacyOptions: true, // Expressions not supported from 1.x modules
+			} satisfies Complete<ActionDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
 
-		if (this.#entityManager) {
-			this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Action)
+		if (this.#actionManager) {
+			this.#actionManager.onEntityDefinitionsChanged()
 		}
 	}
 
@@ -819,7 +845,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle settings feedback definitions from the child process
 	 */
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
@@ -831,18 +857,19 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				sortKey: null,
-				description: rawFeedback.description,
-				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback, !!this.#entityManager),
-				optionsToMonitorForInvalidations: null, // All should be monitored
+				description: rawFeedback.description ?? null,
+				options: translateEntityInputFields(
+					rawFeedback.options || [],
+					EntityModelType.Feedback,
+					!!this.#feedbackManager
+				),
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
-				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
-				actionHasResult: undefined,
-				actionExecutionTimeout: undefined, // not supported from 1.x modules
+				warning: null,
 
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,
@@ -850,14 +877,16 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				showButtonPreview: false,
 				supportsChildGroups: [],
 				hiddenFromPicker: false,
-				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
-			} satisfies Complete<ClientEntityDefinition>
+				hiddenForControlTypes: undefined,
+				legacyOptions: true, // Expressions not supported from 1.x modules
+				invertDisableAutoExpression: true, // The module applies the invert itself
+			} satisfies Complete<FeedbackDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)
 
-		if (this.#entityManager) {
-			this.#entityManager.onEntityDefinitionsChanged(EntityModelType.Feedback)
+		if (this.#feedbackManager) {
+			this.#feedbackManager.onEntityDefinitionsChanged()
 		}
 	}
 
@@ -866,6 +895,12 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
 		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
+
+		if (this.#feedbackManager) {
+			// The values are for subscriptions, which can be shared by multiple entities
+			this.#feedbackManager.handleFeedbackValues(msg.values)
+			return
+		}
 
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
@@ -974,6 +1009,23 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 
 	/**
+	 * Find the entity the module refers to by an id it was given, including the copies held by calls of custom actions
+	 */
+	#findEntityForModule(
+		controlId: SomeControlId,
+		entityType: EntityModelType,
+		id: string
+	): ControlEntityInstance | undefined {
+		// From 1.13 the module knows an entity by its subscription
+		const subscribed = this.#getEntityManager(entityType)?.getSubscriptionEntity(id, controlId)
+		if (subscribed) return subscribed
+
+		const control = this.#deps.controls.getControl(controlId)
+		if (!control?.supportsEntities) return undefined
+		return control.entities.getAllEntitiesWithTransient().find((entity) => entity.id === id)
+	}
+
+	/**
 	 * Handle request to parse variables in a string
 	 */
 	async #handleParseVariablesInString(
@@ -981,7 +1033,17 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
 			const controlId = msg.controlId && isSomeControlId(msg.controlId) ? msg.controlId : null
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
+			const instance = msg.actionInstanceId
+				? { type: EntityModelType.Action, id: msg.actionInstanceId }
+				: msg.feedbackInstanceId
+					? { type: EntityModelType.Feedback, id: msg.feedbackInstanceId }
+					: null
+			// An entity in a custom action sees its inputs and local variables, rather than those of the control
+			const entity =
+				controlId && instance ? this.#findEntityForModule(controlId, instance.type, instance.id) : undefined
+			const parser = entity
+				? entity.createVariablesAndExpressionParser(null)
+				: this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
 			const result = parser.parseVariables(msg.text)
 
 			return {
@@ -1033,7 +1095,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle the module informing us of some actions/feedbacks which have been run through upgrade scripts
 	 */
 	async #handleUpgradedItems(msg: UpgradedDataResponseMessage): Promise<void> {
-		if (this.#entityManager) {
+		if (this.#usesSeparateUpgradeMethod) {
 			this.logger.error(`Module should not be using 'upgradedItems' as it uses the new upgrade flow`)
 			throw new Error(`Module should not be using 'upgradedItems' as it uses the new upgrade flow`)
 		}
@@ -1144,22 +1206,20 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	}
 }
 
-class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
+class ConnectionLegacyActionManagerAdapter implements EntityManagerAdapter<ActionEntityModel> {
 	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
-	readonly #controlsStore: IControlStore
 
-	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>, controlsStore: IControlStore) {
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>) {
 		this.#ipcWrapper = ipcWrapper
-		this.#controlsStore = controlsStore
 	}
 
-	async updateActions(actions: Map<string, EntityManagerActionEntity | null>) {
+	async update(actions: Map<string, EntityManagerEntity<ActionEntityModel> | null>) {
 		const updateMessage: UpdateActionInstancesMessage = { actions: {} }
 
 		for (const [id, value] of actions) {
 			if (value) {
 				updateMessage.actions[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
 					options: value.parsedOptions as OptionsObject,
@@ -1175,35 +1235,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 		return this.#ipcWrapper.sendWithCb('updateActions', updateMessage)
 	}
 
-	async updateFeedbacks(feedbacks: Map<string, EntityManagerFeedbackEntity | null>) {
-		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
-
-		for (const [id, value] of feedbacks) {
-			if (value) {
-				const control = this.#controlsStore.getControl(value.controlId)
-
-				updateMessage.feedbacks[id] = {
-					id: value.entity.id,
-					controlId: value.controlId,
-					feedbackId: value.entity.definitionId,
-					options: value.parsedOptions as OptionsObject,
-
-					image: getFeedbackImageSizeForControl(control),
-
-					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
-
-					upgradeIndex: value.entity.upgradeIndex ?? null,
-					disabled: !!value.entity.disabled,
-				}
-			} else {
-				updateMessage.feedbacks[id] = null
-			}
-		}
-
-		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
-	}
-
-	async upgradeActions(actions: Omit<EntityManagerActionEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
+	async upgrade(actions: EntityManagerUpgradeEntity<ActionEntityModel>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActionsAndFeedbacks', {
 				actions: actions.map((act) => ({
@@ -1231,8 +1263,46 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 				)
 			})
 	}
+}
 
-	async upgradeFeedbacks(feedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[], currentUpgradeIndex: number) {
+class ConnectionLegacyFeedbackManagerAdapter implements EntityManagerAdapter<FeedbackEntityModel> {
+	readonly #ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>
+	readonly #controlsStore: IControlStore
+
+	constructor(ipcWrapper: IpcWrapperEJSON<HostToModuleEventsV0, ModuleToHostEventsV0>, controlsStore: IControlStore) {
+		this.#ipcWrapper = ipcWrapper
+		this.#controlsStore = controlsStore
+	}
+
+	async update(feedbacks: Map<string, EntityManagerEntity<FeedbackEntityModel> | null>) {
+		const updateMessage: UpdateFeedbackInstancesMessage = { feedbacks: {} }
+
+		for (const [id, value] of feedbacks) {
+			if (value) {
+				const control = this.#controlsStore.getControl(value.controlId)
+
+				updateMessage.feedbacks[id] = {
+					id: id,
+					controlId: value.controlId,
+					feedbackId: value.entity.definitionId,
+					options: value.parsedOptions as OptionsObject,
+
+					image: getFeedbackImageSizeForControl(control),
+
+					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
+
+					upgradeIndex: value.entity.upgradeIndex ?? null,
+					disabled: !!value.entity.disabled,
+				}
+			} else {
+				updateMessage.feedbacks[id] = null
+			}
+		}
+
+		return this.#ipcWrapper.sendWithCb('updateFeedbacks', updateMessage)
+	}
+
+	async upgrade(feedbacks: EntityManagerUpgradeEntity<FeedbackEntityModel>[], currentUpgradeIndex: number) {
 		return this.#ipcWrapper
 			.sendWithCb('upgradeActionsAndFeedbacks', {
 				actions: [],

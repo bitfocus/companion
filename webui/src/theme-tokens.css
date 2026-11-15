@@ -1,3 +1,5 @@
+@import '../../shared-lib/theme/tokens.css';
+
 /*
   The design tokens: every colour and font the UI uses (plus a few sizes), with their dark theme values.
 
@@ -10,11 +12,10 @@
 	--container-readable: 56rem;
 
 	/* Fonts — the app's canonical UI and monospace stacks. Declared here so base.css and the
-	   font-sans/font-mono utilities all read one source. */
-	--font-sans:
-		system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif,
-		'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-	--font-mono: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+	   font-sans/font-mono utilities all read one source. Both lead with a font bundled by fonts.css, so the UI looks
+	   the same on every machine; the rest only covers glyphs those lack. */
+	--font-sans: var(--companion-font-sans);
+	--font-mono: var(--companion-font-mono);
 
 	/* Steps below Tailwind's `text-xs` (0.75rem), for badges, table meta lines and toolbar chips. */
 	--text-2xs: 0.6875rem;
@@ -25,8 +26,8 @@
 	   `primary` — anything safe and interactive: primary buttons, checked controls, selection, focus.
 	   `danger`  — destructive actions and error status, and nothing else.
 	   A red button in the content area now always means "this destroys something". */
-	--color-brand: #d50215;
-	--color-brand-hover: rgb(170, 2, 17); /* darkened brand, for hover on brand-coloured text/links */
+	--color-brand: var(--companion-brand);
+	--color-brand-hover: var(--companion-brand-hover);
 	--color-primary: #1f242e;
 	--color-primary-hover: #2b3341;
 	--color-primary-active: #12161d;
@@ -39,23 +40,23 @@
 	--color-action-on-primary: #fff;
 	--color-action-text: #46505b;
 	--color-action-bg: #f3f4f5;
-	--color-action-hover: #e8ebee;
+	--color-action-hover: var(--companion-action-hover);
 	--color-action-pressed: #dce1e6;
 	--color-action-border: #c5cbd2;
 	--color-action-border-hover: #aeb7c2;
 	--color-action-disabled-text: #9aa2ac;
 	--color-action-disabled-bg: #f3f4f5;
 	--color-action-disabled-border: #e1e5ea;
-	--color-action-focus: #66788a;
+	--color-action-focus: var(--companion-action-focus);
 	--color-action-danger-text: #b4233a;
 	--color-action-danger-hover: #fff1f3;
 	--color-action-danger-pressed: #ffe4e9;
 	--color-action-danger-hover-solid: #a30d25;
 	--color-action-danger-pressed-solid: #8c0b20;
-	--color-selection-bg: #e5e8eb;
-	--color-selection-text: #303842;
+	--color-selection-bg: var(--companion-selection-bg);
+	--color-selection-text: var(--companion-selection-text);
 	--color-selection-border: #73808c;
-	--color-accent-active: #941d1b; /* the active sidebar indicator — brand, not selection */
+	--color-accent-active: var(--companion-accent-active);
 	--color-secondary: #ccc;
 	--color-success: #1b9e3e;
 	--color-danger: #c8102e;
@@ -123,8 +124,8 @@
 	--color-syntax-error: var(--color-danger);
 
 	/* Surfaces */
-	--color-surface: #fff;
-	--color-surface-muted: #f0f0f0;
+	--color-surface: var(--companion-surface);
+	--color-surface-muted: var(--companion-surface-muted);
 	--color-surface-muted-hover: #e8e8e8;
 	--color-surface-hover: #eee; /* light hover highlight on cards/rows */
 	--color-surface-alt: #f7f7f7;
@@ -138,12 +139,12 @@
 	--color-launcher-body: #d50215;
 	--color-launcher-status: #b80012;
 	--color-launcher-header: #1b1f27;
-	--color-app-bg: #f9f9f9; /* main content area background */
-	--color-app-frame-bg: #f3f4f7; /* outer app frame behind the sidebar/header/body */
+	--color-app-bg: var(--companion-app-bg);
+	--color-app-frame-bg: var(--companion-app-frame-bg);
 	--color-body-bg: #f3f4f7; /* <body> element backing, behind the app chrome */
 
 	/* Borders */
-	--color-border: #ddd;
+	--color-border: var(--companion-border);
 	--color-border-soft: color-mix(
 		in srgb,
 		var(--color-border) 70%,
@@ -157,22 +158,22 @@
 		transparent
 	); /* translucent hairline that darkens against its backdrop (modals, toasts, separators) */
 	--color-border-muted: #dddfe2;
-	--color-border-medium: #bbb; /* stronger than --color-border (e.g. tab bar underline) */
+	--color-border-medium: var(--companion-border-medium);
 	--color-border-strong: #999;
 	--color-border-hover: #aaa; /* hovered drag/resize handle border */
 	--color-line: #ccc; /* thin neutral line: tree/nesting guides, tab-panel borders, thin scrollbars */
 
 	/* Text */
 	--color-text: #111;
-	--color-body-text: rgba(37, 42.92, 54.02, 0.95); /* inherited <body> default text colour */
+	--color-body-text: var(--companion-body-text);
 	--color-code: #d63384; /* inline <code> text */
-	--color-text-strong: #000;
+	--color-text-strong: var(--companion-text-strong);
 	/* For the `text-body` / `text-body-strong` utilities: body text that stays body-coloured inside a link or a muted
 	   container, rather than inheriting from it */
 	--color-body: var(--color-body-text);
 	--color-body-strong: var(--color-text-strong);
 	--color-icon: #333;
-	--color-text-secondary: #666;
+	--color-text-secondary: var(--companion-text-secondary);
 	--color-muted: #6c757d; /* deliberately un-prefixed (not --color-text-muted) so the utility reads `text-muted` */
 	--color-text-faint: #999; /* fainter than -muted: dropdown group headings, empty/placeholder labels */
 	--color-text-disabled: #ccc;
@@ -306,13 +307,10 @@
 	--variable-pill-padding: 1px 3px 0px;
 }
 
-/* The dark theme: every themed token's dark value. Applied by `data-theme` on <html> (set by Theme/ThemeState.ts,
-   and before first paint by index.html). Tokens built from others with var()/color-mix recompute from these, and
-   the fixed ones (Theme/themeTokens.ts) are deliberately absent. themeTokens.test.ts keeps this list complete. */
+/* App-specific dark values. Shared colors come from shared-lib/theme/tokens.css. Both follow data-theme on <html>,
+   set by Theme/ThemeState.ts and before first paint by index.html. Derived colors recompute through their references. */
 @layer theme {
 	:root[data-theme='dark'] {
-		--color-brand: #f0444f;
-		--color-brand-hover: #ff6b74;
 		--color-primary: #757575;
 		--color-primary-hover: #858585;
 		--color-primary-active: #666666;
@@ -326,23 +324,18 @@
 		--color-action-on-primary: #fff;
 		--color-action-text: #cecece;
 		--color-action-bg: #252525;
-		--color-action-hover: #2f2f2f;
 		--color-action-pressed: #393939;
 		--color-action-border: #3f3f3f;
 		--color-action-border-hover: #505050;
 		--color-action-disabled-text: #636363;
 		--color-action-disabled-bg: #1f1f1f;
 		--color-action-disabled-border: #2e2e2e;
-		--color-action-focus: #999999;
 		--color-action-danger-text: #ff7a8a;
 		--color-action-danger-hover: #3a1a20;
 		--color-action-danger-pressed: #4a1f27;
 		--color-action-danger-hover-solid: #f04a62;
 		--color-action-danger-pressed-solid: #c8203a;
-		--color-selection-bg: #303030;
-		--color-selection-text: #e3e3e3;
 		--color-selection-border: #939393;
-		--color-accent-active: #e0434a;
 		--color-secondary: #505050;
 		--color-success: #2fbf5a;
 		--color-danger: #e5354f;
@@ -403,31 +396,22 @@
 		--color-syntax-error: var(--color-danger);
 
 		/* Elevation comes from lightness: the frame is darkest, cards and popovers lightest */
-		--color-surface: #181818;
-		--color-surface-muted: #202020;
 		--color-surface-muted-hover: #282828;
 		--color-surface-hover: #272727;
 		--color-surface-alt: #1d1d1d;
 		--color-surface-subtle: #161616;
-		--color-app-bg: #131313;
-		--color-app-frame-bg: #0e0e0e;
 		--color-body-bg: #0e0e0e;
 
-		--color-border: #303030;
 		--color-border-alt: #303030;
 		--color-border-subtle: #272727;
 		--color-border-muted: #303030;
-		--color-border-medium: #4b4b4b;
 		--color-border-strong: #636363;
 		--color-border-hover: #636363;
 		--color-line: #3f3f3f;
 
 		--color-text: #e8e8e8;
-		--color-body-text: #dfdfdf;
 		--color-code: #f07fb8;
-		--color-text-strong: #fff;
 		--color-icon: #cecece;
-		--color-text-secondary: #a9a9a9;
 		--color-muted: #a0a0a0;
 		--color-text-faint: #757575;
 		--color-text-disabled: #555555;

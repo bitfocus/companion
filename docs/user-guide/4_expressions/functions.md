@@ -707,5 +707,5 @@ eg `dateFormat(dateAdd(unixNow(), 1, 'months'), 'YYYY-MM-DD')` formats the date 
 Note: when adding months, if the resulting day exceeds the target month's length, the date overflows into the next month (e.g. January 31 + 1 month overflows into March, not February).
 
 :::tip
-The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, the timezone set in [Settings](../3_config/settings.md#general) is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
+The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, the timezone set in [Settings](../3_config/system/settings.md#general) is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
 :::

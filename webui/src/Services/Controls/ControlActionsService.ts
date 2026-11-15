@@ -57,6 +57,10 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 				// Not implemented in action recorder
 			},
 
+			setCustomDefinition: (_entityId: string, _definitionId: string) => {
+				// Not implemented in action recorder
+			},
+
 			performDelete: (actionId: string) => {
 				deleteActionMutation.mutateAsync({ sessionId, actionId }).catch((e) => {
 					console.error(e)
@@ -74,6 +78,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setEnabled: undefined,
 			setHeadline: undefined,
 			setRawStoreResult: undefined,
+			setRawOutputTarget: undefined,
 
 			setInverted: (_entityId: string, _inverted: ExpressionOrValue<boolean>) => {
 				// Not supported

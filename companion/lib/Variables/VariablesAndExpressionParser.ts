@@ -1,7 +1,7 @@
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	getFieldDefaultForControl,
 	isFieldDisabledForControl,
@@ -19,6 +19,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import { isInternalLogicFeedback, type ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { EntityDefinition } from '../Instance/Definitions.js'
 import {
 	computeHiddenEntityOptionFields,
 	executeExpression,
@@ -232,7 +233,7 @@ export class VariablesAndExpressionParser {
 	 * @param controlId The control the entity belongs to, for fields which are disabled on some kinds of control
 	 */
 	parseEntityOptions(
-		entityDefinition: ClientEntityDefinition,
+		entityDefinition: EntityDefinition,
 		options: ExpressionableOptionsObject,
 		controlId: SomeControlId | null
 	):
@@ -259,6 +260,10 @@ export class VariablesAndExpressionParser {
 
 		const controlKind = controlId ? (ParseControlId(controlId)?.type ?? null) : null
 
+		// Only an action can limit which options' variables are tracked
+		const optionsToMonitor =
+			entityDefinition.entityType === EntityModelType.Action ? entityDefinition.optionsToMonitorForInvalidations : null
+
 		const parsedOptions = visitEntityOptionsForVariables(entityDefinition, options, (field, optionValue, fieldType) => {
 			// Fields disabled on this kind of control have no meaning here; use the default for the control
 			if (isFieldDisabledForControl(field, controlKind)) {
@@ -280,10 +285,7 @@ export class VariablesAndExpressionParser {
 			// Track the variables referenced in this field. This happens even when the expression failed,
 			// as it may have read variables before erroring - we want to re-evaluate (and recover) when
 			// they change. #4427
-			if (
-				!entityDefinition.optionsToMonitorForInvalidations ||
-				entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
-			) {
+			if (!optionsToMonitor || optionsToMonitor.includes(field.id)) {
 				for (const variable of parsedValue.variableIds) {
 					referencedVariableIds.add(variable)
 				}

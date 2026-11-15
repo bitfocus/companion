@@ -1,3 +1,4 @@
+import type { IpcWrapper } from 'thread-tools'
 import type { JsonValue } from 'type-fest'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import type {
@@ -15,7 +16,6 @@ import type {
 	SurfaceFirmwareUpdateInfo,
 	SurfaceRotation,
 } from '@companion-surface/host'
-import type { IpcWrapper } from '../Common/IpcWrapper.js'
 
 export type SurfaceIpcWrapper = IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModuleEvents>
 

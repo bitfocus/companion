@@ -31,13 +31,10 @@ import { describeHowToEnableDangerousFeature } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type {
 	ActionForInternalExecution,
-	ActionForVisitor,
-	FeedbackForVisitor,
 	InternalActionDefinition,
 	InternalActionResult,
 	InternalModuleFragment,
 	InternalModuleFragmentEvents,
-	InternalVisitor,
 } from './Types.js'
 
 const execAsync = promisify(exec)
@@ -274,7 +271,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		const actions: Record<string, InternalActionDefinition> = {
 			exec: {
 				label: 'System: Run shell command (local)',
-				description: undefined,
+				description: null,
 				options: [
 					...(shellCommandEnabled
 						? []
@@ -327,11 +324,10 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						isVisibleUi: hideWhenDisabled,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			custom_log: {
 				label: 'Write to companion log',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'textinput',
@@ -340,8 +336,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 
@@ -349,18 +343,16 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			// Only offer app_restart if there is a handler for the event
 			actions['app_restart'] = {
 				label: 'System: Restart companion',
-				description: undefined,
+				description: null,
 				options: [],
-				optionsSupportExpressions: true,
 			}
 		}
 		if (process.env.COMPANION_IPC_PARENT) {
 			// Only offer app_exit if there is a handler for the event
 			actions['app_exit'] = {
 				label: 'System: Exit companion',
-				description: undefined,
+				description: null,
 				options: [],
-				optionsSupportExpressions: true,
 			}
 		}
 
@@ -430,17 +422,5 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		}
 
 		return { result: undefined }
-	}
-
-	visitReferences(visitor: InternalVisitor, actions: ActionForVisitor[], _feedbacks: FeedbackForVisitor[]): void {
-		for (const action of actions) {
-			try {
-				if (action.action === 'exec') {
-					visitor.visitVariableName(action.options, 'targetVariable')
-				}
-			} catch (_e) {
-				//Ignore
-			}
-		}
 	}
 }

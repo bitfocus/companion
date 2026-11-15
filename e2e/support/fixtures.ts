@@ -6,10 +6,16 @@ import { launchCompanion, type CompanionServer } from './companion.js'
  * Tests must therefore use distinct grid locations / variable names, the same discipline as the
  * backend integration suite.
  */
-export const test = base.extend<NonNullable<unknown>, { companion: CompanionServer }>({
+export const test = base.extend<NonNullable<unknown>, { scenario: string | null; companion: CompanionServer }>({
+	/**
+	 * A module which seeds the app before the tests run (see launch-app.mts), set with `test.use({ scenario })`.
+	 * The app is shared by the worker, so this applies to the whole file
+	 */
+	scenario: [null, { scope: 'worker', option: true }],
+
 	companion: [
-		async ({}, use) => {
-			const server = await launchCompanion()
+		async ({ scenario }, use) => {
+			const server = await launchCompanion(scenario)
 			await use(server)
 			await server.stop()
 		},
@@ -52,4 +58,16 @@ export function watchConsoleErrors(page: Page): string[] {
 export async function reloadApp(page: Page): Promise<void> {
 	await page.reload()
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
+}
+
+/**
+ * Click a list page's add button: the one above its list, or the one in the empty state that replaces the list
+ * until there is something in it
+ */
+export async function clickListPageAdd(page: Page, listButton: string, emptyStateButton: string): Promise<void> {
+	await page
+		.locator('.primary-panel')
+		.getByRole('button', { name: listButton })
+		.or(page.locator('.page-empty-state').getByRole('button', { name: emptyStateButton }))
+		.click()
 }

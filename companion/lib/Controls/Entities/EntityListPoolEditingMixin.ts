@@ -97,7 +97,14 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 	 * @param id the id of the entity
 	 * @param connectionId the id of the new connection
 	 */
-	entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean
+	entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string): boolean
+
+	/**
+	 * Set which custom action or feedback an entity which uses one uses
+	 * @param id the id of the entity
+	 * @param definitionId the id of the custom action or feedback to use
+	 */
+	entitySetCustomDefinition(listId: SomeSocketEntityLocation, id: string, definitionId: string): boolean
 
 	/**
 	 * Set whether a boolean feedback should be inverted
@@ -108,6 +115,14 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 
 	/** Set where this action's result will be stored (if at all) */
 	entitySetRawStoreResult(listId: SomeSocketEntityLocation, id: string, target: RawStoreResult | undefined): boolean
+
+	/** Set where an output of this action will be written (if at all) */
+	entitySetRawOutputTarget(
+		listId: SomeSocketEntityLocation,
+		id: string,
+		outputId: string,
+		target: RawStoreResult | null
+	): boolean
 
 	/**
 	 * Set the local variable name for an entity
@@ -166,7 +181,7 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 
 			// Inform relevant module
 			for (const entity of newEntities) {
-				entity.subscribe(true)
+				entity.subscribe()
 			}
 
 			this.tryTriggerLocalVariablesChanged(...newEntities)
@@ -337,7 +352,8 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			const entityList = this.getEntityList(listId)
 			if (!entityList) return false
 
-			entityList.loadStorage(entities, false, false)
+			entityList.loadStorage(entities, false)
+			entityList.subscribe()
 
 			this.reportChange({
 				redraw: true,
@@ -368,14 +384,14 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			return true
 		}
 
-		entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean {
+		entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string): boolean {
 			const entityList = this.getEntityList(listId)
 			if (!entityList) return false
 
 			const entity = entityList.findById(id)
 			if (!entity) return false
 
-			entity.setConnectionId(connectionId)
+			if (!entity.setConnectionId(connectionId)) return false
 
 			this.tryTriggerLocalVariablesChanged(entity)
 
@@ -383,6 +399,19 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 				redraw: true,
 				// No need to invalidate caches, feedback values havent changed
 			})
+
+			return true
+		}
+
+		entitySetCustomDefinition(listId: SomeSocketEntityLocation, id: string, definitionId: string): boolean {
+			const entity = this.getEntityList(listId)?.findById(id)
+			if (!entity) return false
+
+			if (!entity.setCustomDefinitionId(definitionId)) return false
+
+			this.tryTriggerLocalVariablesChanged(entity)
+
+			this.reportChange({ redraw: true })
 
 			return true
 		}
@@ -411,6 +440,22 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			if (!entity) return false
 
 			entity.setRawStoreResult(target)
+
+			this.reportChange({ redraw: false })
+
+			return true
+		}
+
+		entitySetRawOutputTarget(
+			listId: SomeSocketEntityLocation,
+			id: string,
+			outputId: string,
+			target: RawStoreResult | null
+		): boolean {
+			const entity = this.getEntityList(listId)?.findById(id)
+			if (!entity) return false
+
+			if (!entity.setRawOutputTarget(outputId, target)) return false
 
 			this.reportChange({ redraw: false })
 
@@ -511,7 +556,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 				.toArray()
 			if (existingKeys.length === 0) {
 				// add the default '1000' set
-				step.sets.set(1000, this.createActionEntityList([], false, false))
+				step.sets.set(1000, this.createActionEntityList([], false))
 
 				this.reportChange({ redraw: true })
 
@@ -521,7 +566,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 				const max = Math.max(...existingKeys)
 				const newIndex = Math.floor(max / 1000) * 1000 + 1000
 
-				step.sets.set(newIndex, this.createActionEntityList([], false, false))
+				step.sets.set(newIndex, this.createActionEntityList([], false))
 
 				this.reportChange({ redraw: false })
 
@@ -686,6 +731,11 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			const newStepId = `${max + 1}`
 			this.steps.set(newStepId, newStep)
+
+			// Inform relevant modules of the copied actions
+			for (const set of newStep.sets.values()) {
+				set.subscribe()
+			}
 
 			// Ensure current step is valid
 			this.stepCheckExpression(false)
