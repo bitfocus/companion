@@ -18,6 +18,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
+import { useForceDarkTheme } from '~/Theme/ThemeState.js'
 import { ButtonsBlock, ButtonWrapper, SectionOfButtons, type TabletGridSize } from './ButtonsFromPage.js'
 import { ConfigurePanel } from './ConfigurePanel.js'
 
@@ -172,6 +173,7 @@ export const TabletView = observer(function TabletView() {
 	const buttonSize = pageSize.width / displayColumns
 
 	useWakeLock()
+	useForceDarkTheme()
 
 	// If the socket was connected and has since dropped, show a calm reconnecting overlay
 	// rather than the raw connection error. Gated on `wasConnected` so it doesn't flash

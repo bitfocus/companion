@@ -1,4 +1,5 @@
 import { action, autorun, computed, makeObservable, observable } from 'mobx'
+import { useLayoutEffect } from 'react'
 import { safeGetLocalStorage, safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import {
 	parseThemePreference,
@@ -15,6 +16,8 @@ const SYSTEM_DARK_QUERY = '(prefers-color-scheme: dark)'
 class ThemeStore {
 	preference: ThemePreference
 	systemPrefersDark: boolean
+	/** Number of mounted pages that always show the dark theme */
+	forceDarkCount = 0
 
 	constructor() {
 		this.preference = parseThemePreference(safeGetLocalStorage(THEME_STORAGE_KEY))
@@ -26,8 +29,11 @@ class ThemeStore {
 		makeObservable(this, {
 			preference: observable,
 			systemPrefersDark: observable,
+			forceDarkCount: observable,
 			resolved: computed,
 			setPreference: action,
+			pushForceDark: action,
+			popForceDark: action,
 		})
 
 		systemQuery?.addEventListener(
@@ -49,12 +55,20 @@ class ThemeStore {
 	}
 
 	get resolved(): ResolvedTheme {
-		return resolveTheme(this.preference, this.systemPrefersDark)
+		return resolveTheme(this.preference, this.systemPrefersDark, this.forceDarkCount > 0 ? 'dark' : null)
 	}
 
 	setPreference(preference: ThemePreference): void {
 		this.preference = preference
 		safeSetLocalStorage(THEME_STORAGE_KEY, preference)
+	}
+
+	pushForceDark(): void {
+		this.forceDarkCount++
+	}
+
+	popForceDark(): void {
+		this.forceDarkCount--
 	}
 }
 
@@ -70,3 +84,11 @@ function applyTheme(theme: ResolvedTheme): void {
 }
 
 export const themeStore = new ThemeStore()
+
+/** Always show the dark theme while the calling page is mounted, whatever the user chose */
+export function useForceDarkTheme(): void {
+	useLayoutEffect(() => {
+		themeStore.pushForceDark()
+		return () => themeStore.popForceDark()
+	}, [])
+}

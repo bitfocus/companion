@@ -1,4 +1,4 @@
-/* Standalone surface views share the application theme, including status overlays.
+/* Standalone surface views use the application's dark theme tokens (forced by useForceDarkTheme), including status overlays.
  * Keep aliases scoped to these roots so portals and directly rendered status screens resolve them too. */
 :where(.page-tablet, .page-emulator-base, .page-emulator, .page-emulator-list, .standalone-overlay) {
 	--remote-bg: var(--color-app-bg);
