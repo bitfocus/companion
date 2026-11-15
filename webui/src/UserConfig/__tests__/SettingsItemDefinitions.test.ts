@@ -38,7 +38,7 @@ function collectUserGuidePages(): Map<string, string> {
 
 /** The `slug` in the front matter at the top of a page, if it has one */
 function readSlug(content: string): string | undefined {
-	const frontMatter = /^---\n([\s\S]*?)\n---\n/.exec(content)?.[1]
+	const frontMatter = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/.exec(content)?.[1]
 	return frontMatter ? /^slug:\s*(.+?)\s*$/m.exec(frontMatter)?.[1] : undefined
 }
 

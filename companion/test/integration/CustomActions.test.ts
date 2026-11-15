@@ -1121,9 +1121,10 @@ describe('long running custom actions', () => {
 		).toBe(1)
 		const firstStoppedAt = app.getCustomVariableValue('first') as number
 		const secondBefore = app.getCustomVariableValue('second') as number
-		await new Promise((resolve) => setTimeout(resolve, 400))
+		await vi.waitFor(() => expect(app.getCustomVariableValue('second')).toBeGreaterThan(secondBefore + 1), {
+			timeout: 2000,
+		})
 		expect(app.getCustomVariableValue('first')).toBeLessThanOrEqual(firstStoppedAt + 1)
-		expect(app.getCustomVariableValue('second')).toBeGreaterThan(secondBefore + 1)
 
 		const afterOne = await readUsage(customActionId)
 		expect(afterOne.uses.find((use) => use.controlId === firstId)?.runs).toEqual([])
