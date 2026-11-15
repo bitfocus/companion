@@ -9,7 +9,11 @@ import {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsElementUsage, type ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsElementUsage,
+	type ButtonStyleProperties,
+	type CompositeElementOptionKey,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -359,6 +363,21 @@ export class ControlButtonPreset
 			[ButtonGraphicsElementUsage.Image]: undefined,
 			[ButtonGraphicsElementUsage.Leds]: undefined,
 		}
+	}
+
+	layeredStyleRenameCompositeOption(
+		_connectionId: string,
+		_elementId: string,
+		_fromKey: CompositeElementOptionKey,
+		_toKey: CompositeElementOptionKey | null
+	): boolean {
+		// A preset is drawn from its definition, which is fixed
+		return false
+	}
+
+	layeredStylePreviewVariableValues(): null {
+		// Streaming elements is not supported
+		return null
 	}
 
 	/**

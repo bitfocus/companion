@@ -4,6 +4,7 @@ import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
 	CreateTriggerControlId,
 	type SomeControlId,
@@ -65,6 +66,8 @@ function createImportController() {
 	controls.replaceCustomActionCollections.mockReturnValue(undefined)
 	controls.importCustomFeedback.mockReturnValue(true)
 	controls.replaceCustomFeedbackCollections.mockReturnValue(undefined)
+	controls.importCustomElement.mockReturnValue(true)
+	controls.replaceCustomElementCollections.mockReturnValue(undefined)
 	controls.replaceTriggerCollections.mockReturnValue(undefined)
 
 	graphics.clearAllForPage.mockReturnValue(undefined)
@@ -271,6 +274,7 @@ function fullConfig(overrides: Partial<ClientImportOrResetSelection> = {}): Clie
 		expressionVariables: all,
 		customActions: all,
 		customFeedbacks: all,
+		customElements: all,
 		userconfig: 'reset',
 		imageLibrary: all,
 		...overrides,
@@ -329,6 +333,18 @@ describe('importFull config gating', () => {
 				},
 			},
 			customFeedbackCollections: [{ id: 'fcol', label: 'FCol', sortOrder: 0, children: [], metaData: null }],
+			customElements: {
+				ce1: {
+					type: 'custom-element',
+					options: { name: 'CE', description: '', sortOrder: 0, notes: '' },
+					inputs: [{ type: 'textinput', id: 'label', label: 'Label', default: '' }],
+					elements: [
+						{ type: 'canvas', id: 'canvas', name: 'Canvas' },
+						{ type: 'group', id: 'g1', name: 'Group', children: [] },
+					],
+				},
+			},
+			customElementCollections: [{ id: 'ecol', label: 'ECol', sortOrder: 0, children: [], metaData: null }],
 			imageLibrary: [{ info: { name: 'i' } }],
 			imageLibraryCollections: [],
 		}
@@ -364,6 +380,18 @@ describe('importFull config gating', () => {
 				type: 'custom-feedback',
 				inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
 				feedbacks: [expect.objectContaining({ id: 'f1', connectionId: 'internal', definitionId: 'check_expression' })],
+			})
+		)
+		expect(controls.replaceCustomElementCollections).toHaveBeenCalledWith([
+			{ id: 'ecol', label: 'ECol', sortOrder: 0, children: [], metaData: null },
+		])
+		// It never has a canvas, as it is drawn inside the bounds of its use
+		expect(controls.importCustomElement).toHaveBeenCalledWith(
+			CreateCustomElementControlId('ce1'),
+			expect.objectContaining({
+				type: 'custom-element',
+				inputs: [{ type: 'textinput', id: 'label', label: 'Label', default: '' }],
+				elements: [expect.objectContaining({ id: 'g1', type: 'group' })],
 			})
 		)
 	})
@@ -460,6 +488,7 @@ describe('importFull config gating', () => {
 			expressionVariables: 'unchanged',
 			customActions: 'unchanged',
 			customFeedbacks: 'unchanged',
+			customElements: 'unchanged',
 			imageLibrary: 'unchanged',
 			surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'unchanged' },
 		})

@@ -970,6 +970,74 @@
 						"$ref": "#/$defs/EmptyCollection"
 					}
 				},
+				"customElements": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {
+						"type": "object",
+						"properties": {
+							"type": {
+								"type": "string",
+								"const": "custom-element"
+							},
+							"options": {
+								"default": {
+									"name": "New custom element",
+									"description": "",
+									"sortOrder": 0,
+									"notes": ""
+								},
+								"type": "object",
+								"properties": {
+									"name": {
+										"default": "New custom element",
+										"type": "string"
+									},
+									"description": {
+										"default": "",
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"collectionId": {
+										"type": "string"
+									},
+									"notes": {
+										"default": "",
+										"type": "string"
+									}
+								}
+							},
+							"inputs": {
+								"default": [],
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/AuthorableInputField"
+								}
+							},
+							"elements": {
+								"default": [],
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/ButtonGraphicsElement"
+								}
+							}
+						},
+						"required": [
+							"type"
+						]
+					}
+				},
+				"customElementCollections": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/EmptyCollection"
+					}
+				},
 				"instances": {
 					"type": "object",
 					"propertyNames": {

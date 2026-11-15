@@ -10,7 +10,7 @@ interface BuildingBlockInputsEditorProps {
 	service: InputFieldDefinitionsService
 	inputs: AuthorableInputField[]
 	/** What the building block is used as, and is made of, such as `action` */
-	usedAs: 'action' | 'feedback'
+	usedAs: 'action' | 'feedback' | 'element'
 	collapseStorageId: string
 }
 

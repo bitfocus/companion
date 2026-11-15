@@ -21,7 +21,7 @@ describe('legacy style api', () => {
 
 		// The gate defaults to off: the endpoint responds ok but changes nothing
 		await app.http.post('/api/location/1/1/1/style?text=Nope').expect(200)
-		expect(control.drawing.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: '' } })
+		expect(control.drawing.tree.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: '' } })
 
 		await app.trpc().controls.setOptionsField({
 			controlId,
@@ -30,7 +30,9 @@ describe('legacy style api', () => {
 
 		// text maps onto the text element, bgcolor onto the background box element
 		await app.http.post('/api/location/1/1/1/style?text=Hi&bgcolor=%23ff0000').expect(200)
-		expect(control.drawing.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: 'Hi' } })
-		expect(control.drawing.getElementById('box0')).toMatchObject({ color: { isExpression: false, value: 0xff0000 } })
+		expect(control.drawing.tree.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: 'Hi' } })
+		expect(control.drawing.tree.getElementById('box0')).toMatchObject({
+			color: { isExpression: false, value: 0xff0000 },
+		})
 	})
 })

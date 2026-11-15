@@ -28,7 +28,7 @@ import { makeAbsolutePath } from '~/Resources/util.js'
 /** How a kind of building block, such as the custom actions, is named and shown */
 export interface BuildingBlockListKind {
 	/** Its id, which the drag and drop, and the remembered panel sizes and collapsed collections, are kept under */
-	id: 'custom-action' | 'custom-feedback'
+	id: 'custom-action' | 'custom-feedback' | 'custom-element'
 	icon: IconDefinition
 	/** What one is called in a sentence, eg `custom action` */
 	noun: string

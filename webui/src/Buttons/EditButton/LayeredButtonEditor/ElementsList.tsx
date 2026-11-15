@@ -135,10 +135,11 @@ export const ElementsList = observer(function ElementsList({
 
 			const emptyGroupId = parseEmptyGroupDroppableId(target?.id)
 			if (target?.id === ROOT_BOTTOM_DROPPABLE) {
-				// Canvas row - drop at data index 1, just above the locked canvas (skip if already there)
-				if (styleStore.elements[1]?.id === elementId) return
+				// Bottom of the list - drop just above the locked canvas, if there is one (skip if already there)
+				const bottomIndex = styleStore.elements[0]?.type === 'canvas' ? 1 : 0
+				if (styleStore.elements[bottomIndex]?.id === elementId) return
 				parentElementId = null
-				newIndex = 1
+				newIndex = bottomIndex
 				destKey = 'root-bottom'
 			} else if (emptyGroupId !== null) {
 				// Empty group placeholder - drop as its only child

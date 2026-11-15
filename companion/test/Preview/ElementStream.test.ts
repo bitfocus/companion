@@ -1,7 +1,12 @@
 import EventEmitter from 'node:events'
 import { initTRPC } from '@trpc/server'
 import { describe, expect, it, test, vi } from 'vitest'
-import { CreateBankControlId, formatLocation, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateCustomElementControlId,
+	formatLocation,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
@@ -187,6 +192,8 @@ const t = initTRPC.context<TrpcContext>().create()
 const userconfig = mockUserConfig({ timezone: '' })
 
 const CONTROL_ID = CreateBankControlId('control1')
+/** A control with elements but no entities, as a custom element is */
+const NO_ENTITIES_CONTROL_ID = CreateCustomElementControlId('element1')
 const CONTROL_LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
 const DEFAULT_CANVAS: ElementRasterCanvas = { width: 92, height: 92, paddingX: 10, paddingY: 10 }
 
@@ -212,6 +219,17 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 		layeredStyleGetElements: () => state.elements,
 		entities: { getFeedbackStyleOverrides: () => state.feedbackOverrides },
 		drawing: { resolveDefaultNoTopBar: () => false },
+		layeredStylePreviewVariableValues: () => null,
+	}
+
+	/** A control with elements but no entities, as a custom element is, drawn with the defaults of its inputs */
+	const noEntitiesControl = {
+		supportsLayeredStyle: true,
+		supportsEntities: false,
+		layeredStyleGetElementById: (id: string) => findElement(state.elements, id),
+		layeredStyleGetElements: () => state.elements,
+		drawing: null,
+		layeredStylePreviewVariableValues: () => ({ 'options:label': 'Preview' }),
 	}
 
 	const controlsController = {
@@ -219,8 +237,7 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 			if (controlId === CONTROL_ID) return control
 			if (controlId === CreateBankControlId('not-layered'))
 				return { supportsLayeredStyle: false, supportsEntities: true }
-			if (controlId === CreateBankControlId('no-entities'))
-				return { supportsLayeredStyle: true, supportsEntities: false }
+			if (controlId === NO_ENTITIES_CONTROL_ID) return noEntitiesControl
 			return undefined
 		}),
 		createVariablesAndExpressionParser: vi.fn(() => {
@@ -306,6 +323,7 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 		graphicsController,
 		controlEvents,
 		evaluationCount,
+		createVariablesAndExpressionParser: controlsController.createVariablesAndExpressionParser,
 		tickClock: () => clockCallback?.(),
 		isClockSubscribed: () => clockCallback !== null,
 		createCaller,
@@ -396,14 +414,10 @@ describe('PreviewElementStream.watchElement', () => {
 			await sub.cleanup()
 		})
 
-		it('yields a null element for an unknown control, or one without a layered style or entities', async () => {
+		it('yields a null element for an unknown control, or one without a layered style', async () => {
 			const harness = createHarness([makeTextEl()])
 
-			for (const controlId of [
-				CreateBankControlId('unknown'),
-				CreateBankControlId('not-layered'),
-				CreateBankControlId('no-entities'),
-			] as const) {
+			for (const controlId of [CreateBankControlId('unknown'), CreateBankControlId('not-layered')] as const) {
 				const sub = await harness.watch('text1', controlId)
 				await sub.expectValue({ ok: true, element: null })
 				await settle()
@@ -411,6 +425,19 @@ describe('PreviewElementStream.watchElement', () => {
 			}
 
 			expect(harness.evaluationCount()).toBe(0)
+		})
+
+		it('evaluates the element of a control without entities, with its preview variables', async () => {
+			const harness = createHarness([makeTextEl({ text: val('Plain') })])
+			const sub = await harness.watch('text1', NO_ENTITIES_CONTROL_ID)
+
+			await sub.expectValue({ ok: true, element: null })
+			expect(unraster((await sub.next()).element)).toMatchObject({ id: 'text1', text: 'Plain' })
+			expect(harness.createVariablesAndExpressionParser).toHaveBeenCalledWith(NO_ENTITIES_CONTROL_ID, {
+				'options:label': 'Preview',
+			})
+
+			await sub.cleanup()
 		})
 
 		it('evaluates a nested element', async () => {

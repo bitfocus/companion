@@ -10,6 +10,7 @@ import {
 	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomElementModel } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
@@ -171,6 +172,28 @@ export function fixupCustomFeedbackControl(
 	}
 
 	referencesUpdater.visitEntityModels([...result.localVariables, ...result.feedbacks])
+
+	return result
+}
+
+export function fixupCustomElementControl(
+	control: CustomElementModel,
+	referencesUpdater: ImportReferencesUpdater
+): CustomElementModel {
+	const result: CustomElementModel = {
+		type: 'custom-element',
+		options: structuredClone(control.options),
+		// Inputs of the same id would share one value from each use, so only the first is kept
+		inputs: structuredClone(
+			(control.inputs || []).filter(
+				(input, index, inputs) => inputs.findIndex((other) => other.id === input.id) === index
+			)
+		),
+		// It is drawn inside the bounds of its use, so never has a canvas
+		elements: structuredClone((control.elements || []).filter((element) => element.type !== 'canvas')),
+	}
+
+	referencesUpdater.visitDrawElements(result.elements)
 
 	return result
 }

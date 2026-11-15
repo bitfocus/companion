@@ -2,11 +2,13 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
 	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
 	type CustomActionControlId,
+	type CustomElementControlId,
 	type CustomFeedbackControlId,
 } from '../ControlId.js'
 import { ActionSetsModelSchema } from '../Model/ActionModel.js'
@@ -18,6 +20,7 @@ import {
 } from '../Model/ButtonModel.js'
 import { isControlModelForId, SomeControlModelSchema, zodStoredControlId } from '../Model/Controls.js'
 import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
+import { CustomElementModelSchema, getCustomElementUsesExcludedFrom } from '../Model/CustomElementModel.js'
 import { CustomFeedbackModelSchema, getCustomFeedbackCallsExcludedFrom } from '../Model/CustomFeedbackModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
@@ -377,6 +380,46 @@ describe('getCustomFeedbackCallsExcludedFrom', () => {
 
 	test('excludes nothing from a control which is not a custom feedback', () => {
 		expect(getCustomFeedbackCallsExcludedFrom(CreateCustomActionControlId('c'), customFeedbacks)).toEqual(new Set())
+	})
+})
+
+describe('CustomElementModelSchema', () => {
+	test('a custom element without anything has the defaults', () => {
+		expect(CustomElementModelSchema.parse({ type: 'custom-element' })).toEqual({
+			type: 'custom-element',
+			options: { name: 'New custom element', description: '', sortOrder: 0, notes: '' },
+			inputs: [],
+			elements: [],
+		})
+	})
+
+	test('an input must be a valid input field', () => {
+		const result = CustomElementModelSchema.safeParse({
+			type: 'custom-element',
+			inputs: [{ type: 'sparkle', id: 'a' }],
+		})
+		expect(result.success).toBe(false)
+	})
+})
+
+describe('getCustomElementUsesExcludedFrom', () => {
+	const customElements: [CustomElementControlId, { usedCustomElementIds: string[] }][] = [
+		[CreateCustomElementControlId('a'), { usedCustomElementIds: ['b', 'c'] }],
+		[CreateCustomElementControlId('b'), { usedCustomElementIds: ['c'] }],
+		[CreateCustomElementControlId('c'), { usedCustomElementIds: [] }],
+	]
+
+	test('excludes the custom element itself, and any which use it', () => {
+		expect(getCustomElementUsesExcludedFrom(CreateCustomElementControlId('c'), customElements)).toEqual(
+			new Set(['custom:c', 'custom:a', 'custom:b'])
+		)
+		expect(getCustomElementUsesExcludedFrom(CreateCustomElementControlId('a'), customElements)).toEqual(
+			new Set(['custom:a'])
+		)
+	})
+
+	test('excludes nothing from a control which is not a custom element', () => {
+		expect(getCustomElementUsesExcludedFrom(CreateBankControlId('c'), customElements)).toEqual(new Set())
 	})
 })
 

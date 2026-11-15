@@ -87,6 +87,13 @@ export function CreateCustomFeedbackControlId(customFeedbackId: string): CustomF
 }
 
 /**
+ * Create full custom element control id
+ */
+export function CreateCustomElementControlId(customElementId: string): CustomElementControlId {
+	return `custom-element:${customElementId}` as CustomElementControlId
+}
+
+/**
  * Create the full control id for a page's local-variables control (one per page, keyed by page id).
  */
 export function CreatePageControlId(pageId: string): PageControlId {
@@ -120,6 +127,10 @@ export interface ParsedControlIdCustomFeedback {
 	type: 'custom-feedback'
 	customFeedbackId: string
 }
+export interface ParsedControlIdCustomElement {
+	type: 'custom-element'
+	customElementId: string
+}
 export interface ParsedControlIdPage {
 	type: 'page'
 	pageId: string
@@ -136,6 +147,7 @@ export type ParsedControlIdType =
 	| ParsedControlIdExpressionVariable
 	| ParsedControlIdCustomAction
 	| ParsedControlIdCustomFeedback
+	| ParsedControlIdCustomElement
 	| ParsedControlIdPage
 	| ParsedControlIdPreset
 
@@ -148,6 +160,7 @@ const CONTROL_ID_KINDS: Record<ControlIdKind, true> = {
 	'expression-variable': true,
 	'custom-action': true,
 	'custom-feedback': true,
+	'custom-element': true,
 	page: true,
 	preset: true,
 }
@@ -177,6 +190,7 @@ export const zodControlIds = {
 	'expression-variable': controlIdSchema('expression-variable'),
 	'custom-action': controlIdSchema('custom-action'),
 	'custom-feedback': controlIdSchema('custom-feedback'),
+	'custom-element': controlIdSchema('custom-element'),
 	page: controlIdSchema('page'),
 	preset: controlIdSchema<'preset', `preset:${string}:${string}:${string}`>('preset'),
 } satisfies Record<ControlIdKind, z.ZodType>
@@ -189,6 +203,7 @@ export type TriggerControlId = ControlIdOfKind<'trigger'>
 export type ExpressionVariableControlId = ControlIdOfKind<'expression-variable'>
 export type CustomActionControlId = ControlIdOfKind<'custom-action'>
 export type CustomFeedbackControlId = ControlIdOfKind<'custom-feedback'>
+export type CustomElementControlId = ControlIdOfKind<'custom-element'>
 export type PageControlId = ControlIdOfKind<'page'>
 export type PresetControlId = ControlIdOfKind<'preset'>
 
@@ -257,6 +272,8 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			return { type: 'custom-action', customActionId: value }
 		case 'custom-feedback':
 			return { type: 'custom-feedback', customFeedbackId: value }
+		case 'custom-element':
+			return { type: 'custom-element', customElementId: value }
 		case 'page':
 			return { type: 'page', pageId: value }
 		case 'preset': {

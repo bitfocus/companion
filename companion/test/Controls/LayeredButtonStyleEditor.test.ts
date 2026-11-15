@@ -80,7 +80,7 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 	})
 
 	it('adds a plain element with the defaults for its type', () => {
-		const id = editor.addElement('circle', null)
+		const id = editor.tree.addElement('circle', null)
 		expect(elementById(id).type).toBe('circle')
 		expect(elementById(id).pinnedProperties).toEqual(['color'])
 	})
@@ -91,7 +91,7 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 			options: [{ id: 'speed', default: 5 }, { id: 'label' }],
 		})
 
-		const id = editor.addElement('conn1;widget', null)
+		const id = editor.tree.addElement('conn1;widget', null)
 
 		expect(getCompositeElementDefinition).toHaveBeenCalledWith('conn1', 'widget')
 		const element = elementById(id)
@@ -105,42 +105,42 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 	})
 
 	it('throws when a composite definition is missing', () => {
-		expect(() => editor.addElement('conn1;gone', null)).toThrow('Composite element not found')
+		expect(() => editor.tree.addElement('conn1;gone', null)).toThrow('Composite element not found')
 	})
 
 	it('pins a property that was not pinned', () => {
-		expect(editor.setElementPropertyPinned('text0', 'weight', true)).toBe(true)
+		expect(editor.tree.setElementPropertyPinned('text0', 'weight', true)).toBe(true)
 		expect(elementById('text0').pinnedProperties).toContain('weight')
 		expect(commitChange).toHaveBeenCalledWith(false) // pins are editor-only, so nothing to redraw
 	})
 
 	it('unpins a pinned property', () => {
-		expect(editor.setElementPropertyPinned('text0', 'color', false)).toBe(true)
+		expect(editor.tree.setElementPropertyPinned('text0', 'color', false)).toBe(true)
 		expect(elementById('text0').pinnedProperties).not.toContain('color')
 	})
 
 	it('reports no change when the property is already in the requested state', () => {
-		expect(editor.setElementPropertyPinned('text0', 'color', true)).toBe(false)
-		expect(editor.setElementPropertyPinned('text0', 'weight', false)).toBe(false)
+		expect(editor.tree.setElementPropertyPinned('text0', 'color', true)).toBe(false)
+		expect(editor.tree.setElementPropertyPinned('text0', 'weight', false)).toBe(false)
 		expect(commitChange).not.toHaveBeenCalled()
 	})
 
 	it('pins a property of an element nested in a group', () => {
-		expect(editor.setElementPropertyPinned('inner', 'weight', true)).toBe(true)
+		expect(editor.tree.setElementPropertyPinned('inner', 'weight', true)).toBe(true)
 		expect(elementById('group0').children[0].pinnedProperties).toContain('weight')
 	})
 
 	it('refuses to pin canvas properties, which are button-level', () => {
-		expect(editor.setElementPropertyPinned('canvas', 'decoration', true)).toBe(false)
+		expect(editor.tree.setElementPropertyPinned('canvas', 'decoration', true)).toBe(false)
 		expect(elementById('canvas').pinnedProperties).toBeUndefined()
 	})
 
 	it('ignores an unknown element', () => {
-		expect(editor.setElementPropertyPinned('nope', 'color', true)).toBe(false)
+		expect(editor.tree.setElementPropertyPinned('nope', 'color', true)).toBe(false)
 	})
 
 	it('will not let the generic option setters overwrite the pins', () => {
-		expect(editor.updateOption('text0', 'pinnedProperties', { isExpression: false, value: [] })).toBe(false)
+		expect(editor.tree.updateOption('text0', 'pinnedProperties', { isExpression: false, value: [] })).toBe(false)
 		expect(elementById('text0').pinnedProperties).toContain('text')
 	})
 })

@@ -25,7 +25,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlActionRunner } from '../ActionRunner.js'
-import { BuildingBlockInputs } from '../BuildingBlocks/BuildingBlockInputs.js'
+import { BuildingBlockInputs, entityInputReferences } from '../BuildingBlocks/BuildingBlockInputs.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import {
@@ -169,7 +169,9 @@ export class ControlCustomAction
 			localVariableRenamed: (fromName, toName) => this.#localVariableRenamed(fromName, toName),
 		})
 
-		this.buildingBlockInputs = new BuildingBlockInputs(deps.internalModule, this.entities, () => this.commitChange())
+		this.buildingBlockInputs = new BuildingBlockInputs(entityInputReferences(deps.internalModule, this.entities), () =>
+			this.commitChange()
+		)
 
 		this.options = this.optionsSchema.parse({})
 

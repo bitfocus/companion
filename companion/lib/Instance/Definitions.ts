@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
+import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { diffObject, diffObjects } from '@companion-app/shared/Diff.js'
 import type {
@@ -601,6 +602,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	/**
+	 * Set the composite element definitions of the custom elements. Their variables are left as they are, as they
+	 * belong to no connection
+	 */
+	setCustomElementDefinitions(definitions: Record<string, CompositeElementDefinition>): void {
+		this.#storeCompositeElements(CUSTOM_CONNECTION_ID, definitions)
+	}
+
+	/**
 	 * Simplify composite element definitions for UI by removing the element property
 	 */
 	#simplifyCompositeElementsForUi(
@@ -814,15 +823,25 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			replaceAllVariablesInElements(compositeElement.elements, label, replaceSet)
 		}
 
+		this.#storeCompositeElements(connectionId, compositeElements)
+	}
+
+	/**
+	 * Store the composite element definitions of a connection, and report those which have changed
+	 */
+	#storeCompositeElements(connectionId: string, compositeElements: Record<string, CompositeElementDefinition>): void {
 		const lastCompositeElementDefinitions = this.#compositeElementDefinitions[connectionId]
 		this.#compositeElementDefinitions[connectionId] = structuredClone(compositeElements)
 
-		// Report the changes
-		// Future: This could be better if it performed some diffing and only reported changed element ids
-		const changedElementIds = new Set<CompositeElementIdString>([
-			...Object.keys(compositeElements).map((id) => `${connectionId}:${id}` as const),
-			...Object.keys(lastCompositeElementDefinitions ?? {}).map((id) => `${connectionId}:${id}` as const),
-		])
+		// Report the elements which have been added, removed or changed
+		const changedElementIds = new Set<CompositeElementIdString>()
+		for (const id of new Set([
+			...Object.keys(compositeElements),
+			...Object.keys(lastCompositeElementDefinitions ?? {}),
+		])) {
+			if (!isEqual(compositeElements[id], lastCompositeElementDefinitions?.[id]))
+				changedElementIds.add(`${connectionId}:${id}`)
+		}
 		if (changedElementIds.size > 0) this.emit('updateCompositeElements', changedElementIds)
 
 		if (this.#events.listenerCount('compositeElements') > 0) {
