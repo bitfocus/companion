@@ -280,7 +280,7 @@ If you find a case where an expression fails to evaluate because of one of the v
 - Multiple statements must be separated by a newline or a semicolon (`;`).
 - These features can be combined into long and complex expressions. More functionality will be added over time — let us know if something you need is missing.
 
-:::note Changes in Companion 5.0
+:::note[Changes in Companion 5.0]
 
 The expression engine was rebuilt on a standard JavaScript parser in 5.0, adding control flow, functions and collection helpers (see [Advanced expressions](scripting.md)). A few previously-accepted quirks changed as a result:
 
