@@ -135,6 +135,7 @@ export const createMockEntity = (
 		...extraModel,
 	}),
 	getEntityDefinition: vi.fn<() => any>().mockReturnValue({
+		entityType: type,
 		hasLifecycleFunctions: true,
 		options: [{ id: 'field1', type: 'textinput' }],
 		optionsToIgnoreForSubscribe: [],

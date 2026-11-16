@@ -69,7 +69,6 @@ import type { InstanceConfigStore } from './ConfigStore.js'
  * What the definitions of actions and feedbacks have in common, that only the backend needs
  */
 interface EntityDefinitionBase {
-	hasLifecycleFunctions: boolean
 	learnTimeout: number | undefined
 }
 
@@ -82,6 +81,10 @@ export interface ActionDefinition extends ClientActionDefinition, EntityDefiniti
 	 * If null, all options are monitored
 	 */
 	optionsToMonitorForInvalidations: string[] | null
+	/**
+	 * Whether the module is told about the action when it is added, changed or removed
+	 */
+	hasLifecycleFunctions: boolean
 	/**
 	 * How long (in ms) its callback may run before it is cancelled. The host clamps this to a maximum.
 	 * Defaults to 5000ms when not set.

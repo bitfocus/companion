@@ -128,7 +128,6 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				feedbackAffectedProperties: rawFeedback.affectedProperties,
 				feedbackDisableStyleOverrides: false,
 				feedbackStyleOverridesUnsupported: false,
-				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),

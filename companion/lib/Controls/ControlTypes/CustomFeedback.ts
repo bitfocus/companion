@@ -175,7 +175,6 @@ export class ControlCustomFeedback
 			feedbackStyle: undefined,
 			feedbackDisableStyleOverrides: false,
 			feedbackStyleOverridesUnsupported: false,
-			hasLifecycleFunctions: false,
 			hasLearn: false,
 			learnTimeout: undefined,
 			showInvert: true,

@@ -590,37 +590,6 @@ describe('FeedbackEntityManager', () => {
 		})
 	})
 
-	describe('Edge Cases', () => {
-		it('should skip feedback entities without lifecycle functions', () => {
-			const mockFeedback = {
-				id: 'feedback-1',
-				type: EntityModelType.Feedback,
-				definitionId: 'feedback-def-1',
-				upgradeIndex: 5,
-				asEntityModel: vi.fn().mockReturnValue({
-					id: 'feedback-1',
-					type: EntityModelType.Feedback,
-					definitionId: 'feedback-def-1',
-					connectionId: 'connection-1',
-					options: {},
-				}),
-				getEntityDefinition: vi.fn().mockReturnValue({
-					hasLifecycleFunctions: false,
-					options: [],
-					optionsToIgnoreForSubscribe: [],
-				}),
-			}
-
-			feedbackManager.start(5)
-			feedbackManager.trackEntity(mockFeedback as any, CreateBankControlId('control-1'))
-
-			// Should skip the feedback entity since it doesn't have lifecycle functions
-			vi.runAllTimers()
-
-			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
-		})
-	})
-
 	describe('State Transitions', () => {
 		it('should transition entity correctly between various states', () => {
 			// Setup a mock entity that will need to be upgraded

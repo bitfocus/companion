@@ -48,6 +48,11 @@ export class FeedbackEntityManager extends EntityManagerBase<FeedbackEntityModel
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
 	}
 
+	protected isSubscribedByModule(): boolean {
+		// The module always needs to know about a feedback, to report its value
+		return true
+	}
+
 	protected onOptionsParsed(wrapper: EntityWrapper, clockSensitive: boolean): void {
 		if (clockSensitive) {
 			this.#clockSensitive.add(wrapper)

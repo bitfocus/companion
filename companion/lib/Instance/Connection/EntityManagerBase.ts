@@ -14,6 +14,7 @@ import type {
 	VariableDependencyListener,
 	VariableDependencyRegistry,
 } from '../../Variables/DependencyRegistry.js'
+import type { EntityDefinition } from '../Definitions.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -178,6 +179,9 @@ export abstract class EntityManagerBase<
 		this.controlsStore = controlsStore
 		this.#variableDependencies = variableDependencies
 	}
+
+	/** Whether the module is told about entities of this definition */
+	protected abstract isSubscribedByModule(definition: EntityDefinition): boolean
 
 	/** The options of an entity have been parsed */
 	protected abstract onOptionsParsed(wrapper: EntityWrapper, clockSensitive: boolean): void
@@ -376,8 +380,8 @@ export abstract class EntityManagerBase<
 							}
 
 							const entityDefinition = entity.getEntityDefinition()
-							if (!entityDefinition || !entityDefinition.hasLifecycleFunctions) {
-								// The entity does not have lifecycle functions, so we can skip informing the module about it
+							if (!entityDefinition || !this.isSubscribedByModule(entityDefinition)) {
+								// The module doesn't need to know about this entity
 								leaveSubscription(entityId, wrapper)
 								continue
 							}

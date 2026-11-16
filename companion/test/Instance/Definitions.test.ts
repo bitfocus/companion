@@ -87,7 +87,6 @@ function makeFeedbackDefinition(overrides: Partial<FeedbackDefinition> = {}): Fe
 		feedbackType: FeedbackEntitySubType.Boolean,
 		feedbackStyle: undefined,
 		feedbackAffectedProperties: undefined,
-		hasLifecycleFunctions: false,
 		hasLearn: false,
 		learnTimeout: undefined,
 		showInvert: false,
@@ -114,7 +113,6 @@ function toClientActionDefinition(definition: ActionDefinition): ClientActionDef
 /** The feedback as the ui is sent it, without what only the backend needs */
 function toClientFeedbackDefinition(definition: FeedbackDefinition): ClientFeedbackDefinition {
 	const {
-		hasLifecycleFunctions: _hasLifecycleFunctions,
 		learnTimeout: _learnTimeout,
 		feedbackStyle: _feedbackStyle,
 		feedbackAffectedProperties: _feedbackAffectedProperties,

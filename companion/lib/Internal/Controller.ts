@@ -722,7 +722,6 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 					feedbacks[id] = {
 						...feedback,
 						sortKey: feedback.sortKey ?? null,
-						hasLifecycleFunctions: false,
 						showInvert: feedback.showInvert ?? false,
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,

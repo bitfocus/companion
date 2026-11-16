@@ -56,6 +56,7 @@ describe('ActionEntityManager', () => {
 					options: {},
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -99,6 +100,7 @@ describe('ActionEntityManager', () => {
 					options: { replaced: false },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'replaced', type: 'checkbox' }],
 					optionsToIgnoreForSubscribe: [],
@@ -117,6 +119,7 @@ describe('ActionEntityManager', () => {
 					options: { replaced: true },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'replaced', type: 'checkbox' }],
 					optionsToIgnoreForSubscribe: [],
@@ -178,6 +181,7 @@ describe('ActionEntityManager', () => {
 					options: {},
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -213,6 +217,7 @@ describe('ActionEntityManager', () => {
 					options: {},
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -255,6 +260,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -310,6 +316,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -344,6 +351,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -389,6 +397,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -408,6 +417,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: '$(var:test)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -476,6 +486,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -523,6 +534,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -554,6 +566,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -618,6 +631,7 @@ describe('ActionEntityManager', () => {
 				definitionId: 'action-1',
 				asEntityModel: vi.fn(),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -657,6 +671,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -693,6 +708,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 5,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -747,6 +763,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 5,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -800,6 +817,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 5,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -854,6 +872,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 5,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -905,6 +924,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 5,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -948,6 +968,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 5,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -993,6 +1014,7 @@ describe('ActionEntityManager', () => {
 						upgradeIndex: 5,
 					}),
 					getEntityDefinition: vi.fn().mockReturnValue({
+						entityType: EntityModelType.Action,
 						hasLifecycleFunctions: true,
 						options: [{ id: 'index', type: 'number' }],
 						optionsToIgnoreForSubscribe: [],
@@ -1059,6 +1081,7 @@ describe('ActionEntityManager', () => {
 						upgradeIndex: 5,
 					}),
 					getEntityDefinition: vi.fn().mockReturnValue({
+						entityType: EntityModelType.Action,
 						hasLifecycleFunctions: true,
 						options: [],
 						optionsToIgnoreForSubscribe: [],
@@ -1110,6 +1133,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1161,6 +1185,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: '$(var:page_specific)' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
 					optionsToIgnoreForSubscribe: [],
@@ -1220,6 +1245,7 @@ describe('ActionEntityManager', () => {
 					options: { field1: 'value1' },
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: false,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1249,6 +1275,7 @@ describe('ActionEntityManager', () => {
 					options: {},
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1268,6 +1295,7 @@ describe('ActionEntityManager', () => {
 					options: {},
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: false,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1319,6 +1347,7 @@ describe('ActionEntityManager', () => {
 					disabled: true,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1353,6 +1382,7 @@ describe('ActionEntityManager', () => {
 					disabled: true,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1403,6 +1433,7 @@ describe('ActionEntityManager', () => {
 					upgradeIndex: 3,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: false,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1455,6 +1486,7 @@ describe('ActionEntityManager', () => {
 					disabled: false,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1502,6 +1534,7 @@ describe('ActionEntityManager', () => {
 					disabled: true,
 				}),
 				getEntityDefinition: vi.fn().mockReturnValue({
+					entityType: EntityModelType.Action,
 					hasLifecycleFunctions: true,
 					options: [],
 					optionsToIgnoreForSubscribe: [],
@@ -1570,6 +1603,7 @@ describe('ActionEntityManager', () => {
 						upgradeIndex: 3,
 					}),
 					getEntityDefinition: vi.fn().mockReturnValue({
+						entityType: EntityModelType.Action,
 						hasLifecycleFunctions: true,
 						options: [],
 						optionsToIgnoreForSubscribe: [],
@@ -1589,6 +1623,7 @@ describe('ActionEntityManager', () => {
 						upgradeIndex: 5,
 					}),
 					getEntityDefinition: vi.fn().mockReturnValue({
+						entityType: EntityModelType.Action,
 						hasLifecycleFunctions: true,
 						options: [],
 						optionsToIgnoreForSubscribe: [],
@@ -1678,6 +1713,7 @@ describe('ActionEntityManager', () => {
 		it('should have no subscription id for an entity which is not subscribed', () => {
 			const action = createMockEntity('action-1', EntityModelType.Action, { field1: 'a' })
 			action.getEntityDefinition.mockReturnValue({
+				entityType: EntityModelType.Action,
 				hasLifecycleFunctions: false,
 				options: [],
 				optionsToIgnoreForSubscribe: [],
@@ -1688,6 +1724,21 @@ describe('ActionEntityManager', () => {
 
 			expect(actionManager.getSubscriptionId('action-1')).toBeUndefined()
 			expect(actionManager.getSubscriptionId('unknown')).toBeUndefined()
+		})
+
+		it('should not subscribe an action whose definition is not an action', () => {
+			const action = createMockEntity('action-1', EntityModelType.Action, { field1: 'a' })
+			action.getEntityDefinition.mockReturnValue({
+				entityType: EntityModelType.Feedback,
+				options: [],
+				optionsToIgnoreForSubscribe: [],
+			})
+
+			actionManager.trackEntity(action as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			expect(actionManager.getSubscriptionId('action-1')).toBeUndefined()
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
 		})
 
 		it('should update the subscription of a sole member in place when its options change', () => {

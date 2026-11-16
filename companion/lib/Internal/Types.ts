@@ -143,6 +143,6 @@ export type InternalActionDefinition = SetOptional<
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<FeedbackDefinition, 'entityType' | 'hasLifecycleFunctions' | 'warning'>,
+	Omit<FeedbackDefinition, 'entityType' | 'warning'>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

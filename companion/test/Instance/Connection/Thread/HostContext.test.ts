@@ -203,7 +203,6 @@ describe('HostContext setFeedbackDefinitions', () => {
 			sortKey: null,
 			feedbackType: 'boolean',
 			feedbackStyle: { color: 1 },
-			hasLifecycleFunctions: true,
 			hasLearn: true,
 			learnTimeout: 1000,
 			warning: null,

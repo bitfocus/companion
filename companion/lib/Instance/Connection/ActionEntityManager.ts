@@ -1,6 +1,7 @@
 import { EntityModelType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
+import type { EntityDefinition } from '../Definitions.js'
 import { EntityManagerBase, type EntityManagerAdapter } from './EntityManagerBase.js'
 
 /**
@@ -15,6 +16,11 @@ export class ActionEntityManager extends EntityManagerBase<ActionEntityModel> {
 		variableDependencies: VariableDependencyRegistry
 	) {
 		super(EntityModelType.Action, adapter, controlsStore, connectionId, variableDependencies)
+	}
+
+	protected isSubscribedByModule(definition: EntityDefinition): boolean {
+		// The module only needs to know about an action which has lifecycle functions
+		return definition.entityType === EntityModelType.Action && definition.hasLifecycleFunctions
 	}
 
 	protected onOptionsParsed(): void {

@@ -865,7 +865,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				),
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
-				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
 				hasLearn: !!rawFeedback.hasLearn,
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
