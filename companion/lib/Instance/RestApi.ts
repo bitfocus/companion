@@ -8,6 +8,7 @@ import {
 	registerConnectionPaths,
 } from './Connection/ConnectionsRestApi.js'
 import type { InstanceController } from './Controller.js'
+import { createDefinitionsRouter, DEFINITIONS_API_BASE_PATH, registerDefinitionsPaths } from './DefinitionsRestApi.js'
 
 export function createInstanceRestApiRouter(
 	logger: Logger,
@@ -21,9 +22,12 @@ export function createInstanceRestApiRouter(
 		createConnectionsRouter(logger.child({ source: 'connection/v1' }), instanceController, configStore)
 	)
 
+	router.use(DEFINITIONS_API_BASE_PATH, createDefinitionsRouter(instanceController.definitions))
+
 	return router
 }
 
 export function registerInstanceRestApiPaths(registry: OpenAPIRegistry): void {
-	return registerConnectionPaths(registry)
+	registerConnectionPaths(registry)
+	registerDefinitionsPaths(registry)
 }
