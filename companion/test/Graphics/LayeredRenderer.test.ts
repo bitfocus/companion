@@ -450,6 +450,21 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('text outline does not spike at acute corners', async () => {
+			const img = Image.create(288, 232, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [makeTextElement({ text: 'M', outlineColor: 0xff0000, fontsize: 200, fontsizeAllowShrink: false })],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('text element with translucent color', async () => {
 			const img = Image.create(72, 58, 1, null)
 			await GraphicsLayeredButtonRenderer.draw(

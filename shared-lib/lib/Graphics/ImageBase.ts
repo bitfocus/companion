@@ -1110,47 +1110,54 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		yAnchor += y
 
 		this.context2d.fillStyle = color
+		const oldMiterLimit = this.context2d.miterLimit
 		if (outlineStyle && outlineStyle.width > 0) {
 			this.context2d.strokeStyle = outlineStyle.color
 			this.context2d.lineWidth = outlineStyle.width
+			// the default limit (10) spikes at acute glyph corners (eg an M); 2 bevels those but keeps right angles square
+			this.context2d.miterLimit = 2
 		}
 
-		// only draw the lines that actually fit in the box (numLines); the rest overflow and are clipped
-		for (const line of layout.lines.slice(0, numLines)) {
-			if (outlineStyle && outlineStyle.width > 0) {
-				this.context2d.strokeText(line.text, xAnchor, yAnchor)
-			}
+		try {
+			// only draw the lines that actually fit in the box (numLines); the rest overflow and are clipped
+			for (const line of layout.lines.slice(0, numLines)) {
+				if (outlineStyle && outlineStyle.width > 0) {
+					this.context2d.strokeText(line.text, xAnchor, yAnchor)
+				}
 
-			this.context2d.fillText(line.text, xAnchor, yAnchor)
+				this.context2d.fillText(line.text, xAnchor, yAnchor)
 
-			// Underline/strikethrough have no native canvas support, so draw them manually.
-			// fillStyle is still `color` here, so the decorations match the text color.
-			if (underline || strikethrough) {
-				const metrics = this.context2d.measureText(line.text)
-				const width = metrics.width
-				if (width > 0) {
-					const ascent = metrics.fontBoundingBoxAscent
-					const descent = metrics.fontBoundingBoxDescent
-					const thickness = Math.max(1, (ascent + descent) / 14)
-					// textAlign is set above, so derive the line's left edge from the anchor.
-					const left = halign === 'center' ? xAnchor - width / 2 : halign === 'right' ? xAnchor - width : xAnchor
-					if (underline) {
-						this.context2d.fillRect(left, yAnchor + descent * 0.5, width, thickness)
-					}
-					if (strikethrough) {
-						this.context2d.fillRect(left, yAnchor - ascent * 0.3, width, thickness)
+				// Underline/strikethrough have no native canvas support, so draw them manually.
+				// fillStyle is still `color` here, so the decorations match the text color.
+				if (underline || strikethrough) {
+					const metrics = this.context2d.measureText(line.text)
+					const width = metrics.width
+					if (width > 0) {
+						const ascent = metrics.fontBoundingBoxAscent
+						const descent = metrics.fontBoundingBoxDescent
+						const thickness = Math.max(1, (ascent + descent) / 14)
+						// textAlign is set above, so derive the line's left edge from the anchor.
+						const left = halign === 'center' ? xAnchor - width / 2 : halign === 'right' ? xAnchor - width : xAnchor
+						if (underline) {
+							this.context2d.fillRect(left, yAnchor + descent * 0.5, width, thickness)
+						}
+						if (strikethrough) {
+							this.context2d.fillRect(left, yAnchor - ascent * 0.3, width, thickness)
+						}
 					}
 				}
+
+				//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
+				// this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
+				// this.horizontalLine(yAnchor + line.descent, 'rgb(0, 255, 0)')
+				// this.horizontalLine(yAnchor - correctedAscent, 'rgb(0,0,255)')
+				// this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
+				//console.log('Fontsize', fontsize, 'Lineheight', lineheight, 'asc', correctedAscent, 'des', correctedDescent, 'a+d', correctedAscent+correctedDescent);
+
+				yAnchor += layout.measuredLineHeight
 			}
-
-			//this.horizontalLine(yAnchor - fontsize, 'rgb(255,0,255)')
-			// this.horizontalLine(yAnchor + correctedDescent, 'rgb(0, 255, 0)')
-			// this.horizontalLine(yAnchor + line.descent, 'rgb(0, 255, 0)')
-			// this.horizontalLine(yAnchor - correctedAscent, 'rgb(0,0,255)')
-			// this.horizontalLine(yAnchor, 'rgb(255, 0, 0)')
-			//console.log('Fontsize', fontsize, 'Lineheight', lineheight, 'asc', correctedAscent, 'des', correctedDescent, 'a+d', correctedAscent+correctedDescent);
-
-			yAnchor += layout.measuredLineHeight
+		} finally {
+			this.context2d.miterLimit = oldMiterLimit
 		}
 	}
 
