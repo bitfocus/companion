@@ -1,8 +1,240 @@
-/**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
- */
+@import '../../../shared-lib/theme/tokens.css';
+@import '../../../webui/src/fonts.css';
+
+:root,
+:root[data-theme='dark'] {
+	--ifm-color-primary: var(--companion-brand);
+	--ifm-link-hover-color: var(--companion-brand-hover);
+	--ifm-color-content: var(--companion-body-text);
+	--ifm-color-content-secondary: var(--companion-text-secondary);
+	--ifm-heading-color: var(--companion-text-strong);
+	--ifm-background-color: var(--companion-app-bg);
+	--ifm-background-surface-color: var(--companion-surface);
+	--ifm-font-family-base: var(--companion-font-sans);
+	--ifm-font-family-monospace: var(--companion-font-mono);
+	--ifm-code-font-size: 95%;
+	--ifm-code-background: var(--companion-surface-muted);
+	--ifm-global-radius: 0.5rem;
+	--ifm-hover-overlay: var(--companion-action-hover);
+	--ifm-navbar-height: 3.25rem;
+	--ifm-navbar-background-color: var(--companion-app-frame-bg);
+	--ifm-navbar-link-color: var(--companion-body-text);
+	--ifm-navbar-link-hover-color: var(--companion-text-strong);
+	--ifm-navbar-search-input-background-color: var(--companion-surface);
+	--ifm-navbar-search-input-color: var(--companion-body-text);
+	--ifm-navbar-search-input-placeholder-color: var(--companion-text-secondary);
+	--ifm-menu-color: var(--companion-body-text);
+	--ifm-menu-color-active: var(--companion-selection-text);
+	--ifm-menu-color-background-active: var(--companion-selection-bg);
+	--ifm-breadcrumb-color-active: var(--companion-selection-text);
+	--ifm-breadcrumb-item-background-active: var(--companion-selection-bg);
+	--ifm-breadcrumb-border-radius: var(--ifm-global-radius);
+	--ifm-toc-border-color: var(--companion-border);
+	--ifm-table-border-color: var(--companion-border);
+	--ifm-table-stripe-background: var(--companion-surface-muted);
+	--docusaurus-highlighted-code-line-bg: var(--companion-selection-bg);
+}
+
+:focus-visible {
+	outline: 2px solid var(--companion-action-focus);
+	outline-offset: 2px;
+}
+
+.navbar {
+	border-bottom: 1px solid var(--companion-border);
+	box-shadow: none;
+}
+
+.navbar__inner,
+.navbar__items {
+	min-width: 0;
+}
+
+.navbar__brand {
+	min-width: 0;
+	font-size: 0.9375rem;
+}
+
+.navbar__logo {
+	height: 1.75rem;
+}
+
+.navbar__title {
+	font-weight: 600;
+}
+
+.navbar__item.navbar__link,
+.navbar__toggle,
+.navbar-sidebar__close {
+	border-radius: var(--ifm-global-radius);
+
+	&:hover {
+		background-color: var(--companion-action-hover);
+	}
+}
+
+.navbar__toggle,
+.navbar-sidebar__close {
+	color: var(--companion-body-text);
+}
+
+.navbar__toggle {
+	padding: 0.25rem;
+}
+
+.navbar__search-input {
+	width: min(15rem, 24vw);
+	height: 2rem;
+	border: 1px solid var(--companion-border-medium);
+	border-radius: var(--ifm-global-radius);
+	font: inherit;
+	font-size: 0.8125rem;
+}
+
+/* Lunr measures typed text in a hidden element. Keep it within the search field. */
+.navbar__search .algolia-autocomplete > pre {
+	max-inline-size: 100%;
+	padding: 0;
+	overflow: hidden;
+}
+
+:root[data-theme='dark'] {
+	--ifm-navbar-search-input-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23a9a9a9' stroke-width='1.7'%3E%3Ccircle cx='8' cy='8' r='5'/%3E%3Cpath d='m12 12 4.5 4.5'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 996px) {
+	.navbar {
+		--ifm-navbar-padding-horizontal: 0.75rem;
+	}
+
+	.navbar__search-input {
+		width: min(12rem, 26vw);
+		padding-right: 0.5rem;
+	}
+}
+
+@media (max-width: 420px) {
+	.navbar__brand {
+		font-size: 0.8125rem;
+	}
+
+	.navbar__logo {
+		height: 1.5rem;
+	}
+
+	.navbar__search-input {
+		width: 7.75rem;
+		font-size: 0.75rem;
+	}
+}
+
+.theme-layout-navbar-right > .fontawesome-container {
+	padding: 0.45rem;
+
+	.fontawesome {
+		display: block;
+		width: auto;
+		height: 1.125rem;
+	}
+
+	.fontawesome-text {
+		display: none;
+	}
+}
+
+.navbar-sidebar__items,
+.navbar__inner .dropdown__menu {
+	.fontawesome-container {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		.fontawesome {
+			width: auto;
+			height: 1.125rem;
+		}
+	}
+}
+
+.navbar-sidebar,
+.theme-doc-sidebar-container {
+	background-color: var(--companion-surface-muted);
+}
+
+.navbar-sidebar__brand {
+	background-color: var(--companion-app-frame-bg);
+	border-bottom: 1px solid var(--companion-border);
+	box-shadow: none;
+}
+
+.theme-doc-sidebar-container .menu {
+	padding-inline-end: 0.5rem;
+}
+
+.theme-doc-sidebar-menu,
+.navbar-sidebar .menu {
+	--ifm-menu-link-padding-vertical: 0.4rem;
+	font-size: 0.875rem;
+
+	.menu__list .menu__list {
+		margin-inline-start: 0.75rem;
+		padding-inline-start: 0.5rem;
+		border-inline-start: 1px solid var(--companion-border);
+	}
+
+	.menu__list-item-collapsible > .menu__link--active:not([aria-current='page']) {
+		color: var(--ifm-menu-color);
+		font-weight: 600;
+	}
+
+	.menu__link[aria-current='page'] {
+		position: relative;
+		background-color: var(--companion-selection-bg);
+		font-weight: 600;
+
+		&::before {
+			position: absolute;
+			inset-block: 0.4rem;
+			inset-inline-start: 0;
+			width: 3px;
+			border-radius: 2px;
+			background-color: var(--companion-accent-active);
+			content: '';
+		}
+	}
+
+	/* Style the immediate groups in Configuration GUI using the bundled sidebar markup. */
+	.theme-doc-sidebar-item-category:has(> .menu__list-item-collapsible > a[href$='/category/configuration-gui'])
+		> .menu__list
+		> .theme-doc-sidebar-item-category {
+		margin-block-start: 0.75rem;
+
+		> .menu__list-item-collapsible > .menu__link {
+			color: var(--companion-text-secondary);
+			font-size: 0.75rem;
+			font-weight: 600;
+		}
+	}
+}
+
+.pagination-nav__link {
+	background-color: var(--companion-surface);
+	border-color: var(--companion-border);
+}
+
+.pagination-nav__label {
+	color: var(--companion-text-strong);
+}
+
+.markdown :is(p, li) a {
+	text-decoration: underline;
+	text-underline-offset: 0.15em;
+}
+
+.markdown img:is([src$='#themed-light'], [src$='#themed-dark'], [src$='#unthemed']) {
+	border: 1px solid var(--companion-border);
+	border-radius: var(--ifm-global-radius);
+}
 
 /* Adjust anchor-linking (in-page links) behavior: animate scrolling down to them
     and if the screen is tall enough, show a bit above the link for context. */
@@ -18,257 +250,7 @@
 	}
 }
 
-/* You can override the default Infima variables here. */
-:root {
-	--ifm-color-primary: #d50215;
-	--ifm-color-primary-dark: #bf0213;
-	--ifm-color-primary-darker: #b40212;
-	--ifm-color-primary-darkest: #94010f;
-	--ifm-color-primary-light: #e00217;
-	--ifm-color-primary-lighter: #e60c22;
-	--ifm-color-primary-lightest: #ea2336;
-	--ifm-code-font-size: 95%;
-	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 10%);
-
-	--companion-navbar-bg: #d50215;
-	--ifm-navbar-height: 3.25rem; /* default is 3.75 */
-	--ifm-navbar-background-color: var(--companion-navbar-bg);
-	--ifm-navbar-link-color: white;
-	--ifm-navbar-link-hover-color: white;
-
-	--companion-navbar-item-hover-bg: rgb(255 255 255 / 20%);
-	--companion-active-tab-color: var(--ifm-font-color-base);
-	--companion-active-tab-bg: white;
-	--companion-active-tab-shadow-color: rgb(0 0 0 / 10%);
-	--companion-mode-toggle-bg: rgb(255 255 255 / 40%);
-	--companion-group-border-color: rgb(0 0 0 / 10%);
-	--companion-pulldown-sidebar-bg: white; /* --ifm-background-color is transparent in light mode */
-}
-
-/* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
-	--ifm-color-primary: #f04d63;
-	--ifm-color-primary-dark: #ed3249;
-	--ifm-color-primary-darker: #eb233e;
-	--ifm-color-primary-darkest: #d30825;
-	--ifm-color-primary-light: #f3687d;
-	--ifm-color-primary-lighter: #f47788;
-	--ifm-color-primary-lightest: #f89aa7;
-
-	--docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 30%);
-	--ifm-navbar-link-color: white;
-	--ifm-navbar-link-hover-color: white;
-
-	--companion-active-tab-color: var(--ifm-font-color-base); /* for the pseudo-tab links in the top navbar */
-	--companion-active-tab-bg: var(--ifm-background-color); /* #1b1b1d */
-	--companion-active-tab-shadow-color: rgb(125 125 125 / 10%);
-	--companion-mode-toggle-bg: rgb(0 0 0 / 25%);
-	--companion-group-border-color: rgb(255 255 255 / 10%);
-	--companion-pulldown-sidebar-bg: var(--ifm-background-color);
-}
-
-/* parent of the "tabs" needs slight adjustments: */
-/* The navbar and (implicitly) right container must not hide overflow: or the version dropdown will be clipped. */
-.navbar {
-	padding-top: 0; /* In order to enable tab-like visuals, we need to let the inner elements deal with padding. */
-	padding-bottom: 0;
-	box-shadow: none; /* keeps tab continuous with page content */
-}
-
-/* To get the best tab effect clip overflow so we don't have to precisely calculate the button padding.
-   This also prevents the shadow from interrupting the continuity of the tab to the page contents */
-.theme-layout-navbar-left {
-	overflow: hidden;
-}
-
-/* Navbar (the top bar, not the sidebar) link styles 
-   note: `overflow: hidden;` can cause weird text-wrapping (if wrapping is enabled). It clips button text when wrapping is disabled.
-   Note: The margin-bottom/border-bottom adjustment here is made large to make the tabs touch the bottom of the header bar
-        Since we're clipping the left-container, the bottom-border needn't be precise -- as long as it's big enough.
-   note 3: ":not(:last-child)" is to prevent tab-highlighting in the app-packaged docs, where there are no tabs.
-   */
-.theme-layout-navbar-left .navbar__link {
-	--vertical-padding: 0.5rem; /* make up for the reduced line-height */
-	--margin-bottom: calc(-1 * var(--ifm-navbar-height) / 2); /* move the button down to create the tab-like effect */
-	text-align: center; /* keep labels horizontally centered when they become two lines */
-	line-height: 1; /* keep labels compact when words wrap to two lines (in case we remove nowrap later, below) */
-	padding-top: var(--vertical-padding);
-	padding-bottom: calc(
-		var(--vertical-padding) - var(--margin-bottom)
-	); /* note that margin-bottom is negative, so padding-bottom is positive and larger in magnitude */
-	margin-bottom: var(--margin-bottom);
-	white-space: nowrap; /* Prevent two-line buttons! If we add more buttons, this may be removed */
-
-	/* Make page-tab links with rounded top corners, but square bottom corners so it visually "fuses" with the page */
-	border-radius: 0.5rem 0.5rem 0 0;
-}
-
-/* Make the active link look a like a page-tab (like a browser tab or VS Code editor tabs) */
-.theme-layout-navbar-left .navbar__link--active {
-	color: var(--companion-active-tab-color);
-	background-color: var(--companion-active-tab-bg);
-	/* Give the tab a glow  */
-	box-shadow: 0 -4px 10px 1px var(--companion-active-tab-shadow-color);
-
-	.navbar__title {
-		font-weight: var(--ifm-font-weight-semibold); /* for the logo, match other tabs; bold is too strong */
-	}
-}
-
-/* Hover styles for navbar links. 
-	Note: ".navbar__item.navbar__link" excludes dropdown menus, which by default do not highlight, possibly due to dropdown--hoverable
-	*/
-.navbar__item.navbar__link:hover:not(.navbar__link--active),
-.navbar__toggle:hover {
-	background-color: var(--companion-navbar-item-hover-bg);
-}
-
-.navbar__brand:hover,
-.navbar-sidebar__close:hover {
-	opacity: 85%;
-}
-
-/* Make the dark/light mode button stand out better.
-   Unfortunately, it doesn't have a non-serialized classname, but this works. 
-   Can't say if it's better than .clean-btn[title='system mode'], but it's safer from localization */
-.theme-layout-navbar-right .clean-btn:not(:hover),
-.navbar-sidebar__brand .clean-btn:not(:hover) {
-	background-color: var(--companion-mode-toggle-bg);
-}
-
-/* The next two rules adjust spacing for the download, github and light/dark buttons.
-   The first is for the light/dark button when it is grouped with the other two, so only needs to work on the full navbar. */
-.theme-layout-navbar-right .clean-btn {
-	margin: 0 0.25em;
-}
-
-/* when the window is wide, the icons show in the right-header. Don't show text. */
-.theme-layout-navbar-right .navbar__link {
-	padding: 0.25em;
-	border-radius: 0.5rem;
-
-	/* fontawesome-* classes are added in the item definitions in docusaurus.config.ts  */
-	.fontawesome {
-		height: 2rem;
-		width: auto;
-		display: block; /* removes extra spacing below the SVG */
-	}
-	.fontawesome-text {
-		display: none;
-	}
-}
-
-/* .navbar-sidebar__items: when the window is narrow, the right-header icons are in the pull-down sidebar
-	.navbar__inner .dropdown__menu: for dropdown menus in the navbar. (note, though, that the current design does not allow dropdowns in the left section.)
-	*/
-.navbar-sidebar__items,
-.navbar__inner .dropdown__menu {
-	/* fontawesome-* classes were added in the item definitions in docusaurus.config.ts  */
-	.fontawesome-container {
-		display: flex;
-		align-items: center;
-
-		.fontawesome {
-			height: 1.5em;
-			width: auto;
-			/* "display: block" not needed here — flex container eliminates the inline spacing below the SVG */
-		}
-
-		.fontawesome-text {
-			line-height: 1;
-			padding-left: 0.5em;
-		}
-	}
-}
-
-/* Default color for the sidebar toggle is black in light mode and grey in dark mode for some reason; neither look great */
-.navbar__toggle {
-	color: white;
-	padding: 0.5em;
-	border-radius: 0.5em;
-}
-
-/* when window is narrow, the "pull-down" sidebar's class is .navbar-sidebar.
-   Adjust its colors here to match the body/sidebar colors rather than the (top) navbar colors
-   (when the window is wider, the permanent sidebar class is .theme-doc-sidebar-menu)
- */
-.navbar-sidebar {
-	--ifm-navbar-background-color: var(--companion-pulldown-sidebar-bg);
-}
-
-/* the top of the narrow-win sidebar should be red regardless of theme */
-.navbar-sidebar__brand,
-.navbar-sidebar__brand:hover {
-	background-color: var(--companion-navbar-bg);
-}
-
-/* Close-icon for the drop-down sidebar when the window is narrow */
-.navbar-sidebar__close {
-	padding: 0.5em;
-	border-radius: 0.5em;
-	color: white; /* doesn't do anything currently, because the SVG is hardcoded to: */
-	--ifm-color-emphasis-600: white;
-
-	&:hover {
-		background-color: var(--companion-mode-toggle-bg);
-	}
-}
-
-/* For all sidebars: Make subgroup (aka category) boundaries more distinct.
-   note that the DOM for collapsing lists in the sidebar is:
-    <li class="theme-doc-sidebar-item-category ... menu__list-item menu__list-item--collapsed> 
-		<div class="menu__list-item-collapsible">...</div>
-		<ul class="menu__list> <li class="...menu__list-item">...</li>...   </ul>
-	</li>
-   but the class .menu__list-item--collapsed is removed from the outer <li> and not
-   replaced by another classname, the condition for open is therefore:
-   .theme-doc-sidebar-item-category:not(.menu__list-item--collapsed)
- */
-
-.theme-doc-sidebar-item-category:not(.menu__list-item--collapsed) {
-	box-shadow: 1px 0 16px -3px var(--companion-group-border-color);
-	border-right: 1px solid var(--companion-group-border-color);
-	border-radius: 0.5rem;
-}
-
-/* move the expand/contract caret to the far left for improved visibility/group offsetting.
-   The second class is active if the subdirectory has no linked-page (so clicking on it just opens the sublist w/o changing the main panel.
-   */
-.menu__caret,
-.menu__link--sublist-caret::after {
-	order: -1;
-	padding-left: 0.45em;
-	padding-right: 0;
-	border-radius: 0.5rem 0 0 0.5rem; /* match the outer box's corner */
-}
-
-/* The caret is placed differently depending on whether the subdirectory has an index page.
-   The first is when an "index" is present; the second when there's no linked page */
-.menu__caret::before,
-.menu__link--sublist-caret::after {
-	scale: 0.6;
-	margin-left: 0; /* this is currently needed for .menu__link--sublist-caret::after, but is correct for both */
-}
-
-/* split the padding between the caret (previous rule) and the text in the category header */
-.menu__link--sublist {
-	padding-left: 0.2em;
-}
-
-/* indent sublists, i.e. list under a category, to  align with the category header */
-.menu__list-item .menu__list-item {
-	margin-left: 0.35em;
-}
-
-/* Main body styling? CodeRabbit says these are safe to prune, but was there an intention to use these? */
-.text-gray-50 {
-	color: #f9fafb;
-}
-.text-gray-500 {
-	color: #6b7280;
-}
-
-/* Auto-generated TOC heading links should be white, not red */
+/* Use the heading color on generated table-of-contents headings. */
 .auto-toc-heading a {
 	color: var(--ifm-heading-color);
 	text-decoration: none;
@@ -279,27 +261,13 @@
 	text-decoration: underline;
 }
 
-/* In markdown pages indent all text, including subheaders, under H2 headers */
-.markdown h2 ~ :not(h1, h2) {
-	margin-left: 2rem;
-}
-
-/* Some default numbers: in markdown, the ifm defaults are overridden
-    --ifm-heading-line-height: 1.25;
-    --ifm-h1-font-size: 2rem; but 3rem for top of file (.markdown h1:first-child),
-    --ifm-h2-font-size: 2rem; in markdown (default is 1.5 rem)
-    --ifm-h3-font-size: 1.5 in markdown; normal is 1.25rem;
-    --ifm-h4-font-size: 1rem; (unchanged)
-    --ifm-h5-font-size: 0.875rem;
-    --ifm-h6-font-size: 0.85rem;
-	*/
 .markdown h1 {
 	--ifm-h1-vertical-rhythm-bottom: 1;
 	font-size: 2em; /* setting --ifm-h1-font-size doesn't work (because of specificity?) */
 }
 
 .markdown h2 {
-	--ifm-h2-vertical-rhythm-top: 1; /* default 2 is too much. Also, we already indent everything under H2 to make H2 breaks clear */
+	--ifm-h2-vertical-rhythm-top: 1;
 	--ifm-heading-vertical-rhythm-bottom: calc(0.5 / 1.25); /* this is multiplied by --ifm-leading = 1.25 */
 	font-size: 1.5em;
 }

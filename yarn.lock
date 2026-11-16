@@ -1640,6 +1640,8 @@ __metadata:
     "@docusaurus/preset-classic": "npm:3.10.2"
     "@docusaurus/tsconfig": "npm:3.10.2"
     "@docusaurus/types": "npm:3.10.2"
+    "@fontsource-variable/inter": "npm:^5.3.0"
+    "@fontsource/fira-code": "npm:^5.3.0"
     "@mdx-js/react": "npm:^3.1.1"
     clsx: "npm:^2.1.1"
     docusaurus-lunr-search: "npm:3.6.1"
