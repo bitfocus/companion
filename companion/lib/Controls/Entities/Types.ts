@@ -1,5 +1,6 @@
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type {
+	EntityModelType,
 	FeedbackValue,
 	RawStoreResultCustomVariable,
 	RawStoreResultLocalVariable,
@@ -7,7 +8,7 @@ import type {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionValueType } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
-import type { InstanceDefinitions } from '../../Instance/Definitions.js'
+import type { EntityDefinition } from '../../Instance/Definitions.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
 import type {
@@ -22,7 +23,14 @@ import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressi
 
 export type { FeedbackExecutionContext } from '../../Internal/Types.js'
 
-export type InstanceDefinitionsForEntity = Pick<InstanceDefinitions, 'getEntityDefinition'>
+export interface InstanceDefinitionsForEntity {
+	/** An entity only knows its type at runtime, so gets either kind of definition */
+	getEntityDefinition(
+		entityType: EntityModelType,
+		connectionId: string,
+		definitionId: string
+	): EntityDefinition | undefined
+}
 
 export type ProcessManagerForEntity = Pick<
 	InstanceProcessManager,

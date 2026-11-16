@@ -110,6 +110,14 @@ export interface FeedbackDefinition extends ClientFeedbackDefinition, EntityDefi
 
 export type EntityDefinition = ActionDefinition | FeedbackDefinition
 
+/**
+ * The definition of each kind of entity
+ */
+export interface EntityDefinitionOfType {
+	[EntityModelType.Action]: ActionDefinition
+	[EntityModelType.Feedback]: FeedbackDefinition
+}
+
 export interface CompositeElementDefinition {
 	id: string
 	name: string
@@ -154,17 +162,18 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	readonly #configStore: InstanceConfigStore
 
 	/**
-	 * The action definitions
+	 * The action and feedback definitions, by connection
 	 */
-	#actionDefinitions: Record<string, Record<string, ActionDefinition>> = {}
+	readonly #entityDefinitions: {
+		[TType in EntityModelType]: Record<string, Record<string, EntityDefinitionOfType[TType]>>
+	} = {
+		[EntityModelType.Action]: {},
+		[EntityModelType.Feedback]: {},
+	}
 	/**
 	 * The action definitions, as viewed by the ui
 	 */
 	#uiActionDefinitions: Record<string, Record<string, ClientActionDefinition>> = {}
-	/**
-	 * The feedback definitions
-	 */
-	#feedbackDefinitions: Record<string, Record<string, FeedbackDefinition>> = {}
 	/**
 	 * The feedback definitions, as viewed by the ui
 	 */
@@ -363,8 +372,8 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 */
 	getDefinitionCounts(connectionId: string): { actions: number; feedbacks: number; presets: number } {
 		return {
-			actions: Object.keys(this.#actionDefinitions[connectionId] ?? {}).length,
-			feedbacks: Object.keys(this.#feedbackDefinitions[connectionId] ?? {}).length,
+			actions: Object.keys(this.#entityDefinitions[EntityModelType.Action][connectionId] ?? {}).length,
+			feedbacks: Object.keys(this.#entityDefinitions[EntityModelType.Feedback][connectionId] ?? {}).length,
 			presets: this.#presetDefinitions[connectionId]?.size ?? 0,
 		}
 	}
@@ -384,7 +393,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 
 		this.emit('updatePresets', connectionId)
 
-		delete this.#actionDefinitions[connectionId]
+		delete this.#entityDefinitions[EntityModelType.Action][connectionId]
 		delete this.#uiActionDefinitions[connectionId]
 		if (this.#events.listenerCount('actions') > 0) {
 			this.#events.emit('actions', {
@@ -393,7 +402,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			})
 		}
 
-		delete this.#feedbackDefinitions[connectionId]
+		delete this.#entityDefinitions[EntityModelType.Feedback][connectionId]
 		delete this.#uiFeedbackDefinitions[connectionId]
 		if (this.#events.listenerCount('feedbacks') > 0) {
 			this.#events.emit('feedbacks', {
@@ -421,22 +430,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	}
 
 	/**
-	 * Get an entity definition
+	 * Get an entity definition, of the kind asked for
 	 */
-	getEntityDefinition(
-		entityType: EntityModelType,
+	getEntityDefinition<TType extends EntityModelType>(
+		entityType: TType,
 		connectionId: string,
 		definitionId: string
-	): EntityDefinition | undefined {
-		switch (entityType) {
-			case EntityModelType.Action:
-				return this.#actionDefinitions[connectionId]?.[definitionId]
-			case EntityModelType.Feedback:
-				return this.#feedbackDefinitions[connectionId]?.[definitionId]
-			default:
-				assertNever(entityType)
-				return undefined
-		}
+	): EntityDefinitionOfType[TType] | undefined {
+		return this.#entityDefinitions[entityType][connectionId]?.[definitionId]
 	}
 
 	/**
@@ -569,7 +570,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * Set the action definitions for a connection
 	 */
 	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ActionDefinition>): void {
-		this.#actionDefinitions[connectionId] = actionDefinitions
+		this.#entityDefinitions[EntityModelType.Action][connectionId] = actionDefinitions
 
 		const lastUiDefinitions = this.#uiActionDefinitions[connectionId]
 		const uiDefinitions: Record<string, ClientActionDefinition> = {}
@@ -588,7 +589,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * Set the feedback definitions for a connection
 	 */
 	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, FeedbackDefinition>): void {
-		this.#feedbackDefinitions[connectionId] = feedbackDefinitions
+		this.#entityDefinitions[EntityModelType.Feedback][connectionId] = feedbackDefinitions
 
 		const lastUiDefinitions = this.#uiFeedbackDefinitions[connectionId]
 		const uiDefinitions: Record<string, ClientFeedbackDefinition> = {}
