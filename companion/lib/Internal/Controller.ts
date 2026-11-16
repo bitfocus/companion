@@ -20,14 +20,11 @@ import {
 	type FeedbackValue,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import {
-	convertExpressionOptionsWithoutParsing,
-	type ExpressionableOptionsObject,
-} from '@companion-app/shared/Model/Options.js'
+import { type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import type { CompanionOptionValues, Complete } from '@companion-module/base'
+import type { Complete } from '@companion-module/base'
 import type { JsonValue } from '@companion-module/host'
 import type { ActionRunner } from '../Controls/ActionRunner.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
@@ -439,34 +436,23 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 				return undefined
 			}
 
-			// Parse the options if enabled
-			let parsedOptions: CompanionOptionValues
-			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
 
-				// Always track the dependencies, for accurate re-evaluation when something changes
-				if (tracking) {
-					tracking.referencedVariables = parseRes.referencedVariableIds
-					tracking.clockSensitive = parseRes.clockSensitive
-				}
-
-				if (!parseRes.ok) {
-					this.#logger.warn(
-						`Failed to parse options for feedback ${entityModel.definitionId} in control ${controlId}: ${JSON.stringify(parseRes.optionErrors)}`
-					)
-					throw new Error(
-						`Failed to parse options for feedback ${entityModel.definitionId}. One or more options were invalid`
-					)
-				} else {
-					parsedOptions = parseRes.parsedOptions
-				}
-			} else {
-				parsedOptions = convertExpressionOptionsWithoutParsing(entityModel.options)
-				if (tracking) {
-					tracking.referencedVariables = new Set<string>()
-					tracking.clockSensitive = false
-				}
+			// Always track the dependencies, for accurate re-evaluation when something changes
+			if (tracking) {
+				tracking.referencedVariables = parseRes.referencedVariableIds
+				tracking.clockSensitive = parseRes.clockSensitive
 			}
+
+			if (!parseRes.ok) {
+				this.#logger.warn(
+					`Failed to parse options for feedback ${entityModel.definitionId} in control ${controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(
+					`Failed to parse options for feedback ${entityModel.definitionId}. One or more options were invalid`
+				)
+			}
+			const parsedOptions = parseRes.parsedOptions
 
 			const executionFeedback: Complete<FeedbackForInternalExecution> = {
 				controlId: controlId,
@@ -561,20 +547,14 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 				parserOptions: { allowClockSensitive: false },
 			})
 
-			let parsedOptions: CompanionOptionValues
-			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
-				if (!parseRes.ok) {
-					this.#logger.warn(
-						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
-					)
-					throw new Error(`Failed to parse options for action ${action.definitionId}. One or more options were invalid`)
-				} else {
-					parsedOptions = parseRes.parsedOptions
-				}
-			} else {
-				parsedOptions = convertExpressionOptionsWithoutParsing(action.rawOptions)
+			const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
+			if (!parseRes.ok) {
+				this.#logger.warn(
+					`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
+				)
+				throw new Error(`Failed to parse options for action ${action.definitionId}. One or more options were invalid`)
 			}
+			const parsedOptions = parseRes.parsedOptions
 
 			const executionAction: Complete<ActionForInternalExecution> = {
 				options: parsedOptions,
@@ -701,9 +681,8 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						hiddenFromPicker: action.hiddenFromPicker ?? false,
 						hiddenForControlTypes: action.hiddenForControlTypes,
 
-						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
-
 						optionsToMonitorForInvalidations: action.optionsToMonitorForInvalidations || null,
+						legacyOptions: false,
 					} satisfies Complete<ActionDefinition>
 				}
 			}
@@ -736,8 +715,8 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
 						hiddenFromPicker: feedback.hiddenFromPicker ?? false,
 						hiddenForControlTypes: feedback.hiddenForControlTypes,
-
-						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
+						legacyOptions: false,
+						invertDisableAutoExpression: false,
 					} satisfies Complete<FeedbackDefinition>
 				}
 			}

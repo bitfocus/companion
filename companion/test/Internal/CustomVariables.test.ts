@@ -261,7 +261,7 @@ describe('getActionDefinitions', () => {
 			'custom_variable_sync_to_default',
 		])
 		for (const def of Object.values(defs)) {
-			expect(def.optionsSupportExpressions).toBe(true)
+			expect(def).not.toHaveProperty('legacyOptions')
 			expect(Array.isArray(def.options)).toBe(true)
 		}
 	})

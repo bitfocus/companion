@@ -131,7 +131,7 @@ export interface ExecuteFeedbackResultWithReferences {
 export type InternalActionDefinition = SetOptional<
 	Omit<
 		ActionDefinition,
-		'entityType' | 'hasLifecycleFunctions' | 'actionExecutionTimeout' | 'actionOutputs' | 'warning'
+		'entityType' | 'hasLifecycleFunctions' | 'actionExecutionTimeout' | 'actionOutputs' | 'warning' | 'legacyOptions'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -143,6 +143,6 @@ export type InternalActionDefinition = SetOptional<
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<FeedbackDefinition, 'entityType' | 'warning'>,
+	Omit<FeedbackDefinition, 'entityType' | 'warning' | 'legacyOptions' | 'invertDisableAutoExpression'>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

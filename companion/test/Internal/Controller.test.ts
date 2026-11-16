@@ -83,7 +83,6 @@ describe('evaluateFeedbackValue', () => {
 		instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: true,
 		} as any)
 
 		const model: FeedbackEntityModel = {
@@ -112,7 +111,6 @@ describe('evaluateFeedbackValue', () => {
 		instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: true,
 		} as any)
 
 		const model: FeedbackEntityModel = {
@@ -169,7 +167,6 @@ describe("the placeholder for an entity that couldn't be loaded", () => {
 		instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: false,
 		} as any)
 
 		const model: FeedbackEntityModel = {
@@ -217,7 +214,6 @@ describe('onVariablesChanged', () => {
 		ctx.instanceController.definitions.getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-			optionsSupportExpressions: true,
 		} as any)
 		ctx.controlStore.createVariablesAndExpressionParser.mockReturnValue({
 			parseEntityOptions: vi.fn(() => ({

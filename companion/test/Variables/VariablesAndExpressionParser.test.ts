@@ -59,7 +59,7 @@ function createDefinition(partial: Pick<ActionDefinition, 'options'> & Partial<A
 		actionExecutionTimeout: undefined,
 		actionOutputs: null,
 		warning: null,
-		optionsSupportExpressions: false,
+		legacyOptions: true,
 		showButtonPreview: false,
 		supportsChildGroups: [],
 		...partial,
@@ -296,7 +296,7 @@ describe('VariablesAndExpressionParser', () => {
 			const parser = createParser()
 			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
-				optionsSupportExpressions: true, // required so number fields go through validateInputValue
+				legacyOptions: false, // required so number fields go through validateInputValue
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: -10 }, // below min, should be clamped to 0
@@ -314,7 +314,7 @@ describe('VariablesAndExpressionParser', () => {
 			const parser = createParser()
 			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
-				optionsSupportExpressions: true, // required so number fields go through validateInputValue
+				legacyOptions: false, // required so number fields go through validateInputValue
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: 200 }, // above max, should be clamped to 100
@@ -335,7 +335,7 @@ describe('VariablesAndExpressionParser', () => {
 					{ id: 'text1', type: 'textinput', label: 'Text', useVariables: useVariablesMinimal },
 					{ id: 'num1', type: 'number', label: 'Number', min: 10, max: 50, default: 10, clampValues: true },
 				],
-				optionsSupportExpressions: true, // required so number fields go through validateInputValue
+				legacyOptions: false, // required so number fields go through validateInputValue
 			})
 			const options: ExpressionableOptionsObject = {
 				text1: { isExpression: false, value: '$(test:var1)' },
@@ -351,11 +351,11 @@ describe('VariablesAndExpressionParser', () => {
 			}
 		})
 
-		it('should not clamp number field when optionsSupportExpressions is false (passthrough path)', () => {
+		it('should not clamp number field when legacyOptions is true (passthrough path)', () => {
 			const parser = createParser()
 			const entityDefinition = createDefinition({
 				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0, clampValues: true }],
-				// optionsSupportExpressions: false (default) - legacy path: number fields are passed through without validation
+				// legacyOptions: true (the default here) - legacy path: number fields are passed through without validation
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: 200 }, // above max, but clamping is intentionally skipped
@@ -365,7 +365,7 @@ describe('VariablesAndExpressionParser', () => {
 
 			expect(result.ok).toBe(true)
 			if (result.ok) {
-				// In the legacy (optionsSupportExpressions: false) path, number fields are treated as
+				// In the legacy (legacyOptions: true) path, number fields are treated as
 				// passthrough — validateInputValue is never called, so clampValues has no effect.
 				expect(result.parsedOptions.field1).toBe(200)
 			}
@@ -373,7 +373,7 @@ describe('VariablesAndExpressionParser', () => {
 	})
 
 	describe('parseEntityOptions with expressions', () => {
-		it('should parse expression fields when optionsSupportExpressions is true', () => {
+		it('should parse expression fields when legacyOptions is false', () => {
 			const parser = createParser()
 			const entityDefinition = createDefinition({
 				options: [
@@ -383,7 +383,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: false, value: '1 + $(test:num)' },
@@ -414,7 +414,7 @@ describe('VariablesAndExpressionParser', () => {
 						useVariables: useVariablesMinimal,
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				exprField: { isExpression: false, value: '$(test:num) * 2' },
@@ -442,7 +442,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: '100 / 4' },
@@ -466,7 +466,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: 'concat($(test:var1), "-suffix")' },
@@ -491,7 +491,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: '$(test:num) > 40' },
@@ -526,7 +526,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Bool Field',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				mathField: { isExpression: true, value: '$(test:num) + 8' },
@@ -562,7 +562,7 @@ describe('VariablesAndExpressionParser', () => {
 					},
 				],
 				optionsToMonitorForInvalidations: ['monitoredExpr'],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				monitoredExpr: { isExpression: true, value: 'concat($(test:var1), " monitored")' },
@@ -594,7 +594,7 @@ describe('VariablesAndExpressionParser', () => {
 						allowInvalidValues: true,
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				// nope() is not a known function, so the expression throws at runtime - but only after
@@ -624,7 +624,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Good Field',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				badField: { isExpression: true, value: '$(test:num) + nope()' },
@@ -661,7 +661,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: 'undefined' },
@@ -685,7 +685,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: 'concat($(unknown:var), " test")' },
@@ -722,7 +722,7 @@ describe('VariablesAndExpressionParser', () => {
 						useVariables: useVariablesMinimal,
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				exprField: { isExpression: true, value: '$(test:num) * 3' },
@@ -752,7 +752,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: {
@@ -772,7 +772,7 @@ describe('VariablesAndExpressionParser', () => {
 			expect(result.referencedVariableIds.has('test:num')).toBe(true)
 		})
 
-		it('should not evaluate expression when optionsSupportExpressions is false', () => {
+		it('should not evaluate expression when legacyOptions is true', () => {
 			const parser = createParser()
 			const entityDefinition = createDefinition({
 				options: [
@@ -782,7 +782,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				// optionsSupportExpressions: false (default) - module doesn't support expressions
+				// legacyOptions: true (the default here) - module doesn't support expressions
 			})
 			const options: ExpressionableOptionsObject = {
 				field1: { isExpression: true, value: '1 + 1' },
@@ -807,7 +807,7 @@ describe('VariablesAndExpressionParser', () => {
 						label: 'Field 1',
 					},
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const options: ExpressionableOptionsObject = {
 				// isExpression is false, but field definition supports expressions
@@ -1558,7 +1558,7 @@ describe('VariablesAndExpressionParser', () => {
 				actionExecutionTimeout: undefined,
 				actionOutputs: null,
 				warning: null,
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
 				options: [
@@ -1592,9 +1592,9 @@ describe('VariablesAndExpressionParser', () => {
 			if (result.ok) expect(result.parsedOptions.value).toBe('$(test:num) + 5')
 		})
 
-		it('ignores deferParsing on the legacy (optionsSupportExpressions: false) path', () => {
+		it('ignores deferParsing on the legacy (legacyOptions: true) path', () => {
 			const definition = createDefinition({
-				// optionsSupportExpressions: false (default) — legacy path only checks useVariables
+				// legacyOptions: true (the default here) — legacy path only checks useVariables
 				options: [
 					{
 						type: 'textinput',
@@ -1667,7 +1667,7 @@ describe('VariablesAndExpressionParser', () => {
 					{ id: 'plain', type: 'expression', label: 'Plain' },
 					{ id: 'osc', type: 'expression', label: 'Oscillating' },
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const result = parser.parseEntityOptions(
 				definition,
@@ -1688,7 +1688,7 @@ describe('VariablesAndExpressionParser', () => {
 					{ id: 'a', type: 'expression', label: 'A' },
 					{ id: 'b', type: 'textinput', label: 'B', useVariables: useVariablesMinimal },
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const result = parser.parseEntityOptions(
 				definition,
@@ -1710,7 +1710,7 @@ describe('VariablesAndExpressionParser', () => {
 					// Out of range with no clamping/allowInvalidValues -> validation error -> ok:false
 					{ id: 'num', type: 'number', label: 'Number', min: 0, max: 100, default: 0 },
 				],
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			})
 			const result = parser.parseEntityOptions(
 				definition,
@@ -1745,7 +1745,7 @@ describe('VariablesAndExpressionParser', () => {
 	describe('parseEntityOptions with hidden fields', () => {
 		const createHideableDefinition = () =>
 			createDefinition({
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'mode',
@@ -1804,7 +1804,7 @@ describe('VariablesAndExpressionParser', () => {
 			}
 		})
 
-		it('does not apply visibility when optionsSupportExpressions is false', () => {
+		it('does not apply visibility when legacyOptions is true', () => {
 			const parser = createParser()
 			const entityDefinition = createDefinition({
 				// legacy path: fields pass through without validation and visibility is not evaluated
@@ -1849,7 +1849,7 @@ describe('VariablesAndExpressionParser', () => {
 	describe('parseEntityOptions with disabled fields', () => {
 		const createDisableableDefinition = () =>
 			createDefinition({
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'level',

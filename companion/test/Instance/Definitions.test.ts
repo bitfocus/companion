@@ -70,7 +70,7 @@ function makeActionDefinition(overrides: Partial<ActionDefinition> = {}): Action
 		actionExecutionTimeout: undefined,
 		actionOutputs: null,
 		warning: null,
-		optionsSupportExpressions: false,
+		legacyOptions: true,
 		supportsChildGroups: [],
 		showButtonPreview: false,
 		...overrides,
@@ -91,7 +91,7 @@ function makeFeedbackDefinition(overrides: Partial<FeedbackDefinition> = {}): Fe
 		learnTimeout: undefined,
 		showInvert: false,
 		warning: null,
-		optionsSupportExpressions: false,
+		legacyOptions: true,
 		supportsChildGroups: [],
 		showButtonPreview: false,
 		...overrides,
@@ -105,6 +105,7 @@ function toClientActionDefinition(definition: ActionDefinition): ClientActionDef
 		hasLifecycleFunctions: _hasLifecycleFunctions,
 		learnTimeout: _learnTimeout,
 		actionExecutionTimeout: _actionExecutionTimeout,
+		legacyOptions: _legacyOptions,
 		...clientDefinition
 	} = definition
 	return clientDefinition
@@ -116,6 +117,7 @@ function toClientFeedbackDefinition(definition: FeedbackDefinition): ClientFeedb
 		learnTimeout: _learnTimeout,
 		feedbackStyle: _feedbackStyle,
 		feedbackAffectedProperties: _feedbackAffectedProperties,
+		legacyOptions: _legacyOptions,
 		...clientDefinition
 	} = definition
 	return clientDefinition
@@ -1453,6 +1455,7 @@ describe('InstanceDefinitions', () => {
 			expect(uiDefinition).not.toHaveProperty('learnTimeout')
 			expect(uiDefinition).not.toHaveProperty('actionExecutionTimeout')
 			expect(uiDefinition).not.toHaveProperty('optionsToMonitorForInvalidations')
+			expect(uiDefinition).not.toHaveProperty('legacyOptions')
 
 			await subscription.cleanup()
 		})
@@ -2042,12 +2045,12 @@ describe('InstanceDefinitions', () => {
 			expect(feedback.options.value).toEqual(exprVal('$(label:status) should not change'))
 		})
 
-		it('replaces $(label:var) in feedback expression fields when optionsSupportExpressions is true', () => {
+		it('replaces $(label:var) in feedback expression fields when legacyOptions is false', () => {
 			const { defs } = createInstanceDefinitions()
 
 			const feedbackDef = makeFeedbackDefinition({
 				label: 'Expression Feedback',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'expr',
@@ -2176,12 +2179,12 @@ describe('InstanceDefinitions', () => {
 			expect(feedback.options.value).toEqual(exprVal('Check $(label:status)'))
 		})
 
-		it('replaces $(label:var) in expression fields when optionsSupportExpressions is true', () => {
+		it('replaces $(label:var) in expression fields when legacyOptions is false', () => {
 			const { defs } = createInstanceDefinitions()
 
 			const actionDef = makeActionDefinition({
 				label: 'Expression Action',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'expr',
@@ -2229,12 +2232,12 @@ describe('InstanceDefinitions', () => {
 			expect(action.options.expr).toEqual(exprVal('$(conn1:count) + 10'))
 		})
 
-		it('replaces $(label:var) in textinput with isExpression=true when optionsSupportExpressions is true', () => {
+		it('replaces $(label:var) in textinput with isExpression=true when legacyOptions is false', () => {
 			const { defs } = createInstanceDefinitions()
 
 			const actionDef = makeActionDefinition({
 				label: 'Test Action',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'text',
@@ -2283,12 +2286,12 @@ describe('InstanceDefinitions', () => {
 			expect(action.options.text).toEqual(exprExpr('$(conn1:var1) + " text"'))
 		})
 
-		it('does NOT replace $(label:var) in textinput with isExpression=false even when optionsSupportExpressions is true', () => {
+		it('does NOT replace $(label:var) in textinput with isExpression=false even when legacyOptions is false', () => {
 			const { defs } = createInstanceDefinitions()
 
 			const actionDef = makeActionDefinition({
 				label: 'Test Action',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'text',
@@ -2570,7 +2573,7 @@ describe('InstanceDefinitions', () => {
 
 			const actionDef = makeActionDefinition({
 				label: 'Test Action',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'text',

@@ -241,7 +241,6 @@ export class ControlCustomAction
 				label: output.label || output.variableName,
 			})),
 			warning: this.#callAnalysis?.problem ?? null,
-			optionsSupportExpressions: true,
 			showButtonPreview: false,
 			supportsChildGroups: [],
 		}

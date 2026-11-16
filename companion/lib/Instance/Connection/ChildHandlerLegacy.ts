@@ -830,7 +830,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
-				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
+				legacyOptions: true, // Expressions not supported from 1.x modules
 			} satisfies Complete<ActionDefinition>
 		}
 
@@ -878,7 +878,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				supportsChildGroups: [],
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
-				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
+				legacyOptions: true, // Expressions not supported from 1.x modules
+				invertDisableAutoExpression: true, // The module applies the invert itself
 			} satisfies Complete<FeedbackDefinition>
 		}
 

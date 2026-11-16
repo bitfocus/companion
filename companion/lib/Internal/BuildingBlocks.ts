@@ -81,7 +81,6 @@ export class InternalBuildingBlocks
 						label: '',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			logic_conditionalise_advanced: {
@@ -111,7 +110,6 @@ export class InternalBuildingBlocks
 						label: 'Feedbacks',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -148,7 +146,6 @@ export class InternalBuildingBlocks
 						label: '',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			wait: {
 				label: 'Wait',
@@ -165,7 +162,6 @@ export class InternalBuildingBlocks
 				],
 				hasLearn: false,
 				learnTimeout: undefined,
-				optionsSupportExpressions: true,
 			},
 			logic_if: {
 				label: 'Logic: If statement',
@@ -194,7 +190,6 @@ export class InternalBuildingBlocks
 						entityTypeLabel: 'action',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			logic_while: {
 				label: 'Logic: While loop',
@@ -217,7 +212,6 @@ export class InternalBuildingBlocks
 						entityTypeLabel: 'action',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}

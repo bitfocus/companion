@@ -63,7 +63,6 @@ export class InternalCustomVariables
 						contextVariableResolution: { type: 'customVariable', nameFieldId: 'name' },
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			custom_variable_reset_to_default: {
@@ -78,7 +77,6 @@ export class InternalCustomVariables
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			custom_variable_sync_to_default: {
 				label: 'Custom Variable: Write current value to startup value',
@@ -92,7 +90,6 @@ export class InternalCustomVariables
 							'The name of the custom variable. Just the portion after the "custom:" prefix. Make sure to wrap it in quotes!',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}

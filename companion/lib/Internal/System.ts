@@ -324,7 +324,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						isVisibleUi: hideWhenDisabled,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			custom_log: {
 				label: 'Write to companion log',
@@ -337,8 +336,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 
@@ -348,7 +345,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 				label: 'System: Restart companion',
 				description: undefined,
 				options: [],
-				optionsSupportExpressions: true,
 			}
 		}
 		if (process.env.COMPANION_IPC_PARENT) {
@@ -357,7 +353,6 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 				label: 'System: Exit companion',
 				description: undefined,
 				options: [],
-				optionsSupportExpressions: true,
 			}
 		}
 

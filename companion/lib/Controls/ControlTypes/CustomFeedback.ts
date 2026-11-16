@@ -180,7 +180,6 @@ export class ControlCustomFeedback
 			showInvert: true,
 			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
-			optionsSupportExpressions: true,
 			showButtonPreview: false,
 			supportsChildGroups: [],
 		}

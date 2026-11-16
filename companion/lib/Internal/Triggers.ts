@@ -84,8 +84,6 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			trigger_collection_enabled: {
 				label: 'Trigger: Enable or disable trigger collection',
@@ -110,8 +108,6 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -180,8 +176,6 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			trigger_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -211,8 +205,6 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 	}

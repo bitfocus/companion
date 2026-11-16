@@ -228,7 +228,7 @@ const EventEditor = observer(function EventEditor({
 		[service]
 	)
 
-	const optionVisibility = useOptionsVisibility(eventSpec?.options, false, wrappedOptions)
+	const optionVisibility = useOptionsVisibility(eventSpec?.options, wrappedOptions)
 
 	return (
 		<>

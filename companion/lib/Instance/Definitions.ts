@@ -70,6 +70,11 @@ import type { InstanceConfigStore } from './ConfigStore.js'
  */
 interface EntityDefinitionBase {
 	learnTimeout: number | undefined
+	/**
+	 * When true, the options are handled as a 1.x module expects: only `useVariables` text is parsed, and
+	 * everything else is passed through without being validated. Defaults to false
+	 */
+	legacyOptions?: boolean
 }
 
 /**
@@ -908,7 +913,6 @@ function toClientEntityDefinitionBase(definition: EntityDefinition): Complete<Cl
 		hiddenForControlTypes: definition.hiddenForControlTypes,
 		hasLearn: definition.hasLearn,
 		warning: definition.warning,
-		optionsSupportExpressions: definition.optionsSupportExpressions,
 		showButtonPreview: definition.showButtonPreview,
 		supportsChildGroups: definition.supportsChildGroups,
 	} satisfies Complete<ClientEntityDefinitionBase>
@@ -931,6 +935,7 @@ function toClientFeedbackDefinition(definition: FeedbackDefinition): ClientFeedb
 		feedbackDisableStyleOverrides: definition.feedbackDisableStyleOverrides,
 		feedbackStyleOverridesUnsupported: definition.feedbackStyleOverridesUnsupported,
 		showInvert: definition.showInvert,
+		invertDisableAutoExpression: definition.invertDisableAutoExpression,
 	} satisfies Complete<ClientFeedbackDefinition>
 }
 

@@ -32,11 +32,6 @@ export interface ClientEntityDefinitionBase {
 	warning: string | null
 
 	/**
-	 * Whether this entity definition uses the auto-parser for options
-	 */
-	optionsSupportExpressions: boolean
-
-	/**
 	 * Whether this entity supports button previewing a reference in the UI
 	 * Note: This is only valid for internal connections. It expects to find a 'location' option to preview
 	 */
@@ -78,6 +73,8 @@ export interface ClientFeedbackDefinition extends ClientEntityDefinitionBase {
 	/** When true, this feedback cannot be used as a style override: it is hidden from the add menu and rejected by validation. */
 	feedbackStyleOverridesUnsupported?: boolean
 	showInvert: boolean
+	/** When true, the invert option can't be an expression, as the module applies it. Defaults to false */
+	invertDisableAutoExpression?: boolean
 }
 
 export type ClientEntityDefinition = ClientActionDefinition | ClientFeedbackDefinition

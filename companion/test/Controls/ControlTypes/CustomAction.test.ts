@@ -57,11 +57,10 @@ function getEntityDefinition(
 			entityType,
 			feedbackType: FeedbackEntitySubType.Value,
 			options: [],
-			optionsSupportExpressions: true,
 		} as Partial<EntityDefinition> as any
 	}
 	if (connectionId === 'internal') {
-		return { entityType, options: [], optionsSupportExpressions: true } as Partial<EntityDefinition> as any
+		return { entityType, options: [] } as Partial<EntityDefinition> as any
 	}
 	void definitionId
 	return undefined
@@ -305,7 +304,6 @@ describe('ControlCustomAction', () => {
 				label: 'My action',
 				description: 'desc',
 				options: [numberInput],
-				optionsSupportExpressions: true,
 				actionHasResult: false,
 				// An output is known by the name of its variable, which is its label when it has none
 				actionOutputs: [

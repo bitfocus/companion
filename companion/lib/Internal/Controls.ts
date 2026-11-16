@@ -163,7 +163,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						description: 'How long to hold the button down before releasing it. 0 releases immediately',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			button_press: {
 				label: 'Button: Trigger press',
@@ -179,7 +178,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			button_release: {
 				label: 'Button: Trigger release',
@@ -195,7 +193,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			button_rotate: {
@@ -215,7 +212,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 							'1 rotates one step clockwise (right), -1 one step counter-clockwise (left). Larger magnitudes rotate by that many steps. Tip: switch to an expression and use $(this:delta) to forward the amount of a physical rotation.',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			button_text: {
@@ -232,7 +228,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						default: '',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			textcolor: {
 				label: 'Button: Set text color (Deprecated)',
@@ -250,7 +245,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						returnType: 'number',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			bgcolor: {
 				label: 'Button: Set background color (Deprecated)',
@@ -268,7 +262,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						returnType: 'number',
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			panic_bank: {
@@ -291,7 +284,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			panic_page: {
 				label: 'Actions: Abort all button runs on a page',
@@ -326,7 +318,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			panic_trigger: {
 				label: 'Actions: Abort trigger runs',
@@ -341,7 +332,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			panic: {
 				label: 'Actions: Abort all button and trigger runs',
@@ -356,7 +346,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			bank_current_step: {
@@ -374,7 +363,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						useVariables: CompanionFieldVariablesSupport.InternalParser,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			bank_current_step_delta: {
 				label: 'Button: Skip step',
@@ -392,7 +380,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -408,7 +395,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				feedbackStyle: undefined,
 				showInvert: false,
 				options: [ControlLocationOption],
-				optionsSupportExpressions: true,
 			},
 			bank_pushed: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -430,7 +416,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			bank_current_step: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -454,7 +439,6 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						max: Number.MAX_SAFE_INTEGER,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}

@@ -180,8 +180,6 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			connection_collection_enabled: {
 				label: 'Connection: Enable or disable connection collection',
@@ -206,8 +204,6 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -320,8 +316,6 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						allowInvalidValues: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			instance_custom_state: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -355,8 +349,6 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			connection_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -386,8 +378,6 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						disableAutoExpression: true,
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 		}
 	}

@@ -85,7 +85,7 @@ export function visitEntityOptionsForVariables<T>(
 ): Record<string, T> {
 	const result: Record<string, T> = {}
 
-	if (definition.optionsSupportExpressions) {
+	if (!definition.legacyOptions) {
 		// Modern approach: check field types
 		for (const field of definition.options) {
 			const optionValue = options[field.id]
@@ -142,14 +142,14 @@ export function visitEntityOptionsForVariables<T>(
  * fails open (treated as visible) on any error, so this can only ever suppress spurious
  * validation - never hide a field that should be validated.
  *
- * Only meaningful for definitions with `optionsSupportExpressions` - legacy definitions pass
+ * Only meaningful for definitions without `legacyOptions` - legacy definitions pass
  * their fields through without validation, so there are no errors to suppress.
  */
 export function computeHiddenEntityOptionFields(
 	definition: EntityDefinition,
 	options: ExpressionableOptionsObject
 ): Set<string> {
-	if (!definition.optionsSupportExpressions) return new Set()
+	if (definition.legacyOptions) return new Set()
 
 	return computeHiddenOptionFields(definition.options, (optionId) => options[optionId]?.value)
 }

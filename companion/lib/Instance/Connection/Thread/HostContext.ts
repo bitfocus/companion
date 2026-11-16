@@ -101,7 +101,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 			} satisfies Complete<ActionDefinition>
 		}
 
@@ -139,7 +139,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
-				optionsSupportExpressions: true,
+				legacyOptions: false,
+				invertDisableAutoExpression: false,
 			} satisfies Complete<FeedbackDefinition>
 		}
 

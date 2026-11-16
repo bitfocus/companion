@@ -31,7 +31,7 @@ function createDefinition(
 		actionExecutionTimeout: undefined,
 		actionOutputs: null,
 		warning: null,
-		optionsSupportExpressions: false,
+		legacyOptions: true,
 		showButtonPreview: false,
 		supportsChildGroups: [],
 		...partial,
@@ -39,11 +39,11 @@ function createDefinition(
 }
 
 describe('visitEntityOptionsForVariables', () => {
-	describe('legacy mode (optionsSupportExpressions: false)', () => {
+	describe('legacy mode (legacyOptions: true)', () => {
 		it('should process textinput with useVariables', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -76,7 +76,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should pass through textinput without useVariables', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -105,7 +105,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should pass through non-textinput fields with null', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -152,7 +152,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should handle mixed fields', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: false,
+				legacyOptions: true,
 				options: [
 					{
 						id: 'field1',
@@ -199,11 +199,27 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 	})
 
-	describe('modern mode (optionsSupportExpressions: true)', () => {
+	describe('modern mode (legacyOptions: false)', () => {
+		it('is used when legacyOptions is not set', () => {
+			const { legacyOptions: _legacyOptions, ...definition } = createDefinition({
+				label: 'Test',
+				options: [{ id: 'field1', type: 'number', label: 'Field 1', min: 0, max: 100, default: 0 }],
+			})
+
+			const fieldTypes: any[] = []
+			visitEntityOptionsForVariables(definition, { field1: exprVal(50) }, (_field, value, fieldType) => {
+				fieldTypes.push(fieldType)
+				return value
+			})
+
+			// The legacy path would pass a number field through, with no field type
+			expect(fieldTypes).toEqual([{ allowExpression: true, parseVariables: false }])
+		})
+
 		it('should set allowExpression for all fields by default', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -259,7 +275,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should set parseVariables for textinput with useVariables', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -291,7 +307,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should set forceExpression for expression type fields', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -323,7 +339,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should respect disableAutoExpression flag', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -368,7 +384,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should handle textinput with useVariables and disableAutoExpression', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -401,7 +417,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should handle all field combinations in modern mode', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -482,7 +498,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should call visitor for each field with correct parameters', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -522,7 +538,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should return object with visitor results keyed by field id', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -559,7 +575,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should handle undefined option values', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -599,7 +615,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should handle definition with no options', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [],
 			})
 
@@ -615,7 +631,7 @@ describe('visitEntityOptionsForVariables', () => {
 		it('should handle empty options object', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
-				optionsSupportExpressions: true,
+				legacyOptions: false,
 				options: [
 					{
 						id: 'field1',
@@ -638,7 +654,7 @@ describe('visitEntityOptionsForVariables', () => {
 			expect(visitorCalls[0].value).toBeUndefined()
 		})
 
-		it('should handle optionsSupportExpressions: undefined (treated as legacy)', () => {
+		it('should handle the default of the test definition (legacy)', () => {
 			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				options: [

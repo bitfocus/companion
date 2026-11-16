@@ -101,7 +101,7 @@ describe('HostContext setActionDefinitions', () => {
 			actionOutputs: null,
 			warning: null,
 			showButtonPreview: false,
-			optionsSupportExpressions: true,
+			legacyOptions: false,
 		})
 	})
 
@@ -206,7 +206,7 @@ describe('HostContext setFeedbackDefinitions', () => {
 			hasLearn: true,
 			learnTimeout: 1000,
 			warning: null,
-			optionsSupportExpressions: true,
+			legacyOptions: false,
 		})
 	})
 

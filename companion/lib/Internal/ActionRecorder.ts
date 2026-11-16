@@ -81,7 +81,6 @@ export class InternalActionRecorder
 						expressionDescription: `Valid values are 'true', 'false', or 'toggle'`,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			action_recorder_set_connections: {
 				label: 'Action Recorder: Set connections',
@@ -111,7 +110,6 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			action_recorder_save_to_button: {
 				label: 'Action Recorder: Finish recording and save to button',
@@ -162,13 +160,11 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			action_recorder_discard_actions: {
 				label: 'Action Recorder: Discard actions',
 				description: undefined,
 				options: [],
-				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -328,7 +324,6 @@ export class InternalActionRecorder
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 	}

@@ -767,7 +767,6 @@ describe('ActionEntityManager', () => {
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
-					optionsSupportExpressions: true,
 				}),
 			}
 
@@ -821,7 +820,6 @@ describe('ActionEntityManager', () => {
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
-					optionsSupportExpressions: true,
 				}),
 			}
 
@@ -876,7 +874,6 @@ describe('ActionEntityManager', () => {
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
-					optionsSupportExpressions: true,
 				}),
 			}
 
@@ -928,7 +925,6 @@ describe('ActionEntityManager', () => {
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
-					optionsSupportExpressions: true,
 				}),
 			}
 
@@ -972,7 +968,6 @@ describe('ActionEntityManager', () => {
 					hasLifecycleFunctions: true,
 					options: [{ id: 'field1', type: 'textinput', isExpression: true }],
 					optionsToIgnoreForSubscribe: [],
-					optionsSupportExpressions: true,
 				}),
 			}
 

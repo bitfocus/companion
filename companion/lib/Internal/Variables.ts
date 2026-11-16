@@ -110,7 +110,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			variable_variable: {
@@ -141,7 +140,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			check_expression: {
@@ -163,7 +161,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						allowInvalidValues: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 
 			expression_value: {
@@ -182,7 +179,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						allowInvalidValues: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 			user_value: {
 				feedbackType: FeedbackEntitySubType.Value,
@@ -218,7 +214,6 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						disableAutoExpression: true,
 					},
 				],
-				optionsSupportExpressions: true,
 			},
 		}
 
@@ -248,20 +243,16 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						contextVariableResolution: { type: 'localVariable', locationFieldId: 'location', nameFieldId: 'name' },
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			local_variable_reset_to_default: {
 				label: 'Local Variable: Reset to startup value',
 				description: undefined,
 				options: [LocalVariableLocationOption, LocalVariableNameOption],
-				optionsSupportExpressions: true,
 			},
 			local_variable_sync_to_default: {
 				label: 'Local Variable: Write current value to startup value',
 				description: undefined,
 				options: [LocalVariableLocationOption, LocalVariableNameOption],
-				optionsSupportExpressions: true,
 			},
 
 			page_variable_set_value: {
@@ -285,20 +276,16 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						contextVariableResolution: { type: 'pageVariable', pageFieldId: 'page', nameFieldId: 'name' },
 					},
 				],
-
-				optionsSupportExpressions: true,
 			},
 			page_variable_reset_to_default: {
 				label: 'Page Variable: Reset to startup value',
 				description: undefined,
 				options: [PAGE_OPTION, PageVariableNameOption],
-				optionsSupportExpressions: true,
 			},
 			page_variable_sync_to_default: {
 				label: 'Page Variable: Write current value to startup value',
 				description: undefined,
 				options: [PAGE_OPTION, PageVariableNameOption],
-				optionsSupportExpressions: true,
 			},
 		}
 

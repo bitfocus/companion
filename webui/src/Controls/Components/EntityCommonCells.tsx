@@ -78,11 +78,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 		[entityDefinition?.options, controlKind]
 	)
 
-	const optionVisibility = useOptionsVisibility(
-		visibleOptions,
-		!!entityDefinition?.optionsSupportExpressions,
-		entity?.options
-	)
+	const optionVisibility = useOptionsVisibility(visibleOptions, entity?.options)
 
 	const setInverted = useCallback(
 		(_k: string, inverted: ExpressionOrValue<JsonValue | undefined>) => {
@@ -169,7 +165,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 									visibility={true}
 									readonly={readonly}
 									localVariablesStore={localVariablesStore}
-									fieldSupportsExpression={entityDefinition.optionsSupportExpressions}
+									fieldSupportsExpression={!entityDefinition.invertDisableAutoExpression}
 								/>
 							</MyErrorBoundary>
 						)}
@@ -200,7 +196,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								visibility={optionVisibility.get(opt.id) ?? true}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
-								fieldSupportsExpression={!!entityDefinition?.optionsSupportExpressions && !opt.disableAutoExpression}
+								fieldSupportsExpression={!opt.disableAutoExpression}
 								allRawOptions={entity.options || {}}
 							/>
 						</MyErrorBoundary>

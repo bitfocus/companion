@@ -184,14 +184,12 @@ function createHarness(model: Partial<CustomFeedbackModel>) {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				showInvert: true,
 				options: [],
-				optionsSupportExpressions: true,
 			} as Partial<EntityDefinition> as any
 		}
 		return {
 			entityType,
 			feedbackType: FeedbackEntitySubType.Value,
 			options: [],
-			optionsSupportExpressions: true,
 		} as Partial<EntityDefinition> as any
 	}
 
@@ -287,7 +285,6 @@ describe('ControlCustomFeedback', () => {
 				description: 'desc',
 				options: [numberInput],
 				showInvert: true,
-				optionsSupportExpressions: true,
 			})
 		})
 
