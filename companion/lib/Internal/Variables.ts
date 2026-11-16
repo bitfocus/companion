@@ -224,7 +224,7 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 		const actions: Record<string, InternalActionDefinition> = {
 			local_variable_set_value: {
 				label: 'Local Variable: Set value',
-				description: undefined,
+				description: null,
 				options: [
 					LocalVariableLocationOption,
 					LocalVariableNameOption,
@@ -246,18 +246,18 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			},
 			local_variable_reset_to_default: {
 				label: 'Local Variable: Reset to startup value',
-				description: undefined,
+				description: null,
 				options: [LocalVariableLocationOption, LocalVariableNameOption],
 			},
 			local_variable_sync_to_default: {
 				label: 'Local Variable: Write current value to startup value',
-				description: undefined,
+				description: null,
 				options: [LocalVariableLocationOption, LocalVariableNameOption],
 			},
 
 			page_variable_set_value: {
 				label: 'Page Variable: Set value',
-				description: undefined,
+				description: null,
 				options: [
 					PAGE_OPTION,
 					PageVariableNameOption,
@@ -279,12 +279,12 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			},
 			page_variable_reset_to_default: {
 				label: 'Page Variable: Reset to startup value',
-				description: undefined,
+				description: null,
 				options: [PAGE_OPTION, PageVariableNameOption],
 			},
 			page_variable_sync_to_default: {
 				label: 'Page Variable: Write current value to startup value',
-				description: undefined,
+				description: null,
 				options: [PAGE_OPTION, PageVariableNameOption],
 			},
 		}

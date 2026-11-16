@@ -45,7 +45,7 @@ export class InternalCustomVariables
 		return {
 			custom_variable_set_value: {
 				label: 'Custom Variable: Set value',
-				description: undefined,
+				description: null,
 				options: [
 					CustomVariableSelectorOption,
 					CustomVariableCreateIfNotExistsOption,
@@ -67,7 +67,7 @@ export class InternalCustomVariables
 
 			custom_variable_reset_to_default: {
 				label: 'Custom Variable: Reset to startup value',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:custom_variable',
@@ -80,7 +80,7 @@ export class InternalCustomVariables
 			},
 			custom_variable_sync_to_default: {
 				label: 'Custom Variable: Write current value to startup value',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:custom_variable',

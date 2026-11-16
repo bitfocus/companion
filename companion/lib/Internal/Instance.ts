@@ -158,7 +158,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			instance_control: {
 				label: 'Connection: Enable or disable connection',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:connection_id',
@@ -183,7 +183,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			connection_collection_enabled: {
 				label: 'Connection: Enable or disable connection collection',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:connection_collection',
@@ -353,7 +353,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			connection_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Connection: When collection enabled or disabled',
-				description: undefined,
+				description: null,
 				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,

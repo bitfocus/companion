@@ -17,7 +17,7 @@ export interface ClientEntityOutputDefinition {
 export interface ClientEntityDefinitionBase {
 	label: string
 	sortKey: string | null
-	description: string | undefined
+	description: string | null
 	options: SomeCompanionInputField[]
 	/** When true, this entity is never offered for adding, as it only stands in for one that couldn't be loaded. Defaults to false */
 	hiddenFromPicker?: boolean

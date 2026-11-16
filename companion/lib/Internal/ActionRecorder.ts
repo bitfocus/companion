@@ -66,7 +66,7 @@ export class InternalActionRecorder
 		return {
 			action_recorder_set_recording: {
 				label: 'Action Recorder: Set recording',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'dropdown',
@@ -84,7 +84,7 @@ export class InternalActionRecorder
 			},
 			action_recorder_set_connections: {
 				label: 'Action Recorder: Set connections',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'dropdown',
@@ -113,7 +113,7 @@ export class InternalActionRecorder
 			},
 			action_recorder_save_to_button: {
 				label: 'Action Recorder: Finish recording and save to button',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'textinput',
@@ -163,7 +163,7 @@ export class InternalActionRecorder
 			},
 			action_recorder_discard_actions: {
 				label: 'Action Recorder: Discard actions',
-				description: undefined,
+				description: null,
 				options: [],
 			},
 		}
@@ -284,7 +284,7 @@ export class InternalActionRecorder
 			action_recorder_check_connections: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Action Recorder: Check if specified connections are selected',
-				description: undefined,
+				description: null,
 				feedbackStyle: {
 					color: 0xffffff,
 					bgcolor: 0xff0000,

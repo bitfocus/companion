@@ -296,7 +296,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		return {
 			set_brightness: {
 				label: 'Surface: Set to brightness',
-				description: undefined,
+				description: null,
 				options: [
 					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
@@ -316,7 +316,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			adjust_brightness: {
 				label: 'Surface: Adjust brightness',
-				description: undefined,
+				description: null,
 				options: [
 					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
@@ -334,12 +334,12 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			set_page: {
 				label: 'Surface: Set to page',
-				description: undefined,
+				description: null,
 				options: [CHOICES_SURFACE_GROUP, CHOICES_PAGE],
 			},
 			set_page_byindex: {
 				label: 'Surface: Set by index to page',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'number',
@@ -358,12 +358,12 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			inc_page: {
 				label: 'Surface: Increment page number',
-				description: undefined,
+				description: null,
 				options: [CHOICES_SURFACE_GROUP],
 			},
 			dec_page: {
 				label: 'Surface: Decrement page number',
-				description: undefined,
+				description: null,
 				options: [CHOICES_SURFACE_GROUP],
 			},
 
@@ -391,7 +391,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			rescan: {
 				label: 'Surface: Rescan USB for devices',
-				description: undefined,
+				description: null,
 				options: [],
 			},
 
@@ -451,7 +451,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 			outbound_surface_set_enabled: {
 				label: 'Remote surface: Enable/Disable',
-				description: undefined,
+				description: null,
 				options: [
 					CHOICES_OUTBOUND_SURFACE_ID,
 					{

@@ -811,7 +811,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				entityType: EntityModelType.Action,
 				label: rawAction.name,
 				sortKey: null,
-				description: rawAction.description,
+				description: rawAction.description ?? null,
 				options: options,
 				optionsToMonitorForInvalidations: options
 					.map((o) => o.id)
@@ -857,7 +857,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				entityType: EntityModelType.Feedback,
 				label: rawFeedback.name,
 				sortKey: null,
-				description: rawFeedback.description,
+				description: rawFeedback.description ?? null,
 				options: translateEntityInputFields(
 					rawFeedback.options || [],
 					EntityModelType.Feedback,

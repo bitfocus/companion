@@ -169,7 +169,7 @@ export class ControlCustomFeedback
 			entityType: EntityModelType.Feedback,
 			label: this.options.name || 'Custom feedback',
 			sortKey: null,
-			description: this.options.description || undefined,
+			description: this.options.description || null,
 			options: this.buildingBlockInputs.toCompanionInputFields(),
 			feedbackType: FeedbackEntitySubType.Boolean,
 			feedbackStyle: undefined,

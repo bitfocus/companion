@@ -6,7 +6,11 @@ import type {
 } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { EntityDefinitionsForTypeStore } from '~/Stores/EntityDefinitionsStore.js'
 
-export function useEntityDefinitionsSubscription<TOutput, TErrorShape, TFeatureFlags extends FeatureFlags>(
+export function useEntityDefinitionsSubscription<
+	TOutput extends EntityDefinitionUpdate<ClientEntityDefinition>,
+	TErrorShape,
+	TFeatureFlags extends FeatureFlags,
+>(
 	store: EntityDefinitionsForTypeStore,
 	procedure: DecorateSubscriptionProcedure<{
 		input: void
@@ -25,7 +29,7 @@ export function useEntityDefinitionsSubscription<TOutput, TErrorShape, TFeatureF
 				setReady(false)
 			},
 			onData: (data) => {
-				store.updateStore(data as EntityDefinitionUpdate<ClientEntityDefinition>) // TODO - some type errors due to optionals
+				store.updateStore(data)
 				setReady(true)
 			},
 			onError: (e) => {

@@ -41,7 +41,7 @@ export interface EntityLeafItem {
 	label: string
 	searchLabel: string
 	sortKey: string
-	description: string | undefined
+	description: string | null
 }
 
 export class EntityDefinitionsStore {

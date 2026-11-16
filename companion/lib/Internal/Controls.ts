@@ -142,7 +142,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		return {
 			button_pressrelease: {
 				label: 'Button: Trigger press and release',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -166,7 +166,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			button_press: {
 				label: 'Button: Trigger press',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -181,7 +181,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			button_release: {
 				label: 'Button: Trigger release',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -266,7 +266,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			panic_bank: {
 				label: 'Actions: Abort button runs',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					{
@@ -287,7 +287,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			panic_page: {
 				label: 'Actions: Abort all button runs on a page',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:page',
@@ -321,7 +321,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			panic_trigger: {
 				label: 'Actions: Abort trigger runs',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'internal:trigger',
@@ -335,7 +335,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			panic: {
 				label: 'Actions: Abort all button and trigger runs',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'checkbox',
@@ -350,7 +350,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			bank_current_step: {
 				label: 'Button: Set current step',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,
@@ -366,7 +366,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			},
 			bank_current_step_delta: {
 				label: 'Button: Skip step',
-				description: undefined,
+				description: null,
 				showButtonPreview: true,
 				options: [
 					ControlLocationOption,

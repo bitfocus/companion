@@ -271,7 +271,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 		const actions: Record<string, InternalActionDefinition> = {
 			exec: {
 				label: 'System: Run shell command (local)',
-				description: undefined,
+				description: null,
 				options: [
 					...(shellCommandEnabled
 						? []
@@ -327,7 +327,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			},
 			custom_log: {
 				label: 'Write to companion log',
-				description: undefined,
+				description: null,
 				options: [
 					{
 						type: 'textinput',
@@ -343,7 +343,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			// Only offer app_restart if there is a handler for the event
 			actions['app_restart'] = {
 				label: 'System: Restart companion',
-				description: undefined,
+				description: null,
 				options: [],
 			}
 		}
@@ -351,7 +351,7 @@ export class InternalSystem extends EventEmitter<InternalModuleFragmentEvents> i
 			// Only offer app_exit if there is a handler for the event
 			actions['app_exit'] = {
 				label: 'System: Exit companion',
-				description: undefined,
+				description: null,
 				options: [],
 			}
 		}

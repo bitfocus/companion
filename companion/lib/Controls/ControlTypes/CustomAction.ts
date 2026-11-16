@@ -228,7 +228,7 @@ export class ControlCustomAction
 			entityType: EntityModelType.Action,
 			label: this.options.name || 'Custom action',
 			sortKey: null,
-			description: this.options.description || undefined,
+			description: this.options.description || null,
 			options: this.buildingBlockInputs.toCompanionInputFields(),
 			optionsToMonitorForInvalidations: null,
 			hasLifecycleFunctions: false,
