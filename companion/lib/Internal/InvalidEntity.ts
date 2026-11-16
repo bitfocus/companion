@@ -27,7 +27,7 @@ export class InternalInvalidEntity
 				description,
 				options: [],
 				hiddenFromPicker: true,
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -47,7 +47,7 @@ export class InternalInvalidEntity
 				showInvert: false,
 				options: [],
 				hiddenFromPicker: true,
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 		}
 	}

@@ -3,12 +3,20 @@ import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { EntityModelType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
+import { exprExpr, exprVal, type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
+import type { EntityDefinition } from '../../lib/Instance/Definitions.js'
 import { InternalInstance } from '../../lib/Internal/Instance.js'
-import type { ActionForInternalExecution, FeedbackForInternalExecution } from '../../lib/Internal/Types.js'
+import type {
+	ActionForInternalExecution,
+	FeedbackForInternalExecution,
+	InternalActionDefinition,
+	InternalFeedbackDefinition,
+} from '../../lib/Internal/Types.js'
 import { visitInputFieldReferences } from '../../lib/Resources/Visitors/InputFieldVisitor.js'
+import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
+import { mockUserConfig } from '../utils/MockUserConfig.js'
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -152,6 +160,57 @@ describe('InternalInstance', () => {
 			expect(disabledChoice.id).toBe('null')
 			// A null id cannot be represented/selected by the UI dropdown
 			expect(disabledChoice.id).not.toBeNull()
+		})
+	})
+
+	describe('option parsing', () => {
+		function parseOptions(
+			definition: InternalActionDefinition | InternalFeedbackDefinition,
+			options: ExpressionableOptionsObject
+		) {
+			const parser = new VariablesAndExpressionParser(
+				mockUserConfig({ timezone: '' }),
+				null as any,
+				{},
+				new Map(),
+				null,
+				null,
+				null,
+				undefined
+			)
+			return parser.parseEntityOptions(definition as unknown as EntityDefinition, options, null)
+		}
+
+		it('gives instance_control its plain values, not evaluating one stored as an expression', () => {
+			const definition = createInstance().getActionDefinitions()['instance_control']
+
+			const result = parseOptions(definition, { instance_id: exprVal('c1'), enable: exprExpr('toggle') })
+
+			expect(result).toMatchObject({ ok: true, parsedOptions: { instance_id: 'c1', enable: 'toggle' } })
+		})
+
+		it('gives instance_status its colours as numbers, and one it cannot use unchanged', () => {
+			const definition = createInstance().getFeedbackDefinitions()['instance_status']
+
+			const result = parseOptions(definition, {
+				instance_id: exprVal('all'),
+				ok_fg: exprVal('#ff0000'),
+				ok_bg: exprVal('nope'),
+			})
+
+			// The colours which are missing are left for the feedback to leave out, as before
+			expect(result).toMatchObject({
+				ok: true,
+				parsedOptions: { instance_id: 'all', ok_fg: 0xff0000, ok_bg: 'nope', warning_fg: undefined },
+			})
+		})
+
+		it('rejects a value which is not one of the choices', () => {
+			const definition = createInstance().getActionDefinitions()['instance_control']
+
+			const result = parseOptions(definition, { instance_id: exprVal('c1'), enable: exprVal('sometimes') })
+
+			expect(result.ok).toBe(false)
 		})
 	})
 

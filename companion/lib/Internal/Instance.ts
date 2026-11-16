@@ -165,6 +165,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						label: 'Connection',
 						id: 'instance_id',
 						multiple: false,
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -176,10 +177,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 			connection_collection_enabled: {
 				label: 'Connection: Enable or disable connection collection',
@@ -189,6 +191,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:connection_collection',
 						label: 'Collection',
 						id: 'collection_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -200,10 +203,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -225,6 +229,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						id: 'instance_id',
 						includeAll: true,
 						multiple: false,
+						disableAutoExpression: true,
 					},
 					{
 						type: 'colorpicker',
@@ -233,6 +238,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0xffffff,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -241,6 +249,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0x00c800,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -249,6 +260,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0x000000,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -257,6 +271,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0xffff00,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -265,6 +282,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0xffffff,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -273,6 +293,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0xc80000,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -281,6 +304,9 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0x999999,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 					{
 						type: 'colorpicker',
@@ -289,10 +315,13 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						default: 0x404040,
 						enableAlpha: false,
 						returnType: 'number',
+						disableAutoExpression: true,
+						// The feedback leaves out a colour it can't use, rather than failing
+						allowInvalidValues: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 			instance_custom_state: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -310,6 +339,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						id: 'instance_id',
 						includeAll: false,
 						multiple: false,
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -322,10 +352,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'error', label: 'Error' },
 							{ id: 'null', label: 'Disabled' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 			connection_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -341,6 +372,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:connection_collection',
 						label: 'Collection',
 						id: 'collection_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -351,10 +383,11 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 		}
 	}

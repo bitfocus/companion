@@ -69,6 +69,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger',
 						label: 'Trigger',
 						id: 'trigger_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -80,10 +81,11 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 			trigger_collection_enabled: {
 				label: 'Trigger: Enable or disable trigger collection',
@@ -93,6 +95,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger_collection',
 						label: 'Collection',
 						id: 'collection_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -104,10 +107,11 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
@@ -162,6 +166,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger',
 						label: 'Trigger',
 						id: 'trigger_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -172,10 +177,11 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 			trigger_collection_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -191,6 +197,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 						type: 'internal:trigger_collection',
 						label: 'Collection',
 						id: 'collection_id',
+						disableAutoExpression: true,
 					},
 					{
 						type: 'dropdown',
@@ -201,10 +208,11 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 							{ id: 'true', label: 'Yes' },
 							{ id: 'false', label: 'No' },
 						],
+						disableAutoExpression: true,
 					},
 				],
 
-				optionsSupportExpressions: false,
+				optionsSupportExpressions: true,
 			},
 		}
 	}
