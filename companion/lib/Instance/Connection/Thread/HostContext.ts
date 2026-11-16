@@ -1,4 +1,3 @@
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, isValidFeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	SharedUdpSocketMessageJoin,
@@ -25,7 +24,7 @@ import {
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
 import { randomIdGenerator } from '../../../Resources/IdGenerator.js'
-import type { CompositeElementDefinition } from '../../Definitions.js'
+import type { ActionDefinition, CompositeElementDefinition, FeedbackDefinition } from '../../Definitions.js'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
 import { VariableValueBatcher } from '../VariableValueBatcher.js'
 import { translateEntityInputFields } from './ConfigFields.js'
@@ -78,7 +77,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	}
 	/** The actions available in the connection have changed */
 	setActionDefinitions(rawActions: HostActionDefinition[]): void {
-		const actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ActionDefinition> = {}
 
 		for (const rawAction of rawActions) {
 			actions[rawAction.id] = {
@@ -97,27 +96,20 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				actionOutputs: null,
 				warning: null,
 
-				showInvert: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
-
-				feedbackType: null,
-				feedbackStyle: undefined,
-				feedbackAffectedProperties: undefined,
-				feedbackDisableStyleOverrides: false,
-				feedbackStyleOverridesUnsupported: false,
 
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
 				optionsSupportExpressions: true,
-			} satisfies Complete<ClientEntityDefinition>
+			} satisfies Complete<ActionDefinition>
 		}
 
 		this.#ipcWrapper.sendWithNoCb('setActionDefinitions', { actions })
 	}
 	/** The feedbacks available in the connection have changed */
 	setFeedbackDefinitions(rawFeedbacks: HostFeedbackDefinition[]): void {
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 		const affectedProperties = new Map<string, string[] | undefined>()
 
 		for (const rawFeedback of rawFeedbacks) {
@@ -131,7 +123,6 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				sortKey: rawFeedback.sortName ? String(rawFeedback.sortName) : null,
 				description: rawFeedback.description,
 				options: translateEntityInputFields(rawFeedback.options || [], EntityModelType.Feedback),
-				optionsToMonitorForInvalidations: null,
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				feedbackAffectedProperties: rawFeedback.affectedProperties,
@@ -142,9 +133,6 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
-				actionHasResult: undefined,
-				actionExecutionTimeout: undefined,
-				actionOutputs: null,
 				warning: null,
 
 				showButtonPreview: false,
@@ -153,7 +141,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
 				optionsSupportExpressions: true,
-			} satisfies Complete<ClientEntityDefinition>
+			} satisfies Complete<FeedbackDefinition>
 		}
 
 		const affectedPropertiesChanged = !areAffectedPropertiesEqual(this.#feedbackAffectedProperties, affectedProperties)

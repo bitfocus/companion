@@ -83,6 +83,23 @@ describe('canAddEntityToFeedbackList', () => {
 			expect(canAddEntityToFeedbackList(null, feedbackDefinition(FeedbackEntitySubType.Value))).toBe(false)
 		})
 	})
+
+	describe('actions', () => {
+		const actionDefinition = { entityType: EntityModelType.Action } as ClientEntityDefinition
+
+		test('allows them in a list with no feedback type', () => {
+			expect(canAddEntityToFeedbackList(null, actionDefinition)).toBe(true)
+		})
+
+		test.each([
+			FeedbackEntitySubType.Boolean,
+			FeedbackEntitySubType.Value,
+			FeedbackEntitySubType.Advanced,
+			FeedbackEntitySubType.StyleOverride,
+		])('rejects them in a %s list', (feedbackListType) => {
+			expect(canAddEntityToFeedbackList(feedbackListType, actionDefinition)).toBe(false)
+		})
+	})
 })
 
 describe('SomeEntityModelSchema', () => {

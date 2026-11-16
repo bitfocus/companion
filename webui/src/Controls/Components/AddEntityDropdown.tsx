@@ -7,8 +7,7 @@ import { useCallback, useContext, useRef, useState } from 'react'
 import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { canOfferEntityInPicker } from '@companion-app/shared/Entity.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
 import { getComboboxItemLabel, useComboboxCollection } from '~/Components/DropdownInputField/useComboboxCollection.js'
 import { useComputed } from '~/Resources/util.js'
@@ -20,7 +19,7 @@ interface AddEntityDropdownProps {
 	onSelect: (connectionId: string, definitionId: string) => void
 	entityType: EntityModelType
 	entityTypeLabel: string
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 	/** The kind of control being edited, or null when the list isn't on a control */
 	controlKind: ControlIdKind | null
 	/** The ids (`<connectionId>:<definitionId>`) of what can't be added here, such as a custom action running itself */

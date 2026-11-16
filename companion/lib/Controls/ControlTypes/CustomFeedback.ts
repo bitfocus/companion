@@ -8,12 +8,12 @@ import {
 	type CustomFeedbackModel,
 	type CustomFeedbackOptions,
 } from '@companion-app/shared/Model/CustomFeedbackModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, FeedbackEntitySubType, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import type { CompanionOptionValues } from '@companion-module/base'
+import type { FeedbackDefinition } from '../../Instance/Definitions.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import type {
@@ -164,14 +164,13 @@ export class ControlCustomFeedback
 	/**
 	 * The definition of the feedback which uses this custom feedback
 	 */
-	toFeedbackDefinition(): ClientEntityDefinition {
+	toFeedbackDefinition(): FeedbackDefinition {
 		return {
 			entityType: EntityModelType.Feedback,
 			label: this.options.name || 'Custom feedback',
 			sortKey: null,
 			description: this.options.description || undefined,
 			options: this.buildingBlockInputs.toCompanionInputFields(),
-			optionsToMonitorForInvalidations: null,
 			feedbackType: FeedbackEntitySubType.Boolean,
 			feedbackStyle: undefined,
 			feedbackDisableStyleOverrides: false,
@@ -180,9 +179,6 @@ export class ControlCustomFeedback
 			hasLearn: false,
 			learnTimeout: undefined,
 			showInvert: true,
-			actionHasResult: undefined,
-			actionExecutionTimeout: undefined,
-			actionOutputs: null,
 			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
 			optionsSupportExpressions: true,

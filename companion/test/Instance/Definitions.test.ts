@@ -1,7 +1,12 @@
 import { initTRPC } from '@trpc/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
+import type {
+	ClientActionDefinition,
+	ClientFeedbackDefinition,
+	EntityDefinitionUpdateInit,
+} from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	InstanceVersionUpdatePolicy,
@@ -19,7 +24,7 @@ import type {
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { InstanceConfigStore } from '../../lib/Instance/ConfigStore.js'
-import { InstanceDefinitions } from '../../lib/Instance/Definitions.js'
+import { InstanceDefinitions, type ActionDefinition, type FeedbackDefinition } from '../../lib/Instance/Definitions.js'
 import { EventDefinitions } from '../../lib/Resources/EventDefinitions.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
@@ -50,7 +55,7 @@ function makeConnectionConfig(overrides: Partial<InstanceConfig> = {}): Instance
 	}
 }
 
-function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): ClientEntityDefinition {
+function makeActionDefinition(overrides: Partial<ActionDefinition> = {}): ActionDefinition {
 	return {
 		entityType: EntityModelType.Action,
 		label: 'Test Action',
@@ -58,12 +63,9 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 		description: 'A test action',
 		options: [],
 		optionsToMonitorForInvalidations: null,
-		feedbackType: null,
-		feedbackStyle: undefined,
 		hasLifecycleFunctions: false,
 		hasLearn: false,
 		learnTimeout: undefined,
-		showInvert: false,
 		actionHasResult: false,
 		actionExecutionTimeout: undefined,
 		actionOutputs: null,
@@ -71,17 +73,54 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 		optionsSupportExpressions: false,
 		supportsChildGroups: [],
 		showButtonPreview: false,
-		feedbackAffectedProperties: undefined,
 		...overrides,
 	}
 }
 
-function makeFeedbackDefinition(overrides: Partial<ClientEntityDefinition> = {}): ClientEntityDefinition {
+function makeFeedbackDefinition(overrides: Partial<FeedbackDefinition> = {}): FeedbackDefinition {
 	return {
-		...makeActionDefinition({ entityType: EntityModelType.Feedback }),
+		entityType: EntityModelType.Feedback,
+		label: 'Test Feedback',
+		sortKey: null,
+		description: 'A test feedback',
+		options: [],
 		feedbackType: FeedbackEntitySubType.Boolean,
+		feedbackStyle: undefined,
+		feedbackAffectedProperties: undefined,
+		hasLifecycleFunctions: false,
+		hasLearn: false,
+		learnTimeout: undefined,
+		showInvert: false,
+		warning: null,
+		optionsSupportExpressions: false,
+		supportsChildGroups: [],
+		showButtonPreview: false,
 		...overrides,
 	}
+}
+
+/** The action as the ui is sent it, without what only the backend needs */
+function toClientActionDefinition(definition: ActionDefinition): ClientActionDefinition {
+	const {
+		optionsToMonitorForInvalidations: _optionsToMonitorForInvalidations,
+		hasLifecycleFunctions: _hasLifecycleFunctions,
+		learnTimeout: _learnTimeout,
+		actionExecutionTimeout: _actionExecutionTimeout,
+		...clientDefinition
+	} = definition
+	return clientDefinition
+}
+
+/** The feedback as the ui is sent it, without what only the backend needs */
+function toClientFeedbackDefinition(definition: FeedbackDefinition): ClientFeedbackDefinition {
+	const {
+		hasLifecycleFunctions: _hasLifecycleFunctions,
+		learnTimeout: _learnTimeout,
+		feedbackStyle: _feedbackStyle,
+		feedbackAffectedProperties: _feedbackAffectedProperties,
+		...clientDefinition
+	} = definition
+	return clientDefinition
 }
 
 function makeButtonPresetModel(overrides: Partial<LayeredButtonModel> = {}): LayeredButtonModel {
@@ -1351,7 +1390,7 @@ describe('InstanceDefinitions', () => {
 			const subscription = new SubscriptionTester(await caller.actions())
 			await subscription.expectValue({
 				type: 'init',
-				definitions: { conn1: { act1: actDef } },
+				definitions: { conn1: { act1: toClientActionDefinition(actDef) } },
 			})
 			await subscription.cleanup()
 		})
@@ -1370,7 +1409,7 @@ describe('InstanceDefinitions', () => {
 			await subscription.expectValue({
 				type: 'add-connection',
 				connectionId: 'conn1',
-				entities: { act1: actDef },
+				entities: { act1: toClientActionDefinition(actDef) },
 			})
 
 			await subscription.cleanup()
@@ -1395,6 +1434,84 @@ describe('InstanceDefinitions', () => {
 			const updateValue = await subscription.next()
 			expect(updateValue).toHaveProperty('type', 'update-connection')
 			expect(updateValue).toHaveProperty('connectionId', 'conn1')
+
+			await subscription.cleanup()
+		})
+
+		it('actions subscription omits the backend-only fields', async () => {
+			const { defs } = createInstanceDefinitions()
+			defs.setActionDefinitions('conn1', {
+				act1: makeActionDefinition({ hasLifecycleFunctions: true, learnTimeout: 1000, actionExecutionTimeout: 2000 }),
+			})
+
+			const caller = createCaller(defs)
+			const subscription = new SubscriptionTester(await caller.actions())
+
+			const initValue = await subscription.next()
+			const uiDefinition = (initValue as EntityDefinitionUpdateInit<ClientActionDefinition>).definitions['conn1'][
+				'act1'
+			]
+			expect(uiDefinition).not.toHaveProperty('hasLifecycleFunctions')
+			expect(uiDefinition).not.toHaveProperty('learnTimeout')
+			expect(uiDefinition).not.toHaveProperty('actionExecutionTimeout')
+			expect(uiDefinition).not.toHaveProperty('optionsToMonitorForInvalidations')
+
+			await subscription.cleanup()
+		})
+
+		it('actions subscription yields nothing when only backend-only fields change', async () => {
+			const { defs } = createInstanceDefinitions()
+			defs.setActionDefinitions('conn1', { act1: makeActionDefinition({ label: 'First' }) })
+
+			const caller = createCaller(defs)
+			const subscription = new SubscriptionTester(await caller.actions())
+
+			// Consume init
+			await subscription.next()
+
+			defs.setActionDefinitions('conn1', {
+				act1: makeActionDefinition({ label: 'First', actionExecutionTimeout: 2000 }),
+			})
+			defs.setActionDefinitions('conn1', {
+				act1: makeActionDefinition({ label: 'Second', actionExecutionTimeout: 2000 }),
+			})
+
+			// Only the label change reaches the ui
+			await subscription.expectValue({
+				type: 'update-connection',
+				connectionId: 'conn1',
+				added: {},
+				changed: {
+					act1: diffObject(
+						toClientActionDefinition(makeActionDefinition({ label: 'First' })),
+						toClientActionDefinition(makeActionDefinition({ label: 'Second' }))
+					),
+				},
+				removed: [],
+			})
+
+			await subscription.cleanup()
+		})
+
+		it('feedbacks subscription omits the backend-only fields', async () => {
+			const { defs } = createInstanceDefinitions()
+			defs.setFeedbackDefinitions('conn1', {
+				fb1: makeFeedbackDefinition({
+					feedbackStyle: { bgcolor: 0xff0000 },
+					feedbackAffectedProperties: ['bgcolor'],
+				}),
+			})
+
+			const caller = createCaller(defs)
+			const subscription = new SubscriptionTester(await caller.feedbacks())
+
+			const initValue = await subscription.next()
+			const uiDefinition = (initValue as EntityDefinitionUpdateInit<ClientFeedbackDefinition>).definitions['conn1'][
+				'fb1'
+			]
+			expect(uiDefinition).toEqual(toClientFeedbackDefinition(makeFeedbackDefinition()))
+			expect(uiDefinition).not.toHaveProperty('feedbackStyle')
+			expect(uiDefinition).not.toHaveProperty('feedbackAffectedProperties')
 
 			await subscription.cleanup()
 		})
@@ -1433,7 +1550,7 @@ describe('InstanceDefinitions', () => {
 			await subscription.expectValue({
 				type: 'add-connection',
 				connectionId: 'conn1',
-				entities: { fb1: fbDef },
+				entities: { fb1: toClientFeedbackDefinition(fbDef) },
 			})
 
 			await subscription.cleanup()

@@ -11,13 +11,13 @@ import {
 	type CustomActionOutput,
 	type CustomActionRuntimeProps,
 } from '@companion-app/shared/Model/CustomActionModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
+import type { ActionDefinition } from '../../Instance/Definitions.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import type {
@@ -223,7 +223,7 @@ export class ControlCustomAction
 	/**
 	 * The definition of the action which runs this custom action
 	 */
-	toActionDefinition(): ClientEntityDefinition {
+	toActionDefinition(): ActionDefinition {
 		return {
 			entityType: EntityModelType.Action,
 			label: this.options.name || 'Custom action',
@@ -231,14 +231,9 @@ export class ControlCustomAction
 			description: this.options.description || undefined,
 			options: this.buildingBlockInputs.toCompanionInputFields(),
 			optionsToMonitorForInvalidations: null,
-			feedbackType: null,
-			feedbackStyle: undefined,
-			feedbackDisableStyleOverrides: false,
-			feedbackStyleOverridesUnsupported: false,
 			hasLifecycleFunctions: false,
 			hasLearn: false,
 			learnTimeout: undefined,
-			showInvert: false,
 			actionHasResult: false,
 			actionExecutionTimeout: undefined,
 			actionOutputs: this.outputs.map((output) => ({
@@ -246,7 +241,6 @@ export class ControlCustomAction
 				label: output.label || output.variableName,
 			})),
 			warning: this.#callAnalysis?.problem ?? null,
-			feedbackAffectedProperties: undefined,
 			optionsSupportExpressions: true,
 			showButtonPreview: false,
 			supportsChildGroups: [],

@@ -24,7 +24,6 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionCollection, CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { CustomFeedbackCollection, CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -35,7 +34,7 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { CompositeElementIdString } from '../Instance/Definitions.js'
+import type { ActionDefinition, CompositeElementIdString, FeedbackDefinition } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { yieldToEventLoop } from '../Resources/Util.js'
@@ -231,7 +230,7 @@ export class ControlsController {
 		(): void => {
 			const { customFeedbacks, analysis } = this.#analyseCustomCalls()
 
-			const definitions: Record<string, ClientEntityDefinition> = {}
+			const definitions: Record<string, FeedbackDefinition> = {}
 			for (const [id, control] of customFeedbacks) {
 				const callAnalysis = analysis.customFeedbacks.get(id)
 				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeUseProblem(customFeedbacks, callAnalysis))
@@ -292,7 +291,7 @@ export class ControlsController {
 		(): void => {
 			const { customActions, analysis } = this.#analyseCustomCalls()
 
-			const definitions: Record<string, ClientEntityDefinition> = {}
+			const definitions: Record<string, ActionDefinition> = {}
 			for (const [id, control] of customActions) {
 				const callAnalysis = analysis.customActions.get(id)
 				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))

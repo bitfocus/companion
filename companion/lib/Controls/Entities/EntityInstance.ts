@@ -5,7 +5,6 @@ import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/sh
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -26,6 +25,7 @@ import {
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { EntityDefinition } from '../../Instance/Definitions.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
@@ -694,7 +694,7 @@ export class ControlEntityInstance {
 		return this.#scope.createVariablesAndExpressionParser(overrideVariableValues, options)
 	}
 
-	getEntityDefinition(): ClientEntityDefinition | undefined {
+	getEntityDefinition(): EntityDefinition | undefined {
 		return this.#instanceDefinitions.getEntityDefinition(
 			this.#data.type,
 			this.#data.connectionId,
@@ -1021,7 +1021,10 @@ export class ControlEntityInstance {
 
 		const definition = this.getEntityDefinition()
 
-		if (definition?.feedbackType === FeedbackEntitySubType.Boolean) {
+		if (
+			definition?.entityType === EntityModelType.Feedback &&
+			definition.feedbackType === FeedbackEntitySubType.Boolean
+		) {
 			return this.getBooleanFeedbackValue(context)
 		}
 

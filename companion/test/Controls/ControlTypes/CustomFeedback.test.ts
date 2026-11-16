@@ -11,7 +11,6 @@ import {
 	CustomFeedbackOptionsSchema,
 	type CustomFeedbackModel,
 } from '@companion-app/shared/Model/CustomFeedbackModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -32,6 +31,7 @@ import { CustomFeedbackInstanceManager } from '../../../lib/Controls/CustomFeedb
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import type { FeedbackExecutionContext } from '../../../lib/Controls/Entities/Types.js'
 import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
+import type { EntityDefinition } from '../../../lib/Instance/Definitions.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
 import {
 	VariableDependencyRegistry,
@@ -172,7 +172,7 @@ function createHarness(model: Partial<CustomFeedbackModel>) {
 		entityType: EntityModelType,
 		connectionId: string,
 		definitionId: string
-	): ClientEntityDefinition | undefined => {
+	): EntityDefinition | undefined => {
 		if (entityType !== EntityModelType.Feedback) return undefined
 		if (connectionId === CUSTOM_CONNECTION_ID) {
 			const control = controlStore.getControl(CreateCustomFeedbackControlId(definitionId))
@@ -185,14 +185,14 @@ function createHarness(model: Partial<CustomFeedbackModel>) {
 				showInvert: true,
 				options: [],
 				optionsSupportExpressions: true,
-			} as Partial<ClientEntityDefinition> as any
+			} as Partial<EntityDefinition> as any
 		}
 		return {
 			entityType,
 			feedbackType: FeedbackEntitySubType.Value,
 			options: [],
 			optionsSupportExpressions: true,
-		} as Partial<ClientEntityDefinition> as any
+		} as Partial<EntityDefinition> as any
 	}
 
 	const processManager = {

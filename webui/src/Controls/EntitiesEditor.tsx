@@ -3,10 +3,10 @@ import { observer } from 'mobx-react-lite'
 import { useMemo, useRef } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	stringifySocketEntityLocation,
+	type FeedbackEntitySubType,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -26,7 +26,7 @@ interface ControlEntitiesEditorProps {
 	listId: SomeSocketEntityLocation
 	entityType: EntityModelType
 	entityTypeLabel: string
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 	entities: SomeEntityModel[] | undefined
 	heading: React.JSX.Element | string | null
 	headingActions?: React.JSX.Element[]

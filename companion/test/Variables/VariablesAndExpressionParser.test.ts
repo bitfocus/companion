@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CompanionFieldVariablesSupport,
@@ -9,6 +8,7 @@ import {
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
+import type { ActionDefinition } from '../../lib/Instance/Definitions.js'
 import type { VariablesCache, VariableValueData, VisitEntityOptionValueOptions } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForPage } from '../../lib/Variables/Values.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
@@ -45,26 +45,20 @@ const newParser = (
 		options
 	)
 
-function createDefinition(
-	partial: Pick<ClientEntityDefinition, 'options'> & Partial<ClientEntityDefinition>
-): ClientEntityDefinition {
+function createDefinition(partial: Pick<ActionDefinition, 'options'> & Partial<ActionDefinition>): ActionDefinition {
 	return {
 		entityType: EntityModelType.Action,
 		label: 'Test',
 		sortKey: null,
 		description: undefined,
 		optionsToMonitorForInvalidations: null,
-		feedbackType: null,
-		feedbackStyle: undefined,
 		hasLifecycleFunctions: true,
 		hasLearn: false,
 		learnTimeout: undefined,
-		showInvert: false,
 		actionHasResult: false,
 		actionExecutionTimeout: undefined,
 		actionOutputs: null,
 		warning: null,
-		feedbackAffectedProperties: undefined,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],
@@ -1550,24 +1544,20 @@ describe('VariablesAndExpressionParser', () => {
 	})
 
 	describe('deferParsing field passthrough', () => {
-		function makeDeferredDefinition(): ClientEntityDefinition {
+		function makeDeferredDefinition(): ActionDefinition {
 			return {
 				entityType: EntityModelType.Action,
 				label: 'Test',
 				sortKey: null,
 				description: undefined,
 				optionsToMonitorForInvalidations: null,
-				feedbackType: null,
-				feedbackStyle: undefined,
 				hasLifecycleFunctions: true,
 				hasLearn: false,
 				learnTimeout: undefined,
-				showInvert: false,
 				actionHasResult: false,
 				actionExecutionTimeout: undefined,
 				actionOutputs: null,
 				warning: null,
-				feedbackAffectedProperties: undefined,
 				optionsSupportExpressions: true,
 				showButtonPreview: false,
 				supportsChildGroups: [],

@@ -141,6 +141,7 @@ export class EntityDefinitionsForTypeStore {
 			for (const [definitionId, definition] of internalDefs.entries()) {
 				if (
 					!canOfferEntityInPicker(feedbackListType, controlKind, definition) ||
+					definition.entityType !== EntityModelType.Feedback ||
 					definition.feedbackType !== FeedbackEntitySubType.Value
 				)
 					continue
@@ -220,7 +221,7 @@ export class EntityDefinitionsForTypeStore {
 		}
 	)
 
-	public updateStore = action((change: EntityDefinitionUpdate | null) => {
+	public updateStore = action((change: EntityDefinitionUpdate<ClientEntityDefinition> | null) => {
 		if (!change) {
 			this.connections.clear()
 			return

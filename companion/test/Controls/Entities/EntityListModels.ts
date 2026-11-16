@@ -1,9 +1,9 @@
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import type { EntityDefinition } from '../../../lib/Instance/Definitions.js'
 
 export function getAllModelsInTree(tree: SomeEntityModel[]): SomeEntityModel[] {
 	const result: SomeEntityModel[] = []
@@ -97,7 +97,7 @@ export function ActionTreeEntityDefinitions(
 	entityType: EntityModelType,
 	connectionId: string,
 	definitionId: string
-): ClientEntityDefinition | undefined {
+): EntityDefinition | undefined {
 	if (entityType !== EntityModelType.Action) return undefined
 
 	if (connectionId === 'internal' && definitionId === 'action-with-children') {
@@ -117,7 +117,7 @@ export function ActionTreeEntityDefinitions(
 					label: 'Feedback',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any
+		} as Partial<EntityDefinition> as any
 	}
 	if (connectionId === 'internal' && definitionId === 'def01') {
 		return {
@@ -130,13 +130,13 @@ export function ActionTreeEntityDefinitions(
 					label: 'Action',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any
+		} as Partial<EntityDefinition> as any
 	}
 
 	// Fallback to a valid action
 	return {
 		entityType: EntityModelType.Action,
-	} as Partial<ClientEntityDefinition> as any
+	} as Partial<EntityDefinition> as any
 }
 
 export const FeedbackTree: SomeEntityModel[] = [
@@ -216,7 +216,7 @@ export function FeedbackTreeEntityDefinitions(
 	entityType: EntityModelType,
 	connectionId: string,
 	definitionId: string
-): ClientEntityDefinition | undefined {
+): EntityDefinition | undefined {
 	if (entityType !== EntityModelType.Feedback) return undefined
 
 	if (connectionId === 'internal' && definitionId === 'feedback-with-children') {
@@ -237,7 +237,7 @@ export function FeedbackTreeEntityDefinitions(
 					label: 'Action',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any
+		} as Partial<EntityDefinition> as any
 	}
 	if (connectionId === 'internal' && definitionId === 'def01') {
 		return {
@@ -251,12 +251,12 @@ export function FeedbackTreeEntityDefinitions(
 					label: 'Feedback',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any
+		} as Partial<EntityDefinition> as any
 	}
 
 	// Fallback to a valid feedback
 	return {
 		entityType: EntityModelType.Feedback,
 		feedbackType: FeedbackEntitySubType.Boolean,
-	} as Partial<ClientEntityDefinition> as any
+	} as Partial<EntityDefinition> as any
 }

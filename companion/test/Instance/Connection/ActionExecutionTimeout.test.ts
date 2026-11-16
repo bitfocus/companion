@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	DEFAULT_ACTION_EXECUTION_TIMEOUT,
 	getActionExecutionTimeout,
 	MAX_ACTION_EXECUTION_TIMEOUT,
 } from '../../../lib/Instance/Connection/ActionExecutionTimeout.js'
+import type { ActionDefinition } from '../../../lib/Instance/Definitions.js'
 
-function definitionWithTimeout(actionExecutionTimeout: number | undefined): ClientEntityDefinition {
-	return { actionExecutionTimeout } as ClientEntityDefinition
+function definitionWithTimeout(actionExecutionTimeout: number | undefined): ActionDefinition {
+	return { actionExecutionTimeout } as ActionDefinition
 }
 
 describe('getActionExecutionTimeout', () => {

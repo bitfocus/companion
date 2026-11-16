@@ -19,7 +19,6 @@ import {
 } from '@companion-app/shared/Expressions.js'
 import { clockCycleOfPeriod, combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	isInternalUserValueFeedback,
@@ -41,6 +40,7 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import { buildCustomActionInputVariables } from '../Controls/CustomActionRunFrame.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { EntityDefinition } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { VariablesBlinker } from './VariablesBlinker.js'
 
@@ -75,7 +75,7 @@ export interface VisitEntityOptionValueOptions {
  * @param visitor Function to call for each field. fieldType will be null for passthrough fields.
  */
 export function visitEntityOptionsForVariables<T>(
-	definition: ClientEntityDefinition,
+	definition: EntityDefinition,
 	options: ExpressionableOptionsObject,
 	visitor: (
 		field: SomeCompanionInputField,
@@ -146,7 +146,7 @@ export function visitEntityOptionsForVariables<T>(
  * their fields through without validation, so there are no errors to suppress.
  */
 export function computeHiddenEntityOptionFields(
-	definition: ClientEntityDefinition,
+	definition: EntityDefinition,
 	options: ExpressionableOptionsObject
 ): Set<string> {
 	if (!definition.optionsSupportExpressions) return new Set()

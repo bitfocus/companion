@@ -11,7 +11,10 @@ import type {
 	PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type {
+	ClientActionDefinition,
 	ClientEntityDefinition,
+	ClientEntityDefinitionBase,
+	ClientFeedbackDefinition,
 	CompositeElementDefinitionUpdate,
 	EntityDefinitionUpdate,
 	UICompositeElementDefinition,
@@ -45,7 +48,7 @@ import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleMod
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
-import type { Complete } from '@companion-module/base'
+import type { CompanionButtonStyleProps, Complete } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import {
 	ConvertBooleanFeedbackStyleToOverrides,
@@ -61,6 +64,43 @@ import {
 	visitEntityOptionsForVariables,
 } from '../Variables/Util.js'
 import type { InstanceConfigStore } from './ConfigStore.js'
+
+/**
+ * What the definitions of actions and feedbacks have in common, that only the backend needs
+ */
+interface EntityDefinitionBase {
+	hasLifecycleFunctions: boolean
+	learnTimeout: number | undefined
+}
+
+/**
+ * The definition of an action, with what only the backend needs on top of what the ui is sent
+ */
+export interface ActionDefinition extends ClientActionDefinition, EntityDefinitionBase {
+	/**
+	 * The options whose variables invalidate the action, to tell the module about it again
+	 * If null, all options are monitored
+	 */
+	optionsToMonitorForInvalidations: string[] | null
+	/**
+	 * How long (in ms) its callback may run before it is cancelled. The host clamps this to a maximum.
+	 * Defaults to 5000ms when not set.
+	 */
+	actionExecutionTimeout: number | undefined
+}
+
+/**
+ * The definition of a feedback, with what only the backend needs on top of what the ui is sent
+ */
+export interface FeedbackDefinition extends ClientFeedbackDefinition, EntityDefinitionBase {
+	feedbackStyle: Partial<CompanionButtonStyleProps> | undefined
+	/**
+	 * When an advanced feedback, the properties that should have overrides assigned
+	 */
+	feedbackAffectedProperties: string[] | undefined
+}
+
+export type EntityDefinition = ActionDefinition | FeedbackDefinition
 
 export interface CompositeElementDefinition {
 	id: string
@@ -80,8 +120,8 @@ export type CompositeElementIdString = `${string}:${string}`
 
 type DefinitionsEvents = {
 	presets: [update: UIPresetDefinitionUpdate]
-	actions: [update: EntityDefinitionUpdate]
-	feedbacks: [update: EntityDefinitionUpdate]
+	actions: [update: EntityDefinitionUpdate<ClientActionDefinition>]
+	feedbacks: [update: EntityDefinitionUpdate<ClientFeedbackDefinition>]
 	compositeElements: [update: CompositeElementDefinitionUpdate]
 }
 
@@ -108,11 +148,19 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	/**
 	 * The action definitions
 	 */
-	#actionDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
+	#actionDefinitions: Record<string, Record<string, ActionDefinition>> = {}
+	/**
+	 * The action definitions, as viewed by the ui
+	 */
+	#uiActionDefinitions: Record<string, Record<string, ClientActionDefinition>> = {}
 	/**
 	 * The feedback definitions
 	 */
-	#feedbackDefinitions: Record<string, Record<string, ClientEntityDefinition>> = {}
+	#feedbackDefinitions: Record<string, Record<string, FeedbackDefinition>> = {}
+	/**
+	 * The feedback definitions, as viewed by the ui
+	 */
+	#uiFeedbackDefinitions: Record<string, Record<string, ClientFeedbackDefinition>> = {}
 	/**
 	 * The preset definitions, to convert into real controls
 	 */
@@ -157,7 +205,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			actions: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#events, 'actions', signal)
 
-				yield { type: 'init', definitions: self.#actionDefinitions } satisfies EntityDefinitionUpdate
+				yield {
+					type: 'init',
+					definitions: self.#uiActionDefinitions,
+				} satisfies EntityDefinitionUpdate<ClientActionDefinition>
 
 				for await (const [update] of changes) {
 					yield update
@@ -167,7 +218,10 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			feedbacks: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#events, 'feedbacks', signal)
 
-				yield { type: 'init', definitions: self.#feedbackDefinitions } satisfies EntityDefinitionUpdate
+				yield {
+					type: 'init',
+					definitions: self.#uiFeedbackDefinitions,
+				} satisfies EntityDefinitionUpdate<ClientFeedbackDefinition>
 
 				for await (const [update] of changes) {
 					yield update
@@ -234,7 +288,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 		}
 
-		switch (entityType) {
+		switch (definition.entityType) {
 			case EntityModelType.Action:
 				return {
 					...entity,
@@ -271,7 +325,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 
 			default:
-				assertNever(entityType)
+				assertNever(definition)
 				return null
 		}
 	}
@@ -323,6 +377,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		this.emit('updatePresets', connectionId)
 
 		delete this.#actionDefinitions[connectionId]
+		delete this.#uiActionDefinitions[connectionId]
 		if (this.#events.listenerCount('actions') > 0) {
 			this.#events.emit('actions', {
 				type: 'forget-connection',
@@ -331,6 +386,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		}
 
 		delete this.#feedbackDefinitions[connectionId]
+		delete this.#uiFeedbackDefinitions[connectionId]
 		if (this.#events.listenerCount('feedbacks') > 0) {
 			this.#events.emit('feedbacks', {
 				type: 'forget-connection',
@@ -363,7 +419,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		entityType: EntityModelType,
 		connectionId: string,
 		definitionId: string
-	): ClientEntityDefinition | undefined {
+	): EntityDefinition | undefined {
 		switch (entityType) {
 			case EntityModelType.Action:
 				return this.#actionDefinitions[connectionId]?.[definitionId]
@@ -504,58 +560,38 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	/**
 	 * Set the action definitions for a connection
 	 */
-	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ClientEntityDefinition>): void {
-		const lastActionDefinitions = this.#actionDefinitions[connectionId]
+	setActionDefinitions(connectionId: string, actionDefinitions: Record<string, ActionDefinition>): void {
 		this.#actionDefinitions[connectionId] = actionDefinitions
 
+		const lastUiDefinitions = this.#uiActionDefinitions[connectionId]
+		const uiDefinitions: Record<string, ClientActionDefinition> = {}
+		for (const [id, definition] of Object.entries(actionDefinitions)) {
+			uiDefinitions[id] = toClientActionDefinition(definition)
+		}
+		this.#uiActionDefinitions[connectionId] = uiDefinitions
+
 		if (this.#events.listenerCount('actions') > 0) {
-			if (!lastActionDefinitions) {
-				this.#events.emit('actions', {
-					type: 'add-connection',
-					connectionId,
-
-					entities: actionDefinitions,
-				})
-			} else {
-				const diff = diffObjects(lastActionDefinitions, actionDefinitions || {})
-				if (diff) {
-					this.#events.emit('actions', {
-						type: 'update-connection',
-						connectionId,
-
-						...diff,
-					})
-				}
-			}
+			const update = createEntityDefinitionsUpdate(connectionId, lastUiDefinitions, uiDefinitions)
+			if (update) this.#events.emit('actions', update)
 		}
 	}
 
 	/**
 	 * Set the feedback definitions for a connection
 	 */
-	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, ClientEntityDefinition>): void {
-		const lastFeedbackDefinitions = this.#feedbackDefinitions[connectionId]
+	setFeedbackDefinitions(connectionId: string, feedbackDefinitions: Record<string, FeedbackDefinition>): void {
 		this.#feedbackDefinitions[connectionId] = feedbackDefinitions
 
+		const lastUiDefinitions = this.#uiFeedbackDefinitions[connectionId]
+		const uiDefinitions: Record<string, ClientFeedbackDefinition> = {}
+		for (const [id, definition] of Object.entries(feedbackDefinitions)) {
+			uiDefinitions[id] = toClientFeedbackDefinition(definition)
+		}
+		this.#uiFeedbackDefinitions[connectionId] = uiDefinitions
+
 		if (this.#events.listenerCount('feedbacks') > 0) {
-			if (!lastFeedbackDefinitions) {
-				this.#events.emit('feedbacks', {
-					type: 'add-connection',
-					connectionId,
-
-					entities: feedbackDefinitions,
-				})
-			} else {
-				const diff = diffObjects(lastFeedbackDefinitions, feedbackDefinitions || {})
-				if (diff) {
-					this.#events.emit('feedbacks', {
-						type: 'update-connection',
-						connectionId,
-
-						...diff,
-					})
-				}
-			}
+			const update = createEntityDefinitionsUpdate(connectionId, lastUiDefinitions, uiDefinitions)
+			if (update) this.#events.emit('feedbacks', update)
 		}
 	}
 
@@ -662,7 +698,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const allowedSet = new Set<string>(['local', 'this'])
 
 		const replaceVariablesInEntityOptions = (
-			definition: ClientEntityDefinition,
+			definition: EntityDefinition,
 			options: ExpressionableOptionsObject
 		): ExpressionableOptionsObject =>
 			visitEntityOptionsForVariables<ExpressionOrValue<JsonValue | undefined> | undefined>(
@@ -842,6 +878,57 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			}
 		}
 	}
+}
+
+/**
+ * The update to send the ui for the definitions of a connection, or null when nothing it is sent has changed
+ */
+function createEntityDefinitionsUpdate<TDefinition extends ClientEntityDefinition>(
+	connectionId: string,
+	lastDefinitions: Record<string, TDefinition> | undefined,
+	definitions: Record<string, TDefinition>
+): EntityDefinitionUpdate<TDefinition> | null {
+	if (!lastDefinitions) return { type: 'add-connection', connectionId, entities: definitions }
+
+	const diff = diffObjects(lastDefinitions, definitions)
+	if (!diff) return null
+	return { type: 'update-connection', connectionId, ...diff }
+}
+
+function toClientEntityDefinitionBase(definition: EntityDefinition): Complete<ClientEntityDefinitionBase> {
+	return {
+		label: definition.label,
+		sortKey: definition.sortKey,
+		description: definition.description,
+		options: definition.options,
+		hiddenFromPicker: definition.hiddenFromPicker,
+		hiddenForControlTypes: definition.hiddenForControlTypes,
+		hasLearn: definition.hasLearn,
+		warning: definition.warning,
+		optionsSupportExpressions: definition.optionsSupportExpressions,
+		showButtonPreview: definition.showButtonPreview,
+		supportsChildGroups: definition.supportsChildGroups,
+	} satisfies Complete<ClientEntityDefinitionBase>
+}
+
+function toClientActionDefinition(definition: ActionDefinition): ClientActionDefinition {
+	return {
+		...toClientEntityDefinitionBase(definition),
+		entityType: definition.entityType,
+		actionHasResult: definition.actionHasResult,
+		actionOutputs: definition.actionOutputs,
+	} satisfies Complete<ClientActionDefinition>
+}
+
+function toClientFeedbackDefinition(definition: FeedbackDefinition): ClientFeedbackDefinition {
+	return {
+		...toClientEntityDefinitionBase(definition),
+		entityType: definition.entityType,
+		feedbackType: definition.feedbackType,
+		feedbackDisableStyleOverrides: definition.feedbackDisableStyleOverrides,
+		feedbackStyleOverridesUnsupported: definition.feedbackStyleOverridesUnsupported,
+		showInvert: definition.showInvert,
+	} satisfies Complete<ClientFeedbackDefinition>
 }
 
 function replaceAllVariablesInElements(

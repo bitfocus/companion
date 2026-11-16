@@ -2,7 +2,6 @@ import type express from 'express'
 import semver from 'semver'
 import { isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	isValidFeedbackEntitySubType,
@@ -67,6 +66,7 @@ import type { CompanionOptionValues as CompanionOptionValuesNew } from '@compani
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
+import type { ActionDefinition, FeedbackDefinition } from '../Definitions.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import { ActionEntityManager } from './ActionEntityManager.js'
 import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
@@ -798,7 +798,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle settings action definitions from the child process
 	 */
 	async #handleSetActionDefinitions(msg: SetActionDefinitionsMessage): Promise<void> {
-		const actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ActionDefinition> = {}
 
 		this.#sendToModuleLog('debug', `Updating action definitions (${(msg.actions || []).length} actions)`)
 
@@ -825,19 +825,13 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				actionOutputs: null,
 				warning: null,
 
-				showInvert: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
 
-				feedbackType: null,
-				feedbackStyle: undefined,
-				feedbackAffectedProperties: undefined,
-				feedbackDisableStyleOverrides: false,
-				feedbackStyleOverridesUnsupported: false,
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
-			} satisfies Complete<ClientEntityDefinition>
+			} satisfies Complete<ActionDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setActionDefinitions(this.connectionId, actions)
@@ -851,7 +845,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 * Handle settings feedback definitions from the child process
 	 */
 	async #handleSetFeedbackDefinitions(msg: SetFeedbackDefinitionsMessage): Promise<void> {
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 
 		this.#sendToModuleLog('debug', `Updating feedback definitions (${(msg.feedbacks || []).length} feedbacks)`)
 
@@ -869,7 +863,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					EntityModelType.Feedback,
 					!!this.#feedbackManager
 				),
-				optionsToMonitorForInvalidations: null, // All should be monitored
 				feedbackType: rawFeedback.type,
 				feedbackStyle: rawFeedback.defaultStyle,
 				hasLifecycleFunctions: true, // Feedbacks always have lifecycle functions
@@ -877,9 +870,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				learnTimeout: rawFeedback.learnTimeout,
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
-				actionHasResult: undefined,
-				actionExecutionTimeout: undefined, // not supported from 1.x modules
-				actionOutputs: null,
 				warning: null,
 
 				feedbackAffectedProperties: undefined,
@@ -890,7 +880,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				hiddenFromPicker: false,
 				hiddenForControlTypes: undefined,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
-			} satisfies Complete<ClientEntityDefinition>
+			} satisfies Complete<FeedbackDefinition>
 		}
 
 		this.#deps.instanceDefinitions.setFeedbackDefinitions(this.connectionId, feedbacks)

@@ -283,7 +283,7 @@ export abstract class ButtonEntityListPoolBase
 
 			// Get the definition, to know how to handle it
 			const entityDefinition = feedback.getEntityDefinition()
-			if (!entityDefinition) return
+			if (entityDefinition?.entityType !== EntityModelType.Feedback) return
 
 			switch (entityDefinition.feedbackType) {
 				case FeedbackEntitySubType.Boolean:
@@ -332,7 +332,6 @@ export abstract class ButtonEntityListPoolBase
 					break
 				}
 				case FeedbackEntitySubType.StyleOverride:
-				case null:
 					// Not a real feedback
 					break
 				default:

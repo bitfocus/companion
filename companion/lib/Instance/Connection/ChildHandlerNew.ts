@@ -399,7 +399,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.connectionId,
 				action.definitionId
 			)
-			if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
+			if (actionDefinition?.entityType !== EntityModelType.Action)
+				throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 			// Note: for actions, this doesn't need to be reactive
 			const parser = this.#deps.controls.createActionExecutionParser(extras)

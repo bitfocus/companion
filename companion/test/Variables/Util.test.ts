@@ -1,6 +1,5 @@
 import { describe, expect, it, test } from 'vitest'
 import { CreateBankControlId, CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CompanionFieldVariablesSupport,
@@ -10,6 +9,7 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
+import type { ActionDefinition } from '../../lib/Instance/Definitions.js'
 import {
 	buildActionExecutionOverrides,
 	injectOverriddenLocalVariableValues,
@@ -17,19 +17,16 @@ import {
 } from '../../lib/Variables/Util.js'
 
 function createDefinition(
-	partial: Pick<ClientEntityDefinition, 'label' | 'options'> & Partial<ClientEntityDefinition>
-): ClientEntityDefinition {
+	partial: Pick<ActionDefinition, 'label' | 'options'> & Partial<ActionDefinition>
+): ActionDefinition {
 	return {
 		entityType: EntityModelType.Action,
 		sortKey: null,
 		description: '',
 		optionsToMonitorForInvalidations: [],
-		feedbackType: null,
-		feedbackStyle: undefined,
 		hasLifecycleFunctions: false,
 		hasLearn: false,
 		learnTimeout: undefined,
-		showInvert: false,
 		actionHasResult: false,
 		actionExecutionTimeout: undefined,
 		actionOutputs: null,
@@ -37,7 +34,6 @@ function createDefinition(
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],
-		feedbackAffectedProperties: undefined,
 		...partial,
 	}
 }
@@ -45,7 +41,7 @@ function createDefinition(
 describe('visitEntityOptionsForVariables', () => {
 	describe('legacy mode (optionsSupportExpressions: false)', () => {
 		it('should process textinput with useVariables', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: false,
 				options: [
@@ -78,7 +74,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should pass through textinput without useVariables', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: false,
 				options: [
@@ -107,7 +103,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should pass through non-textinput fields with null', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: false,
 				options: [
@@ -154,7 +150,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle mixed fields', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: false,
 				options: [
@@ -205,7 +201,7 @@ describe('visitEntityOptionsForVariables', () => {
 
 	describe('modern mode (optionsSupportExpressions: true)', () => {
 		it('should set allowExpression for all fields by default', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -261,7 +257,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should set parseVariables for textinput with useVariables', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -293,7 +289,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should set forceExpression for expression type fields', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -325,7 +321,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should respect disableAutoExpression flag', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -370,7 +366,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle textinput with useVariables and disableAutoExpression', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -403,7 +399,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle all field combinations in modern mode', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -484,7 +480,7 @@ describe('visitEntityOptionsForVariables', () => {
 
 	describe('visitor function behavior', () => {
 		it('should call visitor for each field with correct parameters', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -524,7 +520,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should return object with visitor results keyed by field id', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -561,7 +557,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle undefined option values', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -601,7 +597,7 @@ describe('visitEntityOptionsForVariables', () => {
 
 	describe('edge cases', () => {
 		it('should handle definition with no options', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [],
@@ -617,7 +613,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle empty options object', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				optionsSupportExpressions: true,
 				options: [
@@ -643,7 +639,7 @@ describe('visitEntityOptionsForVariables', () => {
 		})
 
 		it('should handle optionsSupportExpressions: undefined (treated as legacy)', () => {
-			const definition: ClientEntityDefinition = createDefinition({
+			const definition: ActionDefinition = createDefinition({
 				label: 'Test',
 				options: [
 					{

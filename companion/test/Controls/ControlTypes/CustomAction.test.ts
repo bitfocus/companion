@@ -8,7 +8,6 @@ import {
 	type CustomActionControlId,
 } from '@companion-app/shared/ControlId.js'
 import { CustomActionOptionsSchema, type CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -36,6 +35,7 @@ import type { ControlEntityInstance } from '../../../lib/Controls/Entities/Entit
 import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
+import type { EntityDefinition } from '../../../lib/Instance/Definitions.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
 import type { VariablesController } from '../../../lib/Variables/Controller.js'
 import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
@@ -51,17 +51,17 @@ function getEntityDefinition(
 	entityType: EntityModelType,
 	connectionId: string,
 	definitionId: string
-): ClientEntityDefinition | undefined {
+): EntityDefinition | undefined {
 	if (entityType === EntityModelType.Feedback) {
 		return {
 			entityType,
 			feedbackType: FeedbackEntitySubType.Value,
 			options: [],
 			optionsSupportExpressions: true,
-		} as Partial<ClientEntityDefinition> as any
+		} as Partial<EntityDefinition> as any
 	}
 	if (connectionId === 'internal') {
-		return { entityType, options: [], optionsSupportExpressions: true } as Partial<ClientEntityDefinition> as any
+		return { entityType, options: [], optionsSupportExpressions: true } as Partial<EntityDefinition> as any
 	}
 	void definitionId
 	return undefined

@@ -13,7 +13,6 @@ import type EventEmitter from 'node:events'
 import { INTERNAL_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -41,7 +40,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
-import type { InstanceDefinitions } from '../Instance/Definitions.js'
+import type { ActionDefinition, FeedbackDefinition, InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
@@ -678,7 +677,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const actions: Record<string, ClientEntityDefinition> = {}
+		const actions: Record<string, ActionDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getActionDefinitions' in fragment && typeof fragment.getActionDefinitions === 'function') {
@@ -699,19 +698,13 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						supportsChildGroups: action.supportsChildGroups ?? [],
 
 						entityType: EntityModelType.Action,
-						showInvert: false,
-						feedbackType: null,
-						feedbackStyle: undefined,
-						feedbackAffectedProperties: undefined,
-						feedbackDisableStyleOverrides: false,
-						feedbackStyleOverridesUnsupported: false,
 						hiddenFromPicker: action.hiddenFromPicker ?? false,
 						hiddenForControlTypes: action.hiddenForControlTypes,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
 						optionsToMonitorForInvalidations: action.optionsToMonitorForInvalidations || null,
-					} satisfies Complete<ClientEntityDefinition>
+					} satisfies Complete<ActionDefinition>
 				}
 			}
 		}
@@ -721,7 +714,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	#regenerateFeedbacks(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const feedbacks: Record<string, FeedbackDefinition> = {}
 
 		for (const fragment of this.#fragments) {
 			if ('getFeedbackDefinitions' in fragment && typeof fragment.getFeedbackDefinitions === 'function') {
@@ -734,9 +727,6 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						hasLearn: feedback.hasLearn ?? false,
 						learnTimeout: feedback.learnTimeout,
 
-						actionHasResult: undefined,
-						actionExecutionTimeout: undefined,
-						actionOutputs: null,
 						warning: null,
 
 						entityType: EntityModelType.Feedback,
@@ -749,10 +739,7 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 						hiddenForControlTypes: feedback.hiddenForControlTypes,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
-
-						// Always monitor everything
-						optionsToMonitorForInvalidations: null,
-					} satisfies Complete<ClientEntityDefinition>
+					} satisfies Complete<FeedbackDefinition>
 				}
 			}
 		}

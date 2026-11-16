@@ -2,13 +2,13 @@ import type { EventEmitter } from 'node:events'
 import type { SetOptional } from 'type-fest'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableDefinition, VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import type { ActionDefinition, FeedbackDefinition } from '../Instance/Definitions.js'
 import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { VisitorVariableRenamerVisitor } from '../Resources/Visitors/VariableRenamer.js'
@@ -130,16 +130,8 @@ export interface ExecuteFeedbackResultWithReferences {
 
 export type InternalActionDefinition = SetOptional<
 	Omit<
-		ClientEntityDefinition,
-		| 'entityType'
-		| 'showInvert'
-		| 'feedbackType'
-		| 'feedbackStyle'
-		| 'hasLifecycleFunctions'
-		| 'feedbackAffectedProperties'
-		| 'actionExecutionTimeout'
-		| 'actionOutputs'
-		| 'warning'
+		ActionDefinition,
+		'entityType' | 'hasLifecycleFunctions' | 'actionExecutionTimeout' | 'actionOutputs' | 'warning'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -151,15 +143,6 @@ export type InternalActionDefinition = SetOptional<
 >
 
 export type InternalFeedbackDefinition = SetOptional<
-	Omit<
-		ClientEntityDefinition,
-		| 'entityType'
-		| 'hasLifecycleFunctions'
-		| 'optionsToMonitorForInvalidations'
-		| 'actionHasResult'
-		| 'actionExecutionTimeout'
-		| 'actionOutputs'
-		| 'warning'
-	>,
+	Omit<FeedbackDefinition, 'entityType' | 'hasLifecycleFunctions' | 'warning'>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -21,6 +20,7 @@ import type {
 	NewFeedbackValue,
 	ProcessManagerForEntity,
 } from '../../../lib/Controls/Entities/Types.js'
+import type { EntityDefinition } from '../../../lib/Instance/Definitions.js'
 import {
 	ActionTree,
 	ActionTreeEntityDefinitions,
@@ -192,7 +192,7 @@ describe('loadStorage', () => {
 					label: 'Action',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Action,
 			supportsChildGroups: [
@@ -203,7 +203,7 @@ describe('loadStorage', () => {
 					label: 'Action',
 				},
 			],
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const inputModels = ActionTree
 
@@ -544,7 +544,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -594,7 +594,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Advanced,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -636,7 +636,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newInstance = list.addEntity(structuredClone(newFeedback))
 		expect(newInstance).not.toBeUndefined()
@@ -654,7 +654,7 @@ describe('addEntity', () => {
 		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
 			feedbackType: FeedbackEntitySubType.Boolean,
-		} as Partial<ClientEntityDefinition> as any)
+		} as Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -710,7 +710,7 @@ describe('addEntity', () => {
 					label: 'Feedback',
 				},
 			],
-		} satisfies Partial<ClientEntityDefinition> as any)
+		} satisfies Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -773,7 +773,7 @@ describe('addEntity', () => {
 
 		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
-		} satisfies Partial<ClientEntityDefinition> as any)
+		} satisfies Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -810,7 +810,7 @@ describe('addEntity', () => {
 					label: 'Feedback',
 				},
 			],
-		} satisfies Partial<ClientEntityDefinition> as any)
+		} satisfies Partial<EntityDefinition> as any)
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -1719,13 +1719,13 @@ describe('lazy feedback evaluation (with context)', () => {
 							label: '',
 						},
 					],
-				} as Partial<ClientEntityDefinition> as any
+				} as Partial<EntityDefinition> as any
 			}
 			return {
 				entityType: EntityModelType.Feedback,
 				feedbackType: FeedbackEntitySubType.Boolean,
 				showInvert,
-			} as Partial<ClientEntityDefinition> as any
+			} as Partial<EntityDefinition> as any
 		})
 		return deps
 	}

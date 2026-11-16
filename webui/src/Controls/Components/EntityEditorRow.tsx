@@ -3,7 +3,6 @@ import { useSortable } from '@dnd-kit/react/sortable'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { isCustomConnectionId } from '@companion-app/shared/ConnectionId.js'
-import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -31,7 +30,7 @@ interface EntityTableRowProps {
 
 	entityType: EntityModelType
 	entityTypeLabel: string
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 }
 
 export const EntityTableRow = observer(function EntityTableRow({
@@ -105,7 +104,7 @@ interface EntityTableRowContentProps {
 
 	entityType: EntityModelType
 	entityTypeLabel: string
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 
 	isDragging?: boolean
 	rowRef: (element: Element | null) => void
@@ -147,7 +146,7 @@ interface EntityEditorRowContentProps {
 	ownerId: EntityOwner | null
 	entityTypeLabel: string
 	entity: SomeEntityModel
-	feedbackListType: ClientEntityDefinition['feedbackType']
+	feedbackListType: FeedbackEntitySubType | null
 	disableLazyMount: boolean
 }
 
@@ -192,17 +191,15 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		!!entityDefinition.showButtonPreview ||
 		!!entityDefinition.supportsChildGroups?.length ||
 		(entityDefinition.entityType === EntityModelType.Action &&
-			!!entityDefinition.actionHasResult &&
-			!!entityService.setRawStoreResult) ||
-		(!!entityDefinition.actionOutputs?.length && !!entityService.setRawOutputTarget) ||
+			((!!entityDefinition.actionHasResult && !!entityService.setRawStoreResult) ||
+				(!!entityDefinition.actionOutputs?.length && !!entityService.setRawOutputTarget))) ||
 		(entity.type === EntityModelType.Feedback &&
 			(!!localVariablePrefix ||
 				(entityDefinition.entityType === EntityModelType.Feedback &&
-					entityDefinition.feedbackType === FeedbackEntitySubType.Boolean &&
-					entityDefinition.showInvert !== false) ||
-				(feedbackListType === FeedbackEntitySubType.StyleOverride &&
-					!entityDefinition.feedbackDisableStyleOverrides &&
-					!entityDefinition.feedbackStyleOverridesUnsupported)))
+					((entityDefinition.feedbackType === FeedbackEntitySubType.Boolean && entityDefinition.showInvert !== false) ||
+						(feedbackListType === FeedbackEntitySubType.StyleOverride &&
+							!entityDefinition.feedbackDisableStyleOverrides &&
+							!entityDefinition.feedbackStyleOverridesUnsupported)))))
 	const isPanelCollapsed = hasDetails && isCollapsed
 
 	return (

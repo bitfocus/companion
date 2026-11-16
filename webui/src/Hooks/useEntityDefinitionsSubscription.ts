@@ -1,23 +1,31 @@
-import { useSubscription } from '@trpc/tanstack-react-query'
+import { useSubscription, type DecorateSubscriptionProcedure, type FeatureFlags } from '@trpc/tanstack-react-query'
 import { useState } from 'react'
-import type { EntityDefinitionUpdate } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { trpc } from '~/Resources/TRPC'
+import type {
+	ClientEntityDefinition,
+	EntityDefinitionUpdate,
+} from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { EntityDefinitionsForTypeStore } from '~/Stores/EntityDefinitionsStore.js'
 
-export function useEntityDefinitionsSubscription(
+export function useEntityDefinitionsSubscription<TOutput, TErrorShape, TFeatureFlags extends FeatureFlags>(
 	store: EntityDefinitionsForTypeStore,
-	endpoint: typeof trpc.instances.definitions.actions | typeof trpc.instances.definitions.feedbacks
+	procedure: DecorateSubscriptionProcedure<{
+		input: void
+		output: AsyncIterable<TOutput, never, any>
+		transformer: false
+		errorShape: TErrorShape
+		featureFlags: TFeatureFlags
+	}>
 ): boolean {
 	const [ready, setReady] = useState(false)
 
 	useSubscription(
-		endpoint.subscriptionOptions(undefined, {
+		procedure.subscriptionOptions(undefined, {
 			onStarted: () => {
 				store.updateStore(null)
 				setReady(false)
 			},
 			onData: (data) => {
-				store.updateStore(data as EntityDefinitionUpdate) // TODO - some type errors due to optionals
+				store.updateStore(data as EntityDefinitionUpdate<ClientEntityDefinition>) // TODO - some type errors due to optionals
 				setReady(true)
 			},
 			onError: (e) => {

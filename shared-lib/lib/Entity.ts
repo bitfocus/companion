@@ -1,12 +1,15 @@
 import type { ControlIdKind } from './ControlId.js'
 import type { ClientEntityDefinition } from './Model/EntityDefinitionModel.js'
-import { FeedbackEntitySubType } from './Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from './Model/EntityModel.js'
 import { assertNever } from './Util.js'
 
 export function canAddEntityToFeedbackList(
 	feedbackListType: FeedbackEntitySubType | null,
 	definition: ClientEntityDefinition
 ): boolean {
+	// An action has no feedback type, so only goes in a list which doesn't have one
+	if (definition.entityType === EntityModelType.Action) return feedbackListType === null
+
 	switch (feedbackListType) {
 		case null:
 			// For now, match the old behavior

@@ -223,9 +223,10 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						)}
 
 					{entity.type === EntityModelType.Action &&
+						entityDefinition?.entityType === EntityModelType.Action &&
 						!!service.setRawOutputTarget &&
 						!!controlId &&
-						entityDefinition?.actionOutputs?.map((output) => (
+						entityDefinition.actionOutputs?.map((output) => (
 							<StoreResultFields
 								key={output.id}
 								label={`Store ${output.label || output.id}`}
@@ -254,7 +255,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						)}
 
 					{!!entity &&
-						!!entityDefinition &&
+						entityDefinition?.entityType === EntityModelType.Feedback &&
 						entity.type === EntityModelType.Feedback &&
 						feedbackListType === FeedbackEntitySubType.StyleOverride &&
 						!entityDefinition.feedbackDisableStyleOverrides &&
