@@ -75,5 +75,6 @@ describe('ALL_NAV_PAGES', () => {
 	test('includes the pages of the building blocks', () => {
 		expect(ALL_NAV_PAGES.map((page) => page.label)).toContain('Building Blocks: Custom Actions')
 		expect(ALL_NAV_PAGES.map((page) => page.label)).toContain('Building Blocks: Custom Feedbacks')
+		expect(ALL_NAV_PAGES.map((page) => page.label)).toContain('Building Blocks: Custom Elements')
 	})
 })

@@ -10,6 +10,7 @@ import {
 	faPlug,
 	faRotate,
 	faSearch,
+	faShapes,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -67,8 +68,16 @@ export const CommandPalette = observer(function CommandPalette() {
 })
 
 const CommandPaletteContents = observer(function CommandPaletteContents() {
-	const { pages, connections, triggersList, customActionsList, customFeedbacksList, variablesStore, notifier } =
-		useContext(RootAppStoreContext)
+	const {
+		pages,
+		connections,
+		triggersList,
+		customActionsList,
+		customFeedbacksList,
+		customElementsList,
+		variablesStore,
+		notifier,
+	} = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
 	const [query, setQuery] = useState('')
@@ -245,7 +254,25 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			})
 		}
 
-		// 7. Pages
+		// 7. Custom elements
+		for (const [controlId, customElement] of customElementsList.customElements.entries()) {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'custom-element') continue
+
+			items.push({
+				id: controlId,
+				category: 'Quick Actions',
+				title: customElement.name || 'Custom element',
+				subtitle: customElement.description || 'Custom element',
+				icon: faShapes,
+				onSelect: () => {
+					void navigate({ to: '/custom-elements/$controlId', params: { controlId: parsedId.customElementId } })
+					closePalette()
+				},
+			})
+		}
+
+		// 8. Pages
 		if (pages?.data) {
 			pages.data.forEach((page, index) => {
 				const pageNumber = index + 1
@@ -294,6 +321,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 		triggersList,
 		customActionsList,
 		customFeedbacksList,
+		customElementsList,
 		variablesStore,
 		navigate,
 		closePalette,

@@ -139,8 +139,16 @@ export class ElementConversionCache {
 
 		// Apply composite type invalidations
 		if (this.#compositeTypesToInvalidate.size > 0) {
+			const compositeIds: string[] = []
 			for (const [elementId, entry] of this.#cache) {
 				if (entry.compositeElement && this.#compositeTypesToInvalidate.has(entry.compositeElement.elementId)) {
+					compositeIds.push(elementId)
+				}
+			}
+			// The children of a composite are cached under its id, followed by `-` or `/` (see childIdPrefix), and are
+			// drawn from its old definition, so must go too
+			for (const elementId of this.#cache.keys()) {
+				if (compositeIds.some((id) => elementId === id || isChildIdOf(elementId, id))) {
 					this.#cache.delete(elementId)
 				}
 			}
@@ -184,4 +192,11 @@ export class ElementConversionCache {
 		this.#compositeTypesToInvalidate.clear()
 		this.#changedVariables.clear()
 	}
+}
+
+/** Whether an element id is that of an element drawn inside a composite element, with its id */
+function isChildIdOf(elementId: string, compositeId: string): boolean {
+	if (!elementId.startsWith(compositeId)) return false
+	const separator = elementId[compositeId.length]
+	return separator === '-' || separator === '/'
 }

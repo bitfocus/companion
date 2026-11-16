@@ -16,8 +16,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useState } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import { getCustomElementUsesExcludedFrom } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion'
@@ -25,6 +26,7 @@ import { Button } from '~/Components/Button'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Popover } from '~/Components/Popover'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from './StyleStore.js'
 
@@ -231,16 +233,18 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 	styleStore: LayeredStyleStore
 	controlId: SomeControlId
 }) {
-	const { compositeElementDefinitions, connections } = useContext(RootAppStoreContext)
+	const { compositeElementDefinitions, connections, customElementsList } = useContext(RootAppStoreContext)
 
-	const compositeGroups = useMemo(() => {
+	const compositeGroups = useComputed(() => {
+		// A custom element can't use itself, or one which uses it, as it would draw itself
+		const excluded = getCustomElementUsesExcludedFrom(controlId, customElementsList.customElements.entries())
+
 		const groups: CompositeElementGroup[] = []
 
 		for (const [connectionId, connectionDefinitions] of compositeElementDefinitions.connections.entries()) {
-			if (connectionDefinitions.size === 0) continue
-
 			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
 			const elements = Array.from(connectionDefinitions.entries())
+				.filter(([elementId]) => !excluded.has(`${connectionId}:${elementId}`))
 				.map(([elementId, definition]) => ({
 					elementId,
 					definition,
@@ -253,6 +257,8 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 					)
 				)
 
+			if (elements.length === 0) continue
+
 			groups.push({
 				connectionId,
 				connectionLabel,
@@ -261,7 +267,7 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 		}
 
 		return groups.sort((a, b) => a.connectionLabel.localeCompare(b.connectionLabel))
-	}, [compositeElementDefinitions.connections, connections])
+	}, [compositeElementDefinitions.connections, connections, customElementsList, controlId])
 
 	return (
 		<>

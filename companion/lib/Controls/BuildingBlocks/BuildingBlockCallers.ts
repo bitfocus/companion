@@ -1,9 +1,11 @@
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { getCustomActionCallDefinition } from '@companion-app/shared/Model/CustomActionModel.js'
+import { getCustomElementUseDefinition } from '@companion-app/shared/Model/CustomElementModel.js'
 import { getCustomFeedbackCallDefinition } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import { isCustomActionCall, isCustomFeedbackUse } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlStore } from '../ControlStore.js'
+import { renameCustomElementInputInUses } from '../CustomElements/CustomElementUses.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 
 /**
@@ -52,6 +54,12 @@ export function renameBuildingBlockInputInCallers(
 	fromId: string,
 	toId: string
 ): void {
+	// A custom element is used by elements rather than entities
+	if (getCustomElementUseDefinition(buildingBlockControlId)) {
+		renameCustomElementInputInUses(controlStore, buildingBlockControlId, fromId, toId)
+		return
+	}
+
 	updateBuildingBlockCallers(controlStore, buildingBlockControlId, (entity) => {
 		if (!(fromId in entity.rawOptions)) return false
 
@@ -76,6 +84,12 @@ export function removeBuildingBlockInputInCallers(
 	buildingBlockControlId: SomeControlId,
 	inputId: string
 ): void {
+	// A custom element is used by elements rather than entities
+	if (getCustomElementUseDefinition(buildingBlockControlId)) {
+		renameCustomElementInputInUses(controlStore, buildingBlockControlId, inputId, null)
+		return
+	}
+
 	updateBuildingBlockCallers(controlStore, buildingBlockControlId, (entity) => {
 		if (!(inputId in entity.rawOptions)) return false
 

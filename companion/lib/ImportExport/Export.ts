@@ -692,6 +692,26 @@ export class ExportController {
 			}
 		}
 
+		if (!config || config.customElements) {
+			exp.customElements = {}
+			exp.customElementCollections = this.#controlsController.exportCustomElementCollections()
+
+			for (const control of this.#controlsController.getAllCustomElements()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-element') {
+					exp.customElements[parsedId.customElementId] = control.toJSON()
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom element control!`)
+				}
+			}
+		}
+
 		if (!config || config.connections) {
 			exp.instances = this.#instancesController.exportAllConnections(!config || config.includeSecrets)
 			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData

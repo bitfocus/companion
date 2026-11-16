@@ -1,12 +1,7 @@
-import { nanoid } from 'nanoid'
-import type { JsonValue } from 'type-fest'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import { getDefaultPinnedProperties } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsElementBase,
-	ButtonGraphicsGroupElement,
 	ButtonGraphicsImageElement,
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
@@ -15,9 +10,8 @@ import { ButtonGraphicsElementUsage, type ButtonStyleProperties } from '@compani
 import { ParseLegacyStyle } from '../../../Resources/ConvertLegacyStyleToElements.js'
 import { lazy } from '../../../Resources/Util.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
-import { CreateElementOfType } from './LayerDefaults.js'
+import { ElementTreeEditor } from './ElementTreeEditor.js'
 import { LayeredButtonDrawer, type LayeredButtonDrawerHost } from './LayeredButtonDrawer.js'
-import { cloneElementWithNewIds } from './LayerUtils.js'
 
 /**
  * The drawer host extended with the persistence callbacks the editing operations need.
@@ -28,10 +22,10 @@ export interface LayeredButtonStyleEditorHost extends LayeredButtonDrawerHost {
 }
 
 /**
- * A {@link LayeredButtonDrawer} that additionally owns the layered-style **editing** operations (add / remove
- * / duplicate / move / rename / reusage / option / legacy-style). Composed only by the editable layered
- * button; read-only controls (e.g. the preset reference) compose the plain {@link LayeredButtonDrawer}, so
- * they have no way to mutate their style.
+ * A {@link LayeredButtonDrawer} that additionally owns the layered-style **editing** operations: those of any tree of
+ * elements (add / remove / duplicate / move / rename / reusage / option) on `tree`, and those only a button has
+ * (legacy-style, the element for each usage). Composed only by the editable layered button; read-only controls (e.g.
+ * the preset reference) compose the plain {@link LayeredButtonDrawer}, so they have no way to mutate their style.
  *
  * Each mutator updates the elements and conversion cache owned by the base drawer, then `commitChange`s and
  * emits the element-changed event via the host.
@@ -39,158 +33,27 @@ export interface LayeredButtonStyleEditorHost extends LayeredButtonDrawerHost {
 export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 	readonly #host: LayeredButtonStyleEditorHost
 
+	/** The editing operations shared with the other editable trees of elements */
+	readonly tree: ElementTreeEditor
+
 	constructor(deps: ControlDependencies, controlId: BankControlId, host: LayeredButtonStyleEditorHost) {
 		super(deps, controlId, host)
 		this.#host = host
-	}
 
-	addElement(type: string, afterElementId: string | null): string {
-		let newElement: SomeButtonGraphicsElement
-
-		// Check if this is a composite element (contains semicolon)
-		if (type.includes(';')) {
-			const [connectionId, elementId] = type.split(';', 2)
-			const compositeDefinition = this.deps.instance.definitions.getCompositeElementDefinition(connectionId, elementId)
-
-			if (compositeDefinition) {
-				newElement = {
-					id: nanoid(),
-					name: compositeDefinition.name,
-					usage: ButtonGraphicsElementUsage.Automatic,
-					type: 'composite',
-					connectionId,
-					elementId,
-					pinnedProperties: getDefaultPinnedProperties('composite'),
-					enabled: { value: true, isExpression: false },
-					opacity: { value: 100, isExpression: false },
-					x: { value: 0, isExpression: false },
-					y: { value: 0, isExpression: false },
-					width: { value: 100, isExpression: false },
-					height: { value: 100, isExpression: false },
-					rotation: { value: 0, isExpression: false },
-				}
-
-				for (const field of compositeDefinition.options) {
-					newElement[`opt:${field.id}`] = {
-						value: 'default' in field ? field.default : undefined,
-						isExpression: false,
-					}
-				}
-			} else {
-				throw new Error(`Composite element not found: ${type}`)
-			}
-		} else {
-			newElement = CreateElementOfType(type as SomeButtonGraphicsElement['type'])
-		}
-
-		// Insert immediately above the given element. Falls back to the top of the
-		// top-level stack when there is no such element (e.g. nothing selected).
-		const insertAfter = afterElementId
-			? this.#findElementIndexAndParent(this.drawElementsList, null, afterElementId)
-			: null
-		if (insertAfter) {
-			insertAfter.currentParentElementArray.splice(insertAfter.indexOfElement + 1, 0, newElement)
-		} else {
-			this.drawElementsList.push(newElement)
-		}
-
-		this.elementConversionCache.queueInvalidate(newElement.id)
-		this.#host.commitChange(true)
-		this.#host.emitElementChanged(newElement.id)
-
-		return newElement.id
-	}
-
-	removeElement(id: string): boolean {
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-
-		const { indexOfElement, element, currentParentElementArray } = currentElementLocation
-
-		// Canvas is the fixed background element and cannot be removed
-		if (element.type === 'canvas') return false
-
-		currentParentElementArray.splice(indexOfElement, 1)
-
-		this.elementConversionCache.queueInvalidate(id)
-		this.#host.commitChange(true)
-		this.#host.emitElementChanged(id)
-
-		return true
-	}
-
-	duplicateElement(id: string): string | false {
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-
-		const { indexOfElement, element, currentParentElementArray } = currentElementLocation
-
-		// Canvas is the fixed background element and cannot be duplicated
-		if (element.type === 'canvas') return false
-
-		const clone = cloneElementWithNewIds(element)
-
-		currentParentElementArray.splice(indexOfElement + 1, 0, clone)
-
-		this.elementConversionCache.queueInvalidate(clone.id)
-		this.#host.commitChange(true)
-		this.#host.emitElementChanged(clone.id)
-
-		return clone.id
-	}
-
-	setElementName(id: string, name: string): boolean {
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-
-		currentElementLocation.element.name = name
-
-		this.#host.commitChange(false)
-
-		return true
-	}
-
-	setElementUsage(id: string, usage: ButtonGraphicsElementUsage): boolean {
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-
-		currentElementLocation.element.usage = usage
-
-		// Trigger a redraw, as this could affect listeners of the properties
-		this.#host.commitChange(true)
-
-		return true
-	}
-
-	/**
-	 * Pin or unpin one property of an element, so it does (or no longer does) appear in the button's pinned
-	 * view. The stored order is insertion order and carries no meaning: the pinned view lays properties out in
-	 * the element type's canonical schema order.
-	 */
-	setElementPropertyPinned(id: string, property: string, pinned: boolean): boolean {
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-
-		const { element } = currentElementLocation
-		// The canvas holds button-level properties, which are out of scope for pinning
-		if (element.type === 'canvas') return false
-
-		if (element.pinnedProperties.includes(property) === pinned) return false // Already in the wanted state
-
-		if (pinned) {
-			element.pinnedProperties.push(property)
-		} else {
-			element.pinnedProperties = element.pinnedProperties.filter((pinnedProperty) => pinnedProperty !== property)
-		}
-
-		// Pins are editor-only metadata, so nothing needs redrawing
-		this.#host.commitChange(false)
-
-		return true
-	}
-
-	getElementById(id: string): SomeButtonGraphicsElement | undefined {
-		return this.#findElementIndexAndParent(this.drawElementsList, null, id)?.element
+		const self = this
+		this.tree = new ElementTreeEditor({
+			get elements() {
+				return self.drawElementsList
+			},
+			hasCanvas: true,
+			getCompositeElementDefinition: (connectionId, elementId) =>
+				deps.instance.definitions.getCompositeElementDefinition(connectionId, elementId),
+			// A button is never a composite element, so can't be drawn by one
+			canAddCompositeElement: () => true,
+			invalidateElement: (elementId) => this.elementConversionCache.queueInvalidate(elementId),
+			commitChange: (redraw) => host.commitChange(redraw),
+			emitElementChanged: (elementId) => host.emitElementChanged(elementId),
+		})
 	}
 
 	selectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
@@ -201,84 +64,6 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 			[ButtonGraphicsElementUsage.Color]: this.#selectLayerForUsage(ButtonGraphicsElementUsage.Color, 'box')?.id,
 			[ButtonGraphicsElementUsage.Leds]: this.#selectLayerForUsage(ButtonGraphicsElementUsage.Leds, 'gauge')?.id,
 		}
-	}
-
-	moveElement(id: string, parentElementId: string | null, newIndex: number): boolean {
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-		const { indexOfElement, currentParentElementId, currentParentElementArray } = currentElementLocation
-
-		// Can't move to or from the first element
-		if ((indexOfElement === 0 && currentParentElementId === null) || (newIndex === 0 && parentElementId === null))
-			return false
-
-		// Cycle detection: prevent moving an element into itself or one of its own descendants
-		if (parentElementId !== null) {
-			if (parentElementId === id) return false
-			const { element } = currentElementLocation
-			if (element.type === 'group' && this.#findGroupElementById(element.children, parentElementId) !== null)
-				return false
-		}
-
-		const targetElementArray = parentElementId
-			? this.#findGroupElementById(this.drawElementsList, parentElementId)?.children
-			: this.drawElementsList
-
-		if (!targetElementArray) return false
-		if (newIndex < 0 || newIndex > targetElementArray.length) return false
-
-		const element = currentParentElementArray.splice(indexOfElement, 1)[0]
-		targetElementArray.splice(newIndex, 0, element)
-
-		this.#host.commitChange(true)
-		// Moving into or out of a group changes the element's layout
-		this.#host.emitElementChanged(id)
-
-		return true
-	}
-
-	// Fixed/structural properties, which must never be reassigned via the generic option setters as it
-	// would corrupt the layer model
-	static #isStructuralKey(key: string): boolean {
-		return (
-			key === 'id' ||
-			key === 'type' ||
-			key === 'name' ||
-			key === 'usage' ||
-			key === 'pinnedProperties' ||
-			key === 'children' ||
-			key === 'connectionId' ||
-			key === 'elementId'
-		)
-	}
-
-	updateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
-		return this.updateOptions(id, { [key]: newVal })
-	}
-
-	/**
-	 * Apply several option changes to an element as a single commit. Callers changing more than one key at
-	 * once (eg a drag that moves and resizes) should use this rather than repeated {@link updateOption}, so
-	 * the element is never persisted or redrawn in a partially-updated state.
-	 */
-	updateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
-		const entries = Object.entries(values).filter(([key]) => !LayeredButtonStyleEditor.#isStructuralKey(key))
-		if (entries.length === 0) return false
-
-		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
-		if (!currentElementLocation) return false
-
-		const entry = currentElementLocation.element as any
-
-		for (const [key, newVal] of entries) {
-			entry[key] = newVal
-		}
-
-		this.elementConversionCache.queueInvalidate(id)
-		this.#host.commitChange(true)
-		this.#host.emitElementChanged(id)
-
-		return true
 	}
 
 	updateFromLegacyProperties(diff: Partial<ButtonStyleProperties>, canModifyStyleInApis: boolean): boolean {
@@ -369,50 +154,6 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		}
 
 		return true
-	}
-
-	#findElementIndexAndParent(
-		searchInElements: SomeButtonGraphicsElement[],
-		parentId: string | null,
-		searchId: string
-	): {
-		indexOfElement: number
-		element: SomeButtonGraphicsElement
-		currentParentElementId: string | null
-		currentParentElementArray: SomeButtonGraphicsElement[]
-	} | null {
-		const indexOfElement = searchInElements.findIndex((element) => element.id === searchId)
-		if (indexOfElement !== -1)
-			return {
-				indexOfElement: indexOfElement,
-				element: searchInElements[indexOfElement],
-				currentParentElementId: parentId,
-				currentParentElementArray: searchInElements,
-			}
-
-		for (const element of searchInElements) {
-			if (element.type !== 'group') continue
-
-			const result = this.#findElementIndexAndParent(element.children, element.id, searchId)
-			if (result) return result
-		}
-
-		return null
-	}
-
-	#findGroupElementById(
-		searchInElements: SomeButtonGraphicsElement[],
-		searchId: string
-	): ButtonGraphicsGroupElement | null {
-		for (const element of searchInElements) {
-			if (element.type !== 'group') continue
-
-			if (element.id === searchId) return element
-			const result = this.#findGroupElementById(element.children, searchId)
-			if (result) return result
-		}
-
-		return null
 	}
 
 	#selectLayerForUsage<TElement extends ButtonGraphicsElementBase & { type: string }>(

@@ -17,6 +17,7 @@ import {
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
+	type CompositeElementOptionKey,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
@@ -217,31 +218,31 @@ export class ControlButtonLayered
 	}
 
 	layeredStyleAddElement(type: string, afterElementId: string | null): string {
-		return this.drawing.addElement(type, afterElementId)
+		return this.drawing.tree.addElement(type, afterElementId)
 	}
 
 	layeredStyleRemoveElement(id: string): boolean {
-		return this.drawing.removeElement(id)
+		return this.drawing.tree.removeElement(id)
 	}
 
 	layeredStyleDuplicateElement(id: string): string | false {
-		return this.drawing.duplicateElement(id)
+		return this.drawing.tree.duplicateElement(id)
 	}
 
 	layeredStyleSetElementName(id: string, name: string): boolean {
-		return this.drawing.setElementName(id, name)
+		return this.drawing.tree.setElementName(id, name)
 	}
 
 	layeredStyleSetElementUsage(id: string, usage: ButtonGraphicsElementUsage): boolean {
-		return this.drawing.setElementUsage(id, usage)
+		return this.drawing.tree.setElementUsage(id, usage)
 	}
 
 	layeredStyleSetElementPropertyPinned(id: string, property: string, pinned: boolean): boolean {
-		return this.drawing.setElementPropertyPinned(id, property, pinned)
+		return this.drawing.tree.setElementPropertyPinned(id, property, pinned)
 	}
 
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined {
-		return this.drawing.getElementById(id)
+		return this.drawing.tree.getElementById(id)
 	}
 
 	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[] {
@@ -252,16 +253,30 @@ export class ControlButtonLayered
 		return this.drawing.selectedElementIds()
 	}
 
+	layeredStyleRenameCompositeOption(
+		connectionId: string,
+		elementId: string,
+		fromKey: CompositeElementOptionKey,
+		toKey: CompositeElementOptionKey | null
+	): boolean {
+		return this.drawing.tree.renameCompositeOption(connectionId, elementId, fromKey, toKey)
+	}
+
+	layeredStylePreviewVariableValues(): null {
+		// The elements are drawn with the variables of the button
+		return null
+	}
+
 	layeredStyleMoveElement(id: string, parentElementId: string | null, newIndex: number): boolean {
-		return this.drawing.moveElement(id, parentElementId, newIndex)
+		return this.drawing.tree.moveElement(id, parentElementId, newIndex)
 	}
 
 	layeredStyleUpdateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
-		return this.drawing.updateOption(id, key, newVal)
+		return this.drawing.tree.updateOption(id, key, newVal)
 	}
 
 	layeredStyleUpdateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
-		return this.drawing.updateOptions(id, values)
+		return this.drawing.tree.updateOptions(id, values)
 	}
 
 	layeredStyleUpdateFromLegacyProperties(diff: Partial<ButtonStyleProperties>): boolean {

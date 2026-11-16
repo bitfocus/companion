@@ -13,6 +13,7 @@ import {
 	ParseControlId,
 	type BankControlId,
 	type CustomActionControlId,
+	type CustomElementControlId,
 	type CustomFeedbackControlId,
 	type ExpressionVariableControlId,
 	type ParsedControlIdType,
@@ -23,6 +24,7 @@ import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionCollection, CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomElementCollection, CustomElementModel } from '@companion-app/shared/Model/CustomElementModel.js'
 import type { CustomFeedbackCollection, CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type {
@@ -35,7 +37,7 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
-import type { CompositeElementIdString } from '../Instance/Definitions.js'
+import type { CompositeElementDefinition, CompositeElementIdString } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
 import { yieldToEventLoop } from '../Resources/Util.js'
@@ -55,6 +57,7 @@ import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import type { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
+import { ControlCustomElement } from './ControlTypes/CustomElement.js'
 import { ControlCustomFeedback } from './ControlTypes/CustomFeedback.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
@@ -68,8 +71,14 @@ import {
 	pruneCustomActionOutputTargetsInCallers,
 	renameCustomActionOutputInCallers,
 } from './CustomActions/CustomActionCallers.js'
-import { analyseCustomCalls, type CustomActionCallAnalysis } from './CustomActions/CustomActionCalls.js'
+import {
+	analyseCustomActionCalls,
+	analyseCustomCalls,
+	type CustomActionCallAnalysis,
+} from './CustomActions/CustomActionCalls.js'
 import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
+import { CustomElementCollections } from './CustomElementCollections.js'
+import { createCustomElementTrpcRouter } from './CustomElementTrpcRouter.js'
 import { CustomFeedbackCollections } from './CustomFeedbackCollections.js'
 import { createCustomFeedbackTrpcRouter } from './CustomFeedbackTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
@@ -140,6 +149,11 @@ export class ControlsController {
 	 * The custom feedback collections
 	 */
 	readonly #customFeedbackCollections: CustomFeedbackCollections
+
+	/**
+	 * The custom element collections
+	 */
+	readonly #customElementCollections: CustomElementCollections
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
@@ -214,7 +228,57 @@ export class ControlsController {
 			this.#publishCustomActionDefinitions()
 			this.#deps.customFeedbackInstances.onCustomFeedbackChanged(controlId)
 		})
+
+		this.#customElementCollections = new CustomElementCollections(db, (validCollectionIds) =>
+			this.#cleanUnknownCustomElementCollectionIds(validCollectionIds)
+		)
+
+		this.#controlEvents.on('customElementDefinitionChanged', () => this.#publishCustomElementDefinitions())
 	}
+
+	#cleanUnknownCustomElementCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomElement) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	/**
+	 * Publish each custom element as a composite element, so that it can be used by other controls
+	 */
+	#publishCustomElementDefinitions = debounceFn(
+		(): void => {
+			const customElements = new Map<string, ControlCustomElement>()
+			for (const control of this.#store.controls.values()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (control instanceof ControlCustomElement && parsedId?.type === 'custom-element') {
+					customElements.set(parsedId.customElementId, control)
+				}
+			}
+
+			// A custom element can't be nested too deeply, as each is drawn once for each use, so only loops matter
+			const analysis = analyseCustomActionCalls(
+				new Map([...customElements].map(([id, control]) => [id, control.getUsedCustomElementIds(false)]))
+			)
+
+			const definitions: Record<string, CompositeElementDefinition> = {}
+			for (const [id, control] of customElements) {
+				const useAnalysis = analysis.get(id)
+				if (useAnalysis) control.setUseAnalysis(useAnalysis)
+
+				definitions[id] = control.toCompositeElementDefinition(id)
+			}
+
+			this.#deps.instance.definitions.setCustomElementDefinitions(definitions)
+		},
+		{
+			before: false,
+			after: true,
+			wait: 10,
+			maxWait: 50,
+		}
+	)
 
 	#cleanUnknownCustomFeedbackCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#store.controls.values()) {
@@ -408,6 +472,13 @@ export class ControlsController {
 				this.#deps.customFeedbackInstances
 			),
 			buildingBlockInputs: createBuildingBlockInputsTrpcRouter(this.#store),
+			customElements: createCustomElementTrpcRouter(
+				this.#controlChangeEvents,
+				this.#controlEvents,
+				this.#customElementCollections,
+				this.#store,
+				this.#factory
+			),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
 				this.#expressionVariableCollections,
@@ -546,6 +617,19 @@ export class ControlsController {
 			}
 		}
 		return customFeedbacks
+	}
+
+	/**
+	 * Get all of the custom element controls
+	 */
+	getAllCustomElements(): ControlCustomElement[] {
+		const customElements: ControlCustomElement[] = []
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomElement) {
+				customElements.push(control)
+			}
+		}
+		return customElements
 	}
 
 	/**
@@ -701,6 +785,23 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import a custom element
+	 */
+	importCustomElement(controlId: CustomElementControlId, definition: CustomElementModel): boolean {
+		if (this.#store.controls.has(controlId)) throw new Error(`Custom element ${controlId} already exists`)
+
+		const newControl = this.#factory.createClassForControl(controlId, 'custom-element', definition, true)
+		if (newControl) {
+			this.#store.controls.set(controlId, newControl)
+			newControl.start(true)
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -729,8 +830,11 @@ export class ControlsController {
 
 		this.#cleanUnknownCustomFeedbackCollectionIds(this.#customFeedbackCollections.collectAllCollectionIds())
 
+		this.#cleanUnknownCustomElementCollectionIds(this.#customElementCollections.collectAllCollectionIds())
+
 		this.#publishCustomActionDefinitions()
 		this.#publishCustomFeedbackDefinitions()
+		this.#publishCustomElementDefinitions()
 
 		// Initialize expression variable names map
 		this.#expressionVariableNamesMap.rebuildMap()
@@ -887,6 +991,14 @@ export class ControlsController {
 
 	replaceCustomFeedbackCollections(collections: CustomFeedbackCollection[]): void {
 		this.#customFeedbackCollections.replaceCollections(collections)
+	}
+
+	exportCustomElementCollections(): CustomElementCollection[] {
+		return this.#customElementCollections.collectionData
+	}
+
+	replaceCustomElementCollections(collections: CustomElementCollection[]): void {
+		this.#customElementCollections.replaceCollections(collections)
 	}
 
 	/**

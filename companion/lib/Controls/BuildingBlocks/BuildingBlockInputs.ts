@@ -11,25 +11,56 @@ import { VisitorVariableRenamer } from '../../Resources/Visitors/VariableRenamer
 import type { ControlEntityListPoolBase } from '../Entities/EntityListPoolBase.js'
 
 /**
- * The user defined inputs of a building block, such as a custom action or custom feedback.
- * This keeps the `$(options:<id>)` references in the entities of the building block in step with them, but not
- * whatever uses the building block, which is the caller's job.
+ * Where a building block references its inputs, as `$(options:<id>)`, so that a renamed input can be followed
+ */
+export interface BuildingBlockInputReferences {
+	/**
+	 * Rename the references to a variable
+	 * @param fromVariableId The old variable, eg `options:old`
+	 * @param toVariableId The new variable, eg `options:new`
+	 */
+	rename(fromVariableId: string, toVariableId: string): void
+}
+
+/**
+ * The references to the inputs in the entities of a building block, such as a custom action or custom feedback
+ * @param internalModule The internal module, to recheck the internal feedbacks which changed
+ * @param entities The entities of the building block
+ */
+export function entityInputReferences(
+	internalModule: InternalController,
+	entities: ControlEntityListPoolBase
+): BuildingBlockInputReferences {
+	return {
+		rename: (fromVariableId, toVariableId) => {
+			const changed = new VisitorVariableRenamer(internalModule, fromVariableId, toVariableId)
+				.visitEntityInstances(entities.getAllEntities())
+				.recheckChangedFeedbacks()
+				.hasChanges()
+
+			// The entities were changed in place, so must be parsed again
+			if (changed) entities.resubscribeEntities()
+		},
+	}
+}
+
+/**
+ * The user defined inputs of a building block, such as a custom action, custom feedback or custom element.
+ * This keeps the `$(options:<id>)` references in the building block in step with them, but not whatever uses the
+ * building block, which is the caller's job.
  */
 export class BuildingBlockInputs {
-	readonly #internalModule: InternalController
-	readonly #entities: ControlEntityListPoolBase
+	readonly #references: BuildingBlockInputReferences
 	readonly #reportChange: () => void
 
 	#fields: AuthorableInputField[] = []
 
 	/**
-	 * @param internalModule The internal module, to update the references to a renamed input
-	 * @param entities The entities of the building block, which may reference the inputs
+	 * @param references Where the building block references its inputs, to follow a renamed input
 	 * @param reportChange Called after the inputs have been changed, to save them
 	 */
-	constructor(internalModule: InternalController, entities: ControlEntityListPoolBase, reportChange: () => void) {
-		this.#internalModule = internalModule
-		this.#entities = entities
+	constructor(references: BuildingBlockInputReferences, reportChange: () => void) {
+		this.#references = references
 		this.#reportChange = reportChange
 	}
 
@@ -125,8 +156,7 @@ export class BuildingBlockInputs {
 	}
 
 	/**
-	 * Replace an input. If the new input has a different id, the references to it in the entities of the building
-	 * block are updated
+	 * Replace an input. If the new input has a different id, the references to it in the building block are updated
 	 * @returns Whether the input was updated
 	 */
 	update(inputId: string, field: AuthorableInputField): boolean {
@@ -139,25 +169,12 @@ export class BuildingBlockInputs {
 			// Renaming, so the new id must be unused
 			if (this.#fields.some((input) => input.id === field.id)) return false
 
-			this.#renameReferences(inputId, field.id)
+			this.#references.rename(`options:${inputId}`, `options:${field.id}`)
 		}
 
 		this.#fields[index] = structuredClone(field)
 
 		this.#reportChange()
 		return true
-	}
-
-	/**
-	 * Update the `$(options:<id>)` references to an input in the entities of the building block
-	 */
-	#renameReferences(fromId: string, toId: string): void {
-		const changed = new VisitorVariableRenamer(this.#internalModule, `options:${fromId}`, `options:${toId}`)
-			.visitEntityInstances(this.#entities.getAllEntities())
-			.recheckChangedFeedbacks()
-			.hasChanges()
-
-		// The entities were changed in place, so must be parsed again
-		if (changed) this.#entities.resubscribeEntities()
 	}
 }
