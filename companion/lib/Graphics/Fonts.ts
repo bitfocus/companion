@@ -16,11 +16,14 @@ function generateFontUrl(fontFilename: string): string {
 	return fileURLToPath(new URL(path.join(fontPath, fontFilename), import.meta.url))
 }
 
+/** The default sans font, also used by the surface host for the lockout screens */
+export const FONT_SANS: FontDefinition = { pathOnDisk: generateFontUrl('Arimo-Regular.ttf'), name: 'Companion-sans' }
+
 /**
  * The supported fonts for button drawing, these are loaded into the renderer at startup, and can be pulled by clients for preview rendering
  */
 export const FONT_DEFINITIONS = [
-	{ pathOnDisk: generateFontUrl('Arimo-Regular.ttf'), name: 'Companion-sans' },
+	FONT_SANS,
 	// typos:disable-line wdth is part of the filename
 	{ pathOnDisk: generateFontUrl('NotoSansMono-wdth-wght.ttf'), name: 'Companion-mono' },
 	{ pathOnDisk: generateFontUrl('NotoSansSymbols-wght.ttf'), name: 'Companion-symbols1' },
