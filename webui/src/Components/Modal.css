@@ -222,7 +222,9 @@
 
 .modal2-dialog.modal2-dialog-scrollable {
 	max-height: calc(100vh - var(--modal2-top-margin) - var(--modal2-margin));
-	overflow: hidden;
+	/* clip, not hidden: hidden is still a scroll container, so scrolling a dropdown's highlighted item into
+	   view while its popup (portalled in here) is not yet positioned shifts the whole dialog for a frame */
+	overflow: clip;
 
 	.modal2-body {
 		overflow-y: auto;
