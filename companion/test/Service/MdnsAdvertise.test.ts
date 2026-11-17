@@ -15,7 +15,10 @@ vi.mock('@julusian/bonjour-service', async () => {
 		publish = vi.fn()
 		unpublishAll = vi.fn()
 		destroy = vi.fn()
-		constructor() {
+		constructor(
+			_opts: unknown,
+			readonly errorCallback: (err: unknown) => void
+		) {
 			hoisted.instances.push(this)
 		}
 	}
@@ -143,5 +146,14 @@ describe('ServiceMdnsAdvertise', () => {
 		ctx.setListening(true)
 		await vi.advanceTimersByTimeAsync(100)
 		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'comp-link-ws' }))
+	})
+
+	it('logs mDNS errors rather than throwing them', () => {
+		const ctx = createService({})
+		const warn = vi.spyOn((ctx.service as any).logger, 'warn')
+
+		hoisted.instances.at(-1).errorCallback(new Error('send failed'))
+
+		expect(warn).toHaveBeenCalledWith(expect.stringContaining('send failed'))
 	})
 })

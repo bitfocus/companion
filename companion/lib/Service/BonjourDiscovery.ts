@@ -68,7 +68,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	protected listen(): void {
 		if (this.#server === undefined) {
 			try {
-				this.#server = new Bonjour()
+				this.#server = new Bonjour({}, (err: unknown) => this.logger.warn(`mDNS error: ${stringifyError(err)}`))
 
 				this.logger.info('Listening for Bonjour messages')
 			} catch (e) {

@@ -10,6 +10,7 @@ import type {
 	CompanionExternalAddresses,
 	SurfacesDiscoveryUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DiscoveredRemoteSurfaceInfo } from '@companion-surface/host'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -46,7 +47,7 @@ export function getSatelliteServices(
  */
 export class ServiceSurfaceDiscovery {
 	readonly #logger = LogController.createLogger('Surface/Discovery')
-	readonly #bonjour = new Bonjour()
+	readonly #bonjour = new Bonjour({}, (err: unknown) => this.#logger.warn(`mDNS error: ${stringifyError(err)}`))
 
 	#satelliteBrowser: Browser | undefined
 	/** Browses the pre-5.2 type, which is longer than RFC 6763 allows. TODO: remove in 6.0 */

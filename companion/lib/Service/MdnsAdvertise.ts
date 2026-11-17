@@ -64,7 +64,7 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		if (this.#bonjour !== undefined) return
 
 		try {
-			this.#bonjour = new Bonjour()
+			this.#bonjour = new Bonjour({}, (err: unknown) => this.logger.warn(`mDNS error: ${stringifyError(err)}`))
 
 			const name = String(this.userconfig.getKey('installName') || '').trim() || `Companion (${os.hostname()})`
 			const txt = {
