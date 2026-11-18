@@ -20,6 +20,7 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import {
+	formatLocation,
 	isControlIdOfKind,
 	isLocationOnGrid,
 	xyToOldBankIndex,
@@ -71,6 +72,12 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
+import {
+	execWithStallTimeout,
+	RENDER_TASK_TIMEOUT_MS,
+	RenderTaskStalledError,
+	stringifyDrawStyleForLog,
+} from './RenderTaskTimeout.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -132,6 +139,8 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 interface ButtonRenderSource {
 	readonly drawStyle: RendererButtonStyle
 	readonly animationFrames: AnimationFrames
+	/** What is drawn, for logging */
+	readonly description: string
 }
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
@@ -234,6 +243,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	// Cumulative count of worker terminations since startup, exposed as a metrics counter
 	#workerTerminationsTotal = 0
 
+	// Cumulative count of render tasks which stalled since startup, exposed as a metrics counter
+	#renderTaskStallsTotal = 0
+
 	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
 	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
 	// almost always catch it at ~0; a fast sampler (#poolStatsSampler) tracks the peak between scrapes.
@@ -251,7 +263,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			return (GraphicsThreadMethods[key] as any)(...args)
 		}
 
-		return pool.exec(key, args).catch(async (e: unknown) => {
+		return execWithStallTimeout<ReturnType<(typeof GraphicsThreadMethods)[TKey]>>(
+			pool,
+			key,
+			args,
+			RENDER_TASK_TIMEOUT_MS[key]
+		).catch(async (e: unknown) => {
+			if (e instanceof RenderTaskStalledError) {
+				// Not retried, as it would most likely stall again
+				this.#renderTaskStallsTotal++
+				throw e
+			}
+
 			const isTermination =
 				e instanceof workerPool.TerminateError || (e instanceof Error && e.message.includes('Worker is terminated'))
 			if (!isTermination) throw e
@@ -435,7 +458,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									animationFrames,
 									cycleRenderCount,
 									buttonStyle.clockCycleMs ?? 0,
-									true
+									true,
+									`preset ${args.controlId}`
 								)
 								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
@@ -511,6 +535,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								cycleRenderCount,
 								buttonStyle.clockCycleMs ?? 0,
 								true,
+								`button ${formatLocation(location)}`,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -706,7 +731,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true, 'preview')
 	}
 
 	/**
@@ -999,6 +1024,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
 			return this.#workerTerminationsTotal
 		})
+
+		// Render tasks which stalled and had their worker terminated, since startup
+		metrics.counter('companion_render_task_stalls_total', 'Render tasks which stalled since startup', () => {
+			return this.#renderTaskStallsTotal
+		})
 	}
 
 	/**
@@ -1015,6 +1045,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		cycleRenderCount: number,
 		clockCycleMs: number,
 		waitForRemoteImages: boolean,
+		description: string,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<ControlLocationString> | undefined = undefined
 	): ImageResult {
@@ -1034,11 +1065,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					rotation,
 					format,
 					CRASHED_WORKER_RETRY_COUNT
-				),
+				).catch((e: unknown) => {
+					if (e instanceof RenderTaskStalledError) {
+						// Dump what was being drawn, so that whatever locks up the renderer can be found and reproduced
+						this.#logger.error(
+							`Drawing ${description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
+						)
+					}
+					throw e
+				}),
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-		this.#renderSources.set(render, { drawStyle, animationFrames })
+		this.#renderSources.set(render, { drawStyle, animationFrames, description })
 		return render
 	}
 
@@ -1053,7 +1092,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const source = this.#renderSources.get(render)
 		let undecorated: UndecoratedRender
 		if (source) {
-			const { drawStyle } = source
+			const { drawStyle, description } = source
 			undecorated = {
 				render: this.#generateImageResult(
 					render.cacheKey && `undecorated:${render.cacheKey}`,
@@ -1068,7 +1107,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					render.clockCycleMs,
 					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
 					// to hold up serving every other button
-					false
+					false,
+					`${description} (undecorated)`
 				),
 				// Without decoration, the state isn't drawn: only the elements, as they are on this frame of any animations
 				contentKey: JSON.stringify({
