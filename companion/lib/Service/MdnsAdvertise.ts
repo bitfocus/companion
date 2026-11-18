@@ -118,8 +118,8 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 	 * satellite apps still find this. TODO: remove after 5.2
 	 */
 	#publish(name: string, txt: Record<string, string>, type: string, port: number, legacyType: string | null): void {
-		const publish = (serviceType: string, allowInvalidType: boolean) =>
-			this.#bonjour?.publish(
+		const publish = (serviceType: string, allowInvalidType: boolean) => {
+			const service = this.#bonjour?.publish(
 				{
 					name,
 					type: serviceType,
@@ -132,6 +132,11 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 				},
 				{ announceOnInterval: 60 * 1000 }
 			)
+			// Another host on the network has the name, so the library moved this one to the next free name
+			service?.on('rename', (newName: string) =>
+				this.logger.warn(`"${name}" is in use on the network, so ${serviceType} is advertised as "${newName}"`)
+			)
+		}
 
 		publish(type, false)
 		if (legacyType !== null) publish(legacyType, true)
