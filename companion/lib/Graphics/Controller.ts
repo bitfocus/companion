@@ -73,10 +73,10 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
+import { RenderPool } from './RenderPool.js'
 import { RenderQuarantine, renderQuarantineKey, type RenderQuarantineStore } from './RenderQuarantine.js'
 import {
 	collectDrawnTexts,
-	execWithStallTimeout,
 	RENDER_TASK_TIMEOUT_MS,
 	RenderTaskStalledError,
 	stringifyDrawStyleForLog,
@@ -84,8 +84,8 @@ import {
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
-const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
-const WORKER_TERMINATION_THRESHOLD = 30 // High limit, to catch extreme cases
+// How long a stalled render thread has to stop, before it is taken to be stuck for good
+const LOST_RENDER_THREAD_GRACE_MS = 10_000
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
 
@@ -231,29 +231,26 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
 	// so it must not be created at all when rendering runs in-process
-	#pool: ReturnType<typeof workerPool.pool> | null = DEBUG_DISABLE_RENDER_THREADING
+	readonly #renderPool: RenderPool<typeof GraphicsThreadMethods> | null = DEBUG_DISABLE_RENDER_THREADING
 		? null
-		: workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
-				minWorkers: 2,
-				maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
-				workerType: 'thread',
-				onCreateWorker: () => {
-					this.#logger.info('Render worker created')
-					return undefined
-				},
-				onTerminateWorker: () => {
-					this.#logger.info('Render worker terminated')
-				},
-			})
-
-	// Track recent worker terminations (timestamps in ms), used for crash-loop detection
-	#workerTerminationTimestamps: number[] = []
-
-	// Cumulative count of worker terminations since startup, exposed as a metrics counter
-	#workerTerminationsTotal = 0
-
-	// Cumulative count of render tasks which stalled since startup, exposed as a metrics counter
-	#renderTaskStallsTotal = 0
+		: new RenderPool(
+				this.#logger,
+				() =>
+					workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
+						minWorkers: 2,
+						maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
+						workerType: 'thread',
+						onCreateWorker: () => {
+							this.#logger.info('Render worker created')
+							return undefined
+						},
+						onTerminateWorker: () => {
+							this.#logger.info('Render worker terminated')
+						},
+					}),
+				RENDER_TASK_TIMEOUT_MS,
+				LOST_RENDER_THREAD_GRACE_MS
+			)
 
 	/** The draws which stalled, which are drawn as a placeholder instead */
 	readonly renderQuarantine: RenderQuarantine
@@ -269,57 +266,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		key: TKey,
 		args: Parameters<(typeof GraphicsThreadMethods)[TKey]>,
 		attempts: number
-	): Promise<ReturnType<(typeof GraphicsThreadMethods)[TKey]>> => {
-		const pool = this.#pool
+	): Promise<Awaited<ReturnType<(typeof GraphicsThreadMethods)[TKey]>>> => {
+		const pool = this.#renderPool
 		if (!pool) {
 			return (GraphicsThreadMethods[key] as any)(...args)
 		}
 
-		return execWithStallTimeout<ReturnType<(typeof GraphicsThreadMethods)[TKey]>>(
-			pool,
-			key,
-			args,
-			RENDER_TASK_TIMEOUT_MS[key]
-		).catch(async (e: unknown) => {
-			if (e instanceof RenderTaskStalledError) {
-				// Not retried, as it would most likely stall again
-				this.#renderTaskStallsTotal++
-				throw e
-			}
-
-			const isTermination =
-				e instanceof workerPool.TerminateError || (e instanceof Error && e.message.includes('Worker is terminated'))
-			if (!isTermination) throw e
-
-			// Count every worker termination, including the one on the final attempt where we give up and
-			// rethrow below - otherwise the metric undercounts crashes on the last retry.
-			this.#workerTerminationsTotal++
-
-			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (attempts > 1) {
-				// Track termination timestamps in a sliding window
-
-				const now = Date.now()
-				this.#workerTerminationTimestamps.push(now)
-				const cutoff = now - WORKER_TERMINATION_WINDOW_MS
-
-				// prune old timestamps
-				this.#workerTerminationTimestamps = this.#workerTerminationTimestamps.filter((timestamp) => timestamp >= cutoff)
-
-				if (this.#workerTerminationTimestamps.length > WORKER_TERMINATION_THRESHOLD) {
-					this.#logger.error(
-						`More than ${WORKER_TERMINATION_THRESHOLD} worker terminations within ${WORKER_TERMINATION_WINDOW_MS / 1000}s. Terminating.`
-					)
-					// Force an immediate exit, as this suggests a major problem
-					// eslint-disable-next-line n/no-process-exit
-					process.exit(5)
-				}
-
-				return this.#poolExec(key, args, attempts - 1)
-			} else {
-				throw e
-			}
-		})
+		return pool.exec(key, args, attempts)
 	}
 
 	/**
@@ -804,7 +757,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Whether a render task has stalled this run, so a render thread may be stuck and never stop
 	 */
 	get hasStalledRenderTasks(): boolean {
-		return this.#renderTaskStallsTotal > 0
+		return (this.#renderPool?.stallsTotal ?? 0) > 0
 	}
 
 	/**
@@ -947,7 +900,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// The pool gauges only exist when render threading is enabled - there is no backlog to report
 		// when rendering runs in-process
-		const pool = this.#pool
+		const pool = this.#renderPool
 		if (pool) {
 			// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
 			// tasks currently executing on a thread (active). This is the true render-thread backlog.
@@ -1052,12 +1005,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// Render worker terminations since startup
 		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
-			return this.#workerTerminationsTotal
+			return this.#renderPool?.workerTerminationsTotal ?? 0
 		})
 
 		// Render tasks which stalled and had their worker terminated, since startup
 		metrics.counter('companion_render_task_stalls_total', 'Render tasks which stalled since startup', () => {
-			return this.#renderTaskStallsTotal
+			return this.#renderPool?.stallsTotal ?? 0
+		})
+
+		// Render threads which stalled and couldn't be terminated, eg as they are stuck in native code
+		metrics.gauge('companion_render_threads_lost', 'Render threads which stalled and are stuck', () => {
+			return this.#renderPool?.lostThreads ?? 0
 		})
 	}
 
