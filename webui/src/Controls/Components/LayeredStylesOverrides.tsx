@@ -376,24 +376,27 @@ const PropertyValueInput = observer(function PropertyValueInput({
 
 	const inputId = undefined
 
+	// For advanced feedbacks, show a dropdown with ButtonStylePropertiesWithBuffer instead of freeform input.
+	// Shown with no element too, as an override can be created before its element exists
+	if (feedbackType === FeedbackEntitySubType.Advanced) {
+		return (
+			<DropdownInputField
+				htmlName={inputId}
+				choices={ButtonStylePropertiesWithBuffer}
+				value={row.override.value as DropdownChoiceId}
+				setValue={(value) =>
+					updateRow({ ...row, override: { ...row.override, value } as ExpressionOrValue<JsonValue | undefined> })
+				}
+			/>
+		)
+	}
+
 	// If no property is selected, return null
 	if (!selectedProperty) {
 		return null
 	}
 
-	// For advanced feedbacks, show a dropdown with ButtonStylePropertiesWithBuffer instead of freeform input
 	switch (feedbackType) {
-		case FeedbackEntitySubType.Advanced:
-			return (
-				<DropdownInputField
-					htmlName={inputId}
-					choices={ButtonStylePropertiesWithBuffer}
-					value={row.override.value as DropdownChoiceId}
-					setValue={(value) =>
-						updateRow({ ...row, override: { ...row.override, value } as ExpressionOrValue<JsonValue | undefined> })
-					}
-				/>
-			)
 		case FeedbackEntitySubType.Boolean:
 			// For boolean feedbacks, show a dropdown with "true" and "false"
 			return (

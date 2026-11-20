@@ -672,4 +672,30 @@ describe('CreateAdvancedFeedbackStyleOverrides', () => {
 		expect(overrides[0].elementId).toBe('box0')
 		expect(overrides[0].override.value).toBe('bgcolor')
 	})
+
+	const noImageIds: { [usage in ButtonGraphicsElementUsage]: string | undefined } = {
+		...defaultSelectedIds,
+		[ButtonGraphicsElementUsage.Image]: undefined,
+	}
+
+	test('affected properties with no element → overrides with no element', () => {
+		const overrides = CreateAdvancedFeedbackStyleOverrides(
+			noImageIds,
+			undefined,
+			['imageBuffer', 'pngalignment', 'text'],
+			randomIdGenerator
+		)
+		expect(overrides.map((o) => [o.elementId, o.elementProperty, o.override.value])).toEqual([
+			['text0', 'text', 'text'],
+			['', 'halign', 'pngalignment'],
+			['', 'valign', 'pngalignment'],
+			['', 'base64Image', 'imageBuffers'],
+		])
+	})
+
+	test('no affected properties and no element → no overrides for that element', () => {
+		const overrides = CreateAdvancedFeedbackStyleOverrides(noImageIds, undefined, undefined, randomIdGenerator)
+		expect(overrides.filter((o) => o.elementId === '')).toHaveLength(0)
+		expect(overrides.filter((o) => o.override.value === 'png64' || o.override.value === 'imageBuffers')).toHaveLength(0)
+	})
 })

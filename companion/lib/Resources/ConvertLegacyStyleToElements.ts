@@ -542,6 +542,11 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 	return overrides
 }
 
+/**
+ * Create the overrides for an advanced feedback, mapping each style property it produces onto an element property.
+ * With no `affectedProperties`, every property is mapped to the elements which exist. When the feedback lists the
+ * properties it affects, those whose element doesn't exist are still created, with no element, as a starting point.
+ */
 export function CreateAdvancedFeedbackStyleOverrides(
 	selectedElementIds: {
 		[usage in ButtonGraphicsElementUsage]: string | undefined
@@ -550,107 +555,35 @@ export function CreateAdvancedFeedbackStyleOverrides(
 	affectedProperties: string[] | undefined,
 	generateId: IdGenerator
 ): FeedbackEntityStyleOverride[] {
-	const overrides: FeedbackEntityStyleOverride[] = []
-
 	const textElementId = selectedElementIds[ButtonGraphicsElementUsage.Text]
 	const imageElementId = selectedElementIds[ButtonGraphicsElementUsage.Image]
 	const backgroundElementId = selectedElementIds[ButtonGraphicsElementUsage.Color]
 
-	if (textElementId) {
-		if (!affectedProperties || affectedProperties.includes('text')) {
+	// style property -> the element and its properties which it is mapped to
+	const mappings: [styleProperty: string, elementId: string | undefined, elementProperties: string[], value: string][] =
+		[
+			['text', textElementId, ['text'], 'text'],
+			['size', textElementId, ['fontsize', 'fontsizeAllowShrink'], 'size'],
+			['alignment', textElementId, ['halign', 'valign'], 'alignment'],
+			['color', textElementId, ['color'], 'color'],
+			['pngalignment', imageElementId, ['halign', 'valign'], 'pngalignment'],
+			['png64', imageElementId, ['base64Image'], 'png64'],
+			['bgcolor', backgroundElementId, ['color'], 'bgcolor'],
+			['imageBuffer', bufferElementId, ['base64Image'], 'imageBuffers'],
+		]
+
+	const overrides: FeedbackEntityStyleOverride[] = []
+	for (const [styleProperty, elementId, elementProperties, value] of mappings) {
+		if (affectedProperties ? !affectedProperties.includes(styleProperty) : !elementId) continue
+
+		for (const elementProperty of elementProperties) {
 			overrides.push({
 				overrideId: generateId(),
-				elementId: textElementId,
-				elementProperty: 'text',
-				override: { isExpression: false, value: 'text' },
+				elementId: elementId ?? '',
+				elementProperty,
+				override: { isExpression: false, value },
 			})
 		}
-		if (!affectedProperties || affectedProperties.includes('size')) {
-			overrides.push(
-				{
-					overrideId: generateId(),
-					elementId: textElementId,
-					elementProperty: 'fontsize',
-					override: { isExpression: false, value: 'size' },
-				},
-				{
-					overrideId: generateId(),
-					elementId: textElementId,
-					elementProperty: 'fontsizeAllowShrink',
-					override: { isExpression: false, value: 'size' },
-				}
-			)
-		}
-		if (!affectedProperties || affectedProperties.includes('alignment')) {
-			overrides.push(
-				{
-					overrideId: generateId(),
-					elementId: textElementId,
-					elementProperty: 'halign',
-					override: { isExpression: false, value: 'alignment' },
-				},
-				{
-					overrideId: generateId(),
-					elementId: textElementId,
-					elementProperty: 'valign',
-					override: { isExpression: false, value: 'alignment' },
-				}
-			)
-		}
-		if (!affectedProperties || affectedProperties.includes('color')) {
-			overrides.push({
-				overrideId: generateId(),
-				elementId: textElementId,
-				elementProperty: 'color',
-				override: { isExpression: false, value: 'color' },
-			})
-		}
-	}
-
-	if (imageElementId) {
-		if (!affectedProperties || affectedProperties.includes('pngalignment')) {
-			overrides.push(
-				{
-					overrideId: generateId(),
-					elementId: imageElementId,
-					elementProperty: 'halign',
-					override: { isExpression: false, value: 'pngalignment' },
-				},
-				{
-					overrideId: generateId(),
-					elementId: imageElementId,
-					elementProperty: 'valign',
-					override: { isExpression: false, value: 'pngalignment' },
-				}
-			)
-		}
-
-		if (!affectedProperties || affectedProperties.includes('png64')) {
-			overrides.push({
-				overrideId: generateId(),
-				elementId: imageElementId,
-				elementProperty: 'base64Image',
-				override: { isExpression: false, value: 'png64' },
-			})
-		}
-	}
-
-	if (backgroundElementId && (!affectedProperties || affectedProperties.includes('bgcolor'))) {
-		overrides.push({
-			overrideId: generateId(),
-			elementId: backgroundElementId,
-			elementProperty: 'color',
-			override: { isExpression: false, value: 'bgcolor' },
-		})
-	}
-
-	if (bufferElementId && (!affectedProperties || affectedProperties.includes('imageBuffer'))) {
-		overrides.push({
-			overrideId: generateId(),
-			elementId: bufferElementId,
-			elementProperty: 'base64Image',
-			override: { isExpression: false, value: 'imageBuffers' },
-		})
 	}
 
 	return overrides
