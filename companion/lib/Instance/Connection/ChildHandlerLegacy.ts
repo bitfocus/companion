@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import type { RespawnMonitor } from 'thread-tools'
 import { isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import {
@@ -20,7 +21,6 @@ import {
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
-import type { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'

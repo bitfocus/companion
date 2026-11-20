@@ -1,12 +1,11 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
+import { importModuleFromPath, IpcWrapper } from 'thread-tools'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ModuleManifest } from '@companion-module/base/manifest'
 import { createModuleLogger, InstanceWrapper, registerLoggingSink } from '@companion-module/host'
 import { connectDataChannel } from '../../Common/DataChannelClient.js'
 import { FramedChannel } from '../../Common/FramedMessageChannel.js'
-import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type {
 	ExecuteActionResponseMessage,
 	GetConfigFieldsResponseMessage,

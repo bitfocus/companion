@@ -1,4 +1,5 @@
 import type { RemoteInfo } from 'node:dgram'
+import type { IpcWrapper } from 'thread-tools'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { PresetDefinition, UIPresetSection } from '@companion-app/shared/Model/Presets.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
@@ -19,7 +20,6 @@ import type {
 	UpgradeFeedbackInstance,
 } from '@companion-module/host'
 import type { VariableValueEntry } from '../../Variables/Values.js'
-import type { IpcWrapper } from '../Common/IpcWrapper.js'
 import type { ActionDefinition, CompositeElementDefinition, FeedbackDefinition } from '../Definitions.js'
 
 export type ModuleIpcWrapper = IpcWrapper<HostToModuleEventsNew, ModuleToHostEventsNew>

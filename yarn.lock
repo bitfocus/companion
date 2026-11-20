@@ -1716,6 +1716,7 @@ __metadata:
     semver: "npm:^7.8.6"
     strip-ansi: "npm:^7.2.0"
     systeminformation: "npm:^5.33.19"
+    thread-tools: "npm:^0.2.0"
   languageName: unknown
   linkType: soft
 
@@ -10991,6 +10992,7 @@ __metadata:
     systeminformation: "npm:^5.33.19"
     tar-fs: "npm:^3.1.3"
     tar-stream: "npm:^3.2.2"
+    thread-tools: "npm:^0.2.0"
     type-fest: "npm:^5.10.0"
     typescript: "npm:@typescript/typescript6@^6.0.2"
     typescript-7: "npm:typescript@^7.0.2"
@@ -22299,6 +22301,13 @@ __metadata:
   peerDependencies:
     tslib: ^2
   checksum: 10c0/52194642c129615b6af15648621be9a2784ad25526e3facca6c28aa1a36ea32245ef146ebc3fbaf64a3605b8301a5335da505d0c314f851ff293b184e0de7fb9
+  languageName: node
+  linkType: hard
+
+"thread-tools@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "thread-tools@npm:0.2.0"
+  checksum: 10c0/d73a8e0d1a929c78b6852b78e88fbd97c992009c9c8e6e028f10e86f4360a5eb07902086cfb1d96aaef4e37263b4efa408235e1506a34e7c367cbd62ed7f3141
   languageName: node
   linkType: hard
 

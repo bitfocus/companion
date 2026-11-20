@@ -1,5 +1,6 @@
 import EventEmitter from 'node:events'
 import debounceFn from 'debounce-fn'
+import type { IpcWrapper } from 'thread-tools'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { sampleLedsToBuffer } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
@@ -13,7 +14,6 @@ import type {
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-surface/host'
-import type { IpcWrapper } from '../Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,

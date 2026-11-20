@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from 'thread-tools'
 import { isControlIdOfKind, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
@@ -26,7 +27,6 @@ import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
 import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
-import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import { ActionEntityManager } from './ActionEntityManager.js'
 import { getActionExecutionTimeout } from './ActionExecutionTimeout.js'

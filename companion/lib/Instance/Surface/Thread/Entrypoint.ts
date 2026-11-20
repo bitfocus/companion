@@ -1,5 +1,6 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
+import { importModuleFromPath, IpcWrapper } from 'thread-tools'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import {
 	createModuleLogger,
@@ -9,8 +10,6 @@ import {
 } from '@companion-surface/host'
 import { connectDataChannel } from '../../Common/DataChannelClient.js'
 import { FramedChannel } from '../../Common/FramedMessageChannel.js'
-import { IpcWrapper } from '../../Common/IpcWrapper.js'
-import { importModuleFromPath } from '../../Common/ThreadUtil.js'
 import type { CheckDeviceInfo, HostToSurfaceModuleEvents, SurfaceModuleToHostEvents } from '../IpcTypes.js'
 import { translateSurfaceConfigFields } from './ConfigFields.js'
 import { HostContext } from './HostContext.js'

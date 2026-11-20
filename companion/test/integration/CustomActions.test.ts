@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { IpcWrapper } from 'thread-tools'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
@@ -21,7 +22,6 @@ import { MAX_CUSTOM_ACTION_DEPTH } from '../../lib/Controls/CustomActionRunFrame
 import type { CustomActionCopy } from '../../lib/Controls/CustomActions/CustomActionCopy.js'
 import { CUSTOM_ACTION_HELD_COPY } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
-import { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
 import type { UpdateFeedbackInstancesMessage } from '../../lib/Instance/Connection/IpcTypesNew.js'
 import { createMockTrpcContext } from '../Util.js'
 import { createTestApp, type TestApp } from './TestApp.js'
