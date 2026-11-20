@@ -73,6 +73,7 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
+import { RenderQuarantine, renderQuarantineKey } from './RenderQuarantine.js'
 import {
 	collectDrawnTexts,
 	execWithStallTimeout,
@@ -248,8 +249,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	// Cumulative count of render tasks which stalled since startup, exposed as a metrics counter
 	#renderTaskStallsTotal = 0
 
-	// The stalled draws already reported to sentry
-	readonly #reportedStalledDraws = new Set<string>()
+	/** The draws which stalled, which are drawn as a placeholder instead */
+	readonly renderQuarantine = new RenderQuarantine()
 
 	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
 	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
@@ -410,6 +411,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		this.setMaxListeners(0)
 
+		// Draw a newly quarantined draw as its placeholder, or one which is allowed again as itself
+		this.renderQuarantine.on('changed', () => this.triggerRegenerateAll())
+
 		this.#drawOptions = {
 			buttons_decoration: this.#userConfigController.getKey('buttons_decoration'),
 			buttons_status_icons: this.#userConfigController.getKey('buttons_status_icons'),
@@ -421,7 +425,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				try {
 					if (args.type === 'preset') {
 						const control = this.controlsStore.getControl(args.controlId)
-						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+						const rawButtonStyle = await control?.drawing?.getDrawStyle()
+						const buttonStyle = rawButtonStyle ? this.renderQuarantine.apply(rawButtonStyle) : undefined
 						const animationFrames = buttonStyle
 							? await this.#selectAnimationFrames(buttonStyle.elements)
 							: NO_ANIMATION_FRAMES
@@ -492,7 +497,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
-					const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+					const rawButtonStyle = await control?.drawing?.getDrawStyle()
+					const buttonStyle = rawButtonStyle ? this.renderQuarantine.apply(rawButtonStyle) : undefined
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
@@ -1081,9 +1087,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (e instanceof RenderTaskStalledError) {
 						// Dump what was being drawn, so that whatever locks up the renderer can be found and reproduced
 						this.#logger.error(
-							`Drawing ${description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
+							`Drawing ${description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced and it will be drawn as a placeholder. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
 						)
-						this.#reportStalledDraw(e, description, drawStyle)
+						this.#quarantineStalledDraw(e, description, drawStyle)
 					}
 					throw e
 				}),
@@ -1157,13 +1163,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	/**
-	 * Report a stalled draw to sentry, once per run for each thing drawn, as it stalls again at each size and redraw
+	 * Quarantine a stalled draw, and report it to sentry. Only the first stall of each is reported, as it stalls at
+	 * each size it is being drawn at before it is quarantined
 	 */
-	#reportStalledDraw(error: RenderTaskStalledError, description: string, drawStyle: RendererButtonStyle): void {
+	#quarantineStalledDraw(error: RenderTaskStalledError, description: string, drawStyle: RendererButtonStyle): void {
 		const texts = collectDrawnTexts(drawStyle.elements)
-		const reportKey = JSON.stringify([description, texts])
-		if (this.#reportedStalledDraws.has(reportKey)) return
-		this.#reportedStalledDraws.add(reportKey)
+		const added = this.renderQuarantine.add({
+			key: renderQuarantineKey(drawStyle),
+			description,
+			texts,
+			time: Date.now(),
+		})
+		if (!added) return
 
 		Sentry.captureException(error, { extra: { description, texts } })
 	}
