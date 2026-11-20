@@ -180,8 +180,9 @@ export class Registry {
 	/**
 	 * Terminate the process once a requested exit has completed. Supplied by the parent scope
 	 * (main.ts), so the Registry itself never calls process.exit
+	 * @param renderThreadsMayBeStuck A render task stalled this run, so a render thread may never stop
 	 */
-	readonly #requestProcessExit: (restart: boolean) => void
+	readonly #requestProcessExit: (restart: boolean, renderThreadsMayBeStuck: boolean) => void
 
 	#isReady = false
 
@@ -196,7 +197,7 @@ export class Registry {
 			AppInfo,
 			'configDir' | 'logsDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'options'
 		>,
-		requestProcessExit: (restart: boolean) => void
+		requestProcessExit: (restart: boolean, renderThreadsMayBeStuck: boolean) => void
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
 		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
@@ -593,7 +594,8 @@ export class Registry {
 		}
 	}
 
-	#onIpcDisconnect = (): void => process.exit()
+	// The launcher has gone (eg it was force quit), so there is nothing to shut down gracefully for
+	#onIpcDisconnect = (): void => this.#requestProcessExit(false, this.graphics.hasStalledRenderTasks)
 
 	#onIpcMessage = (msg: any): void => {
 		try {
@@ -693,7 +695,7 @@ export class Registry {
 			}
 
 			setImmediate(() => {
-				this.#requestProcessExit(restart)
+				this.#requestProcessExit(restart, this.graphics.hasStalledRenderTasks)
 			})
 		})
 	}

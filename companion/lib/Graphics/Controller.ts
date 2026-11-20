@@ -783,6 +783,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	}
 
 	/**
+	 * Whether a render task has stalled this run, so a render thread may be stuck and never stop
+	 */
+	get hasStalledRenderTasks(): boolean {
+		return this.#renderTaskStallsTotal > 0
+	}
+
+	/**
 	 * Clean up resources held by this controller
 	 */
 	destroy(): void {
