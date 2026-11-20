@@ -86,6 +86,8 @@ import { GraphicsThreadMethods } from './ThreadMethods.js'
 const CRASHED_WORKER_RETRY_COUNT = 10
 // How long a stalled render thread has to stop, before it is taken to be stuck for good
 const LOST_RENDER_THREAD_GRACE_MS = 10_000
+// Use 2/3 of available CPUs, at least 4
+const RENDER_POOL_MAX_WORKERS = Math.max(4, Math.floor(os.cpus().length * 0.67))
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
 
@@ -238,7 +240,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				() =>
 					workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
 						minWorkers: 2,
-						maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
+						maxWorkers: RENDER_POOL_MAX_WORKERS,
 						workerType: 'thread',
 						onCreateWorker: () => {
 							this.#logger.info('Render worker created')
@@ -752,6 +754,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	invalidateButton(location: ControlLocation): void {
 		this.#drawAndCacheButton(location)
 	}
+
+	/** The render threads, or null when rendering isn't threaded */
+	get renderPool(): RenderPool<typeof GraphicsThreadMethods> | null {
+		return this.#renderPool
+	}
+
+	/** How many threads the render pool runs at most */
+	readonly renderPoolSize = RENDER_POOL_MAX_WORKERS
 
 	/**
 	 * Whether a render task has stalled this run, so a render thread may be stuck and never stop

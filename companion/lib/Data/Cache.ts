@@ -7,6 +7,8 @@ export interface DataCacheDefaultTable {
 	cloud_servers: Record<string, unknown>
 	module_store_list: ModuleStoreListCacheStore
 	render_quarantine: CachedRenderQuarantine
+	/** When Companion restarted itself to free stuck render threads, in ms */
+	render_stall_restarts: number[]
 }
 
 /**
