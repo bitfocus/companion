@@ -9,10 +9,8 @@
  */
 
 import workerPool from 'workerpool'
-import type {
-	ButtonGraphicsTextDrawElement,
-	SomeButtonGraphicsDrawElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { DrawnText } from '@companion-app/shared/Model/RenderStall.js'
+import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { GraphicsThreadMethods } from './ThreadMethods.js'
 
 /**
@@ -71,13 +69,6 @@ export function stringifyDrawStyleForLog(drawStyle: unknown): string {
 		if (value instanceof Set) return [...value]
 		return value
 	})
-}
-
-export interface DrawnText {
-	readonly text: string
-	readonly font: ButtonGraphicsTextDrawElement['font']
-	readonly weight: ButtonGraphicsTextDrawElement['weight']
-	readonly fontsize: number
 }
 
 /** The text drawn by some elements, and how, for reporting a stalled draw */

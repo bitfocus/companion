@@ -73,7 +73,7 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
-import { RenderQuarantine, renderQuarantineKey } from './RenderQuarantine.js'
+import { RenderQuarantine, renderQuarantineKey, type RenderQuarantineStore } from './RenderQuarantine.js'
 import {
 	collectDrawnTexts,
 	execWithStallTimeout,
@@ -142,8 +142,14 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 interface ButtonRenderSource {
 	readonly drawStyle: RendererButtonStyle
 	readonly animationFrames: AnimationFrames
-	/** What is drawn, for logging */
+	readonly subject: RenderSubject
+}
+
+/** What a render is of, for reporting it if it stalls */
+interface RenderSubject {
 	readonly description: string
+	/** Null if it isn't on a page */
+	readonly location: ControlLocation | null
 }
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
@@ -250,7 +256,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	#renderTaskStallsTotal = 0
 
 	/** The draws which stalled, which are drawn as a placeholder instead */
-	readonly renderQuarantine = new RenderQuarantine()
+	readonly renderQuarantine: RenderQuarantine
 
 	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
 	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
@@ -381,9 +387,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		internalApiRouter: Express.Router,
 		metrics: MetricsRegistry,
 		renderClock: RenderClock,
-		remoteImageSource: RemoteImageSource
+		remoteImageSource: RemoteImageSource,
+		renderQuarantineStore: RenderQuarantineStore
 	) {
 		super()
+
+		this.renderQuarantine = new RenderQuarantine(renderQuarantineStore)
 
 		this.#remoteImageSource = remoteImageSource
 		remoteImageSource.onReleased((slots) => this.#imageCache.releaseRemote(slots))
@@ -469,7 +478,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									cycleRenderCount,
 									buttonStyle.clockCycleMs ?? 0,
 									true,
-									`preset ${args.controlId}`
+									{ description: `preset ${args.controlId}`, location: null }
 								)
 								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
@@ -546,7 +555,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								cycleRenderCount,
 								buttonStyle.clockCycleMs ?? 0,
 								true,
-								`button ${formatLocation(location)}`,
+								{ description: `button ${formatLocation(location)}`, location },
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -742,7 +751,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true, 'preview')
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true, {
+			description: 'preview',
+			location: null,
+		})
 	}
 
 	/**
@@ -1063,7 +1075,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		cycleRenderCount: number,
 		clockCycleMs: number,
 		waitForRemoteImages: boolean,
-		description: string,
+		subject: RenderSubject,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<ControlLocationString> | undefined = undefined
 	): ImageResult {
@@ -1087,16 +1099,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (e instanceof RenderTaskStalledError) {
 						// Dump what was being drawn, so that whatever locks up the renderer can be found and reproduced
 						this.#logger.error(
-							`Drawing ${description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced and it will be drawn as a placeholder. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
+							`Drawing ${subject.description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced and it will be drawn as a placeholder. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
 						)
-						this.#quarantineStalledDraw(e, description, drawStyle)
+						this.#quarantineStalledDraw(e, subject, drawStyle)
 					}
 					throw e
 				}),
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-		this.#renderSources.set(render, { drawStyle, animationFrames, description })
+		this.#renderSources.set(render, { drawStyle, animationFrames, subject })
 		return render
 	}
 
@@ -1111,7 +1123,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const source = this.#renderSources.get(render)
 		let undecorated: UndecoratedRender
 		if (source) {
-			const { drawStyle, description } = source
+			const { drawStyle, subject } = source
 			undecorated = {
 				render: this.#generateImageResult(
 					render.cacheKey && `undecorated:${render.cacheKey}`,
@@ -1127,7 +1139,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
 					// to hold up serving every other button
 					false,
-					`${description} (undecorated)`
+					{ ...subject, description: `${subject.description} (undecorated)` }
 				),
 				// Without decoration, the state isn't drawn: only the elements, as they are on this frame of any animations
 				contentKey: JSON.stringify({
@@ -1166,17 +1178,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Quarantine a stalled draw, and report it to sentry. Only the first stall of each is reported, as it stalls at
 	 * each size it is being drawn at before it is quarantined
 	 */
-	#quarantineStalledDraw(error: RenderTaskStalledError, description: string, drawStyle: RendererButtonStyle): void {
+	#quarantineStalledDraw(error: RenderTaskStalledError, subject: RenderSubject, drawStyle: RendererButtonStyle): void {
 		const texts = collectDrawnTexts(drawStyle.elements)
 		const added = this.renderQuarantine.add({
 			key: renderQuarantineKey(drawStyle),
-			description,
+			location: subject.location,
+			description: subject.description,
 			texts,
 			time: Date.now(),
 		})
 		if (!added) return
 
-		Sentry.captureException(error, { extra: { description, texts } })
+		Sentry.captureException(error, { extra: { description: subject.description, texts } })
 	}
 
 	/**

@@ -24,6 +24,7 @@ import { registerDatabaseDurationHistogram, registerDatabaseMetrics } from './Da
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
+import { CachedRenderQuarantineStore } from './Graphics/RenderQuarantine.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
@@ -256,7 +257,8 @@ export class Registry {
 			this.#internalApiRouter,
 			this.metrics,
 			this.#renderClock,
-			linkRemoteImages
+			linkRemoteImages,
+			new CachedRenderQuarantineStore(this.#data.cache.defaultTableView, this.#appInfo.appBuild)
 		)
 
 		this.surfaces = new SurfaceController(
