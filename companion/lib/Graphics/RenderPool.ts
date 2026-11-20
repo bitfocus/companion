@@ -31,7 +31,7 @@ interface AbandonedPool {
 	lost: boolean
 }
 
-interface RenderPoolEvents {
+export interface RenderPoolEvents {
 	/** The number of threads which are stuck for good changed */
 	lostThreadsChanged: [lostThreads: number]
 }

@@ -25,6 +25,7 @@ import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
 import { CachedRenderQuarantineStore } from './Graphics/RenderQuarantine.js'
+import { CachedRenderStallRestartHistory, RenderStallMonitor } from './Graphics/RenderStallMonitor.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
@@ -113,6 +114,10 @@ export class Registry {
 	 * The core database library
 	 */
 	readonly db: DataDatabase
+	/**
+	 * Warns about and recovers from stalled draws
+	 */
+	readonly renderStalls: RenderStallMonitor
 	/**
 	 * The core graphics controller
 	 */
@@ -259,6 +264,14 @@ export class Registry {
 			this.#renderClock,
 			linkRemoteImages,
 			new CachedRenderQuarantineStore(this.#data.cache.defaultTableView, this.#appInfo.appBuild)
+		)
+		this.renderStalls = new RenderStallMonitor(
+			this.graphics.renderQuarantine,
+			this.graphics.renderPool,
+			// Once a whole pool's worth of threads are stuck, the stuck ones are probably slowing everything else
+			this.graphics.renderPoolSize,
+			new CachedRenderStallRestartHistory(this.#data.cache.defaultTableView),
+			() => this.exit(true, true)
 		)
 
 		this.surfaces = new SurfaceController(
@@ -642,6 +655,7 @@ export class Registry {
 
 		this.internalModule.destroy()
 		this.#renderClock.destroy()
+		this.renderStalls.destroy()
 		this.controls.triggerEvents.destroy()
 
 		this.services.close()

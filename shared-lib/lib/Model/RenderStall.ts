@@ -21,3 +21,24 @@ export interface QuarantinedRender {
 	/** When it stalled, in ms */
 	readonly time: number
 }
+
+/** A restart to free the render threads which are stuck */
+export type RenderStallRestart =
+	| {
+			/** Companion will restart itself, unless it is postponed */
+			readonly type: 'scheduled'
+			/** When, in ms */
+			readonly at: number
+	  }
+	| {
+			/** Companion has restarted itself too often recently, so it is left to the user */
+			readonly type: 'manual'
+	  }
+
+export interface RenderStallStatus {
+	readonly quarantined: readonly QuarantinedRender[]
+	/** How many render threads are stuck for good */
+	readonly lostThreads: number
+	/** Null when no restart is needed */
+	readonly restart: RenderStallRestart | null
+}
