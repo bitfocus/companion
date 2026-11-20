@@ -10,20 +10,47 @@
 
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
+import type { QuarantinedRender } from '@companion-app/shared/Model/RenderStall.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { DataCacheDefaultTable } from '../Data/Cache.js'
+import type { DataStoreTableView } from '../Data/Tables/TableView.js'
 import { makeReferencePlaceholder } from './ConvertGraphicsElements.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
-import type { DrawnText } from './RenderTaskTimeout.js'
 
-/** What a quarantined draw was of */
-export interface QuarantinedRender {
-	/** Identifies what was drawn, at any size, from renderQuarantineKey */
-	readonly key: string
-	/** What was being drawn, eg the button location */
-	readonly description: string
-	readonly texts: readonly DrawnText[]
-	/** When it stalled, in ms */
-	readonly time: number
+/** Where the quarantine is kept between runs */
+export interface RenderQuarantineStore {
+	load(): QuarantinedRender[]
+	save(entries: QuarantinedRender[]): void
+}
+
+/** What is kept in the cache */
+export interface CachedRenderQuarantine {
+	/** The build the draws stalled on, as an update may fix them */
+	build: string
+	entries: QuarantinedRender[]
+}
+
+/**
+ * Keeps the quarantine in the cache, so that a draw which stalls isn't drawn again after a restart, until an update
+ */
+export class CachedRenderQuarantineStore implements RenderQuarantineStore {
+	readonly #table: Pick<DataStoreTableView<DataCacheDefaultTable>, 'get' | 'set'>
+	readonly #build: string
+
+	constructor(table: Pick<DataStoreTableView<DataCacheDefaultTable>, 'get' | 'set'>, build: string) {
+		this.#table = table
+		this.#build = build
+	}
+
+	load(): QuarantinedRender[] {
+		const cached = this.#table.get('render_quarantine')
+		if (!cached || cached.build !== this.#build || !Array.isArray(cached.entries)) return []
+		return cached.entries
+	}
+
+	save(entries: QuarantinedRender[]): void {
+		this.#table.set('render_quarantine', { build: this.#build, entries })
+	}
 }
 
 /** Identifies what a button draws, at any size or state: two draw styles with the same key draw the same content */
@@ -39,10 +66,19 @@ interface RenderQuarantineEvents {
 
 /**
  * The draws which stalled a render thread, which are not drawn again, so that one bad button can't stall a thread
- * at each size it is shown at and each time it is redrawn, until the render threads have all stalled
+ * at each size it is shown at and each time it is redrawn, until the render threads have all stalled. Kept until an
+ * update, as a restart would only stall again
  */
 export class RenderQuarantine extends EventEmitter<RenderQuarantineEvents> {
-	readonly #entries = new Map<string, QuarantinedRender>()
+	readonly #store: RenderQuarantineStore
+	readonly #entries: Map<string, QuarantinedRender>
+
+	constructor(store: RenderQuarantineStore) {
+		super()
+
+		this.#store = store
+		this.#entries = new Map(store.load().map((entry) => [entry.key, entry]))
+	}
 
 	has(key: string): boolean {
 		return this.#entries.has(key)
@@ -55,6 +91,7 @@ export class RenderQuarantine extends EventEmitter<RenderQuarantineEvents> {
 		if (this.#entries.has(entry.key)) return false
 
 		this.#entries.set(entry.key, entry)
+		this.#store.save(this.list())
 		this.emit('changed')
 		return true
 	}
@@ -66,6 +103,7 @@ export class RenderQuarantine extends EventEmitter<RenderQuarantineEvents> {
 	remove(key: string): boolean {
 		if (!this.#entries.delete(key)) return false
 
+		this.#store.save(this.list())
 		this.emit('changed')
 		return true
 	}

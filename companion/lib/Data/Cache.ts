@@ -1,10 +1,12 @@
 import type { ModuleStoreListCacheStore } from '@companion-app/shared/Model/ModulesStore.js'
+import type { CachedRenderQuarantine } from '../Graphics/RenderQuarantine.js'
 import { DataLegacyCache } from './Legacy/Cache.js'
 import { DataStoreBase, type OperationObserver } from './StoreBase.js'
 
 export interface DataCacheDefaultTable {
 	cloud_servers: Record<string, unknown>
 	module_store_list: ModuleStoreListCacheStore
+	render_quarantine: CachedRenderQuarantine
 }
 
 /**
