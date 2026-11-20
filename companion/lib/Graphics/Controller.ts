@@ -14,6 +14,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import type * as imageRs from '@julusian/image-rs'
 import { GlobalFonts } from '@napi-rs/canvas'
+import * as Sentry from '@sentry/node'
 import compressionMiddleware from 'compression'
 import debounceFn from 'debounce-fn'
 import type Express from 'express'
@@ -73,6 +74,7 @@ import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from '.
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
 import {
+	collectDrawnTexts,
 	execWithStallTimeout,
 	RENDER_TASK_TIMEOUT_MS,
 	RenderTaskStalledError,
@@ -245,6 +247,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 	// Cumulative count of render tasks which stalled since startup, exposed as a metrics counter
 	#renderTaskStallsTotal = 0
+
+	// The stalled draws already reported to sentry
+	readonly #reportedStalledDraws = new Set<string>()
 
 	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
 	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
@@ -1071,6 +1076,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						this.#logger.error(
 							`Drawing ${description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
 						)
+						this.#reportStalledDraw(e, description, drawStyle)
 					}
 					throw e
 				}),
@@ -1141,6 +1147,18 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				? this.#userConfigController.getKey('buttons_decoration')
 				: decoration
 		)
+	}
+
+	/**
+	 * Report a stalled draw to sentry, once per run for each thing drawn, as it stalls again at each size and redraw
+	 */
+	#reportStalledDraw(error: RenderTaskStalledError, description: string, drawStyle: RendererButtonStyle): void {
+		const texts = collectDrawnTexts(drawStyle.elements)
+		const reportKey = JSON.stringify([description, texts])
+		if (this.#reportedStalledDraws.has(reportKey)) return
+		this.#reportedStalledDraws.add(reportKey)
+
+		Sentry.captureException(error, { extra: { description, texts } })
 	}
 
 	/**

@@ -1,7 +1,9 @@
 import path from 'node:path'
 import { afterEach, describe, expect, test } from 'vitest'
 import workerPool from 'workerpool'
+import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
+	collectDrawnTexts,
 	execWithStallTimeout,
 	RenderTaskStalledError,
 	stringifyDrawStyleForLog,
@@ -78,5 +80,27 @@ describe('stringifyDrawStyleForLog', () => {
 			map: { a: 1 },
 			set: ['b'],
 		})
+	})
+})
+
+describe('collectDrawnTexts', () => {
+	test('collects the text elements, including those in groups', () => {
+		// Only the fields it reads
+		const elements: any[] = [
+			{ type: 'text', text: 'Top', font: 'companion-sans', weight: 'bold', fontsize: 14 },
+			{ type: 'box' },
+			{
+				type: 'group',
+				children: [
+					{ type: 'image' },
+					{ type: 'text', text: 'ภาษาไทย', font: 'companion-mono', weight: 'normal', fontsize: 10 },
+				],
+			},
+		]
+
+		expect(collectDrawnTexts(elements as SomeButtonGraphicsDrawElement[])).toEqual([
+			{ text: 'Top', font: 'companion-sans', weight: 'bold', fontsize: 14 },
+			{ text: 'ภาษาไทย', font: 'companion-mono', weight: 'normal', fontsize: 10 },
+		])
 	})
 })
