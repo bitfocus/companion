@@ -72,6 +72,17 @@ const config: Config = {
 					path: './user-guide',
 					routeBasePath: '/',
 					sidebarPath: './sidebars.ts',
+					// Order the What's New pages newest first by the version in their filename (eg v5-1-0.md), as the website does
+					sidebarItemsGenerator: async ({ defaultSidebarItemsGenerator, ...props }) =>
+						defaultSidebarItemsGenerator({
+							...props,
+							docs: props.docs.map((d) => {
+								const version = d.sourceDirName === '9_whatsnew' && d.id.match(/\/v(\d+)-(\d+)-(\d+)$/)
+								if (!version || d.sidebarPosition !== undefined) return d
+								const [major, minor, patch] = version.slice(1).map(Number)
+								return { ...d, sidebarPosition: -(major * 1_000_000 + minor * 1_000 + patch) }
+							}),
+						}),
 					editUrl: 'https://github.com/bitfocus/companion/tree/main/docs/',
 					beforeDefaultRemarkPlugins: [remarkVideo, remarkThemedImage],
 					remarkPlugins: [remarkScreenshotSize],
