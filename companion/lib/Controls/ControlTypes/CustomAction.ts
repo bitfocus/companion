@@ -199,12 +199,12 @@ export class ControlCustomAction
 		}
 	}
 
-	abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null): void {
+	abortDelayedActions(_markReleased: boolean, exceptSignal: AbortSignal | null): void {
 		this.#testActionRunner.abortAll(exceptSignal)
 	}
 
-	abortDelayedActionsSingle(_skip_up: boolean, exceptSignal: AbortSignal): void {
-		this.#testActionRunner.abortSingle(exceptSignal)
+	abortDelayedActionsSingle(_markReleased: boolean, onlySignal: AbortSignal): void {
+		this.#testActionRunner.abortSingle(onlySignal)
 	}
 
 	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {

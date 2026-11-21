@@ -232,8 +232,8 @@ export class ControlButtonLink
 	}
 
 	/** The actions run on the remote installation, so abort them there */
-	override abortDelayedActions(skip_up: boolean, _exceptSignal: AbortSignal | null, linkHops: number): void {
-		this.deps.linkButtons.abort(this.controlId, skip_up, linkHops)
+	override abortDelayedActions(markReleased: boolean, _exceptSignal: AbortSignal | null, linkHops: number): void {
+		this.deps.linkButtons.abort(this.controlId, markReleased, linkHops)
 	}
 
 	/**

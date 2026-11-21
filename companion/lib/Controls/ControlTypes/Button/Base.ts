@@ -124,20 +124,20 @@ export abstract class ButtonControlRuntimeBase<
 	 */
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
-	override abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
-		if (skip_up) {
+	override abortDelayedActions(markReleased: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
+		if (markReleased) {
 			this.setPushed(false)
 		}
 
 		this.actionRunner.abortAll(exceptSignal)
 	}
 
-	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void {
-		if (skip_up) {
+	abortDelayedActionsSingle(markReleased: boolean, onlySignal: AbortSignal): void {
+		if (markReleased) {
 			this.setPushed(false)
 		}
 
-		this.actionRunner.abortSingle(exceptSignal)
+		this.actionRunner.abortSingle(onlySignal)
 	}
 
 	/**

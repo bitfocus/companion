@@ -210,12 +210,12 @@ export class ControlTrigger
 		}
 	}
 
-	override abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
+	override abortDelayedActions(_markReleased: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		this.#actionRunner.abortAll(exceptSignal)
 	}
 
-	abortDelayedActionsSingle(_skip_up: boolean, exceptSignal: AbortSignal): void {
-		this.#actionRunner.abortSingle(exceptSignal)
+	abortDelayedActionsSingle(_markReleased: boolean, onlySignal: AbortSignal): void {
+		this.#actionRunner.abortSingle(onlySignal)
 	}
 
 	checkCollectionIdIsValid(validCollectionIds: ReadonlySet<string>): boolean {

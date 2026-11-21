@@ -220,7 +220,7 @@ export abstract class ControlBase<
 	 * @param exceptSignal A run to leave running
 	 * @param linkHops How many installations the abort has come through over Link, so that a loop of remote buttons ends
 	 */
-	abortDelayedActions(_skip_up: boolean, _exceptSignal: AbortSignal | null, _linkHops: number): void {
+	abortDelayedActions(_markReleased: boolean, _exceptSignal: AbortSignal | null, _linkHops: number): void {
 		// Nothing to do
 	}
 

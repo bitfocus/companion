@@ -155,9 +155,9 @@ export interface ControlWithActions extends ControlBase<SomeControlId, SomeContr
 
 	/**
 	 * Abort a single action run for a control
-	 * @param skip_up Mark button as released
+	 * @param markReleased Mark button as released
 	 */
-	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void
+	abortDelayedActionsSingle(markReleased: boolean, onlySignal: AbortSignal): void
 }
 
 export interface ControlWithoutActions extends ControlBase<SomeControlId, SomeControlJson, SomeControlRuntimeProps> {
