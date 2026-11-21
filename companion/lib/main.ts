@@ -269,7 +269,15 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 				installNameOverride: (options.installName ?? process.env.COMPANION_INSTALL_NAME)?.trim() || undefined,
 			},
 		},
-		(restart) => process.exit(restart ? 1 : 0)
+		(restart, renderThreadsMayBeStuck) => {
+			if (renderThreadsMayBeStuck) {
+				// process.exit waits for every thread to stop, which a render thread stuck in native code never does. The exit
+				// code is lost, but the launcher goes by the exit message it was sent to decide whether to restart
+				console.log('A render task stalled, so the process is being killed rather than waiting for its threads')
+				process.kill(process.pid, 'SIGKILL')
+			}
+			process.exit(restart ? 1 : 0)
+		}
 	)
 
 	registry

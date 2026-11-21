@@ -14,12 +14,14 @@ import fs from 'node:fs'
 import os from 'node:os'
 import type * as imageRs from '@julusian/image-rs'
 import { GlobalFonts } from '@napi-rs/canvas'
+import * as Sentry from '@sentry/node'
 import compressionMiddleware from 'compression'
 import debounceFn from 'debounce-fn'
 import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import {
+	formatLocation,
 	isControlIdOfKind,
 	isLocationOnGrid,
 	xyToOldBankIndex,
@@ -71,11 +73,21 @@ import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
 import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
+import { RenderPool } from './RenderPool.js'
+import { RenderQuarantine, renderQuarantineKey, type RenderQuarantineStore } from './RenderQuarantine.js'
+import {
+	collectDrawnTexts,
+	RENDER_TASK_TIMEOUT_MS,
+	RenderTaskStalledError,
+	stringifyDrawStyleForLog,
+} from './RenderTaskTimeout.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
-const WORKER_TERMINATION_WINDOW_MS = 60_000 // 1 minute
-const WORKER_TERMINATION_THRESHOLD = 30 // High limit, to catch extreme cases
+// How long a stalled render thread has to stop, before it is taken to be stuck for good
+const LOST_RENDER_THREAD_GRACE_MS = 10_000
+// Use 2/3 of available CPUs, at least 4
+const RENDER_POOL_MAX_WORKERS = Math.max(4, Math.floor(os.cpus().length * 0.67))
 
 const DEBUG_DISABLE_RENDER_THREADING = process.env.DEBUG_DISABLE_RENDER_THREADING === '1'
 
@@ -132,6 +144,14 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 interface ButtonRenderSource {
 	readonly drawStyle: RendererButtonStyle
 	readonly animationFrames: AnimationFrames
+	readonly subject: RenderSubject
+}
+
+/** What a render is of, for reporting it if it stalls */
+interface RenderSubject {
+	readonly description: string
+	/** Null if it isn't on a page */
+	readonly location: ControlLocation | null
 }
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
@@ -213,26 +233,29 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
 	// so it must not be created at all when rendering runs in-process
-	#pool: ReturnType<typeof workerPool.pool> | null = DEBUG_DISABLE_RENDER_THREADING
+	readonly #renderPool: RenderPool<typeof GraphicsThreadMethods> | null = DEBUG_DISABLE_RENDER_THREADING
 		? null
-		: workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
-				minWorkers: 2,
-				maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
-				workerType: 'thread',
-				onCreateWorker: () => {
-					this.#logger.info('Render worker created')
-					return undefined
-				},
-				onTerminateWorker: () => {
-					this.#logger.info('Render worker terminated')
-				},
-			})
+		: new RenderPool(
+				this.#logger,
+				() =>
+					workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
+						minWorkers: 2,
+						maxWorkers: RENDER_POOL_MAX_WORKERS,
+						workerType: 'thread',
+						onCreateWorker: () => {
+							this.#logger.info('Render worker created')
+							return undefined
+						},
+						onTerminateWorker: () => {
+							this.#logger.info('Render worker terminated')
+						},
+					}),
+				RENDER_TASK_TIMEOUT_MS,
+				LOST_RENDER_THREAD_GRACE_MS
+			)
 
-	// Track recent worker terminations (timestamps in ms), used for crash-loop detection
-	#workerTerminationTimestamps: number[] = []
-
-	// Cumulative count of worker terminations since startup, exposed as a metrics counter
-	#workerTerminationsTotal = 0
+	/** The draws which stalled, which are drawn as a placeholder instead */
+	readonly renderQuarantine: RenderQuarantine
 
 	// High-water marks of the worker pool's own queue since the last metrics scrape. The pool backlog is
 	// bursty (buttons render in floods) and Prometheus scrapes slowly, so a scrape-time read alone would
@@ -245,46 +268,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		key: TKey,
 		args: Parameters<(typeof GraphicsThreadMethods)[TKey]>,
 		attempts: number
-	): Promise<ReturnType<(typeof GraphicsThreadMethods)[TKey]>> => {
-		const pool = this.#pool
+	): Promise<Awaited<ReturnType<(typeof GraphicsThreadMethods)[TKey]>>> => {
+		const pool = this.#renderPool
 		if (!pool) {
 			return (GraphicsThreadMethods[key] as any)(...args)
 		}
 
-		return pool.exec(key, args).catch(async (e: unknown) => {
-			const isTermination =
-				e instanceof workerPool.TerminateError || (e instanceof Error && e.message.includes('Worker is terminated'))
-			if (!isTermination) throw e
-
-			// Count every worker termination, including the one on the final attempt where we give up and
-			// rethrow below - otherwise the metric undercounts crashes on the last retry.
-			this.#workerTerminationsTotal++
-
-			// if a worker crashes, the first attempt will fail, retry when that happens, but not infinitely
-			if (attempts > 1) {
-				// Track termination timestamps in a sliding window
-
-				const now = Date.now()
-				this.#workerTerminationTimestamps.push(now)
-				const cutoff = now - WORKER_TERMINATION_WINDOW_MS
-
-				// prune old timestamps
-				this.#workerTerminationTimestamps = this.#workerTerminationTimestamps.filter((timestamp) => timestamp >= cutoff)
-
-				if (this.#workerTerminationTimestamps.length > WORKER_TERMINATION_THRESHOLD) {
-					this.#logger.error(
-						`More than ${WORKER_TERMINATION_THRESHOLD} worker terminations within ${WORKER_TERMINATION_WINDOW_MS / 1000}s. Terminating.`
-					)
-					// Force an immediate exit, as this suggests a major problem
-					// eslint-disable-next-line n/no-process-exit
-					process.exit(5)
-				}
-
-				return this.#poolExec(key, args, attempts - 1)
-			} else {
-				throw e
-			}
-		})
+		return pool.exec(key, args, attempts)
 	}
 
 	/**
@@ -352,9 +342,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		internalApiRouter: Express.Router,
 		metrics: MetricsRegistry,
 		renderClock: RenderClock,
-		remoteImageSource: RemoteImageSource
+		remoteImageSource: RemoteImageSource,
+		renderQuarantineStore: RenderQuarantineStore
 	) {
 		super()
+
+		this.renderQuarantine = new RenderQuarantine(renderQuarantineStore)
 
 		this.#remoteImageSource = remoteImageSource
 		remoteImageSource.onReleased((slots) => this.#imageCache.releaseRemote(slots))
@@ -382,6 +375,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		this.setMaxListeners(0)
 
+		// Draw a newly quarantined draw as its placeholder, or one which is allowed again as itself
+		this.renderQuarantine.on('changed', () => this.triggerRegenerateAll())
+
 		this.#drawOptions = {
 			buttons_decoration: this.#userConfigController.getKey('buttons_decoration'),
 			buttons_status_icons: this.#userConfigController.getKey('buttons_status_icons'),
@@ -393,7 +389,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				try {
 					if (args.type === 'preset') {
 						const control = this.controlsStore.getControl(args.controlId)
-						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+						const rawButtonStyle = await control?.drawing?.getDrawStyle()
+						const buttonStyle = rawButtonStyle ? this.renderQuarantine.apply(rawButtonStyle) : undefined
 						const animationFrames = buttonStyle
 							? await this.#selectAnimationFrames(buttonStyle.elements)
 							: NO_ANIMATION_FRAMES
@@ -435,7 +432,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									animationFrames,
 									cycleRenderCount,
 									buttonStyle.clockCycleMs ?? 0,
-									true
+									true,
+									{ description: `preset ${args.controlId}`, location: null }
 								)
 								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
@@ -463,7 +461,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
-					const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+					const rawButtonStyle = await control?.drawing?.getDrawStyle()
+					const buttonStyle = rawButtonStyle ? this.renderQuarantine.apply(rawButtonStyle) : undefined
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
@@ -511,6 +510,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								cycleRenderCount,
 								buttonStyle.clockCycleMs ?? 0,
 								true,
+								{ description: `button ${formatLocation(location)}`, location },
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -706,7 +706,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true, {
+			description: 'preview',
+			location: null,
+		})
 	}
 
 	/**
@@ -750,6 +753,21 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	invalidateButton(location: ControlLocation): void {
 		this.#drawAndCacheButton(location)
+	}
+
+	/** The render threads, or null when rendering isn't threaded */
+	get renderPool(): RenderPool<typeof GraphicsThreadMethods> | null {
+		return this.#renderPool
+	}
+
+	/** How many threads the render pool runs at most */
+	readonly renderPoolSize = RENDER_POOL_MAX_WORKERS
+
+	/**
+	 * Whether a render task has stalled this run, so a render thread may be stuck and never stop
+	 */
+	get hasStalledRenderTasks(): boolean {
+		return (this.#renderPool?.stallsTotal ?? 0) > 0
 	}
 
 	/**
@@ -892,7 +910,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// The pool gauges only exist when render threading is enabled - there is no backlog to report
 		// when rendering runs in-process
-		const pool = this.#pool
+		const pool = this.#renderPool
 		if (pool) {
 			// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
 			// tasks currently executing on a thread (active). This is the true render-thread backlog.
@@ -997,7 +1015,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// Render worker terminations since startup
 		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
-			return this.#workerTerminationsTotal
+			return this.#renderPool?.workerTerminationsTotal ?? 0
+		})
+
+		// Render tasks which stalled and had their worker terminated, since startup
+		metrics.counter('companion_render_task_stalls_total', 'Render tasks which stalled since startup', () => {
+			return this.#renderPool?.stallsTotal ?? 0
+		})
+
+		// Render threads which stalled and couldn't be terminated, eg as they are stuck in native code
+		metrics.gauge('companion_render_threads_lost', 'Render threads which stalled and are stuck', () => {
+			return this.#renderPool?.lostThreads ?? 0
 		})
 	}
 
@@ -1015,6 +1043,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		cycleRenderCount: number,
 		clockCycleMs: number,
 		waitForRemoteImages: boolean,
+		subject: RenderSubject,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<ControlLocationString> | undefined = undefined
 	): ImageResult {
@@ -1034,11 +1063,20 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					rotation,
 					format,
 					CRASHED_WORKER_RETRY_COUNT
-				),
+				).catch((e: unknown) => {
+					if (e instanceof RenderTaskStalledError) {
+						// Dump what was being drawn, so that whatever locks up the renderer can be found and reproduced
+						this.#logger.error(
+							`Drawing ${subject.description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced and it will be drawn as a placeholder. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
+						)
+						this.#quarantineStalledDraw(e, subject, drawStyle)
+					}
+					throw e
+				}),
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-		this.#renderSources.set(render, { drawStyle, animationFrames })
+		this.#renderSources.set(render, { drawStyle, animationFrames, subject })
 		return render
 	}
 
@@ -1053,7 +1091,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const source = this.#renderSources.get(render)
 		let undecorated: UndecoratedRender
 		if (source) {
-			const { drawStyle } = source
+			const { drawStyle, subject } = source
 			undecorated = {
 				render: this.#generateImageResult(
 					render.cacheKey && `undecorated:${render.cacheKey}`,
@@ -1068,7 +1106,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					render.clockCycleMs,
 					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
 					// to hold up serving every other button
-					false
+					false,
+					{ ...subject, description: `${subject.description} (undecorated)` }
 				),
 				// Without decoration, the state isn't drawn: only the elements, as they are on this frame of any animations
 				contentKey: JSON.stringify({
@@ -1101,6 +1140,24 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				? this.#userConfigController.getKey('buttons_decoration')
 				: decoration
 		)
+	}
+
+	/**
+	 * Quarantine a stalled draw, and report it to sentry. Only the first stall of each is reported, as it stalls at
+	 * each size it is being drawn at before it is quarantined
+	 */
+	#quarantineStalledDraw(error: RenderTaskStalledError, subject: RenderSubject, drawStyle: RendererButtonStyle): void {
+		const texts = collectDrawnTexts(drawStyle.elements)
+		const added = this.renderQuarantine.add({
+			key: renderQuarantineKey(drawStyle),
+			location: subject.location,
+			description: subject.description,
+			texts,
+			time: Date.now(),
+		})
+		if (!added) return
+
+		Sentry.captureException(error, { extra: { description: subject.description, texts } })
 	}
 
 	/**

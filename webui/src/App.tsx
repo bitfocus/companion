@@ -14,6 +14,7 @@ import { AdminLockContext } from './Layout/AdminLockContext.js'
 import { AppAuthWrapper, AppLoading } from './Layout/AppSplash.js'
 import { CommandPalette } from './Layout/CommandPalette.js'
 import { ConfigImportingOverlay, ConnectionLostOverlay } from './Layout/ConnectionLostOverlay.js'
+import { RenderStallBanner } from './Layout/RenderStallBanner.js'
 import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
 import { TopBar } from './Layout/TopBar.js'
 import { TopBarPageContext, type TopBarPage } from './Layout/TopBarContext.js'
@@ -172,6 +173,7 @@ function AppWrapper({ connected, loadingComplete, loadingProgress, locked, setUn
 	return (
 		<div className="wrapper flex flex-col min-h-dvh bg-app-frame-bg relative">
 			{connected && loadingComplete && !locked && <TopBar page={topBarPage} />}
+			{connected && loadingComplete && !locked && <RenderStallBanner />}
 			<div className="body grow">
 				{connected && loadingComplete ? (
 					locked ? (
