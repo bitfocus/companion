@@ -18,6 +18,7 @@ function createService(initialEnabled: boolean) {
 		db: new DataDatabase(':memory:', () => {}),
 		instance: { createRestApiRouter: () => express.Router() },
 		surfaces: { createRestApiRouter: () => express.Router() },
+		controls: { createRestApiRouter: () => express.Router() },
 		graphics: { imageLibrary: { createRestApiRouter: () => express.Router() } },
 	} as unknown as Registry
 

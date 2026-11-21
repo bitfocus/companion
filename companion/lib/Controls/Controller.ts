@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type express from 'express'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
@@ -80,6 +81,7 @@ import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
 import { ControlsFactory } from './Factory.js'
 import type { SomeControl } from './IControlFragments.js'
+import { createControlsRestApiRouter } from './RestApi.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { TriggerCollections } from './TriggerCollections.js'
@@ -381,6 +383,10 @@ export class ControlsController {
 			maxWait: 500,
 		}
 	)
+
+	createRestApiRouter(): express.Router {
+		return createControlsRestApiRouter(this.#store.controls, this.#deps.pageStore, this.#deps.instance.definitions)
+	}
 
 	createTrpcRouter() {
 		const self = this

@@ -237,21 +237,6 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		return true
 	}
 
-	// Fixed/structural properties, which must never be reassigned via the generic option setters as it
-	// would corrupt the layer model
-	static #isStructuralKey(key: string): boolean {
-		return (
-			key === 'id' ||
-			key === 'type' ||
-			key === 'name' ||
-			key === 'usage' ||
-			key === 'pinnedProperties' ||
-			key === 'children' ||
-			key === 'connectionId' ||
-			key === 'elementId'
-		)
-	}
-
 	updateOption(id: string, key: string, newVal: ExpressionOrValue<JsonValue | undefined>): boolean {
 		return this.updateOptions(id, { [key]: newVal })
 	}
@@ -262,7 +247,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 	 * the element is never persisted or redrawn in a partially-updated state.
 	 */
 	updateOptions(id: string, values: Record<string, ExpressionOrValue<JsonValue | undefined>>): boolean {
-		const entries = Object.entries(values).filter(([key]) => !LayeredButtonStyleEditor.#isStructuralKey(key))
+		const entries = Object.entries(values).filter(([key]) => !isStructuralStyleElementKey(key))
 		if (entries.length === 0) return false
 
 		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
@@ -457,4 +442,21 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 
 		return undefined
 	}
+}
+
+/**
+ * Whether a property of a style element is fixed/structural. These must never be reassigned via the generic option
+ * setters, as it would corrupt the layer model
+ */
+export function isStructuralStyleElementKey(key: string): boolean {
+	return (
+		key === 'id' ||
+		key === 'type' ||
+		key === 'name' ||
+		key === 'usage' ||
+		key === 'pinnedProperties' ||
+		key === 'children' ||
+		key === 'connectionId' ||
+		key === 'elementId'
+	)
 }
