@@ -376,7 +376,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		this.setMaxListeners(0)
 
 		// Draw a newly quarantined draw as its placeholder, or one which is allowed again as itself
-		this.renderQuarantine.on('changed', () => this.triggerRegenerateAll())
+		this.renderQuarantine.on('changed', () => {
+			this.triggerRegenerateAll()
+			for (const controlId of this.controlsStore.getAllControls().keys()) {
+				if (isControlIdOfKind(controlId, 'preset')) this.#drawAndCachePreset(controlId)
+			}
+		})
 
 		this.#drawOptions = {
 			buttons_decoration: this.#userConfigController.getKey('buttons_decoration'),
@@ -1069,6 +1074,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						this.#logger.error(
 							`Drawing ${subject.description} at ${width}x${height} (rotation ${rotation ?? 0}) stalled, so its render thread is being replaced and it will be drawn as a placeholder. Text: ${JSON.stringify(processedStyle?.text?.text ?? '')}. Draw style: ${stringifyDrawStyleForLog(drawStyle)}`
 						)
+						// It holds the failed draw, so mustn't be reused if the draw is allowed again
+						if (cacheKey && this.#renderLRUCache.peek(cacheKey) === render) this.#renderLRUCache.delete(cacheKey)
 						this.#quarantineStalledDraw(e, subject, drawStyle)
 					}
 					throw e
