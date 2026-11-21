@@ -1863,6 +1863,7 @@ __metadata:
     eslint-plugin-react: "npm:^7.37.5"
     eslint-plugin-react-hooks: "npm:^7.1.1"
     eslint-plugin-react-refresh: "npm:^0.5.7"
+    fflate: "npm:^0.8.3"
     husky: "npm:^9.1.7"
     lint-staged: "npm:^17.6.0"
     p-retry: "npm:^9.0.0"
