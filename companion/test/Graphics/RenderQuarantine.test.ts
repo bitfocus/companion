@@ -10,7 +10,7 @@ import {
 	type RenderQuarantineStore,
 } from '../../lib/Graphics/RenderQuarantine.js'
 
-function makeDrawStyle(text: string, pushed = false): DrawStyleLayeredButtonModel {
+function makeDrawStyle(text: string, pushed: boolean): DrawStyleLayeredButtonModel {
 	return {
 		style: 'button-layered',
 		drawType: 'button',
@@ -33,7 +33,7 @@ function makeEntry(drawStyle: DrawStyleLayeredButtonModel): QuarantinedRender {
 	}
 }
 
-function makeStore(initial: QuarantinedRender[] = []): RenderQuarantineStore & { saved: QuarantinedRender[][] } {
+function makeStore(initial: QuarantinedRender[]): RenderQuarantineStore & { saved: QuarantinedRender[][] } {
 	const saved: QuarantinedRender[][] = []
 	return { saved, load: () => initial, save: (entries) => saved.push(entries) }
 }
@@ -56,17 +56,17 @@ describe('renderQuarantineKey', () => {
 	})
 
 	test('differs for different content', () => {
-		expect(renderQuarantineKey(makeDrawStyle('a'))).not.toBe(renderQuarantineKey(makeDrawStyle('b')))
+		expect(renderQuarantineKey(makeDrawStyle('a', false))).not.toBe(renderQuarantineKey(makeDrawStyle('b', false)))
 	})
 })
 
 describe('RenderQuarantine', () => {
 	test('adds each draw once', () => {
-		const quarantine = new RenderQuarantine(makeStore())
+		const quarantine = new RenderQuarantine(makeStore([]))
 		const changed = vi.fn()
 		quarantine.on('changed', changed)
 
-		const entry = makeEntry(makeDrawStyle('a'))
+		const entry = makeEntry(makeDrawStyle('a', false))
 		expect(quarantine.add(entry)).toBe(true)
 		expect(quarantine.add({ ...entry, description: 'button 1/0/1' })).toBe(false)
 
@@ -76,8 +76,8 @@ describe('RenderQuarantine', () => {
 	})
 
 	test('removes a draw', () => {
-		const quarantine = new RenderQuarantine(makeStore())
-		const entry = makeEntry(makeDrawStyle('a'))
+		const quarantine = new RenderQuarantine(makeStore([]))
+		const entry = makeEntry(makeDrawStyle('a', false))
 		quarantine.add(entry)
 
 		const changed = vi.fn()
@@ -92,7 +92,7 @@ describe('RenderQuarantine', () => {
 	})
 
 	test('replaces the elements of a quarantined draw with a placeholder', () => {
-		const quarantine = new RenderQuarantine(makeStore())
+		const quarantine = new RenderQuarantine(makeStore([]))
 		const stalled = makeDrawStyle('a', true)
 		quarantine.add(makeEntry(stalled))
 
@@ -102,26 +102,26 @@ describe('RenderQuarantine', () => {
 	})
 
 	test('leaves other draws alone', () => {
-		const quarantine = new RenderQuarantine(makeStore())
-		quarantine.add(makeEntry(makeDrawStyle('a')))
+		const quarantine = new RenderQuarantine(makeStore([]))
+		quarantine.add(makeEntry(makeDrawStyle('a', false)))
 
-		const other = makeDrawStyle('b')
+		const other = makeDrawStyle('b', false)
 		expect(quarantine.apply(other)).toBe(other)
 	})
 })
 
 describe('RenderQuarantine persistence', () => {
 	test('loads what was quarantined before', () => {
-		const entry = makeEntry(makeDrawStyle('a'))
+		const entry = makeEntry(makeDrawStyle('a', false))
 		const quarantine = new RenderQuarantine(makeStore([entry]))
 
 		expect(quarantine.has(entry.key)).toBe(true)
 	})
 
 	test('saves each change', () => {
-		const store = makeStore()
+		const store = makeStore([])
 		const quarantine = new RenderQuarantine(store)
-		const entry = makeEntry(makeDrawStyle('a'))
+		const entry = makeEntry(makeDrawStyle('a', false))
 
 		quarantine.add(entry)
 		quarantine.add(entry)
@@ -132,7 +132,7 @@ describe('RenderQuarantine persistence', () => {
 })
 
 describe('CachedRenderQuarantineStore', () => {
-	const entry = makeEntry(makeDrawStyle('a'))
+	const entry = makeEntry(makeDrawStyle('a', false))
 
 	test('loads what was saved by the same build', () => {
 		const table = makeCacheTable({ build: '5.2.0+1', entries: [entry] })
