@@ -690,11 +690,12 @@ export class Registry {
 
 	/**
 	 * Request application exit
+	 * @returns Whether it will exit, as it can't until it is ready
 	 */
-	exit(fromInternal: boolean, restart: boolean): void {
+	exit(fromInternal: boolean, restart: boolean): boolean {
 		if (!this.#isReady) {
 			this.#logger.debug('exit called before ready')
-			return
+			return false
 		}
 
 		void Promise.resolve().then(async () => {
@@ -714,6 +715,7 @@ export class Registry {
 				this.#requestProcessExit(restart, this.graphics.hasStalledRenderTasks)
 			})
 		})
+		return true
 	}
 
 	/**

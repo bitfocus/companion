@@ -8,6 +8,7 @@ import {
 	RESTART_DELAY_MS,
 	RESTART_LOOP_WINDOW_MS,
 	RESTART_POSTPONE_MS,
+	RESTART_RETRY_MS,
 	type LostRenderThreads,
 	type RenderStallRestartHistory,
 } from '../../lib/Graphics/RenderStallMonitor.js'
@@ -41,7 +42,7 @@ function makeHistory(initial: number[]): RenderStallRestartHistory & { times: nu
 describe('RenderStallMonitor', () => {
 	let quarantine: RenderQuarantine
 	let lostThreads: FakeLostThreads
-	let requestRestart: ReturnType<typeof vi.fn<() => void>>
+	let requestRestart: ReturnType<typeof vi.fn<() => boolean>>
 
 	function makeMonitor(history: RenderStallRestartHistory): RenderStallMonitor {
 		return new RenderStallMonitor(quarantine, lostThreads, 4, history, requestRestart)
@@ -51,7 +52,7 @@ describe('RenderStallMonitor', () => {
 		vi.useFakeTimers({ now: NOW })
 		quarantine = new RenderQuarantine({ load: () => [], save: () => undefined })
 		lostThreads = new FakeLostThreads()
-		requestRestart = vi.fn<() => void>()
+		requestRestart = vi.fn<() => boolean>().mockReturnValue(true)
 	})
 
 	afterEach(() => {
@@ -82,6 +83,23 @@ describe('RenderStallMonitor', () => {
 		vi.advanceTimersByTime(1)
 		expect(requestRestart).toHaveBeenCalledTimes(1)
 		expect(history.times).toEqual([NOW + RESTART_DELAY_MS])
+	})
+
+	test("tries again when the restart can't happen yet, and only records it once it does", () => {
+		const history = makeHistory([])
+		const monitor = makeMonitor(history)
+		requestRestart.mockReturnValueOnce(false)
+
+		lostThreads.set(4)
+		vi.advanceTimersByTime(RESTART_DELAY_MS)
+
+		expect(requestRestart).toHaveBeenCalledTimes(1)
+		expect(monitor.status.restart).toEqual({ type: 'scheduled', at: NOW + RESTART_DELAY_MS + RESTART_RETRY_MS })
+		expect(history.times).toEqual([])
+
+		vi.advanceTimersByTime(RESTART_RETRY_MS)
+		expect(requestRestart).toHaveBeenCalledTimes(2)
+		expect(history.times).toEqual([NOW + RESTART_DELAY_MS + RESTART_RETRY_MS])
 	})
 
 	test("doesn't restart if the stuck threads stop after all", () => {

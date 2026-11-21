@@ -20,6 +20,8 @@ import type { RenderQuarantine } from './RenderQuarantine.js'
 
 /** How long until a restart, so that it can be seen coming, and postponed */
 export const RESTART_DELAY_MS = 60_000
+/** How long until trying again, when a restart couldn't happen yet, eg as Companion is still starting */
+export const RESTART_RETRY_MS = 10_000
 /** How long postponing a restart puts it off for */
 export const RESTART_POSTPONE_MS = 10 * 60_000
 /** Restarting this many times within the window means restarting isn't helping, so it is left to the user */
@@ -71,7 +73,7 @@ export class RenderStallMonitor {
 	readonly #lostThreads: LostRenderThreads | null
 	readonly #lostThreadBudget: number
 	readonly #restartHistory: RenderStallRestartHistory
-	readonly #requestRestart: () => void
+	readonly #requestRestart: () => boolean
 
 	#restart: RenderStallRestart | null = null
 	#restartTimer: NodeJS.Timeout | null = null
@@ -79,13 +81,14 @@ export class RenderStallMonitor {
 	/**
 	 * @param lostThreads Null when rendering isn't threaded
 	 * @param lostThreadBudget How many threads may be stuck for good, before restarting
+	 * @param requestRestart Returns whether the restart will happen
 	 */
 	constructor(
 		quarantine: RenderQuarantine,
 		lostThreads: LostRenderThreads | null,
 		lostThreadBudget: number,
 		restartHistory: RenderStallRestartHistory,
-		requestRestart: () => void
+		requestRestart: () => boolean
 	) {
 		this.#quarantine = quarantine
 		this.#lostThreads = lostThreads
@@ -145,9 +148,15 @@ export class RenderStallMonitor {
 				this.#restartTimer = null
 				this.#logger.warn('Restarting, to free the stuck render threads')
 
+				if (!this.#requestRestart()) {
+					this.#logger.warn(`Couldn't restart yet, so trying again in ${RESTART_RETRY_MS / 1000}s`)
+					this.#setRestart({ type: 'scheduled', at: Date.now() + RESTART_RETRY_MS })
+					this.#emitStatus()
+					return
+				}
+
 				const cutoff = Date.now() - RESTART_LOOP_WINDOW_MS
 				this.#restartHistory.save([...this.#restartHistory.load().filter((time) => time >= cutoff), Date.now()])
-				this.#requestRestart()
 			}, restart.at - Date.now())
 		}
 	}
@@ -163,8 +172,9 @@ export class RenderStallMonitor {
 
 	/** Restart now, as the user asked to */
 	restartNow(): void {
+		if (!this.#requestRestart()) return
+
 		this.#setRestart(null)
-		this.#requestRestart()
 	}
 
 	destroy(): void {
