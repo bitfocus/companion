@@ -18,18 +18,22 @@ describe('RenderPool', () => {
 	let pool: RenderPool<Methods> | undefined
 	let createdPools = 0
 
-	function makePool(lostThreadGraceMs: number): RenderPool<Methods> {
+	/**
+	 * @param threads One, for a task to only run once the stalled one is out of the way
+	 */
+	function makePool(lostThreadGraceMs: number, threads: number): RenderPool<Methods> {
 		createdPools = 0
+		vi.clearAllMocks()
 		pool = new RenderPool<Methods>(
 			logger,
-			() => {
+			(hooks) => {
 				createdPools++
-				// One thread, so that a task can only run once the stalled one is out of the way
 				return workerPool.pool(THREAD_PATH, {
-					minWorkers: 1,
-					maxWorkers: 1,
+					minWorkers: threads,
+					maxWorkers: threads,
 					workerType: 'thread',
 					workerTerminateTimeout: 100,
+					...hooks,
 				})
 			},
 			{ stall: 200, nativeStall: 200, add: 5000 },
@@ -44,14 +48,14 @@ describe('RenderPool', () => {
 	})
 
 	test('runs tasks', async () => {
-		const pool = makePool(1000)
+		const pool = makePool(1000, 1)
 
 		await expect(pool.exec('add', [1, 2], 1)).resolves.toBe(3)
 		expect(createdPools).toBe(1)
 	})
 
 	test('replaces the pool when a task stalls, and runs what was queued behind it in the new one', async () => {
-		const pool = makePool(1000)
+		const pool = makePool(1000, 1)
 
 		const stalled = pool.exec('stall', [], 1)
 		const queued = pool.exec('add', [2, 3], 1)
@@ -65,7 +69,7 @@ describe('RenderPool', () => {
 	})
 
 	test("doesn't count a stalled thread which stops as lost", async () => {
-		const pool = makePool(1000)
+		const pool = makePool(1000, 1)
 
 		await expect(pool.exec('stall', [], 1)).rejects.toBeInstanceOf(RenderTaskStalledError)
 		await new Promise((resolve) => setTimeout(resolve, 1500))
@@ -74,7 +78,7 @@ describe('RenderPool', () => {
 	})
 
 	test('counts a stalled thread which is stuck in native code as lost, until it returns', async () => {
-		const pool = makePool(500)
+		const pool = makePool(500, 1)
 		const lostThreadsChanged = vi.fn()
 		pool.on('lostThreadsChanged', lostThreadsChanged)
 
@@ -86,5 +90,25 @@ describe('RenderPool', () => {
 		await vi.waitFor(() => expect(pool.lostThreads).toBe(0), { timeout: 5000 })
 
 		expect(lostThreadsChanged.mock.calls).toEqual([[1], [0]])
+	})
+
+	test("doesn't count a stalled thread which stops as lost, while another in its pool is stuck", async () => {
+		const pool = makePool(500, 2)
+		const lostThreadsChanged = vi.fn()
+		pool.on('lostThreadsChanged', lostThreadsChanged)
+
+		const stuck = pool.exec('nativeStall', [3000], 1)
+		const stopped = pool.exec('stall', [], 1)
+		await expect(stuck).rejects.toBeInstanceOf(RenderTaskStalledError)
+		await expect(stopped).rejects.toBeInstanceOf(RenderTaskStalledError)
+		expect(createdPools).toBe(2)
+
+		await vi.waitFor(() => expect(pool.lostThreads).toBe(1), { timeout: 2000 })
+		await vi.waitFor(() => expect(pool.lostThreads).toBe(0), { timeout: 5000 })
+
+		expect(lostThreadsChanged.mock.calls).toEqual([[1], [0]])
+		// workerpool replaced the thread which stopped, in the old pool, and it was stopped too
+		expect(logger.info).toHaveBeenCalledWith('Render worker render-1-3 created')
+		expect(logger.info).toHaveBeenCalledWith('Render worker render-1-3 terminated')
 	})
 })

@@ -237,18 +237,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		? null
 		: new RenderPool(
 				this.#logger,
-				() =>
+				(hooks) =>
 					workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
 						minWorkers: 2,
 						maxWorkers: RENDER_POOL_MAX_WORKERS,
 						workerType: 'thread',
-						onCreateWorker: () => {
-							this.#logger.info('Render worker created')
-							return undefined
-						},
-						onTerminateWorker: () => {
-							this.#logger.info('Render worker terminated')
-						},
+						...hooks,
 					}),
 				RENDER_TASK_TIMEOUT_MS,
 				LOST_RENDER_THREAD_GRACE_MS

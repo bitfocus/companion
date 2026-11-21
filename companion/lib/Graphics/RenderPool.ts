@@ -21,13 +21,22 @@ export type WorkerPool = ReturnType<typeof workerPool.pool>
 
 type PoolMethods = Record<string, (...args: any[]) => any>
 
+type WorkerPoolOptions = NonNullable<Parameters<typeof workerPool.pool>[1]>
+
+/** The workerpool options a pool must be created with, so that its threads can be tracked */
+export type RenderPoolWorkerHooks = Required<Pick<WorkerPoolOptions, 'onCreateWorker' | 'onTerminateWorker'>>
+
+interface TrackedPool {
+	pool: WorkerPool
+	/** The names of its threads which haven't stopped */
+	runningThreads: Set<string>
+}
+
 /** A pool which had a task stall, and is no longer used */
-interface AbandonedPool {
+interface AbandonedPool extends TrackedPool {
 	/** How many of its threads stalled */
 	stalledThreads: number
-	/** Whether its threads have all stopped */
-	exited: boolean
-	/** Whether its stalled threads are taken to be stuck for good, as they didn't stop in time */
+	/** Whether its stalled threads are taken to be stuck, as they didn't stop in time */
 	lost: boolean
 }
 
@@ -43,12 +52,13 @@ export interface RenderPoolEvents {
  */
 export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<RenderPoolEvents> {
 	readonly #logger: Logger
-	readonly #createPool: () => WorkerPool
+	readonly #createPool: (hooks: RenderPoolWorkerHooks) => WorkerPool
 	readonly #timeoutsMs: Readonly<Record<keyof TMethods & string, number>>
 	readonly #lostThreadGraceMs: number
 
-	#current: WorkerPool
+	#current: TrackedPool
 	readonly #abandoned = new Map<WorkerPool, AbandonedPool>()
+	#poolCount = 0
 
 	// Track recent worker terminations (timestamps in ms), used for crash-loop detection
 	#workerTerminationTimestamps: number[] = []
@@ -61,12 +71,13 @@ export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<Rende
 	lostThreads = 0
 
 	/**
+	 * @param createPool Create a pool, with the given hooks in its options
 	 * @param timeoutsMs How long each task may run before it is taken to have stalled
 	 * @param lostThreadGraceMs How long a stalled thread has to stop, before it is taken to be stuck for good
 	 */
 	constructor(
 		logger: Logger,
-		createPool: () => WorkerPool,
+		createPool: (hooks: RenderPoolWorkerHooks) => WorkerPool,
 		timeoutsMs: Readonly<Record<keyof TMethods & string, number>>,
 		lostThreadGraceMs: number
 	) {
@@ -77,12 +88,50 @@ export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<Rende
 		this.#timeoutsMs = timeoutsMs
 		this.#lostThreadGraceMs = lostThreadGraceMs
 
-		this.#current = createPool()
+		this.#current = this.#createTrackedPool()
+	}
+
+	#createTrackedPool(): TrackedPool {
+		const poolIndex = ++this.#poolCount
+		let threadCount = 0
+		const runningThreads = new Set<string>()
+		// The threads are created as the pool is, before it is returned
+		const created: { pool: WorkerPool | null } = { pool: null }
+
+		const pool = this.#createPool({
+			onCreateWorker: (options) => {
+				// Named so that each thread's exit can be told apart
+				const name = `render-${poolIndex}-${++threadCount}`
+				this.#logger.info(`Render worker ${name} created`)
+
+				const abandonedPool = created.pool && this.#abandoned.has(created.pool) ? created.pool : null
+				if (abandonedPool) {
+					// workerpool replaces a thread which stopped, even in a pool which is being terminated, where the new
+					// one would idle forever. It is added to the pool once this returns
+					setImmediate(() => {
+						abandonedPool.terminate().catch(() => null)
+					})
+				} else {
+					runningThreads.add(name)
+				}
+
+				return { workerThreadOpts: { ...options.workerThreadOpts, name } }
+			},
+			onTerminateWorker: (options) => {
+				const name = options.workerThreadOpts?.name
+				this.#logger.info(`Render worker ${name} terminated`)
+				if (name && runningThreads.delete(name)) this.#updateLostThreads()
+			},
+		})
+
+		created.pool = pool
+
+		return { pool, runningThreads }
 	}
 
 	/** The stats of the pool in use */
 	stats(): ReturnType<WorkerPool['stats']> {
-		return this.#current.stats()
+		return this.#current.pool.stats()
 	}
 
 	/**
@@ -94,7 +143,7 @@ export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<Rende
 		args: Parameters<TMethods[TKey]>,
 		attempts: number
 	): Promise<Awaited<ReturnType<TMethods[TKey]>>> {
-		const pool = this.#current
+		const pool = this.#current.pool
 
 		try {
 			return await execWithStallTimeout<Awaited<ReturnType<TMethods[TKey]>>>(pool, key, args, this.#timeoutsMs[key])
@@ -107,7 +156,7 @@ export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<Rende
 			}
 
 			// Queued in a pool which was replaced before it ran
-			if (pool !== this.#current && e instanceof Error && e.message === 'Pool terminated') {
+			if (pool !== this.#current.pool && e instanceof Error && e.message === 'Pool terminated') {
 				return this.exec(key, args, attempts)
 			}
 
@@ -147,51 +196,58 @@ export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<Rende
 	}
 
 	/**
-	 * Replace a pool which had a task stall, and terminate it. If its threads don't stop in time, the stalled ones
-	 * are lost
+	 * Replace a pool which had a task stall, and terminate it. Those of its stalled threads which don't stop in time
+	 * are lost, until they do
 	 */
 	#abandonStalledPool(pool: WorkerPool): void {
 		let abandoned = this.#abandoned.get(pool)
 		if (!abandoned) {
-			if (pool === this.#current) this.#current = this.#createPool()
+			if (pool !== this.#current.pool) return // Already stopped
 
-			const entry: AbandonedPool = { stalledThreads: 0, exited: false, lost: false }
+			const entry: AbandonedPool = { ...this.#current, stalledThreads: 0, lost: false }
 			this.#abandoned.set(pool, entry)
 			abandoned = entry
+			this.#current = this.#createTrackedPool()
 
 			// Lets the tasks it is running finish, and rejects the ones queued in it, which are run in the new pool
-			pool.terminate().then(
-				() => {
-					entry.exited = true
-					this.#abandoned.delete(pool)
-
-					if (entry.lost) {
-						this.#logger.info(`${entry.stalledThreads} stalled render threads stopped after all`)
-						this.#setLostThreads(this.lostThreads - entry.stalledThreads)
-					}
-				},
-				(e: unknown) => {
-					this.#logger.warn(`Failed to terminate a stalled render pool: ${stringifyError(e)}`)
-				}
-			)
+			pool.terminate().catch((e: unknown) => {
+				this.#logger.warn(`Failed to terminate a stalled render pool: ${stringifyError(e)}`)
+			})
 
 			setTimeout(() => {
-				if (entry.exited) return
+				if (!this.#abandoned.has(pool)) return
 
 				entry.lost = true
-				this.#logger.error(
-					`${entry.stalledThreads} stalled render threads didn't stop within ${this.#lostThreadGraceMs / 1000}s, so are stuck`
-				)
-				this.#setLostThreads(this.lostThreads + entry.stalledThreads)
+				this.#updateLostThreads()
+				if (this.#lostThreadsOf(entry) > 0) {
+					this.#logger.error(
+						`${this.#lostThreadsOf(entry)} stalled render threads didn't stop within ${this.#lostThreadGraceMs / 1000}s, so are stuck`
+					)
+				}
 			}, this.#lostThreadGraceMs).unref()
 		}
 
 		abandoned.stalledThreads++
-		// Another task which was running in it stalled after its threads were taken to be stuck
-		if (abandoned.lost) this.#setLostThreads(this.lostThreads + 1)
+		this.#updateLostThreads()
 	}
 
-	#setLostThreads(lostThreads: number): void {
+	/** A thread which stalled can't be told apart from the others, but those which didn't stall stop promptly */
+	#lostThreadsOf(abandoned: AbandonedPool): number {
+		return abandoned.lost ? Math.min(abandoned.stalledThreads, abandoned.runningThreads.size) : 0
+	}
+
+	#updateLostThreads(): void {
+		let lostThreads = 0
+		for (const [pool, abandoned] of this.#abandoned) {
+			if (abandoned.runningThreads.size === 0) {
+				this.#abandoned.delete(pool)
+				if (abandoned.lost) this.#logger.info(`The stalled render threads of a replaced pool all stopped`)
+				continue
+			}
+			lostThreads += this.#lostThreadsOf(abandoned)
+		}
+
+		if (lostThreads === this.lostThreads) return
 		this.lostThreads = lostThreads
 		this.emit('lostThreadsChanged', lostThreads)
 	}
@@ -199,6 +255,6 @@ export class RenderPool<TMethods extends PoolMethods> extends EventEmitter<Rende
 	/** Terminate every thread, without waiting for the stalled ones */
 	async terminate(): Promise<void> {
 		for (const pool of this.#abandoned.keys()) void pool.terminate(true).catch(() => null)
-		await this.#current.terminate(true)
+		await this.#current.pool.terminate(true)
 	}
 }
