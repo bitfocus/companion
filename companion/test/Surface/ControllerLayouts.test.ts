@@ -1,4 +1,5 @@
 import { initTRPC } from '@trpc/server'
+import type { IpcWrapper } from 'thread-tools'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import type {
@@ -9,7 +10,6 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
-import type { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,
@@ -469,19 +469,20 @@ describe('Satellite control events', () => {
 	}
 
 	test('sends CONTROL-EVENT with the control id to a client that asked for it', () => {
-		const { panel, events } = satellitePanel({ supportsControlEvents: true })
+		const { panel, events } = satellitePanel({ controlEvents: ['hold'] })
 		expect(panel.info.supportsControlEvents).toBe(true)
 
 		panel.controlEvent(0, 1, 'hold')
 		expect(events()).toEqual([['CONTROL-EVENT', null, 'dev1', { CONTROLID: '1/0', EVENT: 'hold' }]])
 
-		panel.controlEvent(4, 4, 'press')
+		panel.controlEvent(4, 4, 'hold')
+		panel.controlEvent(0, 1, 'press')
 		expect(events()).toHaveLength(1)
 	})
 
 	test('uses the key index for a client in grid mode', () => {
 		const { panel, events } = satellitePanel({
-			supportsControlEvents: true,
+			controlEvents: ['press'],
 			surfaceManifestFromClient: false,
 			gridSize: { columns: 2, rows: 2 },
 			surfaceManifest: {
@@ -500,7 +501,7 @@ describe('Satellite control events', () => {
 		legacy.panel.controlEvent(0, 0, 'press')
 		expect(legacy.events()).toHaveLength(0)
 
-		const closed = satellitePanel({ supportsControlEvents: true })
+		const closed = satellitePanel({ controlEvents: ['press'] })
 		closed.panel.quit()
 		closed.panel.controlEvent(0, 0, 'press')
 		expect(closed.events()).toHaveLength(0)

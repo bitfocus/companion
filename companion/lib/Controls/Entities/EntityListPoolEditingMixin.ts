@@ -640,10 +640,9 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 			if (!step || !step.sets.has(setId)) return false
 
 			const disabledSets = step.options.controlEventsDisabledSets
-			const disabledIndex = disabledSets.indexOf(setId)
-			if (enabled === (disabledIndex === -1)) return true
+			if (enabled === !disabledSets.includes(setId)) return true
 
-			if (enabled) disabledSets.splice(disabledIndex, 1)
+			if (enabled) step.options.controlEventsDisabledSets = disabledSets.filter((disabledSet) => disabledSet !== setId)
 			else disabledSets.push(setId)
 
 			this.reportChange({ redraw: false })

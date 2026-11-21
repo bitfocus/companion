@@ -103,7 +103,7 @@ export const SATELLITE_FEATURES = {
 		since: '1.17.0',
 		capsFlag: null,
 		description:
-			'ADD-DEVICE accepts CONTROL_EVENTS=1 to receive CONTROL-EVENT when a press or held group of one of its controls runs actions',
+			'ADD-DEVICE accepts a comma-separated CONTROL_EVENTS list (press, hold) to receive matching CONTROL-EVENT messages',
 	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 

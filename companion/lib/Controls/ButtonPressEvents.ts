@@ -45,8 +45,8 @@ export class ButtonPressEvents {
 	/**
 	 * Stop sending events for this press.
 	 * The surface handler that created it calls this once the release has been handled, and when the surface locks or
-	 * unloads. A button calls it early when another press from the same surface replaces this one, when its delayed
-	 * actions are aborted, or when it is destroyed, so a pending hold cannot cue.
+	 * unloads. A button calls it early when another press from the same surface replaces this one, when all delayed
+	 * actions are explicitly aborted, or when the button is destroyed.
 	 */
 	finish(): void {
 		this.#active = false

@@ -1,8 +1,8 @@
 import { EventEmitter } from 'node:events'
+import type { IpcWrapper } from 'thread-tools'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
-import type { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
 import type {
 	HostOpenDeviceResult,
 	HostToSurfaceModuleEvents,

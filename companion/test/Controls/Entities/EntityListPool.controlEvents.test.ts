@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
+import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import { ControlEntityListPoolButton } from '../../../lib/Controls/Entities/EntityListPoolButton.js'
 import { actionModel, createPool, createPoolDeps, downSet } from './EntityListPoolTestHelpers.js'
 
@@ -19,6 +20,44 @@ describe('button action-set surface cue preferences', () => {
 		expect(pool.isActionSetControlEventsEnabled('0', 1000)).toBe(true)
 		expect(pool.isActionSetControlEventsEnabled('0', 2000)).toBe(false)
 		expect(pool.isActionSetControlEventsEnabled('missing', 'down')).toBe(false)
+	})
+
+	test('defaults surface cues when a pre-cue button is imported', () => {
+		const { pool } = createPool()
+		const exported = {
+			feedbacks: [],
+			localVariables: [],
+			steps: {
+				'0': { action_sets: { down: [actionModel()], 1000: [actionModel()] }, options: { runWhileHeld: [1000] } },
+			},
+		} as unknown as ButtonModelBase
+
+		pool.loadStorage(exported, true)
+
+		expect(pool.isActionSetControlEventsEnabled('0', 'down')).toBe(true)
+		expect(pool.isActionSetControlEventsEnabled('0', 1000)).toBe(true)
+		expect(pool.getStepActions('0')?.options.runWhileHeld).toEqual([1000])
+	})
+
+	test('enabling a cue clears every stored opt-out for that group', () => {
+		const { pool } = createPool()
+		pool.loadStorage(
+			{
+				feedbacks: [],
+				localVariables: [],
+				steps: {
+					'0': {
+						action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
+						options: { runWhileHeld: [], controlEventsDisabledSets: ['down', 'up', 'down'] },
+					},
+				},
+			},
+			false
+		)
+
+		expect(pool.actionSetControlEvents('0', 'down', true)).toBe(true)
+		expect(pool.isActionSetControlEventsEnabled('0', 'down')).toBe(true)
+		expect(pool.isActionSetControlEventsEnabled('0', 'up')).toBe(false)
 	})
 
 	test('persists toggles through a storage round-trip', () => {

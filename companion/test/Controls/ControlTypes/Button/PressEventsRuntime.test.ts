@@ -7,6 +7,7 @@ import { ButtonPressEvents } from '../../../../lib/Controls/ButtonPressEvents.js
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonLayered } from '../../../../lib/Controls/ControlTypes/Button/Layered.js'
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
+import type { RunActionExtras } from '../../../../lib/Instance/Connection/ChildHandlerApi.js'
 import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
 const CONTROL_ID = CreateBankControlId('press-events-test')
@@ -60,7 +61,10 @@ function storage(options: {
 	}
 }
 
-function createControl(model: LayeredButtonModel, runMultipleActions = vi.fn(async () => {})) {
+function createControl(
+	model: LayeredButtonModel,
+	runMultipleActions = vi.fn<(actions: unknown, extras: RunActionExtras) => Promise<void>>(async () => {})
+) {
 	const definitions = Object.assign(new EventEmitter(), {
 		getEntityDefinition: vi.fn((entityType: EntityModelType) => ({ entityType })),
 	})
@@ -110,6 +114,8 @@ function createControl(model: LayeredButtonModel, runMultipleActions = vi.fn(asy
 		changeEvents: new EventEmitter() as any,
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 		variableDependencies: new VariableDependencyRegistry(),
+		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
+		customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() } as any,
 		linkButtons: null as any,
 		referencedLocations: new ReferencedLocationsIndex(),
 		controlsAccessor: {
@@ -230,6 +236,28 @@ describe('button automatic press event dispatch', () => {
 
 		expect(runMultipleActions).toHaveBeenCalledTimes(2)
 		expect(send).toHaveBeenCalledTimes(1)
+		control.destroy()
+	})
+
+	test.each(['other runs', 'only this run'] as const)('cancelling %s leaves later hold cues active', (scope) => {
+		const { control, runMultipleActions } = createControl(
+			storage({
+				down: [action('down1')],
+				durations: { 100: [action('held1')] },
+				runWhileHeld: [100],
+			})
+		)
+		runMultipleActions.mockImplementationOnce(async (_actions, { abortDelayed }) => {
+			if (scope === 'other runs') control.abortDelayedActions(false, abortDelayed, 0)
+			else control.abortDelayedActionsSingle(false, abortDelayed)
+		})
+		const send = vi.fn()
+
+		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)
+		vi.advanceTimersByTime(100)
+
+		expect(runMultipleActions).toHaveBeenCalledTimes(2)
+		expect(send).toHaveBeenLastCalledWith('hold')
 		control.destroy()
 	})
 

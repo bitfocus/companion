@@ -400,9 +400,10 @@ describe('ServiceSatelliteApi', () => {
 		})
 
 		test.each([
-			['', false],
-			[' CONTROL_EVENTS=1', true],
-			[' CONTROL_EVENTS=0', false],
+			['', []],
+			[' CONTROL_EVENTS=press', ['press']],
+			[' CONTROL_EVENTS="press,hold,future"', ['press', 'hold']],
+			[' CONTROL_EVENTS=future', []],
 		])('reads control event support from ADD-DEVICE%s', (flag, expected) => {
 			const { api, logger, surfaceController } = createService()
 			const { processMessage } = createSocketAndInit(api, logger)
@@ -413,7 +414,7 @@ describe('ServiceSatelliteApi', () => {
 			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"${flag}\n`)
 
 			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
-			expect(!!callArgs.supportsControlEvents).toBe(expected)
+			expect(callArgs.controlEvents).toEqual(expected)
 		})
 
 		test('falls back to rgb for an unadvertised BITMAP_FORMAT', () => {

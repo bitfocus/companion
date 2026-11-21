@@ -126,7 +126,7 @@ export abstract class ButtonControlRuntimeBase<
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
 	override abortDelayedActions(markReleased: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
-		this.#finishPressEvents()
+		if (!exceptSignal) this.#finishPressEvents()
 		if (markReleased) {
 			this.setPushed(false)
 		}
@@ -135,7 +135,6 @@ export abstract class ButtonControlRuntimeBase<
 	}
 
 	abortDelayedActionsSingle(markReleased: boolean, onlySignal: AbortSignal): void {
-		this.#finishPressEvents()
 		if (markReleased) {
 			this.setPushed(false)
 		}

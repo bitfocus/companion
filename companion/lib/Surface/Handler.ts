@@ -361,8 +361,10 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (this.#isSurfaceLocked === !!locked) return false
 
 		this.#isSurfaceLocked = !!locked
-		if (locked) this.#finishPressEvents()
-		if (this.#isSurfaceLocked) this.#displayed.clear()
+		if (this.#isSurfaceLocked) {
+			this.#finishPressEvents()
+			this.#displayed.clear()
+		}
 
 		this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
 
@@ -486,11 +488,15 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#onDeviceClick(x: number, y: number, pressed: boolean, pageOffset: number = 0): void {
 		if (!this.panel) return
 
-		// The physical release ends its cue lifetime even if the current page has disappeared.
+		// The physical key stays in place even when its mapped button moves before release.
 		const panelCoordinate = `${y}/${x}/${pageOffset}`
 		const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 		if (!pageNumber) {
-			if (!pressed) this.#currentButtonPresses.get(panelCoordinate)?.pressEvents?.finish()
+			// A release ends the cue even if the current page has disappeared.
+			if (!pressed) {
+				this.#currentButtonPresses.get(panelCoordinate)?.pressEvents?.finish()
+				this.#currentButtonPresses.delete(panelCoordinate)
+			}
 			return
 		}
 

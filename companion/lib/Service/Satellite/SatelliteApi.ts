@@ -237,7 +237,8 @@ export class ServiceSatelliteApi {
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
 		const canChangePage =
 			typeof params.CAN_CHANGE_PAGE === 'string' && params.CAN_CHANGE_PAGE ? params.CAN_CHANGE_PAGE : undefined
-		const supportsControlEvents = params.CONTROL_EVENTS !== undefined && isTruthy(params.CONTROL_EVENTS)
+		const advertisedControlEvents = typeof params.CONTROL_EVENTS === 'string' ? params.CONTROL_EVENTS.split(',') : []
+		const controlEvents = advertisedControlEvents.filter((event) => event === 'press' || event === 'hold')
 
 		let transferVariables: SatelliteTransferableValue[]
 		try {
@@ -284,7 +285,7 @@ export class ServiceSatelliteApi {
 			canChangePage,
 			bitmapFormat,
 			variableEncoding,
-			supportsControlEvents,
+			controlEvents,
 		})
 
 		this.#devices.set(id, {

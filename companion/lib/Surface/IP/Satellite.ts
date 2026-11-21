@@ -72,8 +72,8 @@ export interface SatelliteDeviceInfo {
 
 	/** The encoding (string/json) this surface asked to receive output variable values in */
 	variableEncoding: SatelliteVariableEncoding
-	/** Whether the client asked for CONTROL-EVENT messages */
-	supportsControlEvents?: boolean
+	/** The CONTROL-EVENT types the client asked to receive */
+	controlEvents?: readonly SurfaceControlEvent[]
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -212,6 +212,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly #supportsLockedState: boolean
 	readonly #bitmapFormat: SatelliteBitmapFormat
 	readonly #variableEncoding: SatelliteVariableEncoding
+	readonly #controlEvents: readonly SurfaceControlEvent[]
 
 	readonly #inputVariables: Record<string, SatelliteInputVariableInfo> = {}
 	readonly #outputVariables: Record<string, SatelliteOutputVariableInfo> = {}
@@ -248,6 +249,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.#supportsLockedState = deviceInfo.supportsLockedState
 		this.#bitmapFormat = deviceInfo.bitmapFormat
 		this.#variableEncoding = deviceInfo.variableEncoding
+		this.#controlEvents = deviceInfo.controlEvents ?? []
 
 		this.#hasDeviceConfigFields = (deviceInfo.configFields ?? []).some((f) => f.type !== 'static-text')
 
@@ -258,7 +260,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
 			canChangePage: !!deviceInfo.canChangePage,
-			supportsControlEvents: !!deviceInfo.supportsControlEvents,
+			supportsControlEvents: this.#controlEvents.length > 0,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -351,7 +353,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	 */
 	controlEvent(x: number, y: number, event: SurfaceControlEvent): void {
 		// A reconnecting client gets a new panel, so a press that started on this one must not reach it
-		if (this.#closed || !this.info.supportsControlEvents || !this.socket) return
+		if (this.#closed || !this.#controlEvents.includes(event) || !this.socket) return
 
 		const definitions = this.#controlDefinitions.get(formatSurfaceXy(x, y))
 		if (!definitions) return

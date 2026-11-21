@@ -397,7 +397,7 @@ export abstract class ButtonEntityListPoolBase
 		existingOptions: ActionStepOptions | null,
 		isCloned: boolean
 	): ControlEntityListActionStep {
-		const options = existingOptions || ActionStepOptionsSchema.parse({})
+		const options = ActionStepOptionsSchema.parse(existingOptions ?? {})
 
 		const downList = this.createActionEntityList(existingActions?.down || [], isCloned)
 		const upList = this.createActionEntityList(existingActions?.up || [], isCloned)
