@@ -166,6 +166,8 @@ export interface TestApp {
 	createCustomVariable(name: string, defaultValue: VariableValue | undefined): void
 	/** Read the current value of a custom variable */
 	getCustomVariableValue(name: string): VariableValue | undefined
+	/** Set the current value of a custom variable, throwing on failure */
+	setCustomVariableValue(name: string, value: VariableValue | undefined): void
 
 	/** Shut the application down gracefully. The config directory is left in place for reuse */
 	close(): Promise<void>
@@ -605,6 +607,11 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 
 		getCustomVariableValue(name) {
 			return registry.variables.custom.getValue(name)
+		},
+
+		setCustomVariableValue(name, value) {
+			const failureReason = registry.variables.custom.setValue(name, value)
+			if (failureReason) throw new Error(failureReason)
 		},
 
 		async close() {

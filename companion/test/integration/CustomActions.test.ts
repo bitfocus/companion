@@ -2181,6 +2181,7 @@ describe('custom actions using a connection', () => {
 		const connectionId = await addConnection('test-module-2-1-3')
 		const setLastValue = await addSetter(connectionId)
 		app.createCustomVariable('done', false)
+		app.createCustomVariable('release', false)
 
 		/** Add a local variable which is the connection feedback `last_value_is` for `$(local:x)` */
 		const addMatchesVariable = async (controlId: SomeControlId, name: string) => {
@@ -2225,6 +2226,17 @@ describe('custom actions using a connection', () => {
 			})
 			app.addCustomActionAction(customActionId, inOrder, 'wait', { time: exprExpr('100') })
 		}
+		// Held until the test has seen `gamma` sent, as the run ending first would rightly drop it
+		const holdId = app.addCustomActionAction(customActionId, inOrder, 'logic_while', {})
+		app.addCustomActionChildFeedback(
+			customActionId,
+			{ parentId: holdId, childGroup: 'condition' },
+			'check_expression',
+			{ expression: exprVal('!$(custom:release)') }
+		)
+		app.addCustomActionAction(customActionId, { parentId: holdId, childGroup: 'actions' }, 'wait', {
+			time: exprExpr('10'),
+		})
 		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
 			name: exprVal('done'),
 			create: exprVal(false),
@@ -2249,19 +2261,22 @@ describe('custom actions using a connection', () => {
 		await new Promise((resolve) => setTimeout(resolve, 500))
 
 		const sent = vi.spyOn(IpcWrapper.prototype, 'sendWithCb')
+		const getSentValues = () =>
+			sent.mock.calls
+				.filter(([name]) => name === 'updateFeedbacks')
+				.flatMap(([, msg]) => Object.values((msg as UpdateFeedbackInstancesMessage).feedbacks))
+				.flatMap((feedback) => (feedback ? [feedback.options.value] : []))
 		app.pressButton(location, true)
 		while (app.getCustomVariableValue('done') !== true) {
 			// The run's changes reach what reads `x` on the button, but none of it changes
 			expectUntouched()
+			if (getSentValues().includes('gamma')) app.setCustomVariableValue('release', true)
 			await new Promise((resolve) => setTimeout(resolve, 10))
 		}
 		expectUntouched()
 
 		// Only the run's own subscription was sent to the module as `x` changed: not the button's, nor the held copy's
-		const sentValues = sent.mock.calls
-			.filter(([name]) => name === 'updateFeedbacks')
-			.flatMap(([, msg]) => Object.values((msg as UpdateFeedbackInstancesMessage).feedbacks))
-			.flatMap((feedback) => (feedback ? [feedback.options.value] : []))
+		const sentValues = getSentValues()
 		expect(sentValues).toContain('beta')
 		expect(sentValues).toContain('gamma')
 		expect(sentValues).not.toContain('own')
