@@ -12,7 +12,7 @@ import { VariableDependencyRegistry } from '../../../../lib/Variables/Dependency
 
 const CONTROL_ID = CreateBankControlId('press-events-test')
 
-function action(id: string, disabled = false): ActionEntityModel {
+function action(id: string): ActionEntityModel {
 	return {
 		id,
 		type: EntityModelType.Action,
@@ -20,7 +20,7 @@ function action(id: string, disabled = false): ActionEntityModel {
 		definitionId: 'action1',
 		options: {},
 		upgradeIndex: undefined,
-		disabled,
+		disabled: false,
 	}
 }
 
@@ -61,10 +61,8 @@ function storage(options: {
 	}
 }
 
-function createControl(
-	model: LayeredButtonModel,
-	runMultipleActions = vi.fn<(actions: unknown, extras: RunActionExtras) => Promise<void>>(async () => {})
-) {
+function createControl(model: LayeredButtonModel) {
+	const runMultipleActions = vi.fn<(actions: unknown, extras: RunActionExtras) => Promise<void>>(async () => {})
 	const definitions = Object.assign(new EventEmitter(), {
 		getEntityDefinition: vi.fn((entityType: EntityModelType) => ({ entityType })),
 	})
@@ -147,7 +145,7 @@ describe('button automatic press event dispatch', () => {
 	})
 
 	test.each([
-		['all actions disabled', storage({ down: [action('down1', true)] })],
+		['all actions disabled', storage({ down: [{ ...action('down1'), disabled: true }] })],
 		['group preference disabled', storage({ down: [action('down1')], controlEventsDisabledSets: ['down'] })],
 	] as const)('does not send an event when %s', (_name, model) => {
 		const { control } = createControl(model)
@@ -173,8 +171,8 @@ describe('button automatic press event dispatch', () => {
 		const pendingAction = new Promise<void>((resolve) => {
 			resolveAction = resolve
 		})
-		const runMultipleActions = vi.fn(async () => pendingAction)
-		const { control } = createControl(storage({ down: [action('down1')] }), runMultipleActions)
+		const { control, runMultipleActions } = createControl(storage({ down: [action('down1')] }))
+		runMultipleActions.mockImplementation(async () => pendingAction)
 		const send = vi.fn()
 
 		control.pressControl(true, { surfaceId: 'surface1', pressEvents: new ButtonPressEvents(send) }, false)

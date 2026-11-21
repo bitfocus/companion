@@ -132,6 +132,30 @@ describe('button action-set surface cue preferences', () => {
 		expect(pool.getStepActions('0')?.options.controlEventsDisabledSets).toEqual([])
 	})
 
+	test('a new duration group does not inherit duplicate opt-outs left by a rename', () => {
+		const { pool } = createPool()
+		pool.loadStorage(
+			{
+				feedbacks: [],
+				localVariables: [],
+				steps: {
+					'0': {
+						action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined, 1000: [] },
+						options: { runWhileHeld: [], controlEventsDisabledSets: [1000, 'up', 1000] },
+					},
+				},
+			},
+			false
+		)
+
+		expect(pool.actionSetRename('0', 1000, 2000)).toBe(true)
+		expect(pool.isActionSetControlEventsEnabled('0', 2000)).toBe(false)
+		expect(pool.actionSetRemove('0', 2000)).toBe(true)
+		expect(pool.actionSetAdd('0')).toBe(true)
+		expect(pool.isActionSetControlEventsEnabled('0', 1000)).toBe(true)
+		expect(pool.isActionSetControlEventsEnabled('0', 'up')).toBe(false)
+	})
+
 	test('duplicates preferences independently and leaves them unchanged when copying an action leaf', () => {
 		const { pool } = createPool()
 		pool.entityAdd(downSet(), null, actionModel())

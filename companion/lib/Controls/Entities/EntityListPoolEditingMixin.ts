@@ -626,9 +626,9 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
 			if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
 
-			const controlEventsDisabledIndex = step.options.controlEventsDisabledSets.indexOf(oldSetIdNumber)
-			if (controlEventsDisabledIndex !== -1)
-				step.options.controlEventsDisabledSets[controlEventsDisabledIndex] = newSetIdNumber
+			step.options.controlEventsDisabledSets = step.options.controlEventsDisabledSets.map((id) =>
+				id === oldSetIdNumber ? newSetIdNumber : id
+			)
 
 			this.reportChange({ redraw: false })
 
