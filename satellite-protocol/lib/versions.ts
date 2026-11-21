@@ -99,6 +99,12 @@ export const SATELLITE_FEATURES = {
 		description:
 			'SET-VARIABLE-VALUE and VARIABLE-VALUE accept ENCODING=json. ADD-DEVICE accepts VARIABLE_ENCODING=json to receive JSON values',
 	},
+	controlEvents: {
+		since: '1.17.0',
+		capsFlag: null,
+		description:
+			'ADD-DEVICE accepts a comma-separated CONTROL_EVENTS list (press, hold) to receive matching CONTROL-EVENT messages',
+	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 
 export type SatelliteFeatureId = keyof typeof SATELLITE_FEATURES

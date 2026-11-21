@@ -10,6 +10,7 @@ import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import type { IControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
+import { ActionSetPropertiesButton } from './ActionSetPropertiesButton.js'
 import { EditActionsRelease } from './EditActionsRelease.js'
 
 export interface ControlActionStepTabProps {
@@ -102,6 +103,13 @@ export function ControlActionStepTab({
 										<span>Press actions</span>
 									</div>
 								}
+								headingActions={[
+									<ActionSetPropertiesButton
+										key="properties"
+										controlEvents={!selectedStepProps.options.controlEventsDisabledSets.includes('down')}
+										setControlEvents={(enabled) => service.setControlEvents(selectedKey, 'down', enabled)}
+									/>,
+								]}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'down' }}
@@ -120,6 +128,7 @@ export function ControlActionStepTab({
 							action_sets={selectedStepProps.action_sets}
 							stepOptions={selectedStepProps.options}
 							stepId={selectedKey}
+							service={service}
 							removeSet={service.removeSet}
 							localVariablesStore={localVariablesStore}
 						/>

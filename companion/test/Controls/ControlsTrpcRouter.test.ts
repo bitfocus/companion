@@ -344,7 +344,10 @@ describe('createControlsTrpcRouter', () => {
 
 			await caller.hotPressControl({ location: loc(1, 0, 0), direction: true, surfaceId: 'surface1' })
 
-			expect(controlsController.pressControl).toHaveBeenCalledWith(CreateBankControlId('ctrlA'), true, 'hot:surface1')
+			expect(controlsController.pressControl).toHaveBeenCalledWith(CreateBankControlId('ctrlA'), true, {
+				surfaceId: 'hot:surface1',
+				pressEvents: null,
+			})
 		})
 
 		it('does nothing when there is no control at the location', async () => {

@@ -19,6 +19,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
+import type { ControlPressSource } from './ButtonPressEvents.js'
 import { repairControl } from './ControlRepair.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
@@ -181,15 +182,20 @@ export class ControlStore implements IControlStore {
 	 * Execute a press of a control
 	 * @param controlId Id of the control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that initiated this press
+	 * @param source The surface that initiated this press, or null when there is none
 	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
+	pressControl(
+		controlId: SomeControlId,
+		pressed: boolean,
+		source: ControlPressSource | null,
+		force?: boolean
+	): boolean {
 		const control = this.getControl(controlId)
 		if (control) {
-			this.triggerEvents.emit('control_press', controlId, pressed, surfaceId)
+			this.triggerEvents.emit('control_press', controlId, pressed, source?.surfaceId)
 
-			control.pressControl(pressed, surfaceId, force)
+			control.pressControl(pressed, source, force)
 
 			return true
 		}

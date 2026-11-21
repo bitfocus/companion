@@ -16,6 +16,7 @@ import { VisitorReferencesCollector } from '../../../Resources/Visitors/Referenc
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { mangleReferenceSurfaceId } from '../../../Surface/ReferenceSurfaceId.js'
 import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
+import type { ControlPressSource } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type {
@@ -223,8 +224,8 @@ export class ControlButtonLink
 		return false
 	}
 
-	pressControl(pressed: boolean, surfaceId: string | undefined): void {
-		this.deps.linkButtons.press(this.controlId, pressed, mangleReferenceSurfaceId(surfaceId, this.controlId))
+	pressControl(pressed: boolean, source: ControlPressSource | null): void {
+		this.deps.linkButtons.press(this.controlId, pressed, mangleReferenceSurfaceId(source?.surfaceId, this.controlId))
 	}
 
 	override rotateControl(delta: number, surfaceId: string | undefined): boolean {

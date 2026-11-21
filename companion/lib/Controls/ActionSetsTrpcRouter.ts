@@ -1,5 +1,6 @@
 import z from 'zod'
 import { zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import { ControlEventsActionSetIdSchema } from '@companion-app/shared/Model/ActionModel.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { ControlActionSetAndStepsEditor } from './Entities/ControlActionSetAndStepsManager.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -76,6 +77,22 @@ export function createActionSetsTrpcRouter(controlsMap: Map<SomeControlId, SomeC
 				if (!control) return false
 
 				return getEditableActionSets(control).actionSetRunWhileHeld(input.stepId, input.setId, input.runWhileHeld)
+			}),
+
+		setControlEvents: publicProcedure
+			.input(
+				z.object({
+					controlId: zodSomeControlId,
+					stepId: z.string(),
+					setId: ControlEventsActionSetIdSchema,
+					enabled: z.boolean(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				return getEditableActionSets(control).actionSetControlEvents(input.stepId, input.setId, input.enabled)
 			}),
 	})
 }

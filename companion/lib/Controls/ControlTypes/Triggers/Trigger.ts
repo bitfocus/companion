@@ -21,6 +21,7 @@ import { clamp } from '../../../Resources/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
+import type { ControlPressSource } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
@@ -819,7 +820,7 @@ export class ControlTrigger
 	/**
 	 * Execute a press of this control
 	 */
-	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
+	pressControl(_pressed: boolean, _source: ControlPressSource | null): void {
 		// Nothing to do
 	}
 }

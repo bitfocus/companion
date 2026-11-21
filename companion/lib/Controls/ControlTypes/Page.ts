@@ -4,6 +4,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
+import type { ControlPressSource } from '../ButtonPressEvents.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
@@ -197,7 +198,7 @@ export class ControlPage
 	/**
 	 * Execute a press of this control
 	 */
-	pressControl(_pressed: boolean, _surfaceId: string | undefined): void {
+	pressControl(_pressed: boolean, _source: ControlPressSource | null): void {
 		// Nothing to do
 	}
 }

@@ -1,8 +1,20 @@
 import z from 'zod'
 import { SomeEntityModelSchema, type SomeEntityModel } from './EntityModel.js'
 
+/**
+ * The action sets that can send control events: press, release, and the hold durations
+ */
+export const ControlEventsActionSetIdSchema = z.union([z.literal('down'), z.literal('up'), z.number().finite()])
+export type ControlEventsActionSetId = z.infer<typeof ControlEventsActionSetIdSchema>
+
+export function isControlEventsActionSetId(setId: ActionSetId): setId is ControlEventsActionSetId {
+	return ControlEventsActionSetIdSchema.safeParse(setId).success
+}
+
 export const ActionStepOptionsSchema = z.object({
 	runWhileHeld: z.array(z.number()).default(() => []),
+	// Action sets whose control events are turned off
+	controlEventsDisabledSets: z.array(ControlEventsActionSetIdSchema).default(() => []),
 	name: z.string().optional(),
 })
 

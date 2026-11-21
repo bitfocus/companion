@@ -133,8 +133,8 @@ describe('button_pressrelease execution', () => {
 
 		expect(result).toEqual({ result: undefined })
 		expect(controlsStore.pressControl.mock.calls).toEqual([
-			[CreateBankControlId('target'), true, 'surface0', false],
-			[CreateBankControlId('target'), false, 'surface0', false],
+			[CreateBankControlId('target'), true, { surfaceId: 'surface0', pressEvents: null }, false],
+			[CreateBankControlId('target'), false, { surfaceId: 'surface0', pressEvents: null }, false],
 		])
 	})
 
@@ -147,13 +147,20 @@ describe('button_pressrelease execution', () => {
 			fakeExtras
 		)
 
-		expect(controlsStore.pressControl.mock.calls).toEqual([[CreateBankControlId('target'), true, 'surface0', true]])
+		expect(controlsStore.pressControl.mock.calls).toEqual([
+			[CreateBankControlId('target'), true, { surfaceId: 'surface0', pressEvents: null }, true],
+		])
 
 		await vi.advanceTimersByTimeAsync(499)
 		expect(controlsStore.pressControl).toHaveBeenCalledTimes(1)
 
 		await vi.advanceTimersByTimeAsync(1)
-		expect(controlsStore.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('target'), false, 'surface0', true)
+		expect(controlsStore.pressControl).toHaveBeenLastCalledWith(
+			CreateBankControlId('target'),
+			false,
+			{ surfaceId: 'surface0', pressEvents: null },
+			true
+		)
 		await expect(result).resolves.toEqual({ result: undefined })
 	})
 
@@ -170,8 +177,8 @@ describe('button_pressrelease execution', () => {
 		abort.abort()
 		await expect(result).resolves.toEqual({ result: undefined })
 		expect(controlsStore.pressControl.mock.calls).toEqual([
-			[CreateBankControlId('target'), true, 'surface0', false],
-			[CreateBankControlId('target'), false, 'surface0', false],
+			[CreateBankControlId('target'), true, { surfaceId: 'surface0', pressEvents: null }, false],
+			[CreateBankControlId('target'), false, { surfaceId: 'surface0', pressEvents: null }, false],
 		])
 	})
 })

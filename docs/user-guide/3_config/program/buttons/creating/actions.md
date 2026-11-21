@@ -26,6 +26,17 @@ Once added you can edit the time of that group and whether it executed upon rele
 
 When there is a duration group added, the **Release actions** becomes **Short release actions**, and will only be executed when released before the first duration group time is reached.
 
+## Surface cues
+
+Some surfaces can let you feel or see that a press did something, for example with a short haptic click. Companion tells the surface when a press on it runs actions, and the surface decides how to show it. Surfaces that can't show a cue ignore it.
+
+- A press sends one cue, when its **Press actions** or **Release actions** run, whichever comes first.
+- A duration group set to execute while held sends another cue each time it runs. Duration groups that run on release don't send a cue yet.
+- Only presses made on the surface itself send a cue. Presses from triggers, the web buttons, or other APIs don't.
+- A group with no enabled actions sends nothing.
+
+The cue is on for every group by default. To turn it off for one group, click the pencil button on that group and untick **Surface cue**.
+
 ## Execution order
 
 The actions of a button, and of a trigger, start together: Companion doesn't wait for one action to finish before starting the next. This is called **Concurrent** mode.

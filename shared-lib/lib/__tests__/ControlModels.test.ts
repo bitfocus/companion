@@ -27,7 +27,7 @@ import { TriggerModelSchema } from '../Model/TriggerModel.js'
 const action = { type: 'action', id: 'a1', definitionId: 'send', connectionId: 'conn1', options: {} }
 const emptyStep = {
 	action_sets: { down: [], up: [], rotate_left: undefined, rotate_right: undefined },
-	options: { runWhileHeld: [] },
+	options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 }
 
 describe('LayeredButtonModelSchema', () => {

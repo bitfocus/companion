@@ -1,6 +1,6 @@
 import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import { isControlEventsActionSetId, type ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	ButtonOptionsBase,
 	ButtonStatus,
@@ -13,6 +13,7 @@ import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/Styl
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
+import type { ButtonPressEvents, ControlPressSource } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityListChangeProps } from '../../Entities/EntityListPoolBase.js'
@@ -125,6 +126,7 @@ export abstract class ButtonControlRuntimeBase<
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
 	override abortDelayedActions(markReleased: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
+		if (!exceptSignal) this.#finishPressEvents()
 		if (markReleased) {
 			this.setPushed(false)
 		}
@@ -138,6 +140,10 @@ export abstract class ButtonControlRuntimeBase<
 		}
 
 		this.actionRunner.abortSingle(onlySignal)
+	}
+
+	#finishPressEvents(): void {
+		for (const state of this.#surfaceHoldState.values()) state.pressEvents?.finish()
 	}
 
 	/**
@@ -208,6 +214,7 @@ export abstract class ButtonControlRuntimeBase<
 	 * Prepare this control for deletion
 	 */
 	destroy(): void {
+		this.#finishPressEvents()
 		this.actionRunner.abortAll(null)
 		this.abortRunningHoldTimers(undefined)
 
@@ -241,10 +248,12 @@ export abstract class ButtonControlRuntimeBase<
 	/**
 	 * Execute a press of this control
 	 * @param pressed Whether the control is pressed
-	 * @param surfaceId The surface that initiated this press
+	 * @param source The surface that initiated this press, or null when there is none
 	 * @param force Trigger actions even if already in the state
 	 */
-	pressControl(pressed: boolean, surfaceId: string | undefined, force: boolean): void {
+	pressControl(pressed: boolean, source: ControlPressSource | null, force: boolean): void {
+		const surfaceId = source?.surfaceId
+		const pressEvents = source?.pressEvents ?? null
 		const [thisStepId, nextStepId] = this.entities.validateCurrentStepIdAndGetNextProgression()
 
 		let pressedDuration = 0
@@ -253,12 +262,16 @@ export abstract class ButtonControlRuntimeBase<
 		if (surfaceId) {
 			// Calculate the press duration, or track when the press started
 			if (pressed) {
+				// A replaced press sends nothing more. This is not in abortRunningHoldTimers, as the release also calls that
+				// before running its group, and finishing there would drop the cue of a release-only group
+				this.#surfaceHoldState.get(surfaceId)?.pressEvents?.finish()
 				this.abortRunningHoldTimers(surfaceId)
 
 				holdState = {
 					pressed: Date.now(),
 					step: thisStepId,
 					timers: [],
+					pressEvents,
 				}
 				this.#surfaceHoldState.set(surfaceId, holdState)
 			} else {
@@ -323,6 +336,21 @@ export abstract class ButtonControlRuntimeBase<
 						.catch((e: unknown) => {
 							this.logger.error(`action execution failed: ${stringifyError(e)}`)
 						})
+
+					if (
+						pressEvents &&
+						pressedStep &&
+						isControlEventsActionSetId(setId) &&
+						this.entities.isActionSetControlEventsEnabled(pressedStep, setId) &&
+						actions.some((action) => action.type === EntityModelType.Action && !action.disabled)
+					) {
+						if (typeof setId !== 'number') {
+							pressEvents.request(setId)
+						} else if (pressed) {
+							// Release-selected duration feedback needs a timing decision before this draft ships.
+							pressEvents.request('held')
+						}
+					}
 				}
 
 				if (pressed && holdState && holdState.timers.length === 0) {
@@ -463,4 +491,5 @@ interface SurfaceHoldState {
 	pressed: number
 	step: string | null
 	timers: NodeJS.Timeout[]
+	pressEvents: ButtonPressEvents | null
 }

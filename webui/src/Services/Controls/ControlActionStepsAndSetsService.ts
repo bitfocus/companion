@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { ControlEventsActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -14,6 +15,7 @@ export interface IControlActionStepsAndSetsService {
 	setCurrentStep: (stepId: string) => void
 	appendSet: (stepId: string) => void
 	removeSet: (stepId: string, setId: number) => void
+	setControlEvents: (stepId: string, setId: ControlEventsActionSetId, enabled: boolean) => void
 }
 
 export function useControlActionStepsAndSetsService(
@@ -29,6 +31,7 @@ export function useControlActionStepsAndSetsService(
 
 	const addSetMutation = useMutationExt(trpc.controls.actionSets.add.mutationOptions())
 	const removeSetMutation = useMutationExt(trpc.controls.actionSets.remove.mutationOptions())
+	const setControlEventsMutation = useMutationExt(trpc.controls.actionSets.setControlEvents.mutationOptions())
 
 	return useMemo(
 		() => ({
@@ -91,6 +94,12 @@ export function useControlActionStepsAndSetsService(
 					})
 				})
 			},
+
+			setControlEvents: (stepId: string, setId: ControlEventsActionSetId, enabled: boolean) => {
+				setControlEventsMutation.mutateAsync({ controlId, stepId, setId, enabled }).catch((e) => {
+					console.error('Failed to set surface cue:', e)
+				})
+			},
 		}),
 		[
 			controlId,
@@ -103,6 +112,7 @@ export function useControlActionStepsAndSetsService(
 			setCurrentStepMutation,
 			addSetMutation,
 			removeSetMutation,
+			setControlEventsMutation,
 		]
 	)
 }

@@ -206,7 +206,7 @@ describe('ControlButtonLink', () => {
 	it('forwards presses and rotation with its id appended to the surface id', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'))
 
-		control.pressControl(true, 'deck')
+		control.pressControl(true, { surfaceId: 'deck', pressEvents: null })
 		expect(linkButtons.press).toHaveBeenCalledWith(MY_CONTROL_ID, true, mangleReferenceSurfaceId('deck', MY_CONTROL_ID))
 
 		expect(control.rotateControl(2, 'deck')).toBe(true)

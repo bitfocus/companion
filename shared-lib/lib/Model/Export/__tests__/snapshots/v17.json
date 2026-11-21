@@ -142,7 +142,8 @@
 																},
 																"options": {
 																	"default": {
-																		"runWhileHeld": []
+																		"runWhileHeld": [],
+																		"controlEventsDisabledSets": []
 																	},
 																	"type": "object",
 																	"properties": {
@@ -151,6 +152,25 @@
 																			"type": "array",
 																			"items": {
 																				"type": "number"
+																			}
+																		},
+																		"controlEventsDisabledSets": {
+																			"default": [],
+																			"type": "array",
+																			"items": {
+																				"anyOf": [
+																					{
+																						"type": "string",
+																						"const": "down"
+																					},
+																					{
+																						"type": "string",
+																						"const": "up"
+																					},
+																					{
+																						"type": "number"
+																					}
+																				]
 																			}
 																		},
 																		"name": {
@@ -282,7 +302,8 @@
 																},
 																"options": {
 																	"default": {
-																		"runWhileHeld": []
+																		"runWhileHeld": [],
+																		"controlEventsDisabledSets": []
 																	},
 																	"type": "object",
 																	"properties": {
@@ -291,6 +312,25 @@
 																			"type": "array",
 																			"items": {
 																				"type": "number"
+																			}
+																		},
+																		"controlEventsDisabledSets": {
+																			"default": [],
+																			"type": "array",
+																			"items": {
+																				"anyOf": [
+																					{
+																						"type": "string",
+																						"const": "down"
+																					},
+																					{
+																						"type": "string",
+																						"const": "up"
+																					},
+																					{
+																						"type": "number"
+																					}
+																				]
 																			}
 																		},
 																		"name": {
@@ -1623,7 +1663,8 @@
 															},
 															"options": {
 																"default": {
-																	"runWhileHeld": []
+																	"runWhileHeld": [],
+																	"controlEventsDisabledSets": []
 																},
 																"type": "object",
 																"properties": {
@@ -1632,6 +1673,25 @@
 																		"type": "array",
 																		"items": {
 																			"type": "number"
+																		}
+																	},
+																	"controlEventsDisabledSets": {
+																		"default": [],
+																		"type": "array",
+																		"items": {
+																			"anyOf": [
+																				{
+																					"type": "string",
+																					"const": "down"
+																				},
+																				{
+																					"type": "string",
+																					"const": "up"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			]
 																		}
 																	},
 																	"name": {
@@ -1763,7 +1823,8 @@
 															},
 															"options": {
 																"default": {
-																	"runWhileHeld": []
+																	"runWhileHeld": [],
+																	"controlEventsDisabledSets": []
 																},
 																"type": "object",
 																"properties": {
@@ -1772,6 +1833,25 @@
 																		"type": "array",
 																		"items": {
 																			"type": "number"
+																		}
+																	},
+																	"controlEventsDisabledSets": {
+																		"default": [],
+																		"type": "array",
+																		"items": {
+																			"anyOf": [
+																				{
+																					"type": "string",
+																					"const": "down"
+																				},
+																				{
+																					"type": "string",
+																					"const": "up"
+																				},
+																				{
+																					"type": "number"
+																				}
+																			]
 																		}
 																	},
 																	"name": {
