@@ -113,8 +113,8 @@
     "uuid@npm:^8.3.2": "npm:uuid@^11.1.1",
     "webpack-bundle-analyzer": "^5.0.0",
     "webpack-dev-server": "^6.1.0",
-    "@companion-surface/host": "1.5.0-nightly-main-20261014-213723-0afe929",
-    "@companion-surface/base": "1.5.0-nightly-main-20261024-190955-ef4df7d"
+    "@companion-surface/host": "1.5.0-nightly-main-20261121-120822-81ceb81",
+    "@companion-surface/base": "1.5.0-nightly-main-20261121-120808-81ceb81"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

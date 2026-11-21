@@ -46,7 +46,7 @@ export class HostContext implements SurfaceHostContext {
 			changePage: (surfaceId: string, forward: boolean) => {
 				this.#ipcWrapper.sendWithNoCb('change-page', { surfaceId, forward })
 			},
-			setVariableValue: (surfaceId: string, name: string, value: JsonValue) => {
+			setVariableValue: (surfaceId: string, name: string, value: JsonValue | undefined) => {
 				this.#ipcWrapper.sendWithNoCb('set-variable-value', { surfaceId, name, value })
 			},
 			pincodeEntry: (surfaceId: string, char: number) => {
