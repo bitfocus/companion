@@ -42,6 +42,12 @@ describe('RenderPool', () => {
 		return pool
 	}
 
+	/** Start each thread, so that its startup doesn't count against the timeout of what it runs next */
+	async function warmUp(pool: RenderPool<Methods>, threads: number): Promise<void> {
+		// Together, so that each thread runs one
+		await Promise.all(Array.from({ length: threads }, async () => pool.exec('add', [1, 1], 1)))
+	}
+
 	afterEach(async () => {
 		await pool?.terminate()
 		pool = undefined
@@ -79,6 +85,7 @@ describe('RenderPool', () => {
 
 	test('counts a stalled thread which is stuck in native code as lost, until it returns', async () => {
 		const pool = makePool(500, 1)
+		await warmUp(pool, 1)
 		const lostThreadsChanged = vi.fn()
 		pool.on('lostThreadsChanged', lostThreadsChanged)
 
@@ -94,6 +101,7 @@ describe('RenderPool', () => {
 
 	test("doesn't count a stalled thread which stops as lost, while another in its pool is stuck", async () => {
 		const pool = makePool(500, 2)
+		await warmUp(pool, 2)
 		const lostThreadsChanged = vi.fn()
 		pool.on('lostThreadsChanged', lostThreadsChanged)
 
