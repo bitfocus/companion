@@ -36,7 +36,8 @@ export interface LostRenderThreads extends EventEmitter<RenderPoolEvents> {
 /** When Companion restarted itself to free stuck render threads, kept across the restarts */
 export interface RenderStallRestartHistory {
 	load(): number[]
-	save(times: number[]): void
+	/** @returns Whether it was saved */
+	save(times: number[]): boolean
 }
 
 export class CachedRenderStallRestartHistory implements RenderStallRestartHistory {
@@ -51,8 +52,8 @@ export class CachedRenderStallRestartHistory implements RenderStallRestartHistor
 		return Array.isArray(times) ? times.filter((time) => typeof time === 'number') : []
 	}
 
-	save(times: number[]): void {
-		this.#table.set('render_stall_restarts', times)
+	save(times: number[]): boolean {
+		return this.#table.set('render_stall_restarts', times)
 	}
 }
 
@@ -148,15 +149,22 @@ export class RenderStallMonitor {
 				this.#restartTimer = null
 				this.#logger.warn('Restarting, to free the stuck render threads')
 
-				if (!this.#requestRestart()) {
-					this.#logger.warn(`Couldn't restart yet, so trying again in ${RESTART_RETRY_MS / 1000}s`)
-					this.#setRestart({ type: 'scheduled', at: Date.now() + RESTART_RETRY_MS })
+				// Recorded first, as without the record a restart which doesn't help could repeat forever
+				const cutoff = Date.now() - RESTART_LOOP_WINDOW_MS
+				const recentRestarts = this.#restartHistory.load().filter((time) => time >= cutoff)
+				if (!this.#restartHistory.save([...recentRestarts, Date.now()])) {
+					this.#logger.error(`Couldn't record the restart, so it is left to the user`)
+					this.#setRestart({ type: 'manual' })
 					this.#emitStatus()
 					return
 				}
 
-				const cutoff = Date.now() - RESTART_LOOP_WINDOW_MS
-				this.#restartHistory.save([...this.#restartHistory.load().filter((time) => time >= cutoff), Date.now()])
+				if (!this.#requestRestart()) {
+					this.#restartHistory.save(recentRestarts)
+					this.#logger.warn(`Couldn't restart yet, so trying again in ${RESTART_RETRY_MS / 1000}s`)
+					this.#setRestart({ type: 'scheduled', at: Date.now() + RESTART_RETRY_MS })
+					this.#emitStatus()
+				}
 			}, restart.at - Date.now())
 		}
 	}

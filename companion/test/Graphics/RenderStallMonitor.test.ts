@@ -28,12 +28,15 @@ class FakeLostThreads extends EventEmitter<RenderPoolEvents> implements LostRend
 	}
 }
 
-function makeHistory(initial: number[]): RenderStallRestartHistory & { times: number[] } {
+function makeHistory(initial: number[]): RenderStallRestartHistory & { times: number[]; writable: boolean } {
 	const history = {
 		times: initial,
+		writable: true,
 		load: () => history.times,
 		save: (times: number[]) => {
+			if (!history.writable) return false
 			history.times = times
+			return true
 		},
 	}
 	return history
@@ -100,6 +103,21 @@ describe('RenderStallMonitor', () => {
 		vi.advanceTimersByTime(RESTART_RETRY_MS)
 		expect(requestRestart).toHaveBeenCalledTimes(2)
 		expect(history.times).toEqual([NOW + RESTART_DELAY_MS + RESTART_RETRY_MS])
+	})
+
+	test("leaves the restart to the user when it can't be recorded", () => {
+		const history = makeHistory([])
+		history.writable = false
+		const monitor = makeMonitor(history)
+
+		lostThreads.set(4)
+		vi.advanceTimersByTime(RESTART_DELAY_MS)
+
+		expect(requestRestart).not.toHaveBeenCalled()
+		expect(monitor.status.restart).toEqual({ type: 'manual' })
+
+		monitor.restartNow()
+		expect(requestRestart).toHaveBeenCalledTimes(1)
 	})
 
 	test("doesn't restart if the stuck threads stop after all", () => {
