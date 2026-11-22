@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type express from 'express'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { CUSTOM_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
@@ -80,6 +81,7 @@ import { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import { createExpressionVariableTrpcRouter } from './ExpressionVariableTrpcRouter.js'
 import { ControlsFactory } from './Factory.js'
 import type { SomeControl } from './IControlFragments.js'
+import { createControlsRestApiRouter } from './RestApi.js'
 import { createStepsTrpcRouter } from './StepsTrpcRouter.js'
 import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { TriggerCollections } from './TriggerCollections.js'
@@ -381,6 +383,10 @@ export class ControlsController {
 			maxWait: 500,
 		}
 	)
+
+	createRestApiRouter(): express.Router {
+		return createControlsRestApiRouter(this.#store.controls, this, this.#deps.pageStore, this.#deps.userconfig)
+	}
 
 	createTrpcRouter() {
 		const self = this
@@ -886,6 +892,23 @@ export class ControlsController {
 
 	replaceCustomFeedbackCollections(collections: CustomFeedbackCollection[]): void {
 		this.#customFeedbackCollections.replaceCollections(collections)
+	}
+
+	/**
+	 * Clear the button at a location, optionally recreating it as a given type.
+	 * This is what the web UI does to reset a button, so the REST API shares it.
+	 * @param location Location in the grid
+	 * @param newType The type of the new control to create, or null to leave the location empty
+	 * @returns the id of the new control, or null if none was created
+	 */
+	resetControlAt(location: ControlLocation, newType: string | null): BankControlId | null {
+		const controlId = this.#deps.pageStore.getControlIdAt(location)
+		if (controlId) {
+			this.deleteControl(controlId)
+		}
+
+		if (!newType) return null
+		return this.createButtonControl(location, newType)
 	}
 
 	/**
