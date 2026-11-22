@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import { getImageResultStats, ImageResult, type ImageResultProcessedStyle } from '../../lib/Graphics/ImageResult.js'
+import { RenderTaskStalledError } from '../../lib/Graphics/RenderTaskTimeout.js'
 
 /**
  * Build a deterministic rgb test pattern of the given size.
@@ -168,6 +169,27 @@ describe('ImageResult', () => {
 			expect(await a).toBe(await b)
 			expect(drawNative).toHaveBeenCalledTimes(1)
 		})
+
+		test('draws again after a draw stalled', async () => {
+			const drawNative = vi
+				.fn()
+				.mockRejectedValueOnce(new RenderTaskStalledError('drawButtonImage', 10_000))
+				.mockResolvedValue(new Uint8Array([7]))
+			const { image } = createImage(null, drawNative)
+
+			await expect(image.drawNative(8, 8, null, 'rgb')).rejects.toBeInstanceOf(RenderTaskStalledError)
+			await expect(image.drawNative(8, 8, null, 'rgb')).resolves.toEqual(new Uint8Array([7]))
+			expect(drawNative).toHaveBeenCalledTimes(2)
+		})
+
+		test("keeps a draw which failed otherwise, so it isn't retried on every use", async () => {
+			const drawNative = vi.fn().mockRejectedValue(new Error('bad'))
+			const { image } = createImage(null, drawNative)
+
+			await expect(image.drawNative(8, 8, null, 'rgb')).rejects.toThrow('bad')
+			await expect(image.drawNative(8, 8, null, 'rgb')).rejects.toThrow('bad')
+			expect(drawNative).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('getImageResultStats', () => {
@@ -222,6 +244,18 @@ describe('ImageResult', () => {
 			// Decode it back and confirm it is pixel-identical to the source
 			const decoded = await imageRs.ImageTransformer.fromImageDataUrl(dataUrl).toBuffer('rgb')
 			expect(Buffer.from(decoded.buffer)).toEqual(Buffer.from(raw))
+		})
+
+		test('encodes again after the draw stalled', async () => {
+			const drawNative = vi
+				.fn()
+				.mockRejectedValueOnce(new RenderTaskStalledError('drawButtonImage', 10_000))
+				.mockResolvedValue(makeRgbBuffer(8, 8))
+			const { image } = createImage(null, drawNative)
+
+			await expect(image.drawNativeEncoded(8, 8, null, 'png')).rejects.toBeInstanceOf(RenderTaskStalledError)
+			await expect(image.drawNativeEncoded(8, 8, null, 'png')).resolves.toMatch(/^data:image\/png;base64,/)
+			expect(drawNative).toHaveBeenCalledTimes(2)
 		})
 
 		test('renders from the rgb pixels and passes rotation through', async () => {

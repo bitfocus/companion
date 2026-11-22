@@ -4,6 +4,7 @@ import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shar
 import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import { RenderTaskStalledError } from './RenderTaskTimeout.js'
 
 /**
  * Re-exported so the many consumers which only want the default preview size keep finding it here, while the size
@@ -195,6 +196,7 @@ export class ImageResult {
 			)
 		}
 		this.#drawNativeCache.set(cacheKey, newBuffer)
+		forgetIfStalled(this.#drawNativeCache, cacheKey, newBuffer)
 		return newBuffer
 	}
 
@@ -227,6 +229,17 @@ export class ImageResult {
 			return imageRs.ImageTransformer.fromBuffer(raw, width, height, 'rgb').toDataUrl(format)
 		})()
 		this.#drawNativeEncodedCache.set(cacheKey, newDataUrl)
+		forgetIfStalled(this.#drawNativeEncodedCache, cacheKey, newDataUrl)
 		return newDataUrl
 	}
+}
+
+/**
+ * A draw which stalled is drawn again when next asked for, as it is quarantined until it is allowed to try again. Other
+ * failures are kept, so that a draw which can't succeed isn't retried on every use
+ */
+function forgetIfStalled<T>(cache: Map<string, Promise<T>>, cacheKey: string, promise: Promise<T>): void {
+	promise.catch((e: unknown) => {
+		if (e instanceof RenderTaskStalledError && cache.get(cacheKey) === promise) cache.delete(cacheKey)
+	})
 }
