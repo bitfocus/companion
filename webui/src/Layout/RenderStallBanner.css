@@ -1,0 +1,35 @@
+.render-stall-banner {
+	margin: 0.5rem 1rem;
+
+	.render-stall-restart {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+		font-weight: 600;
+		margin-bottom: 0.5rem;
+	}
+
+	.render-stall-list {
+		margin: 0;
+		padding-inline-start: 1.25rem;
+
+		li {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.5rem;
+			margin-bottom: 0.25rem;
+		}
+	}
+
+	.render-stall-time {
+		opacity: 0.75;
+	}
+
+	.render-stall-texts {
+		font-family: var(--font-mono);
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+}

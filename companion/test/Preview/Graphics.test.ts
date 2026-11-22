@@ -141,6 +141,52 @@ describe('PreviewGraphics location subscription', () => {
 
 		await square.cleanup()
 	})
+
+	test('carries on when the first draw fails, eg as it stalled, and sends the next', async () => {
+		render.drawNativeEncoded = vi.fn(async () => {
+			throw new Error('stalled')
+		})
+		const sub = new SubscriptionTester(await watchLocation(DEFAULT_PREVIEW_RENDER_SIZE))
+
+		const next = sub.next()
+		await vi.waitFor(() => expect(render.drawNativeEncoded).toHaveBeenCalled())
+		graphics.emit('button_drawn', location, makeRender('placeholder'))
+
+		expect(await next).toEqual({
+			image: 'placeholder:288x288',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
+
+		await sub.cleanup()
+	})
+
+	test('sends a redraw to the other sizes when drawing one fails', async () => {
+		const square = new SubscriptionTester(await watchLocation(DEFAULT_PREVIEW_RENDER_SIZE))
+		const strip = new SubscriptionTester(await watchLocation(STRIP_SIZE))
+
+		await square.next()
+		await strip.next()
+
+		const redraw = makeRender('redraw')
+		const drawEncoded = redraw.drawNativeEncoded
+		redraw.drawNativeEncoded = vi.fn(async (width: number, height: number, rotation, format) => {
+			if (width === DEFAULT_PREVIEW_RENDER_SIZE.width) throw new Error('stalled')
+			return drawEncoded(width, height, rotation, format)
+		})
+		graphics.emit('button_drawn', location, redraw)
+
+		expect(await strip.next()).toEqual({
+			image: 'redraw:480x240',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
+
+		await square.cleanup()
+		await strip.cleanup()
+	})
 })
 
 describe('PreviewGraphics controlId subscription', () => {

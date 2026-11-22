@@ -24,6 +24,8 @@ import { registerDatabaseDurationHistogram, registerDatabaseMetrics } from './Da
 import { DataUsageStatistics } from './Data/UsageStatistics.js'
 import type { DataUserConfig } from './Data/UserConfig.js'
 import { GraphicsController } from './Graphics/Controller.js'
+import { CachedRenderQuarantineStore } from './Graphics/RenderQuarantine.js'
+import { CachedRenderStallRestartHistory, RenderStallMonitor } from './Graphics/RenderStallMonitor.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
@@ -113,6 +115,10 @@ export class Registry {
 	 */
 	readonly db: DataDatabase
 	/**
+	 * Warns about and recovers from stalled draws
+	 */
+	readonly renderStalls: RenderStallMonitor
+	/**
 	 * The core graphics controller
 	 */
 	readonly graphics: GraphicsController
@@ -180,8 +186,9 @@ export class Registry {
 	/**
 	 * Terminate the process once a requested exit has completed. Supplied by the parent scope
 	 * (main.ts), so the Registry itself never calls process.exit
+	 * @param renderThreadsMayBeStuck A render task stalled this run, so a render thread may never stop
 	 */
-	readonly #requestProcessExit: (restart: boolean) => void
+	readonly #requestProcessExit: (restart: boolean, renderThreadsMayBeStuck: boolean) => void
 
 	#isReady = false
 
@@ -196,7 +203,7 @@ export class Registry {
 			AppInfo,
 			'configDir' | 'logsDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'options'
 		>,
-		requestProcessExit: (restart: boolean) => void
+		requestProcessExit: (restart: boolean, renderThreadsMayBeStuck: boolean) => void
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
 		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
@@ -255,7 +262,16 @@ export class Registry {
 			this.#internalApiRouter,
 			this.metrics,
 			this.#renderClock,
-			linkRemoteImages
+			linkRemoteImages,
+			new CachedRenderQuarantineStore(this.#data.cache.defaultTableView, this.#appInfo.appBuild)
+		)
+		this.renderStalls = new RenderStallMonitor(
+			this.graphics.renderQuarantine,
+			this.graphics.renderPool,
+			// Once a whole pool's worth of threads are stuck, the stuck ones are probably slowing everything else
+			this.graphics.renderPoolSize,
+			new CachedRenderStallRestartHistory(this.#data.cache.defaultTableView),
+			() => this.exit(true, true)
 		)
 
 		this.surfaces = new SurfaceController(
@@ -593,7 +609,8 @@ export class Registry {
 		}
 	}
 
-	#onIpcDisconnect = (): void => process.exit()
+	// The launcher has gone (eg it was force quit), so there is nothing to shut down gracefully for
+	#onIpcDisconnect = (): void => this.#requestProcessExit(false, this.graphics.hasStalledRenderTasks)
 
 	#onIpcMessage = (msg: any): void => {
 		try {
@@ -638,6 +655,7 @@ export class Registry {
 
 		this.internalModule.destroy()
 		this.#renderClock.destroy()
+		this.renderStalls.destroy()
 		this.controls.triggerEvents.destroy()
 
 		this.services.close()
@@ -672,11 +690,12 @@ export class Registry {
 
 	/**
 	 * Request application exit
+	 * @returns Whether it will exit, as it can't until it is ready
 	 */
-	exit(fromInternal: boolean, restart: boolean): void {
+	exit(fromInternal: boolean, restart: boolean): boolean {
 		if (!this.#isReady) {
 			this.#logger.debug('exit called before ready')
-			return
+			return false
 		}
 
 		void Promise.resolve().then(async () => {
@@ -693,9 +712,10 @@ export class Registry {
 			}
 
 			setImmediate(() => {
-				this.#requestProcessExit(restart)
+				this.#requestProcessExit(restart, this.graphics.hasStalledRenderTasks)
 			})
 		})
+		return true
 	}
 
 	/**
