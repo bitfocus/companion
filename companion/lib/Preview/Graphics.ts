@@ -113,10 +113,8 @@ export class PreviewGraphics {
 			this.#logger,
 			async (locationId: string, location: ControlLocation, controlId: BankControlId | null, render: ImageResult) => {
 				if (controlId && this.#renderEvents.listenerCount(`controlId:${controlId}`) > 0) {
-					this.#renderEvents.emit(
-						`controlId:${controlId}`,
-						await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
-					)
+					const dataUrl = await this.#drawPreview(render, PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE)
+					if (dataUrl !== null) this.#renderEvents.emit(`controlId:${controlId}`, dataUrl)
 				}
 
 				// Snapshotted, because a watcher can come or go while an encode is in flight
@@ -125,8 +123,11 @@ export class PreviewGraphics {
 					const subId = getLocationSizeSubId(locationId, size)
 					if (this.#renderEvents.listenerCount(`location:${subId}`) === 0) continue
 
+					const dataUrl = await this.#drawPreview(render, size.width, size.height)
+					if (dataUrl === null) continue
+
 					this.#renderEvents.emit(`location:${subId}`, {
-						image: await render.drawNativeEncoded(size.width, size.height, null, 'png'),
+						image: dataUrl,
 						isUsed: !!render.style,
 						color: parseColor(render.bgcolor),
 						leds: render.style?.leds ?? null,
@@ -139,10 +140,8 @@ export class PreviewGraphics {
 					if (previewSession.resolvedLocation.row != location.row) continue
 					if (previewSession.resolvedLocation.column != location.column) continue
 
-					this.#renderEvents.emit(
-						`reference:${previewSession.id}`,
-						await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
-					)
+					const dataUrl = await this.#drawPreview(render, PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE)
+					if (dataUrl !== null) this.#renderEvents.emit(`reference:${previewSession.id}`, dataUrl)
 				}
 			}
 		)
@@ -152,10 +151,12 @@ export class PreviewGraphics {
 			async (_sessionId: string, sessionId: string, resolvedLocation: ControlLocation) => {
 				if (this.#renderEvents.listenerCount(`reference:${sessionId}`) == 0) return
 
-				const dataUrl = await this.#graphicsController
-					.getCachedRenderOrGeneratePlaceholder(resolvedLocation)
-					.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
-				this.#renderEvents.emit(`reference:${sessionId}`, dataUrl)
+				const dataUrl = await this.#drawPreview(
+					this.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation),
+					PREVIEW_RENDER_SIZE,
+					PREVIEW_RENDER_SIZE
+				)
+				if (dataUrl !== null) this.#renderEvents.emit(`reference:${sessionId}`, dataUrl)
 			}
 		)
 
@@ -184,13 +185,15 @@ export class PreviewGraphics {
 						const changes = toIterable(self.#renderEvents, `location:${subId}`, signal)
 
 						const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
-						const dataUrl = await render.drawNativeEncoded(size.width, size.height, null, 'png')
-						yield {
-							image: dataUrl,
-							isUsed: !!render.style,
-							color: parseColor(render.bgcolor),
-							leds: render.style?.leds ?? null,
-						} satisfies WrappedImage
+						const dataUrl = await self.#drawPreview(render, size.width, size.height)
+						if (dataUrl !== null) {
+							yield {
+								image: dataUrl,
+								isUsed: !!render.style,
+								color: parseColor(render.bgcolor),
+								leds: render.style?.leds ?? null,
+							} satisfies WrappedImage
+						}
 
 						for await (const [image] of changes) {
 							yield image
@@ -224,9 +227,10 @@ export class PreviewGraphics {
 						const originalImg = location
 							? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
 							: null
-						yield originalImg
-							? await originalImg.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+						const dataUrl = originalImg
+							? await self.#drawPreview(originalImg, PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE)
 							: null
+						if (dataUrl !== null || !originalImg) yield dataUrl
 
 						for await (const [image] of changes) {
 							yield image
@@ -261,15 +265,15 @@ export class PreviewGraphics {
 
 						// Send the preview image shortly after
 						const initialRender = control.lastRender
-						yield initialRender
-							? await initialRender.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+						const initialDataUrl = initialRender
+							? await self.#drawPreview(initialRender, PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE)
 							: null
+						if (initialDataUrl !== null || !initialRender) yield initialDataUrl
 
 						for await (const [controlId, render] of changes) {
 							if (controlId !== control.controlId) continue
-							yield render
-								? await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
-								: null
+							const dataUrl = render ? await self.#drawPreview(render, PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE) : null
+							if (dataUrl !== null || !render) yield dataUrl
 						}
 					} finally {
 						if (control.removeRenderSubscriberAndCheckEmpty(sessionId)) {
@@ -321,11 +325,14 @@ export class PreviewGraphics {
 						showReferencePreview(session)
 
 						// Emit the initial image
-						yield resolvedLocation
-							? await self.#graphicsController
-									.getCachedRenderOrGeneratePlaceholder(resolvedLocation)
-									.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+						const dataUrl = resolvedLocation
+							? await self.#drawPreview(
+									self.#graphicsController.getCachedRenderOrGeneratePlaceholder(resolvedLocation),
+									PREVIEW_RENDER_SIZE,
+									PREVIEW_RENDER_SIZE
+								)
 							: null
+						if (dataUrl !== null || !resolvedLocation) yield dataUrl
 
 						for await (const [image] of changes) {
 							yield image
@@ -345,6 +352,19 @@ export class PreviewGraphics {
 	 * Registered separately from the event listener because the redraw has to know which sizes to encode before it
 	 * has anything to emit, and an EventEmitter can only be asked whether a name it already knows has listeners.
 	 */
+	/**
+	 * Draw a preview, or null if the draw failed. Not thrown, as that would end the subscription, when a draw which
+	 * stalled is followed by its placeholder
+	 */
+	async #drawPreview(render: ImageResult, width: number, height: number): Promise<string | null> {
+		try {
+			return await render.drawNativeEncoded(width, height, null, 'png')
+		} catch (e) {
+			this.#logger.warn(`Failed to draw a preview: ${stringifyError(e)}`)
+			return null
+		}
+	}
+
 	#watchLocationSize(locationId: string, size: PreviewRenderSize): () => void {
 		const key = formatPreviewRenderSize(size)
 
