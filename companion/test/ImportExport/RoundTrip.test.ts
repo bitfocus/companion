@@ -6,6 +6,7 @@ import { mockDeep } from 'vitest-mock-extended'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
@@ -91,6 +92,14 @@ function makeCustomFeedback(customFeedbackId: string, name: string) {
 	} as any
 }
 
+function makeCustomElement(customElementId: string, name: string) {
+	return {
+		controlId: CreateCustomElementControlId(customElementId),
+		toJSON: () => ({ type: 'custom-element', options: { name }, inputs: [], elements: [] }),
+		collectReferencedConnectionsAndVariables: () => {},
+	} as any
+}
+
 /**
  * Build an ExportController backed by a representative, fully-populated config: a page with a button,
  * a trigger, an expression variable, a connection, surfaces (known/remote/instances) and image
@@ -138,6 +147,8 @@ function createExportController() {
 	controls.exportCustomActionCollections.mockReturnValue([])
 	controls.getAllCustomFeedbacks.mockReturnValue([makeCustomFeedback('cf-1', 'My Custom Feedback')])
 	controls.exportCustomFeedbackCollections.mockReturnValue([])
+	controls.getAllCustomElements.mockReturnValue([makeCustomElement('ce-1', 'My Custom Element')])
+	controls.exportCustomElementCollections.mockReturnValue([])
 
 	instance.exportAllConnections.mockReturnValue({
 		'conn-1': {
@@ -271,6 +282,7 @@ describe('export/import round-trip', () => {
 			expect(Object.keys(exp.expressionVariables)).toContain('ev-1')
 			expect(Object.keys(exp.customActions)).toContain('ca-1')
 			expect(Object.keys(exp.customFeedbacks)).toContain('cf-1')
+			expect(Object.keys(exp.customElements)).toContain('ce-1')
 			expect(exp.custom_variables.myvar).toBeDefined()
 			expect(exp.instances['conn-1'].label).toBe('my-connection')
 			expect(exp.surfaces['surface-1']).toBeDefined()

@@ -33,7 +33,9 @@ describe('editing over trpc, as the ui does', () => {
 
 		// The model reflects the edit
 		const control = app.registry.controls.getControl(controlId!) as ControlButtonLayered
-		expect(control.drawing.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: 'Hello' } })
+		expect(control.drawing.tree.getElementById('text0')).toMatchObject({
+			text: { isExpression: false, value: 'Hello' },
+		})
 
 		// And the real (in-process) renderer draws it
 		await vi.waitFor(() => {

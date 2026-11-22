@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
 	CreateExpressionVariableControlId,
 	CreatePageControlId,
@@ -172,6 +173,12 @@ describe('CreateCustomFeedbackControlId', () => {
 	})
 })
 
+describe('CreateCustomElementControlId', () => {
+	test('prefixes id with "custom-element:"', () => {
+		expect(CreateCustomElementControlId('abc')).toBe('custom-element:abc')
+	})
+})
+
 describe('CreatePageControlId', () => {
 	test('prefixes id with "page:"', () => {
 		expect(CreatePageControlId('page-abc')).toBe('page:page-abc')
@@ -213,6 +220,10 @@ describe('ParseControlId', () => {
 
 	test('parses a custom-feedback control id', () => {
 		expect(ParseControlId('custom-feedback:abc')).toEqual({ type: 'custom-feedback', customFeedbackId: 'abc' })
+	})
+
+	test('parses a custom-element control id', () => {
+		expect(ParseControlId('custom-element:abc')).toEqual({ type: 'custom-element', customElementId: 'abc' })
 	})
 
 	test('parses a page control id', () => {

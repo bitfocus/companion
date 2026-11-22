@@ -2,11 +2,13 @@ import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
 	CreateCustomActionControlId,
+	CreateCustomElementControlId,
 	CreateCustomFeedbackControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
+import { CustomElementsListStore } from '~/Stores/CustomElementsListStore.js'
 import { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
 import { PagesStore } from '~/Stores/PagesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
@@ -35,7 +37,10 @@ function createStores(): UseControlStores {
 	const customFeedbacksList = new CustomFeedbacksListStore()
 	customFeedbacksList.customFeedbacks.set(CreateCustomFeedbackControlId('inner'), { name: 'Inner' } as any)
 
-	return { pages, triggersList, customActionsList, customFeedbacksList }
+	const customElementsList = new CustomElementsListStore()
+	customElementsList.customElements.set(CreateCustomElementControlId('badge'), { name: 'Badge' } as any)
+
+	return { pages, triggersList, customActionsList, customFeedbacksList, customElementsList }
 }
 
 describe('describeUseControl', () => {
@@ -99,6 +104,14 @@ describe('describeUseControl', () => {
 			kind: 'Custom feedback',
 			name: 'Inner',
 			link: { type: 'custom-feedback', customFeedbackId: 'inner' },
+		})
+	})
+
+	test('a custom element is described by its name', () => {
+		expect(describeUseControl(CreateCustomElementControlId('badge'), createStores())).toEqual({
+			kind: 'Custom element',
+			name: 'Badge',
+			link: { type: 'custom-element', customElementId: 'badge' },
 		})
 	})
 

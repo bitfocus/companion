@@ -6,6 +6,7 @@ import {
 } from '@companion-app/shared/ControlId.js'
 import { assertNever } from '~/Resources/util.js'
 import type { CustomActionsListStore } from '~/Stores/CustomActionsListStore.js'
+import type { CustomElementsListStore } from '~/Stores/CustomElementsListStore.js'
 import type { CustomFeedbacksListStore } from '~/Stores/CustomFeedbacksListStore.js'
 import type { PagesStore } from '~/Stores/PagesStore.js'
 import type { TriggersListStore } from '~/Stores/TriggersListStore.js'
@@ -15,16 +16,18 @@ export interface UseControlStores {
 	readonly triggersList: TriggersListStore
 	readonly customActionsList: CustomActionsListStore
 	readonly customFeedbacksList: CustomFeedbacksListStore
+	readonly customElementsList: CustomElementsListStore
 }
 
-/** Where to go to find a control which uses a custom action or feedback */
+/** Where to go to find a control which uses a custom action, feedback or element */
 export type UseControlLink =
 	| { readonly type: 'buttons-page'; readonly pageNumber: number }
 	| { readonly type: 'trigger'; readonly triggerId: string }
 	| { readonly type: 'custom-action'; readonly customActionId: string }
 	| { readonly type: 'custom-feedback'; readonly customFeedbackId: string }
+	| { readonly type: 'custom-element'; readonly customElementId: string }
 
-/** What a control which uses a custom action or feedback is, for showing in a list of its uses */
+/** What a control which uses a custom action, feedback or element is, for showing in a list of its uses */
 export interface UseControlDescription {
 	readonly kind: string
 	readonly name: string
@@ -33,7 +36,7 @@ export interface UseControlDescription {
 }
 
 /**
- * Describe a control which uses a custom action or feedback, such as a button by its location or a trigger by its name
+ * Describe a control which uses a custom action, feedback or element, such as a button by its location or a trigger by its name
  */
 export function describeUseControl(controlId: SomeControlId, stores: UseControlStores): UseControlDescription {
 	const kind = getControlIdKind(controlId)
@@ -81,6 +84,20 @@ export function describeUseControl(controlId: SomeControlId, stores: UseControlS
 				link:
 					parsedId?.type === 'custom-feedback'
 						? { type: 'custom-feedback', customFeedbackId: parsedId.customFeedbackId }
+						: null,
+			}
+		}
+		case 'custom-element': {
+			const customElement = isControlIdOfKind(controlId, 'custom-element')
+				? stores.customElementsList.customElements.get(controlId)
+				: undefined
+			const parsedId = ParseControlId(controlId)
+			return {
+				kind: 'Custom element',
+				name: customElement?.name || 'Unnamed custom element',
+				link:
+					parsedId?.type === 'custom-element'
+						? { type: 'custom-element', customElementId: parsedId.customElementId }
 						: null,
 			}
 		}

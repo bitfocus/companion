@@ -2,10 +2,7 @@ import debounceFn from 'debounce-fn'
 import { formatLocation, type BankControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
-import {
-	SomeButtonGraphicsElementSchema,
-	type SomeButtonGraphicsElement,
-} from '@companion-app/shared/Model/StyleLayersModel.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsDecorationType,
 	type DrawStyleButtonStateProps,
@@ -25,6 +22,7 @@ import type { VariableDependency, VariableDependencyListener } from '../../../Va
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
+import { normalizeLoadedElements } from './LayerUtils.js'
 
 /** Anything that can visit the draw elements (e.g. the reference collector/updater visitors). */
 export interface DrawElementsVisitor {
@@ -238,47 +236,9 @@ export class LayeredButtonDrawer implements IButtonDrawer, VariableDependencyLis
 		this.drawElementsList = elements || []
 
 		// Ensure all properties are defined on elements as they are loaded
-		for (const element of this.drawElementsList) {
-			this.#normalizeLoadedElement(element)
-		}
+		normalizeLoadedElements(this.drawElementsList)
 
 		this.elementConversionCache.clear()
-	}
-
-	/**
-	 * Backfill missing properties and migrate legacy values on a loaded element, recursing into group children
-	 * so that nested layers stay consistent with top-level ones.
-	 */
-	#normalizeLoadedElement(element: SomeButtonGraphicsElement): void {
-		// Fill in the properties added since the element was saved, with the defaults that keep it drawing as it did.
-		// Not the values a new element is created with, which can differ to show off what the element can do
-		const parsed = SomeButtonGraphicsElementSchema.safeParse(element)
-		if (parsed.success) {
-			for (const [key, value] of Object.entries(parsed.data)) {
-				if (!(key in element)) (element as Record<string, unknown>)[key] = value
-			}
-		}
-
-		switch (element.type) {
-			case 'image':
-				if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
-					element.fillMode.value = 'fit'
-				}
-				break
-			case 'line': {
-				// Line position used to reuse the box inside/center/outside enum, which is meaningless for a line
-				const position = element.borderPosition.value
-				if (!element.borderPosition.isExpression && (position === 'inside' || position === 'outside')) {
-					element.borderPosition = { isExpression: false, value: 'center' }
-				}
-				break
-			}
-			case 'group':
-				for (const child of element.children) {
-					this.#normalizeLoadedElement(child)
-				}
-				break
-		}
 	}
 
 	/**

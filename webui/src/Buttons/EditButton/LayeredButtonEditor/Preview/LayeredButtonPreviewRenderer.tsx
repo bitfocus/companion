@@ -36,22 +36,32 @@ import { SelectionOverlay } from './SelectionOverlay.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: SomeControlId
-	location: ControlLocation
+	/** The location of the button, or null if the elements aren't those of a button */
+	location: ControlLocation | null
+	/**
+	 * Draw the elements on their own, without the decoration (top bar, status icons) of a button. For elements which
+	 * are drawn inside another, such as those of a custom element
+	 */
+	bare: boolean
 	styleStore: LayeredStyleStore
 }
 export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPreviewRenderer({
 	controlId,
 	location,
+	bare,
 	styleStore,
 }: LayeredButtonPreviewRendererProps) {
 	const { userConfig } = useContext(RootAppStoreContext)
 
 	const drawConfig = useComputed<ResolveButtonStylePropertiesConfig>(
-		() => ({
-			buttons_decoration: userConfig.properties?.buttons_decoration ?? ButtonGraphicsDecorationType.TopBar,
-			buttons_status_icons: userConfig.properties?.buttons_status_icons ?? 'show',
-		}),
-		[userConfig]
+		() =>
+			bare
+				? { buttons_decoration: ButtonGraphicsDecorationType.None, buttons_status_icons: 'none' }
+				: {
+						buttons_decoration: userConfig.properties?.buttons_decoration ?? ButtonGraphicsDecorationType.TopBar,
+						buttons_status_icons: userConfig.properties?.buttons_status_icons ?? 'show',
+					},
+		[userConfig, bare]
 	)
 
 	const [aspectRatio, setAspectRatio] = useLocalStorage('layered-button-preview-aspect-ratio', '1:1')
@@ -73,7 +83,13 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		() => ({ width: width + PAD_X * 2, height: height + PAD_Y * 2, paddingX: PAD_X, paddingY: PAD_Y }),
 		[width, height]
 	)
-	const drawStyle = useLayeredButtonDrawStyleParser(controlId, location, drawConfig, styleStore, previewCanvas)
+	const drawStyle = useLayeredButtonDrawStyleParser(
+		controlId,
+		location ?? undefined,
+		drawConfig,
+		styleStore,
+		previewCanvas
+	)
 
 	// Owned here rather than in the overlay: the toolbar toggles them and the overlay's drag math reads
 	// them. Refs are what the drag listeners read, since they're registered once per drag.
@@ -233,7 +249,7 @@ const ElementQuickActions = observer(function ElementQuickActions({
 interface LayeredButtonCanvasProps {
 	width: number
 	height: number
-	location: ControlLocation
+	location: ControlLocation | null
 	drawStyle: RendererButtonStyle | null
 	hiddenElements: ReadonlySet<string>
 	selectedElementId: string | null

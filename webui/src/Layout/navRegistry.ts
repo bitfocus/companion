@@ -18,6 +18,7 @@ import {
 	faPlug,
 	faPuzzlePiece,
 	faServer,
+	faShapes,
 	faSquareRootVariable,
 	faTh,
 	faVideoCamera,
@@ -100,6 +101,13 @@ export const BUILDING_BLOCKS_SECTION: NavSection = {
 			shortLabel: 'Feedbacks',
 			path: '/custom-feedbacks',
 			icon: faCubesStacked,
+		},
+		{
+			id: 'elements',
+			label: 'Custom Elements',
+			shortLabel: 'Elements',
+			path: '/custom-elements',
+			icon: faShapes,
 		},
 	],
 }

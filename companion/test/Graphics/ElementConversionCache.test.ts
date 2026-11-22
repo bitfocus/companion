@@ -127,6 +127,36 @@ describe('ElementConversionCache', () => {
 			expect(cache.get('elem2')).toBeDefined()
 		})
 
+		test('the children drawn inside a matching composite element are removed too', () => {
+			const cache = new ElementConversionCache()
+			const compositeId = makeCompositeId('button-A')
+			cache.set(
+				'comp',
+				makeEntry({
+					compositeElement: {
+						elementId: compositeId,
+						childPropOverrides: {},
+						childIdPrefix: 'comp-hash/',
+						isPlaceholder: false,
+					},
+				})
+			)
+			cache.set('comp-hash/text', makeEntry())
+			cache.set('comp/text', makeEntry())
+			cache.set('comp-hash/inner-hash2/box', makeEntry())
+			// Another element whose id merely starts with the same characters
+			cache.set('compact', makeEntry())
+
+			cache.queueInvalidateCompositeType([compositeId])
+			cache.applyQueuedInvalidations()
+
+			expect(cache.get('comp')).toBeUndefined()
+			expect(cache.get('comp-hash/text')).toBeUndefined()
+			expect(cache.get('comp/text')).toBeUndefined()
+			expect(cache.get('comp-hash/inner-hash2/box')).toBeUndefined()
+			expect(cache.get('compact')).toBeDefined()
+		})
+
 		test('entries with a different composite element survive', () => {
 			const cache = new ElementConversionCache()
 			const keepId = makeCompositeId('keep')

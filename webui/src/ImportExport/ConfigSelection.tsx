@@ -15,6 +15,7 @@ import {
 	faNetworkWired,
 	faPlug,
 	faPuzzlePiece,
+	faShapes,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -91,6 +92,7 @@ export const CONFIG_OPTION_META = {
 	expressionVariables: { icon: faCode, label: 'Expression Variables' },
 	customActions: { icon: faCubes, label: 'Custom Actions' },
 	customFeedbacks: { icon: faCubesStacked, label: 'Custom Feedbacks' },
+	customElements: { icon: faShapes, label: 'Custom Elements' },
 	imageLibrary: { icon: faImages, label: 'Image Library' },
 	surfaces: { icon: faGamepad, label: 'Surfaces' },
 	userconfig: { icon: faGear, label: 'Settings' },
@@ -104,6 +106,7 @@ export const CONTENT_OPTION_KEYS = [
 	'expressionVariables',
 	'customActions',
 	'customFeedbacks',
+	'customElements',
 	'imageLibrary',
 ] as const
 

@@ -82,7 +82,9 @@ describe('osc api service over a real udp socket', () => {
 		control.optionsSetField({ key: 'canModifyStyleInApis', value: true })
 
 		await sendUntil(encodeOscMessage('/location/1/1/2/style/text', [{ type: 's', value: 'via osc' }]), () => {
-			expect(control.drawing.getElementById('text0')).toMatchObject({ text: { isExpression: false, value: 'via osc' } })
+			expect(control.drawing.tree.getElementById('text0')).toMatchObject({
+				text: { isExpression: false, value: 'via osc' },
+			})
 		})
 	})
 })

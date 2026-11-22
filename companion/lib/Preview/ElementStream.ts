@@ -434,13 +434,19 @@ export class PreviewElementStream {
 		}
 
 		const control = this.#controlsController.getControl(controlId)
-		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) return emptyResult
+		if (!control || !control.supportsLayeredStyle) return emptyResult
 
 		const elementDef = control.layeredStyleGetElementById(elementId)
 		if (!elementDef) return emptyResult
 
-		const feedbackOverrides = control.entities.getFeedbackStyleOverrides(control.drawing?.resolveDefaultNoTopBar())
-		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId)
+		// A control without entities (eg a custom element) has no feedbacks to override its elements
+		const feedbackOverrides = control.supportsEntities
+			? control.entities.getFeedbackStyleOverrides(control.drawing?.resolveDefaultNoTopBar())
+			: new Map()
+		const parser = this.#controlsController.createVariablesAndExpressionParser(
+			controlId,
+			control.layeredStylePreviewVariableValues()
+		)
 
 		const controlLocation = this.#pageStore.getLocationOfControlId(controlId)
 		const currentLocationStr = controlLocation ? formatLocation(controlLocation) : null

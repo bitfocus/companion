@@ -140,6 +140,9 @@ function findRepairTarget(control: unknown, path: readonly PropertyKey[]): Repai
 				// The single entity of an expression variable
 				found = { container: value, key, kind: 'entity', entityType: EntityModelType.Feedback, path: [key] }
 				nextKind = 'entity'
+			} else if (i === 0 && key === 'elements') {
+				// The elements of a custom element
+				nextKind = 'elementList'
 			} else if (i === 0 && key === 'inputs') {
 				// The input fields of a control, such as the inputs of a custom action
 				nextKind = 'inputList'
