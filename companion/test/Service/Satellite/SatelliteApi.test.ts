@@ -399,6 +399,24 @@ describe('ServiceSatelliteApi', () => {
 			expect(callArgs.bitmapFormat).toBe(format)
 		})
 
+		test.each([
+			['', []],
+			[' CONTROL_EVENTS=press', ['press']],
+			[' CONTROL_EVENTS="press,hold,future"', ['press', 'hold']],
+			[' CONTROL_EVENTS=future', []],
+		])('reads control event support from ADD-DEVICE%s', (flag, expected) => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"${flag}\n`)
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.controlEvents).toEqual(expected)
+		})
+
 		test('falls back to rgb for an unadvertised BITMAP_FORMAT', () => {
 			const { api, logger, surfaceController } = createService()
 			const { processMessage } = createSocketAndInit(api, logger)

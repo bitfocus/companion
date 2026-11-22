@@ -27,6 +27,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariableDependencyRegistry } from '../Variables/DependencyRegistry.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { ControlPressSource } from './ButtonPressEvents.js'
 import type { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { CustomFeedbackInstanceManager } from './CustomFeedbacks/CustomFeedbackInstanceManager.js'
@@ -42,7 +43,7 @@ import type { TriggerEvents } from './TriggerEvents.js'
  */
 export interface ControlsAccessor {
 	getControl(controlId: SomeControlId): SomeControl | undefined
-	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
+	pressControl(controlId: SomeControlId, pressed: boolean, source: ControlPressSource | null, force?: boolean): boolean
 	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean
 }
 

@@ -592,11 +592,11 @@ describe('EntityListPool - storage round-trip (button)', () => {
 				steps: {
 					'0': {
 						action_sets: { down: [actionModel()], up: [], rotate_left: undefined, rotate_right: undefined },
-						options: { runWhileHeld: [] },
+						options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 					},
 					'1': {
 						action_sets: { down: [], up: [actionModel()], rotate_left: undefined, rotate_right: undefined },
-						options: { runWhileHeld: [] },
+						options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 					},
 				},
 			}),
@@ -618,7 +618,7 @@ describe('EntityListPool - storage round-trip (button)', () => {
 				steps: {
 					'0': {
 						action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
-						options: { runWhileHeld: [] },
+						options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 					},
 				},
 			}),
@@ -637,7 +637,7 @@ describe('EntityListPool - storage round-trip (button)', () => {
 		const steps = (action: ReturnType<typeof actionModel>) => ({
 			'0': {
 				action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
-				options: { runWhileHeld: [] },
+				options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 			},
 		})
 
@@ -667,7 +667,7 @@ describe('EntityListPool - storage round-trip (button)', () => {
 				steps: {
 					'0': {
 						action_sets: { down: [action], up: [], rotate_left: undefined, rotate_right: undefined },
-						options: { runWhileHeld: [] },
+						options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 					},
 				},
 			}),

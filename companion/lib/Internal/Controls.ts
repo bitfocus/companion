@@ -27,6 +27,7 @@ import type {
 	CompanionFeedbackButtonStyleResult,
 	CompanionOptionValues,
 } from '@companion-module/host'
+import type { ControlPressSource } from '../Controls/ButtonPressEvents.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -43,6 +44,11 @@ import type {
 	InternalModuleFragmentEvents,
 } from './Types.js'
 import { ParseLocationString } from './Util.js'
+
+/** A press from an action carries the surface that ran it, but no control events */
+function pressSourceFromExtras(extras: RunActionExtras): ControlPressSource | null {
+	return extras.surfaceId ? { surfaceId: extras.surfaceId, pressEvents: null } : null
+}
 
 export class InternalControls extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
 	readonly #graphicsController: GraphicsController
@@ -589,8 +595,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
 					const forcePress = !!action.options.force
+					const pressSource = pressSourceFromExtras(extras)
 
-					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
+					this.#controlsStore.pressControl(theControlId, true, pressSource, forcePress)
 
 					const duration = Number(action.options.duration)
 					if (Number.isFinite(duration) && duration > 0 && !extras.abortDelayed.aborted) {
@@ -598,26 +605,26 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						return setTimeout(duration, undefined, { signal: extras.abortDelayed })
 							.catch(() => undefined)
 							.then(() => {
-								this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
+								this.#controlsStore.pressControl(theControlId, false, pressSource, forcePress)
 								return { result: undefined }
 							})
 					}
 
-					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
+					this.#controlsStore.pressControl(theControlId, false, pressSource, forcePress)
 				}
 				break
 			}
 			case 'button_press': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, !!action.options.force)
+					this.#controlsStore.pressControl(theControlId, true, pressSourceFromExtras(extras), !!action.options.force)
 				}
 				break
 			}
 			case 'button_release': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, !!action.options.force)
+					this.#controlsStore.pressControl(theControlId, false, pressSourceFromExtras(extras), !!action.options.force)
 				}
 				break
 			}

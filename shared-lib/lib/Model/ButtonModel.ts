@@ -27,7 +27,7 @@ const normalButtonStepSchema = z.object({
 		rotate_left: undefined,
 		rotate_right: undefined,
 	})),
-	options: ActionStepOptionsSchema.default(() => ({ runWhileHeld: [] })),
+	options: ActionStepOptionsSchema.default(() => ({ runWhileHeld: [], controlEventsDisabledSets: [] })),
 })
 
 /** A button always has a step, so one without any is given an empty one */

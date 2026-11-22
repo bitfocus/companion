@@ -31,7 +31,7 @@ function editorProps(name?: string): EditorProps {
 		location: { pageNumber: 1, row: 0, column: 0 },
 		steps: {
 			0: {
-				options: { name, runWhileHeld: [] },
+				options: { name, runWhileHeld: [], controlEventsDisabledSets: [] },
 				action_sets: { down: [], up: [], rotate_left: [], rotate_right: [] },
 			},
 		},
@@ -102,7 +102,7 @@ describe('the live step in the editor header', () => {
 			names.map((name, i) => [
 				String(i),
 				{
-					options: { name, runWhileHeld: [] },
+					options: { name, runWhileHeld: [], controlEventsDisabledSets: [] },
 					action_sets: { down: [], up: [], rotate_left: [], rotate_right: [] },
 				},
 			])

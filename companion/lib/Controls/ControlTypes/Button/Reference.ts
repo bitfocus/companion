@@ -20,6 +20,7 @@ import {
 	MAX_REFERENCE_DEPTH,
 	referenceSurfaceIdDepth,
 } from '../../../Surface/ReferenceSurfaceId.js'
+import type { ControlPressSource } from '../../ButtonPressEvents.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type {
@@ -146,9 +147,9 @@ export class ControlButtonReference
 		return (location ? this.deps.pageStore.getControlIdAt(location) : null) ?? null
 	}
 
-	pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void {
+	pressControl(pressed: boolean, source: ControlPressSource | null, force?: boolean): void {
 		// Loop guard: stop forwarding once a press has hopped through too many references
-		if (referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return
+		if (referenceSurfaceIdDepth(source?.surfaceId) >= MAX_REFERENCE_DEPTH) return
 
 		const targetControlId = this.getReferenceTargetControlId()
 		if (!targetControlId || targetControlId === this.controlId) return
@@ -156,7 +157,10 @@ export class ControlButtonReference
 		this.deps.controlsAccessor.pressControl(
 			targetControlId,
 			pressed,
-			mangleReferenceSurfaceId(surfaceId, this.controlId),
+			{
+				surfaceId: mangleReferenceSurfaceId(source?.surfaceId, this.controlId),
+				pressEvents: source?.pressEvents ?? null,
+			},
 			force
 		)
 	}
@@ -215,7 +219,7 @@ export class ControlButtonReference
 			steps: {
 				'0': {
 					action_sets: { down: [], up: undefined, rotate_left: undefined, rotate_right: undefined },
-					options: { runWhileHeld: [] },
+					options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 				},
 			},
 			localVariables: [],

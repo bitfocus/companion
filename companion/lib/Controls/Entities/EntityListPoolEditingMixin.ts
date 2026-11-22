@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
-import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
+import type { ActionSetId, ControlEventsActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import {
 	type EntityOwner,
 	type FeedbackEntityStyleOverride,
@@ -590,6 +590,7 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			// Forget the step from the options
 			step.options.runWhileHeld = step.options.runWhileHeld.filter((id) => id !== setIdNumber)
+			step.options.controlEventsDisabledSets = step.options.controlEventsDisabledSets.filter((id) => id !== setIdNumber)
 
 			// Assume it exists
 			step.sets.delete(setIdNumber)
@@ -624,6 +625,25 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 			// Update the runWhileHeld options
 			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
 			if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
+
+			step.options.controlEventsDisabledSets = step.options.controlEventsDisabledSets.map((id) =>
+				id === oldSetIdNumber ? newSetIdNumber : id
+			)
+
+			this.reportChange({ redraw: false })
+
+			return true
+		}
+
+		actionSetControlEvents(stepId: string, setId: ControlEventsActionSetId, enabled: boolean): boolean {
+			const step = this.steps.get(stepId)
+			if (!step || !step.sets.has(setId)) return false
+
+			const disabledSets = step.options.controlEventsDisabledSets
+			if (enabled === !disabledSets.includes(setId)) return true
+
+			if (enabled) step.options.controlEventsDisabledSets = disabledSets.filter((disabledSet) => disabledSet !== setId)
+			else disabledSets.push(setId)
 
 			this.reportChange({ redraw: false })
 

@@ -332,7 +332,10 @@ export function createControlsTrpcRouter(
 				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
-				controlsController.pressControl(controlId, input.direction, `hot:${input.surfaceId}`)
+				controlsController.pressControl(controlId, input.direction, {
+					surfaceId: `hot:${input.surfaceId}`,
+					pressEvents: null,
+				})
 			}),
 
 		hotRotateControl: publicProcedure

@@ -166,7 +166,7 @@ export abstract class ControlButtonPage<TJson extends PageUpButtonModel | PageDo
 						rotate_left: undefined,
 						rotate_right: undefined,
 					},
-					options: { runWhileHeld: [] },
+					options: { runWhileHeld: [], controlEventsDisabledSets: [] },
 				},
 			},
 			localVariables: [],

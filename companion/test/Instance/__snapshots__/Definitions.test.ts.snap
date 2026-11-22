@@ -72,6 +72,7 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
         "up": [],
       },
       "options": {
+        "controlEventsDisabledSets": [],
         "runWhileHeld": [],
       },
     },
@@ -144,7 +145,7 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
 
 exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set → convert → preview → update label → forget 2`] = `
 {
-  "checksum": "ef2ce9404636113d5d75a2b391b342eced7b6a52",
+  "checksum": "d69ebc1552911dee88d9c960b2532bb9a03a95d4",
   "feedbacks": [],
   "localVariables": [],
   "options": {
@@ -163,6 +164,7 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
         "up": [],
       },
       "options": {
+        "controlEventsDisabledSets": [],
         "runWhileHeld": [],
       },
     },

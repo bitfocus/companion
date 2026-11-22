@@ -6,6 +6,7 @@ import {
 	type ActionSetId,
 	type ActionSetsModel,
 	type ActionStepOptions,
+	type ControlEventsActionSetId,
 } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
@@ -396,7 +397,7 @@ export abstract class ButtonEntityListPoolBase
 		existingOptions: ActionStepOptions | null,
 		isCloned: boolean
 	): ControlEntityListActionStep {
-		const options = existingOptions || ActionStepOptionsSchema.parse({})
+		const options = ActionStepOptionsSchema.parse(existingOptions ?? {})
 
 		const downList = this.createActionEntityList(existingActions?.down || [], isCloned)
 		const upList = this.createActionEntityList(existingActions?.up || [], isCloned)
@@ -421,6 +422,11 @@ export abstract class ButtonEntityListPoolBase
 			sets: sets,
 			options: options,
 		}
+	}
+
+	isActionSetControlEventsEnabled(stepId: string, setId: ControlEventsActionSetId): boolean {
+		const step = this.steps.get(stepId)
+		return !!step?.sets.has(setId) && !step.options.controlEventsDisabledSets.includes(setId)
 	}
 
 	/**
