@@ -130,6 +130,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 			readonly={readonly}
 			localVariablesStore={localVariablesStore}
 			features={features}
+			allRawOptions={allRawOptions}
 		/>
 	)
 
