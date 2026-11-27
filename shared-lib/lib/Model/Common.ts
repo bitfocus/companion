@@ -158,4 +158,6 @@ export interface DropdownChoice<TId extends DropdownChoiceId = DropdownChoiceId>
 	label: string
 	/** Show the option but do not let it be picked */
 	disabled?: boolean
+	/** Filter editor suggestions using sibling literal options; does not affect saved values or validation. */
+	isVisibleExpression?: string
 }

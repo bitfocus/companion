@@ -10,6 +10,17 @@ import {
 } from '../Options.js'
 
 describe('SomeCompanionInputFieldSchema', () => {
+	test.each(['dropdown', 'multidropdown'] as const)('preserves choice expressions for %s', (type) => {
+		const choice = { id: 'camera', label: 'Camera', isVisibleExpression: '$(options:scene) == "Live"' }
+		const result = SomeCompanionInputFieldSchema.parse({
+			type,
+			id: 'source',
+			label: 'Source',
+			choices: [choice],
+			default: type === 'dropdown' ? 'camera' : ['camera'],
+		})
+		expect(result).toHaveProperty('choices', [choice])
+	})
 	test('accepts every element property definition', () => {
 		for (const [elementType, sections] of Object.entries(elementSchemas)) {
 			for (const section of sections) {

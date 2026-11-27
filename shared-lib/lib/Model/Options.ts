@@ -56,6 +56,7 @@ export const DropdownChoiceSchema: z.ZodType<DropdownChoice> = z.object({
 	id: z.union([z.string(), z.number()]),
 	label: z.string(),
 	disabled: z.boolean().optional(),
+	isVisibleExpression: z.string().optional(),
 })
 
 export const IsVisibleUiFnSchema = z.object({

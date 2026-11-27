@@ -2,7 +2,11 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import {
+	CompanionFieldVariablesSupport,
+	type ExpressionableOptionsObject,
+	type SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { ColorInputField } from '~/Components/ColorInputField.js'
@@ -14,6 +18,7 @@ import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { unwrapPastedVariableReference } from '~/Components/variablePaste.js'
+import { useVisibleDropdownChoices } from '~/Hooks/useVisibleDropdownChoices.js'
 import { useOptionalEntityEditorContext } from './Components/EntityEditorContext.js'
 import type { InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
@@ -42,6 +47,7 @@ export interface OptionsInputControlProps {
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
 	features?: InputFeatureIconsProps
+	allRawOptions?: ExpressionableOptionsObject
 }
 
 export const OptionsInputControl = observer(function OptionsInputControl({
@@ -55,8 +61,13 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	readonly,
 	localVariablesStore,
 	features,
+	allRawOptions,
 }: Readonly<OptionsInputControlProps>): React.JSX.Element {
 	const actionContext = useOptionalEntityEditorContext()?.actionContext ?? EntityListActionContext.NotActions
+	const visibleChoices = useVisibleDropdownChoices(
+		option.type === 'dropdown' || option.type === 'multidropdown' ? option.choices : undefined,
+		allRawOptions
+	)
 
 	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
 	const checkValid = useCallback((value: JsonValue | undefined) => validateInputValue(option, value).validity, [option])
@@ -126,7 +137,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 				<DropdownInputField
 					htmlName={inputId}
 					value={optionValueAsChoiceId(value)}
-					choices={option.choices}
+					choices={visibleChoices}
 					allowCustom={option.allowCustom}
 					regex={option.regex}
 					disabled={readonly}
@@ -140,7 +151,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 				<MultiDropdownInputField
 					htmlName={inputId}
 					value={optionValueAsChoiceIds(value)}
-					choices={option.choices}
+					choices={visibleChoices}
 					allowCustom={option.allowCustom}
 					minSelection={option.minSelection}
 					maxSelection={option.maxSelection}
